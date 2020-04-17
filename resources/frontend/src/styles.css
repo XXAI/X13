@@ -1,0 +1,88 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Roboto', sans-serif; }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Roboto', sans-serif; }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Roboto', sans-serif; }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Roboto', sans-serif; }
+
+a.link-route-item-collapsed div.mat-list-item-content{
+    padding: 0px !important;
+}
+
+.mini-side-menu{
+    min-width: 33px;
+    max-width: 33px;
+    min-height: 33px;
+    max-height: 33px;
+    padding: 0px;
+}
+
+a.item-mini-side-menu{
+    min-width: 33px;
+    max-width: 33px;
+    min-height: 33px;
+    max-height: 33px;
+}
+
+a.item-mini-side-menu div.mat-list-item-content{
+    padding: 0px !important;
+    min-width: 33px;
+    max-width: 33px;
+    min-height: 33px;
+    max-height: 33px;
+}
+
+.dense-form-field .mat-form-field-wrapper{
+    padding-bottom: 0px;
+}
+
+.mat-success {
+    color: #fff !important;
+    background-color: #28a745 !important;
+}
+.mat-success[disabled] {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.mat-success {
+    color: #fff !important;
+    background-color: #28a745 !important;
+}
+.mat-success[disabled] {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.mat-info {
+    color: #fff !important;
+    background-color: #0c94d3 !important;
+}
+.mat-info[disabled] {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+   
+.button-spinner:before {
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    border-top-color: #000000;
+    animation: spinner .8s linear infinite;
+}

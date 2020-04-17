@@ -1,0 +1,9 @@
+
+// import custom component themes
+// unofficial naming convention to support nice ordering of files in IDE 
+// to see theme under the original style file of the component
+@import './app/custom-themes/drawer.component.scss-theme.scss';
+// you only have to add additional components here (instead of in every theme class)
+@mixin custom-components-theme($theme) {
+    @include drawer-component-theme($theme);
+}

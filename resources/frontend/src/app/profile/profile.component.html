@@ -1,0 +1,121 @@
+<br fxHide.xs="true">
+<section class="profile" >
+    <div fxFill>
+        <section fxLayout fxLayoutAlign="center">
+            <mat-card fxFlex.xs="100%" fxFlex="90%">
+                <mat-card-content>
+                    <div class="edit-container" [formGroup]="usuarioForm">
+                        <div class="edit-loading-shade" *ngIf="isLoading">
+                            <mat-spinner *ngIf="isLoading"></mat-spinner>
+                        </div>
+
+                        <div class="edit-loading-shade" *ngIf="!isLoading && !usuario">No se encontraron los datos del usuario</div>
+
+                        <div fxLayout="row" fxLayout.xs="column">
+                            <mat-form-field fxFlex>
+                                <input matInput id="name" formControlName="name" placeholder="Nombre Completo" required>
+                                <mat-error *ngIf="usuarioForm.get('name').invalid && (usuarioForm.get('name').dirty || usuarioForm.get('name').touched)">
+                                    <span *ngIf="usuarioForm.get('name').errors.required">El Nombre Completo es obligatorio</span>
+                                </mat-error>
+                            </mat-form-field>
+
+                            <mat-form-field fxFlex>
+                                <input matInput id="email" formControlName="email" placeholder="Correo Electronico" required>
+                                <mat-error *ngIf="usuarioForm.get('email').invalid && (usuarioForm.get('email').dirty || usuarioForm.get('email').touched)">
+                                    <span *ngIf="usuarioForm.get('email').errors.required">El Correo Electronico es obligatorio</span>
+                                    <span *ngIf="usuarioForm.get('email').errors.email">Formato incorrecto</span>
+                                </mat-error>
+                            </mat-form-field>
+                        
+                        
+                            <mat-form-field fxFlex>
+                                <input matInput id="username" formControlName="username" placeholder="Nombre de Usuario" required>
+                                <mat-hint align="end">{{usuarioForm.get('username').value.length || 0}}</mat-hint>
+                                <mat-error *ngIf="usuarioForm.get('username').invalid && (usuarioForm.get('username').dirty || usuarioForm.get('username').touched)">
+                                    <span *ngIf="usuarioForm.get('username').errors.required">El Nombre de Usuario es obligatorio</span>
+                                    <span *ngIf="usuarioForm.get('username').errors.minlength">Debe contener al menos 4 caracteres</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div fxLayout="row">
+                            <mat-form-field  fxFlex appearance="fill">
+                                <mat-label>Contraseña</mat-label>
+                                <input matInput id="password" formControlName="password" placeholder="Contraseña" [type]="hidePassword ? 'password' : 'text'" >
+                                <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+                                    <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                                </button>
+                                <mat-hint align="end">{{usuarioForm.get('password').value.length || 0}}</mat-hint>
+                                <mat-error *ngIf="usuarioForm.get('password').invalid && (usuarioForm.get('password').dirty || usuarioForm.get('password').touched)">
+                                    <span *ngIf="usuarioForm.get('password').errors.minlength">Debe contener al menos 6 caracteres</span>
+                                    <span *ngIf="usuarioForm.get('password').errors.required">La Contraseña es obligatoria</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        
+                        <br>
+                        <mat-tab-group [color]="'primary'" [backgroundColor]="'accent'" mat-align-tabs="end" animationDuration="0ms">
+                            <mat-tab label="Mi Avatar">
+                                <br>
+                                <div fxLayoutGap class="avatars-list">
+                                    <div fxFlex="10" fxFlex.xs="25" *ngFor="let avatar of avatarList" class="avatar-item" >
+                                        <button mat-raised-button (click)="selectedAvatar = avatar.file" [color]="(selectedAvatar == avatar.file)?'primary':''">
+                                            <mat-icon fxFlexFill svgIcon="{{avatar.id}}"></mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                            </mat-tab>
+                            <mat-tab>
+                                <ng-template mat-tab-label>
+                                    <span matBadge="{{selectedRoles.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedRoles.length <= 0">Mis Roles y Permisos</span>
+                                </ng-template>
+                                <div fxLayout="row" class="edit-container">
+                                    <div fxFlex="100">
+                                        <div fxLayout="column">
+                                            <mat-form-field fxFlex>
+                                                <mat-chip-list #chipList aria-label="Roles Seleccionados">
+                                                    <mat-chip *ngFor="let role of selectedRoles; let i = index" [selected]="(selectedRoleChipId == role.id)" [removable]="false" (click)="showPermissionsList(role)" >
+                                                        {{role.name}}
+                                                    </mat-chip>
+                                                </mat-chip-list>
+                                                <mat-hint align="end">{{selectedRoles.length}}</mat-hint>
+                                            </mat-form-field>
+                                            <br>
+                                            <mat-card fxFlex *ngIf="selectedRoleChipId != 0">
+                                                <mat-card-header>
+                                                    <mat-card-title>Permisos asignados</mat-card-title>
+                                                    <div fxFlex></div>
+                                                    <button mat-icon-button aria-label="Cerrar lista de permisos" (click)="selectedRoleChipId = 0" class="close-card-icon-button">
+                                                        <mat-icon>close</mat-icon>
+                                                    </button>
+                                                </mat-card-header>
+                                                <mat-divider></mat-divider>
+                                                <mat-card-content>
+                                                    <br>
+                                                    <!--div fxFlexFill fxLayoutGap class="permissions-edit-list"-->
+                                                      <mat-chip-list fxFlexFill aria-label="Permisos del Rol">
+                                                        <mat-chip *ngFor="let permission of selectedRolePermissions;">{{permission.description}}</mat-chip>
+                                                        <!--span fxFlex="33" *ngFor="let permission of selectedRolePermissions;" class="permission-slide-toggle">
+                                                            {{permission.description}}
+                                                        </span-->
+                                                      </mat-chip-list>
+                                                    <!--/div-->
+                                                </mat-card-content>
+                                            </mat-card>
+                                        </div>
+                                    </div>
+                                </div>
+                            </mat-tab>
+                        </mat-tab-group>
+                    </div>
+                </mat-card-content>
+                <mat-card-actions>
+                    <span fxFlex></span>
+                    <!--button mat-raised-button routerLink="/apps">Cancelar</button-->
+                    <a mat-button routerLink="/">Cancelar</a>
+                    <button mat-raised-button (click)="guardarUsuario()" color="accent" [disabled]="!usuarioForm.valid || isLoading"><mat-icon>save</mat-icon> Guardar</button>
+                </mat-card-actions>
+            </mat-card>
+        </section>
+    </div>
+</section>

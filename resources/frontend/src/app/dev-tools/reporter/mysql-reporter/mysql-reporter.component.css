@@ -1,0 +1,54 @@
+.results-table-container{
+    overflow: auto;
+}
+
+.results-table-container table{ 
+    width: 100%;
+}
+
+.results-table th {
+    background-color: black;
+    color: white;
+    padding: 5px;
+    text-align: center;
+}
+
+.info-results .item{
+    padding:10px;
+}
+
+.execution-error{
+    text-align: center;
+    font-style: italic;
+}
+
+.execution-error .mat-footer-cell{
+    color:red !important;
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+table.results-table mat-spinner{
+    margin: 0 auto;
+  }
+
+.loading-results{
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    text-align: center;
+    font-style: italic;
+}
+
+.loading-results mat-spinner{
+    margin:0 auto;
+}

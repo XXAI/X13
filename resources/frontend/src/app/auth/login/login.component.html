@@ -1,0 +1,48 @@
+<section class="login" >
+  
+  <form fxLayout fxLayoutAlign="center center" [formGroup]="loginForm" fxFlex="100" (ngSubmit)="onSubmit()">
+    <mat-card fxFlex.xs="100%" fxFlex="400px">
+      <mat-card-title fxLayoutAlign="center"> <span *ngIf="!isLoading">Bienvenido</span> <span *ngIf="isLoading">Conectando...</span></mat-card-title>
+      <div><img style="width:50%"src="assets/Logo SIRH en salud 2019-03.png" alt=""></div>
+      <mat-divider></mat-divider>
+      <mat-card-content fxLayout="column">
+          <br>
+          <section fxFlex fxLayout="row" fxLayoutAlign="space-evenly center">
+            <section fxFlex="30" class="mat-elevation-z1">
+                <img style="width:100%"src="{{avatarPlaceholder}}" alt="">
+            </section>
+            <section fxFlex="65" fxLayout="column">
+              <mat-spinner *ngIf="isLoading"  [diameter]="90" fxFlexAlign="center" ></mat-spinner>
+              <mat-form-field fxFlex *ngIf="!isLoading" appearance="outline">
+                <mat-label>Usuario</mat-label>
+                  <input 
+                    type="text"
+                    matInput 
+                    #username
+                    placeholder="Usuario"
+                    formControlName="usuario"
+                    (blur)="checkAvatar(username.value)">
+                  <mat-error>El usuario es inválido</mat-error>
+                  <mat-icon matSuffix>person</mat-icon>
+              </mat-form-field>
+              <mat-form-field fxFlex *ngIf="!isLoading" appearance="outline">
+                  <mat-label>Contraseña</mat-label>
+                  <input 
+                    type="password" 
+                    matInput 
+                    placeholder="Tu contraseña" 
+                    formControlName="password">
+                  <mat-error>La contraseña es requerida.</mat-error>
+                  <mat-icon matSuffix>vpn_key</mat-icon>
+              </mat-form-field>
+            </section>
+          </section>
+      </mat-card-content>
+      
+      <mat-card-actions fxLayout="column" fxAlignItems="center" fxLayoutGap="10px" *ngIf="!isLoading">
+          <button  type="submit" mat-raised-button color="primary" [disabled]="loginForm.invalid">Entrar</button>
+          <a mat-button  routerLink="/forgot-password" >Olvidé contraseña</a>            
+      </mat-card-actions>
+    </mat-card>
+  </form>
+</section>

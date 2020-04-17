@@ -1,0 +1,34 @@
+<h1 mat-dialog-title>{{(id)?'Editar':'Nuevo'}} Estudio</h1>
+<div mat-dialog-content [formGroup]="estudiosForm">
+    <div fxLayout="row" fxLayout.xs="column">
+        <mat-form-field fxFlex fxFlex.xs="100">
+            <mat-label>Tipo Profesión</mat-label>
+            <mat-select formControlName="tipo_profesion_id">
+                <mat-option *ngFor="let item of catalogos['tipo_profesion']" [value]="item.id">
+                {{item.descripcion}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field fxFlex fxFlex.xs="100">
+            <mat-label>Profesión</mat-label>
+            <mat-select formControlName="profesion_id">
+            <mat-option *ngFor="let item of catalogos['profesion']" [value]="item.id">
+                {{item.descripcion}}
+            </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field fxFlex="20" fxFlex.xs="100">
+            <input matInput [matDatepicker]="picker" placeholder="Fecha Ingreso a la SSA"  formControlName="fecha">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field> 
+        <mat-form-field fxFlex fxFlex.xs="100">
+            <input matInput id="cedula" formControlName="cedula" placeholder="Nombre del empleado">
+        </mat-form-field>                      
+    </div>
+</div>
+<div mat-dialog-actions>
+    <span fxFlex></span>
+    <button mat-button (click)='cancelar()'>Cancelar</button>
+    <button mat-raised-button (click)="guardar()" color="accent"><mat-icon>check</mat-icon> Aceptar</button>
+</div>

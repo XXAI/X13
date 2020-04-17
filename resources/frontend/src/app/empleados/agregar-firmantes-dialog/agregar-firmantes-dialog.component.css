@@ -1,0 +1,164 @@
+.data-container {
+    position: relative;
+    min-height: 200px;
+}
+
+.data-table-container {
+    position: relative;
+    max-height: 400px;
+    min-height:200px;
+    overflow: auto;
+}
+
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+table {
+  width: 100%;
+}
+  
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+/* Column Widths */
+.mat-column-actions{
+  max-width: 75px;
+  min-width: 60px;
+}
+
+.selected-item{
+  background-color: lightskyblue;
+}
+
+.not-results-found{
+  text-align: center;
+  font-style: italic;
+}
+
+.loading-results{
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  text-align: center;
+  font-style: italic;
+}
+
+.loading-results mat-spinner{
+  margin:0 auto;
+}
+
+.hide{
+  display: none;
+}
+
+.advanced-filter-container{
+  margin-top: -15px;
+  margin-bottom: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding-top: 15px;
+}
+
+.advanced-filter{
+  border-top-left-radius: 0px !important;
+  border-top-right-radius: 0px !important;
+}
+
+.search-button {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+  margin: 0 10px;
+}
+
+.check-box {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+  margin: 0 10px;
+}
+
+.my-stepper{
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.my-stepper .my-step{
+  outline: 0;
+  cursor: pointer;
+  position: relative;
+  box-sizing: content-box;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  height: 72px;
+  overflow: hidden;
+  align-items: center;
+  padding: 0 24px;
+  color: rgba(0,0,0,.87);
+}
+
+.my-stepper .my-step-active{
+  color: #3f51b5;
+}
+
+.my-stepper .my-step-done mat-icon{
+  color: #3f51b5 !important;
+}
+
+.my-stepper .my-step-done .my-step-label{
+  color: #000000 !important;
+}
+
+
+.my-stepper .my-step .my-step-label{
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 50px;
+  vertical-align: middle;
+  color: rgba(0,0,0,.54);
+}
+
+.my-stepper .my-step mat-icon{
+  color: rgba(0,0,0,.54);
+}
+
+.my-stepper .my-step-separator{
+  border-top-color: rgba(0,0,0,.12);
+  border-top-width: 1px;
+  border-top-style: solid;
+  flex: auto;
+  height: 0;
+  margin: 0 -16px;
+  min-width: 32px;
+}
+
+.my-stepper .my-step-active mat-icon{
+  color: #3f51b5 !important;
+}
+
+.my-stepper .my-step .my-step-error-message{
+  display: block;
+}
+
+.my-stepper .my-step-error, .my-stepper .my-step-error .my-step-label, .my-stepper .my-step-error mat-icon{
+  color: #f44336 !important;
+}

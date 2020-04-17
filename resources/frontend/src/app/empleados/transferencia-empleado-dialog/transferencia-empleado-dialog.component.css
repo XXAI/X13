@@ -1,0 +1,8 @@
+.is-loading{
+    display: flex;
+    justify-content: center;
+}
+
+.is-loading mat-spinner{
+    margin: 0 auto;
+}

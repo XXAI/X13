@@ -1,0 +1,18 @@
+<h1 mat-dialog-title> {{ title }}</h1>
+<div mat-dialog-content>
+    <p *ngIf="message">{{ message }}</p>
+    <div class="form-container" [formGroup]="confirmForm" *ngIf="checkValue">
+        <mat-form-field  >
+            <input matInput id="confirm-text" formControlName="confirm-text" [type]="'text'" (keyup.enter)="confirm()" cdkFocusInitial required>
+            <mat-error *ngIf="confirmForm.get('confirm-text').invalid && (confirmForm.get('confirm-text').dirty || confirmForm.get('confirm-text').touched)">
+                <span *ngIf="confirmForm.get('confirm-text').errors.required">El texto de confirmación es obligatorio</span>
+                <span *ngIf="confirmForm.get('confirm-text').errors.pattern">El texto debe coincidir</span>
+            </mat-error>
+        </mat-form-field>
+    </div>
+</div>
+<div mat-dialog-actions>
+    <span fxFlex></span>
+    <button mat-button (click)='onNoClick()'>Cancelar</button>
+    <button mat-raised-button [mat-dialog-close]='true' [disabled]="checkValue && !confirmForm.valid" color="{{ color }}">{{ btnText }}</button>
+</div>

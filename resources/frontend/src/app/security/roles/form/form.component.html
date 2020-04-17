@@ -1,0 +1,51 @@
+<h1 mat-dialog-title><span *ngIf="rol.id">Editar</span> <span *ngIf="!rol.id">Nuevo</span> Rol</h1>
+<mat-dialog-content>
+    <div class="form-container" [formGroup]="rolForm">
+        <div class="form-loading-shade" *ngIf="isLoading"><mat-spinner *ngIf="isLoading"></mat-spinner></div>
+
+        <div class="form-loading-shade" *ngIf="!isLoading && !rol">No se encontraron los datos del rol</div>
+        <br>
+        <div fxLayout="row">
+            <div fxFlex="49" fxFlex.xs="100">
+                <mat-form-field>
+                    <input matInput id="name" formControlName="name" placeholder="Nombre" required>
+                    <mat-error *ngIf="rolForm.get('name').invalid && (rolForm.get('name').dirty || rolForm.get('name').touched)">
+                        <span *ngIf="rolForm.get('name').errors.required">El nombre es obligatorio</span>
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field>
+                    <input matInput placeholder="Filtrar Permisos" aria-label="filtrar" [formControl]="filterInput">
+                    <mat-icon *ngIf="!filterInput.value" matSuffix>filter_list</mat-icon>
+                    <button mat-icon-button matSuffix *ngIf="filterInput.value"  aria-label="Clean Permission Search" (click)="clearPermissionSearch()">
+                        <mat-icon>clear</mat-icon>
+                    </button>
+                </mat-form-field>
+                <mat-selection-list dense class="permissions-list">
+                    <mat-list-option *ngFor="let permission of filteredPermissions$ | async" (click)="selectPermission(permission)" [value]="permission" [selected]="selectedItems[permission.id]">
+                        <mat-icon matListIcon *ngIf="permission.is_super">vpn_key</mat-icon>
+                        <p matLine>
+                            <span fxHide.xs="true">[{{permission.group}}]</span> <span> {{permission.description}} </span>
+                        </p>
+                        <mat-divider></mat-divider>
+                    </mat-list-option>
+                </mat-selection-list>
+            </div>
+            <div fxFlex></div>
+            <div fxFlex="49" fxFlex.xs="100" fxHide.xs="true">
+                <mat-form-field>
+                    <mat-chip-list #chipList aria-label="Permisos Seleccionados">
+                        <mat-chip [color]="'accent'" *ngFor="let permission of selectedPermissions; let i = index" [removable]="true" (removed)="removePermission(i)">
+                            {{permission.description}}
+                            <mat-icon matChipRemove>cancel</mat-icon>
+                        </mat-chip>
+                    </mat-chip-list>
+                </mat-form-field>
+            </div>
+        </div>
+    </div>
+</mat-dialog-content>
+<mat-divider></mat-divider>
+<mat-dialog-actions align="end">
+    <button mat-button (click)='onNoClick()'>Cancelar</button>
+    <button mat-raised-button (click)="saveRole()" color="primary" [disabled]="rolForm.invalid || isLoading"><mat-icon>save</mat-icon> Guardar</button>
+</mat-dialog-actions>

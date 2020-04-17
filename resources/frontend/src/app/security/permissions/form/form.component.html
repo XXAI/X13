@@ -1,0 +1,45 @@
+<h1 mat-dialog-title><span *ngIf="permiso.id">Editar</span> <span *ngIf="!permiso.id">Nuevo</span> Permiso</h1>
+<div mat-dialog-content>
+    <div class="form-container" [formGroup]="permisoForm">
+        <div class="form-loading-shade" *ngIf="isLoading"><mat-spinner *ngIf="isLoading"></mat-spinner></div>
+
+        <div class="form-loading-shade" *ngIf="!isLoading && !permiso">No se encontraron los datos del permiso</div>
+
+        <mat-form-field hintLabel="Seleccione el cuadro para capturar el ID de manera manual, de lo contrario sera generado automaticamente al momento de guardar el permiso">
+            <input matInput id="id" formControlName="id" placeholder="ID">
+            <button mat-icon-button matPrefix (click)="toggleID()" [attr.aria-label]="'Capturar ID'" [attr.aria-pressed]="provideID">
+                <mat-icon>{{provideID ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
+            </button>
+            <mat-error *ngIf="permisoForm.get('id').invalid && (permisoForm.get('id').dirty || permisoForm.get('id').touched)">
+                <span *ngIf="permisoForm.get('id').errors.required">El ID es obligatorio</span>
+                <span *ngIf="permisoForm.get('id').errors.maxlength">El ID debe tener 32 caracteres</span>
+                <span *ngIf="permisoForm.get('id').errors.minlength">El ID debe tener 32 caracteres</span>
+                <span *ngIf="permisoForm.get('id').errors.notEqualTo && !permisoForm.get('id').errors.required">El ID debe ser único</span>
+            </mat-error>
+        </mat-form-field>
+        <br>
+        <mat-form-field>
+            <input matInput id="description" formControlName="description" placeholder="Descripcion" required>
+            <mat-error *ngIf="permisoForm.get('description').invalid && (permisoForm.get('description').dirty || permisoForm.get('description').touched)">
+                <span *ngIf="permisoForm.get('description').errors.required">La descripción es obligatoria</span>
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+            <input matInput id="group" formControlName="group" placeholder="Grupo" required>
+            <mat-error *ngIf="permisoForm.get('group').invalid && (permisoForm.get('group').dirty || permisoForm.get('group').touched)">
+                <span *ngIf="permisoForm.get('group').errors.required">El grupo es obligatorio</span>
+            </mat-error>
+        </mat-form-field>
+
+        <section class="checkbox-section">
+            <mat-checkbox formControlName="is_super">Permiso de Super-Usuario</mat-checkbox>
+        </section>
+    </div>
+</div>
+<mat-divider></mat-divider>
+<div mat-dialog-actions>
+    <span fxFlex></span>
+    <button mat-button (click)='onNoClick()'>Cancelar</button>
+    <button mat-raised-button (click)="savePermission()" color="primary" [disabled]="permisoForm.invalid || isLoading"><mat-icon>save</mat-icon> Guardar</button>
+</div>

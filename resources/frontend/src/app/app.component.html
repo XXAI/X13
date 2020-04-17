@@ -1,0 +1,21 @@
+<mat-sidenav-container fullscreen>
+  <mat-sidenav #sidenav role="navigation" position="end">
+      <app-sidenav-list (onCloseSidenav)="sidenav.close()"></app-sidenav-list>
+  </mat-sidenav>
+  <mat-sidenav-content fxLayout="column" fxFlexFill>
+      <app-header (onSidenavToggle)="sidenav.toggle()" fxFlex.gt-xs="64px" fxFlex.xs="56px"></app-header>
+      <main fxFlex style="overflow:auto">
+
+          <mat-drawer-container class="app-children-container" autosize>
+              <mat-drawer #drawer class="app-children-sidenav"  mode="side" opened>
+                  <drawer-list></drawer-list>
+              </mat-drawer>
+
+              <main fxFlex style="height: 100%; overflow: auto;">
+                  <router-outlet></router-outlet>
+              </main>
+          </mat-drawer-container>
+
+      </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

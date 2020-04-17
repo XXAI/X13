@@ -1,0 +1,14 @@
+.list-item-active {
+    font-weight: bolder;
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(63, 81, 181, 1);
+}
+
+.toggle-drawer-collapsed{
+  min-width: 33px;
+  padding: 0px;
+}
+
+.mat-list-base .mat-list-item .mat-list-item-content{
+  padding:0px !important;
+}

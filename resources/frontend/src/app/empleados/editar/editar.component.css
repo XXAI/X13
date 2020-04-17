@@ -1,0 +1,167 @@
+.credential-header-image {
+    background-image: url('/assets/logo-estatal.svg');
+    background-size: cover;
+}
+
+.infoEmployee th{
+    text-align: left;
+    white-space: nowrap;
+}
+
+.infoEmployee td{
+    padding-left: 10px;
+}
+
+.is-loading{
+    display: flex;
+    justify-content: center;
+}
+
+.is-loading mat-spinner{
+    margin: 0 auto;
+}
+
+.loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+  
+.loading-shade mat-spinner{
+    margin:0 auto;
+}
+
+.loading-shade span{
+    margin:0 auto;
+}
+
+.employee-status-bar{
+    height: auto;
+    min-height: 35px;
+}
+
+.employee-status-bar mat-toolbar-row {
+    min-height: 35px;
+}
+
+.employee-status-bar .status-icon {
+    padding: 0 14px;
+}
+
+.employee-status-bar .spacer {
+    flex: 1 1 auto;
+}
+
+.escolaridad-table {
+    width: 100%;
+}
+
+/* Column Widths */
+.mat-column-actions{
+    width: 120px;
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.check-box {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    height: 60px;
+    margin: 0 10px;
+}
+
+.schedule-header th{
+    background-color: black; 
+    color:white;
+    border-radius: 15px;
+}
+
+.schedule-body{
+    background-color: #dddddd;
+    font-size: smaller;
+}
+
+.schedule-body td.start{
+    background-color: #c4cdff; 
+    color:#2c3258;
+    border-bottom-left-radius:15px; 
+    border-top-left-radius: 15px; 
+    text-align: center;
+}
+
+.schedule-body td.end{
+    background-color: #7c8cfa; 
+    color:white;
+    border-bottom-right-radius:15px; 
+    border-top-right-radius: 15px; 
+    text-align: center;
+}
+
+.info-adscripcion-activa{
+    width: 100%;
+}
+
+.info-adscripcion-activa th.titulo-largo{
+    background-color: black;
+    color:white;
+    text-align: center;
+    padding:2px;
+}
+
+.info-adscripcion-activa th.titulo-corto{
+    background-color: lightsteelblue;
+    text-align: right;
+}
+
+.info-adscripcion-activa td{
+    background-color: #dddddd;
+    text-align: left;
+    padding:2px;
+}
+
+.info-adscripcion-activa td.descripcion{
+    text-align: center;
+}
+
+.mobile-toolbar-placeholder{
+    min-height: 40px;
+    height: 40px;
+    bottom: 0px;
+    width: 100%  !important;
+}
+
+.mobile-toolbar {
+    min-height: 40px;
+    height: 40px;
+    position: fixed;
+    bottom: 0px;
+    z-index: 100;
+    width: 100%  !important;
+}
+
+.mobile-toolbar-icon {
+    padding: 0 14px;
+}
+
+.mobile-toolbar-spacer {
+    flex: 1 1 auto;
+}
+
+.lista-escolaridad-detalle > fieldset:not(:last-child){
+    border-bottom:hidden;
+}

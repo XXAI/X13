@@ -1,0 +1,48 @@
+<mat-toolbar color="primary">
+    <mat-toolbar-row>
+      <img src="{{'assets/app-icon.svg'}}" alt="" style="height: 60%; width:auto;"><span>&nbsp;</span><span>Personal Activo</span>
+      <!--mat-icon>fingerprint</mat-icon-->
+    </mat-toolbar-row>
+  </mat-toolbar>
+  <mat-nav-list>
+    <ng-template [ngIf]="isAuthenticated">
+      <div mat-list-item>
+        <div fxLayout="row" fxLayoutAlign="center center">
+          <img src="{{user.avatar}}" alt="" style="width:80px; margin:10px">
+        </div>
+        <div style="margin:10px; flex-direction:column; justify-content: center;">
+          <strong>{{user.name}}</strong><br>
+          <small style="color:#777">{{user.email}}</small>
+        </div>
+      </div>
+      <a mat-list-item routerLink="/profile" (click)="close()">
+        <mat-icon>account_circle</mat-icon> 
+        <span>&nbsp;Editar cuenta</span>
+      </a>
+      <mat-divider></mat-divider>
+      <div>
+        <div class="apps" fxLayout="row" fxLayoutAlign="center center">
+          <ng-container *ngFor="let app of apps; let i = index">
+              <figure [routerLink]="['/'+app.route]" (click)="close()" *ngIf="i<6">
+                  <img src="{{ app.icon }}" alt="Icon">
+                  <figcaption class="ellipsis">{{ app.name }}</figcaption>
+              </figure>
+          </ng-container>
+        </div>
+        <button mat-menu-item style="text-align:center" routerLink="/apps" (click)="close()">
+          <mat-icon>apps</mat-icon>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
+      <a mat-list-item  (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+        <span class="nav-caption">Cerrar sesión</span>
+      </a>
+    </ng-template>
+    <ng-template [ngIf]="!isAuthenticated">
+      <a mat-list-item routerLink="/login" (click)="close()">
+        <mat-icon>fingerprint</mat-icon>
+        <span class="nav-caption">Iniciar sesión</span>
+      </a>
+    </ng-template>
+  </mat-nav-list>

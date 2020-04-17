@@ -1,0 +1,37 @@
+.apps {    
+    display: flex;
+    flex:1;
+    width:100%;
+    margin: auto;
+    height: auto;
+    flex-direction: row;
+    justify-content: flex-start;    
+    align-content: flex-start;
+    flex-wrap: wrap;
+    flex-flow: row wrap;
+}
+
+.apps figure {
+    display: block;
+    flex-direction: column;
+    text-align: center; 
+    width: 33.33%;
+    min-width: 50px;
+    margin:0;  
+    cursor: pointer; 
+}
+ 
+.apps figure img {
+    display: block;
+    width:50px;
+    height: 50px;
+    margin:auto;
+    margin-top:15px;      
+    margin-bottom:15px;  
+}
+
+.apps figcaption{
+    font-size: 0.75em;
+    color: #555;    
+    margin-bottom:15px;  
+}

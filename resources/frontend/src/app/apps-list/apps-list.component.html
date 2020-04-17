@@ -1,0 +1,34 @@
+<!-- <section fxLayout style="width:100%; height:100%" fxLayoutAlign="center center"></section> -->
+<section class="container">
+    <!-- <div class="grid-spacer"></div> -->
+    <!-- <div fxFlex="80" style="height:80%" fxFlex.gt-md="1139px" fxLayoutAlign="center start"   > -->
+    <div class="grid"  >  
+        <ng-container *ngFor="let app of apps">
+            <figure [routerLink]="['/'+app.route]">
+                <img src="{{ app.icon }}" alt="Icon">
+                <figcaption class="ellipsis">{{ app.name }}</figcaption>
+            </figure>
+        </ng-container>
+    </div>
+
+    <!--
+        <div fxFlex fxLayout="row wrap"  fxLayoutGap="15px" fxLayoutAlign="start start" class="scrollable" >
+        <ng-container *ngFor="let app of apps">
+            <figure fxLayout="column"  fxLayoutAlign="start center" fxFlex.lt-sm="40px"  fxFlex="40px" fxFlex.gt-sm="120px" fxLayoutGap="15px" >
+                <img src="{{ app.icon }}" alt="Icon"  fxFlex.lt-sm="40px"  fxFlex="40px" fxFlex.gt-sm="120px">
+                <figcaption class="ellipsis">{{ app.name }}</figcaption>
+            </figure>
+        </ng-container>
+        
+    </div>
+    -->
+    <!-- <mat-grid-list fxFlex="80" fxFlex.gt-md="1139px"  [cols]="breakpoint" rowHeight="1:1" (window:resize)="onResize($event)">
+        <mat-grid-tile *ngFor="let app of apps">
+        <div fxLayout="column" fxFlex>
+            <img src="{{ app.icon }}" alt="Icon">
+            <figcaption>{{ app.name }}</figcaption>
+        </div>
+            
+        </mat-grid-tile>
+    </mat-grid-list> -->
+</section>

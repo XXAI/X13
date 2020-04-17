@@ -1,0 +1,68 @@
+<br>
+<section class="profile" >
+    <div  fxFill>
+        <section fxLayout fxLayoutAlign="center">
+            <div class="roles-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+
+            <mat-card fxFlex.xs="100%" fxFlex="90%">
+                
+                <div fxLayout="row">
+                    <div fxFlex="100%">
+                        <mat-form-field appearance="outline">
+                            <mat-label>Buscar</mat-label>
+                            <input matInput [(ngModel)]="searchQuery" (keyup.enter)="applyFilter()" placeholder="Buscar">
+                            <button mat-icon-button flexFill matSuffix (click)="applyFilter()" color="primary">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </mat-form-field>
+                    </div>
+                </div>
+                
+                <div fxLayout="row" style="padding-bottom:10px;">
+                    <div fxFlex></div>
+                    <button mat-raised-button color="primary" (click)="openDialogForm()"><mat-icon>add_circle</mat-icon> Nuevo Rol</button>
+                </div>
+
+                <mat-divider [inset]="true"></mat-divider>
+                
+                <div class="roles-container ">
+                    <div class="roles-table-container">
+                        <table mat-table [dataSource]="dataSource" class="roles-table" multiTemplateDataRows matSort>
+                            <!-- ID Column -->
+                            <ng-container matColumnDef="id">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+                                <td mat-cell *matCellDef="let row"> {{row.id}} </td>
+                            </ng-container>
+                    
+                            <!-- Description Column -->
+                            <ng-container matColumnDef="name">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header> Nombre </th>
+                                <td mat-cell *matCellDef="let row"> {{row.name}} </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="actions">
+                                <th mat-header-cell *matHeaderCellDef style="width: 115px;">Acciones</th>
+                                <td mat-cell *matCellDef="let row">
+                                    <button mat-raised-button color="accent" (click)="openDialogForm(row.id)"><mat-icon>edit</mat-icon></button> &nbsp;
+                                    <button mat-icon-button color="warn" (click)="confirmDeletePermission(row.id)"><mat-icon>delete</mat-icon></button>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="noResultsFound">
+                                <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length">
+                                    No se encontraron registros
+                                </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+                            <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide':!(dataSource!=null && dataSource.length==0)}"></tr>
+                        </table>
+                    </div>
+                    <mat-paginator #paginator pageSize="20" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadRolesData($event)"></mat-paginator>
+                </div>
+            </mat-card>
+        </section>
+    </div>
+</section>

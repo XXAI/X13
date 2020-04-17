@@ -1,0 +1,68 @@
+<h1 mat-dialog-title>Confirmar Transferencia del Empleado</h1>
+<div mat-dialog-content>
+    <div fxLayout="column" fxLayout.xs="column" [formGroup]="permutaForm">
+        <div class="loading-shade" *ngIf="isLoading">
+            <mat-spinner *ngIf="isLoading"></mat-spinner>
+        </div>
+
+        <section fxFlex class="mat-elevation-z2">
+            <table class="tabla-info-transferencia">
+                <tr>
+                    <th width="1">CLUES</th><td>{{cluesOrigen.nombre_unidad}}</td><td fxHide.xs="true" width="1">{{cluesOrigen.clues}}</td>
+                </tr>
+                <tr>
+                    <th>CR</th><td>{{crOrigen.descripcion}}</td><td fxHide.xs="true">{{crOrigen.cr}}</td>
+                </tr>
+            </table>
+        </section>
+
+        <div fxFlex fxLayoutAlign="center center"><mat-icon>arrow_downward</mat-icon></div>
+
+        <section fxFlex class="mat-elevation-z2">
+            <table class="tabla-info-transferencia">
+                <tr>
+                    <th width="1">CLUES</th><td>{{cluesDestino.nombre_unidad}}</td><td fxHide.xs="true" width="1">{{cluesDestino.clues}}</td>
+                </tr>
+                <tr>
+                    <th>CR</th><td>{{crDestino.descripcion}}</td><td fxHide.xs="true">{{crDestino.cr}}</td>
+                </tr>
+            </table>
+            <!--mat-form-field fxFlex appearance="fill">
+                <mat-label>CLUES Destino</mat-label>
+                <input matInput value="{{cluesDestino.nombre_unidad}}" readonly>
+                <mat-hint align="end">{{cluesDestino.clues}}</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex appearance="fill">
+                <mat-label>CR Destino</mat-label>
+                <input matInput value="{{crDestino.descripcion}}" readonly>
+                <mat-hint align="end">{{crDestino.cr}}</mat-hint>
+            </mat-form-field-->
+        </section>
+        <br>
+        <section fxFlex fxLayout.xs="column" *ngIf="observaciones">
+            <mat-form-field fxFlex appearance="outline" color="primary">
+                <mat-label><mat-icon>message</mat-icon></mat-label>
+                <textarea matInput value="{{observaciones}}" readonly></textarea>
+            </mat-form-field>
+        </section>
+        <section fxFlex fxLayout="row" fxLayout.xs="column">
+            <mat-form-field fxFlex="70" fxFlex.xs="100" appearance="outline">
+                <mat-label>Observaciones</mat-label>
+                <textarea matInput formControlName="observaciones" ></textarea>
+            </mat-form-field>
+            <div fxFlex fxHide.xs="true"></div>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput [matDatepicker]="fechaPicker" placeholder="Fecha Transferencia"  formControlName="fecha_transferencia" readonly required>
+                <mat-datepicker-toggle matSuffix [for]="fechaPicker"></mat-datepicker-toggle>
+                <mat-datepicker #fechaPicker disabled="false"></mat-datepicker>
+                <mat-hint align="end">seleccionar fecha <mat-icon>keyboard_arrow_up</mat-icon>&nbsp;</mat-hint>
+            </mat-form-field>
+        </section>
+    </div>
+</div>
+<div mat-dialog-actions>
+    <span fxFlex></span>
+    <button mat-button (click)='cancelar()'>Cancelar</button>
+    <button mat-raised-button (click)="rechazar()" color="warn"><mat-icon>clear</mat-icon><span fxHide.xs="true">&nbsp;Rechazar</span></button>
+    <button mat-raised-button (click)="aceptar()" color="primary" [disabled]="!permutaForm.valid"><mat-icon>check</mat-icon><span fxHide.xs="true">&nbsp;Aceptar</span></button>
+</div>
