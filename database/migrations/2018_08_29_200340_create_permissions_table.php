@@ -17,6 +17,7 @@ class CreatePermissionsTable extends Migration
             $table->string('id', 40)->primary();
             $table->string('description');
             $table->string('group');
+            $table->boolean('is_super')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

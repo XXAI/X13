@@ -1,0 +1,8 @@
+.mat-button-toggle {
+    color: rgba(0,0,0,1);
+}
+
+.mat-button-toggle-checked {
+    background-color: lightskyblue;
+    color: rgba(0,0,0,.54);
+}

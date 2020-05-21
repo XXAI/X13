@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable implements JWTSubject{
     use Notifiable;
     use SoftDeletes;
+    protected $keyType = 'string';
 
     /**
      * The attributes that are mass assignable.
@@ -56,18 +57,6 @@ class User extends Authenticatable implements JWTSubject{
 
     public function permissions(){
         return $this->belongsToMany('App\Models\Permission')->withPivot('status');
-    }
-
-    public function perfilCr(){
-        return $this->belongsToMany('App\Models\Cr', 'rel_usuario_clues_cr', 'user_id', 'cr_id')->withPivot('clues');
-    }
-
-    public function gruposUnidades(){
-        return $this->belongsToMany('App\Models\GrupoUnidades', 'rel_grupo_unidades_usuario', 'user_id', 'grupo_unidades_id');
-    }
-
-    public function relUsuarioCluesCr(){
-        return $this->hasMany('App\Models\RelUsuarioCluesCr');
     }
 
     //Funciones para validación y obtención de permisos del usuario.

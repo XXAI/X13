@@ -1,0 +1,135 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex="none">
+            <button mat-raised-button color="primary"><mat-icon>save_alt</mat-icon> Finalizar</button>
+        </div>
+        <div fxFlex></div>
+        <div fxFlex="none">
+            <button [routerLink]="'/almacen/entradas'" mat-button>Cancelar</button>
+            &nbsp;
+            <button mat-raised-button color="primary"><mat-icon>save</mat-icon> Guardar</button>
+        </div>
+    </section>
+    <section fxFlex fxLayout="row" fxLayoutGap="10px">
+        <section fxFlex="30" fxLayout="row">
+            <mat-card fxFlex="100" fxLayout="column" *ngIf="!mostrarBuscadorInsumos">
+                <div fxFlex="none" fxLayout="row raw" [formGroup]="formEntrada">
+                    <mat-form-field fxFlex="100">
+                        <mat-label>Fecha Entrada (aaaa-mm-dd)</mat-label>
+                        <input matInput mascaraFecha formControlName="fecha_movimiento" required>
+                        <mat-hint>Ejemplo: 1985-08-15</mat-hint>
+                        <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+                    </mat-form-field>
+                    <mat-form-field fxFlex="100">
+                        <mat-label>Folio</mat-label>
+                        <input matInput formControlName="folio">
+                        <mat-hint>En caso de ser necesario</mat-hint>
+                    </mat-form-field>
+                    <mat-form-field fxFlex="100">
+                        <mat-label>Descripcion</mat-label>
+                        <input matInput formControlName="descripcion" required>
+                        <mat-error *ngIf="formEntrada.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
+                    </mat-form-field>
+                    <mat-form-field fxFlex="100">
+                        <mat-label>Persona que Entrega</mat-label>
+                        <input matInput formControlName="actor" required>
+                        <mat-error *ngIf="formEntrada.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
+                    </mat-form-field>
+                    <mat-form-field fxFlex="100">
+                        <mat-label>Programa</mat-label>
+                        <mat-select formControlName="programa_id">
+                            <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
+                            <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
+                                {{item.descripcion}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field  fxFlex="100">
+                        <mat-label>Observaciones</mat-label>
+                        <textarea matInput formControlName="observaciones" rows="2"></textarea>
+                    </mat-form-field>
+                </div>
+                <div fxFlex></div>
+                <div fxFlex="none" fxLayout="row">
+                    <div fxFlex></div>
+                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = true"><mat-icon>chevron_right</mat-icon> Insumos</button>
+                </div>
+            </mat-card>
+            <mat-card fxFlex="100" fxLayout="column" *ngIf="mostrarBuscadorInsumos">
+                <div fxFlex fxLayout="column">
+                    <section fxFlex="none">
+                        <div fxLayout="column">
+                            <div fxFlex fxLayout="row wrap">
+                                <mat-form-field fxFill appearance="outline">
+                                    <mat-label>Buscar</mat-label>
+                                    <input matInput [(ngModel)]="insumoQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Buscar">
+                                    <button matSuffix *ngIf="insumoQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                    <mat-hint>
+                                        <mat-radio-group [(ngModel)]="filtroTipoInsumo" aria-label="Select an option">
+                                            <mat-radio-button color="primary" value="*">Todos</mat-radio-button>
+                                            <mat-radio-button value="MED">Meds</mat-radio-button>
+                                            <mat-radio-button value="MTC">Mat Curación</mat-radio-button>
+                                        </mat-radio-group>
+                                    </mat-hint>
+                                </mat-form-field>
+                            </div>
+                            <button fxFlex mat-raised-button color="accent" (click)="applySearch()">
+                                <mat-icon>search</mat-icon> Buscar
+                            </button>
+                        </div>
+                    </section>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <section fxFlex style="overflow: hidden;">
+                        <div style="overflow: auto; height: 100%;">
+                            <div *ngFor="let insumo of listadoInsumos; index as i;">
+                                <div class="lista-insumos-item" [ngClass]="{'selected': i==indexInsumoSeleccioando}">
+                                    <div class="lista-insumos-item-etiqueta">
+                                        <div class="lista-insumos-item-etiqueta-icono" [ngClass]="{'color-medicamento': insumo.tipo_insumo=='MED','color-mat-curacion': insumo.tipo_insumo=='MTC'}"><img src="{{insumo.icono}}" alt="Icon"></div>
+                                        <div class="lista-insumos-item-etiqueta-texto">{{insumo.tipo_insumo}}</div>
+                                    </div>
+                                    <div class="lista-insumos-item-contenido">
+                                        <div class="lista-insumos-item-cabecera">
+                                            <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre}}</div>
+                                            <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.info}}</div>
+                                        </div>
+                                        <div class="lista-insumos-item-texto">
+                                            {{insumo.descripcion}}
+                                        </div>
+                                        <div>
+                                            <button mat-stroked-button color="primary" fxFlex (click)="agregarLoteInsumo(insumo,i)">
+                                                <mat-icon>launch</mat-icon> Agregar Lote <mat-icon>chevron_right</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <mat-divider [inset]="true"></mat-divider>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div fxFlex="none" fxLayout="row">
+                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = false"><mat-icon>chevron_left</mat-icon> Datos Entrada</button>
+                    <div fxFlex></div>
+                </div>
+            </mat-card>
+        </section>
+        
+        <mat-card fxFlex fxLayout="column" fxLayoutGap="5px">
+            <div fxFlex="none" fxLayout="row">
+                <div fxFlex></div>
+                <div fxFlex="none">
+                    <mat-button-toggle-group appearance="legacy" name="fontStyle" aria-label="Font Style">
+                        <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
+                        <mat-button-toggle value="MED">Medicamentos: {{totales.medicamentos | number}}</mat-button-toggle>
+                        <mat-button-toggle value="MTC">Material de Curación: {{totales.mat_curacion | number}}</mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+                <div fxFlex></div>
+            </div>
+            <mat-divider [inset]="true"></mat-divider>
+            <div fxFlex>lista</div>
+        </mat-card>
+    </section>
+</section>

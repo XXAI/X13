@@ -1,0 +1,77 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex="none">
+            <button mat-raised-button color="primary"><mat-icon>save_alt</mat-icon> Finalizar</button>
+        </div>
+        <div fxFlex></div>
+        <div fxFlex="none">
+            <button [routerLink]="'/almacen/salidas'" mat-button>Cancelar</button>
+            &nbsp;
+            <button mat-raised-button color="accent"><mat-icon>save</mat-icon> Guardar</button>
+        </div>
+    </section>
+    <section fxFlex fxLayout="row" fxLayoutGap="10px">
+        <mat-card fxFlex="30" fxLayout="column">
+            <div fxFlex="none" fxLayout="row raw" [formGroup]="formSalida">
+                <mat-form-field fxFlex="100">
+                    <mat-label>Fecha Entrada (aaaa-mm-dd)</mat-label>
+                    <input matInput mascaraFecha formControlName="fecha_movimiento" required>
+                    <mat-hint>Ejemplo: 1985-08-15</mat-hint>
+                    <mat-error *ngIf="formSalida.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+                <mat-form-field fxFlex="100">
+                    <mat-label>Folio</mat-label>
+                    <input matInput formControlName="folio">
+                    <mat-hint>En caso de ser necesario</mat-hint>
+                </mat-form-field>
+                <mat-form-field fxFlex="100">
+                    <mat-label>Descripcion</mat-label>
+                    <input matInput formControlName="descripcion" required>
+                    <mat-error *ngIf="formSalida.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+                <mat-form-field fxFlex="100">
+                    <mat-label>Persona que Entrega</mat-label>
+                    <input matInput formControlName="actor" required>
+                    <mat-error *ngIf="formSalida.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+                <mat-form-field fxFlex="100">
+                    <mat-label>Programa</mat-label>
+                    <mat-select formControlName="programa_id">
+                        <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
+                        <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
+                            {{item.descripcion}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field  fxFlex="100">
+                    <mat-label>Observaciones</mat-label>
+                    <textarea matInput formControlName="observaciones" rows="2"></textarea>
+                </mat-form-field>
+            </div>
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button fxFlex mat-raised-button color="info"><mat-icon>settings</mat-icon> Lista de Insumos</button>
+            </div>
+        </mat-card>
+        <mat-card fxFlex fxLayout="column" fxLayoutGap="5px">
+            <div fxFlex="none" fxLayout="row">
+                <div fxFlex></div>
+                <div fxFlex="none">
+                    <mat-button-toggle-group appearance="legacy" name="fontStyle" aria-label="Font Style">
+                        <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
+                        <mat-button-toggle value="MED">Medicamentos: {{totales.medicamentos | number}}</mat-button-toggle>
+                        <mat-button-toggle value="MTC">Material de Curación: {{totales.mat_curacion | number}}</mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+                <div fxFlex></div>
+            </div>
+            <mat-divider [inset]="true"></mat-divider>
+            <div fxFlex>lista</div>
+        </mat-card>
+    </section>
+    
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        
+    </section>
+</section>

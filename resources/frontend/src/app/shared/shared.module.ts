@@ -6,8 +6,11 @@ import { MaterialModule } from '../material/material.module';
 import { HttpClientModule } from '@angular/common/http';
 import { IfHasPermissionDirective } from './if-has-permission.directive';
 
+import { AppHubComponent } from './components/app-hub/app-hub.component';
+import { MascaraFechaDirective } from './mascara-fecha.directive'; //Temporal, tengo que mover el componente al folder shared
+
 @NgModule({
-  declarations: [IfHasPermissionDirective],
+  declarations: [IfHasPermissionDirective, AppHubComponent, MascaraFechaDirective],
   imports: [
     CommonModule,
     FormsModule,
@@ -23,7 +26,9 @@ import { IfHasPermissionDirective } from './if-has-permission.directive';
     MaterialModule,
     ReactiveFormsModule,
     HttpClientModule,
-    IfHasPermissionDirective
+    IfHasPermissionDirective,
+    MascaraFechaDirective,
+    AppHubComponent,
   ],
 })
 export class SharedModule { }

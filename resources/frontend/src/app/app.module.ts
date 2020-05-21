@@ -32,7 +32,7 @@ import { ProfileModule } from './profile/profile.module';
 import { DevToolsModule } from './dev-tools/dev-tools.module';
 
 //Modulos del Sistema
-//import { EmpleadosModule } from './empleados/empleados.module';
+import { AlmacenModule } from './almacen/almacen.module';
 
 @NgModule({
   declarations: [
@@ -54,6 +54,7 @@ import { DevToolsModule } from './dev-tools/dev-tools.module';
     UsersModule,
     SecurityModule,
     DevToolsModule,
+    AlmacenModule,
     ProfileModule,
     AppRoutingModule,
     WildcardRoutingModule,

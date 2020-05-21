@@ -20,6 +20,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public isAuthenticated:boolean;
   authSubscription: Subscription;
   selectedApp: any;
+  appHeaderLinks: any[];
+  headerIcon: string;
   user: User;
   apps: App[];
   breakpoint = 6;
@@ -28,9 +30,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     router.events.pipe(
       filter(event => event instanceof NavigationEnd)  
     ).subscribe((event: NavigationEnd) => {
-      
+      this.headerIcon = undefined;
+      this.appHeaderLinks = [];
+
       this.getApps();
-      let routes = event.url.split('/',2);
+      let routes = event.url.split('/');
       let selected_route = routes[1];
 
       let currentApp = this.sharedService.getCurrentApp();
@@ -44,6 +48,24 @@ export class HeaderComponent implements OnInit, OnDestroy {
         });
       }else{
         this.selectedApp = undefined;
+      }
+      
+      if(this.selectedApp){
+        this.headerIcon = this.selectedApp.icon;
+        this.appHeaderLinks.push({name:this.selectedApp.name,route:this.selectedApp.route});
+
+        if(this.selectedApp.apps && routes[2]){
+          
+          let selectedRoute = routes[1]+'/'+routes[2];
+          let selectedChildApp = this.selectedApp.apps.find(function(element) {
+            return element.route == selectedRoute;
+          });
+
+          if(selectedChildApp){
+            this.headerIcon = selectedChildApp.icon;
+            this.appHeaderLinks.push({name:selectedChildApp.name,route:selectedChildApp.route});
+          }
+        }
       }
     });
   }

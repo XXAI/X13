@@ -1,0 +1,10 @@
+<section class="container">
+    <div class="grid"  >  
+        <ng-container *ngFor="let app of apps">
+            <figure (click)="goTo(app.route)">
+                <img src="{{ app.icon }}" alt="Icon">
+                <figcaption class="ellipsis">{{ app.name }}</figcaption>
+            </figure>
+        </ng-container>
+    </div>
+</section>

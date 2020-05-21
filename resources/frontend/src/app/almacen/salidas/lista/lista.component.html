@@ -1,0 +1,86 @@
+<section class="profile" >
+    <div fxLayout="row" fxLayoutAlign="space-evenly center">
+        <section fxFlex="95" fxLayout="column" fxLayoutAlign="center" fxLayoutGap="10px">
+            <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+            <mat-card fxFlex.xs="100%" fxFlex="90%">
+                <div fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex fxLayout="row wrap">
+                        <mat-form-field fxFill appearance="outline">
+                            <mat-label>Buscar</mat-label>
+                            <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applyFilter()" placeholder="Buscar">
+                            <button matSuffix *ngIf="searchQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none" fxFlex.xs="100">
+                        <div fxFlex></div>
+                        <section class="search-button">
+                            <button mat-raised-button color="accent" (click)="applyFilter()">
+                                <mat-icon>search</mat-icon> Buscar
+                            </button>
+                        </section>
+                    </div>
+                </div>
+            </mat-card>
+
+            <section fxFlex.xs="100%" fxFlex="90%" fxLayout="row">
+                <div fxFlex></div>
+                <div fxFlex="none">
+                    <button mat-raised-button [routerLink]="'/almacen/salidas/nueva'" color="primary"><mat-icon>add_circle</mat-icon> Nueva Salida</button>
+                </div>
+            </section>
+            
+            <mat-card fxFlex.xs="100%" fxFlex="90%">
+                <div class="data-container ">
+                    <div class="data-table-container">
+                        <table #dataTable mat-table [dataSource]="dataSource" class="data-table" matSort>
+                            <!-- ID Column -->
+                            <ng-container matColumnDef="id">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+                                <td mat-cell *matCellDef="let row"> {{row.id}} </td>
+                            </ng-container>
+                    
+                            <!-- Username Column -->
+                            <ng-container matColumnDef="formulario">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header> Formulario </th>
+                                <td mat-cell *matCellDef="let row"> {{row.formulario_descripcion}} </td>
+                            </ng-container>
+                    
+                            <!-- Name Column -->
+                            <ng-container matColumnDef="persona" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Persona </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.persona_nombre}} </td>
+                            </ng-container>
+                    
+                            <!-- Email Column -->
+                            <ng-container matColumnDef="fecha_captura" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Fecha Captura </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.fecha_finalizado}} </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="actions">
+                                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                                <td mat-cell *matCellDef="let row; let i = index" width="1">
+                                    <button mat-raised-button color="primary" (click)="verRespuestas(row.id,i)"><mat-icon>remove_red_eye</mat-icon></button>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="noResultsFound">
+                                <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length">
+                                    No se encontraron registros 
+                                </td>
+                            </ng-container>
+                            
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                            <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+
+                            <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(dataSource!=null && dataSource.length==0)}"></tr>
+                        </table>
+                    </div>
+                    <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadLlenadoFormularios($event)"></mat-paginator>
+                </div>                
+            </mat-card>
+        </section>
+    </div>
+</section>

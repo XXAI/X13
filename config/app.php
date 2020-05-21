@@ -2,6 +2,9 @@
 
 return [
 
+    'servidor_id' => env('SERVIDOR_ID'),
+    'servidor_key' => env('SERVIDOR_KEY'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Name

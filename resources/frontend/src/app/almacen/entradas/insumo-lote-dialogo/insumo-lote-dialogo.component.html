@@ -1,0 +1,86 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none">
+        <div>
+            <div class="lista-insumos-item">
+                <div class="lista-insumos-item-etiqueta">
+                    <div class="lista-insumos-item-etiqueta-icono" [ngClass]="{'color-medicamento': insumo.tipo_insumo=='MED','color-mat-curacion': insumo.tipo_insumo=='MTC'}"><img src="{{insumo.icono}}" alt="Icon"></div>
+                    <div class="lista-insumos-item-etiqueta-texto">{{insumo.tipo_insumo}}</div>
+                </div>
+                <div class="lista-insumos-item-contenido">
+                    <div class="lista-insumos-item-cabecera">
+                        <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre}}</div>
+                        <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.info}}</div>
+                    </div>
+                    <div class="lista-insumos-item-texto">
+                        {{insumo.descripcion}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section fxFlex="none" fxLayout="column">
+        <div fxFlex>Nuevo Lote:</div>
+        <div fxFlex fxLayout="row" [formGroup]="formLote">
+            <mat-form-field fxFlex>
+                <mat-label>Lote</mat-label>
+                <input matInput formControlName="lote" required>
+                <mat-error *ngIf="formLote.get('lote').hasError('required')">Este campo es obligatorio</mat-error>
+            </mat-form-field>
+            <mat-form-field fxFlex>
+                <mat-label>Fecha Caducidad (aaaa-mm-dd)</mat-label>
+                <input matInput mascaraFecha formControlName="fecha_caducidad">
+                <mat-hint>Ejemplo: 1985-08-15</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex>
+                <mat-label>Código de Barras</mat-label>
+                <input matInput formControlName="codigo_barras">
+            </mat-form-field>
+            <mat-form-field fxFlex>
+                <mat-label>Cantidad</mat-label>
+                <input matInput formControlName="cantidad" required>
+                <mat-error *ngIf="formLote.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
+            </mat-form-field>
+        </div>
+        <div fxFlex fxLayout="row">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-button (click)="cancelarLote()">Cancelar</button>
+                <button mat-stroked-button color="primary" (click)="agregarLote()" [disabled]="!formLote.valid"><mat-icon>add_circle</mat-icon> Agregar</button>
+            </div>
+        </div>
+    </section>
+    <mat-divider></mat-divider>
+    <section fxFlex fxLayout="column">
+        <div fxFlex="none">
+            Lista de lotes
+            <mat-divider></mat-divider>
+        </div>
+        <div fxFlex style="overflow: auto;"> <!-- fxLayout="row raw"  -->
+            <mat-grid-list style="width: 100%;" cols="4" rowHeight="2:1">
+                <mat-grid-tile *ngFor="let item of listaLotes">
+                    <mat-grid-list class="inner-grid" style="width: 100%;" cols="4" rowHeight="2:1">
+                        <mat-grid-tile class="inner-grid-tile label">Lte:</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile" [colspan]="2">{{item.lote}}</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile" [rowspan]="2"><button mat-icon-button color="primary"><mat-icon>edit</mat-icon></button></mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile label">Cad:</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile" [colspan]="2">{{item.fecha_caducidad}}</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile label">Barr:</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile" [colspan]="2">{{item.codigo_barras}}</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile" [rowspan]="2"><button mat-icon-button color="warn"><mat-icon>delete</mat-icon></button></mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile label">Cant:</mat-grid-tile>
+                        <mat-grid-tile class="inner-grid-tile" [colspan]="2">{{item.cantidad | number:'1.0-0'}}</mat-grid-tile>
+                    </mat-grid-list>
+                </mat-grid-tile>
+            </mat-grid-list>
+        </div>
+    </section>
+    <section fxFlex="none">
+        <div fxLayout="row">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-button (click)="close()">Cancelar</button>&nbsp;
+                <button mat-raised-button color="primary"><mat-icon>playlist_add</mat-icon> Aplicar</button>
+            </div>
+        </div>
+    </section>
+</section>

@@ -11,7 +11,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::create([
+        \App\Models\Servidor::create([
+            'id'=> config('app.servidor_id'),
+            'nombre'=> 'Servidor Principal',
+            'secret_key'=> config('app.servidor_key'),
+            'tiene_internet'=> true,
+            'version'=> '0.1',
+            'principal'=> true
+        ]);
+
+        \App\Models\Usuario::create([
             'name' => 'Usuario Root',
             'username' => 'root',
             'password' => Hash::make('ssa.plataforma'),
@@ -19,9 +28,11 @@ class DatabaseSeeder extends Seeder
             'is_superuser' => 1,
             'avatar' => '/assets/avatars/50-king.svg'
         ]);
+
+        $this->call(PermissionsTableSeeder::class);
         
         //Carga de archivos CSV
-        $lista_csv = [
+        /*$lista_csv = [
             'permissions',
             'roles',
             'role_user',
@@ -42,6 +53,6 @@ class DatabaseSeeder extends Seeder
                 IGNORE 1 LINES", addslashes($archivo_csv));
             echo $query;
             DB::connection()->getpdo()->exec($query);
-        }
+        }*/
     }
 }

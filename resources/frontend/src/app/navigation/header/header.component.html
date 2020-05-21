@@ -2,8 +2,9 @@
     <!--button mat-icon-button aria-label="Ir al inicio" routerLink="/" fxShow.xs fxHide.gt-sm>
       <mat-icon>home</mat-icon>
     </button-->
-    <img src="{{(selectedApp)?selectedApp.icon:'assets/app-icon.png'}}" alt="" style="height: 60%; width:auto;" fxHide.xs="true">
-    <span style="margin-left:10px" *ngIf="!selectedApp"><a routerLink="/">Personal Activo</a></span> <span *ngIf="selectedApp">&nbsp; <a routerLink="{{selectedApp.route}}">{{selectedApp.name}}</a></span>
+    <img src="{{(headerIcon)?headerIcon:'assets/logo-icon.svg'}}" alt="" style="height: 60%; width:auto;" fxHide.xs="true">
+    <span style="margin-left:10px" *ngIf="!selectedApp"><a routerLink="/">SSADII</a></span> 
+    <span class="header-links" *ngIf="selectedApp"><a *ngFor="let link of appHeaderLinks" routerLink="{{link.route}}">{{link.name}}</a></span>
 
     <span class="spacer"></span>
 

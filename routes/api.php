@@ -37,7 +37,10 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('ejecutar-query',                    'API\Admin\DevReporterController@executeQuery');
     Route::get('exportar-query',                    'API\Admin\DevReporterController@exportExcel');
 
-    
+    /**
+     * Modulos Almacen
+     */
+    Route::apiResource('almacen-entradas',          'API\Modulos\AlmacenEntradaController');
 });
 
 Route::middleware('auth')->get('/avatar-images', function (Request $request) {

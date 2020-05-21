@@ -8,6 +8,16 @@ a:active {
     color: lightgray;
 }
 
+.header-links > a{
+ margin-left:4px;
+ margin-right:4px;
+}
+
+a + a::before {
+    content: " > ";
+}
+
+
 .navigation-items {
     list-style: none;
     margin: 0;
