@@ -2,18 +2,20 @@
     padding:0px;
 }
 
-.color-medicamento{
+.medicamento-bg-color{
     background-color: cornflowerblue;
 }
 
-.color-mat-curacion{
+.mat-curacion-bg-color{
     background-color: coral;
 }
 
 .lista-insumos-item{
     overflow: hidden;
     padding:8px;
-    background-color: rgb(233, 224, 224);
+    /*background-color: rgb(233, 224, 224);*/
+    margin: -10px -10px 0px -10px;
+    color:whitesmoke;
 }
 
 /*.lista-insumos-item-contenido{
@@ -68,7 +70,7 @@
 }
 
 .lista-insumos-item-texto{
-    height: 65px;
+    height: 60px;
     display: block;
     font-size: 14px;
     padding: 5px 0;
@@ -77,15 +79,34 @@
     text-justify: inter-word;
 }
 
-mat-grid-tile {
-    background: lightblue;
+.outer-grid-tile{
+    border: solid thin lightblue;
+    /*background: lightblue;*/
+    background-color: whitesmoke;
+}
+
+.outer-grid-tile:hover{    
+    z-index: 99999;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    text-shadow: 1px 1px darkgrey;
+    background-color: lightskyblue;
+    border: solid thin steelblue;
+    background: white;
 }
 
 .inner-grid-tile{
-    background: white;
+    /*background: white;*/
+    border-bottom:solid thin lightseagreen;
 }
 
 .inner-grid-tile.label{
     text-align: right;
     font-weight: bold;
+}
+
+.outer-grid-tile.selected{
+    background-color: steelblue;
+    color:lightblue;
 }

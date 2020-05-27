@@ -83,11 +83,11 @@
                     <mat-divider [inset]="true"></mat-divider>
                     <section fxFlex style="overflow: hidden;">
                         <div style="overflow: auto; height: 100%;">
-                            <div *ngFor="let insumo of listadoInsumos; index as i;">
-                                <div class="lista-insumos-item" [ngClass]="{'selected': i==indexInsumoSeleccioando}">
-                                    <div class="lista-insumos-item-etiqueta">
-                                        <div class="lista-insumos-item-etiqueta-icono" [ngClass]="{'color-medicamento': insumo.tipo_insumo=='MED','color-mat-curacion': insumo.tipo_insumo=='MTC'}"><img src="{{insumo.icono}}" alt="Icon"></div>
-                                        <div class="lista-insumos-item-etiqueta-texto">{{insumo.tipo_insumo}}</div>
+                            <div *ngFor="let insumo of listadoInsumos;">
+                                <div class="lista-insumos-item" [ngClass]="{'selected': insumo.clave==claveInsumoSeleccionado}">
+                                    <div class="lista-insumos-item-etiqueta" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
+                                        <div class="lista-insumos-item-etiqueta-icono"><img src="{{insumo.icono}}" alt="Icon"></div>
+                                        <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
                                     </div>
                                     <div class="lista-insumos-item-contenido">
                                         <div class="lista-insumos-item-cabecera">
@@ -97,11 +97,14 @@
                                         <div class="lista-insumos-item-texto">
                                             {{insumo.descripcion}}
                                         </div>
-                                        <div>
-                                            <button mat-stroked-button color="primary" fxFlex (click)="agregarLoteInsumo(insumo,i)">
-                                                <mat-icon>launch</mat-icon> Agregar Lote <mat-icon>chevron_right</mat-icon>
-                                            </button>
+                                    </div>
+                                    <div class="lista-insumo-item-acciones" fxLayout="row">
+                                        <div fxFlex style="padding: 8px 0px;">
+                                            Stock: 0
                                         </div>
+                                        <button fxFlex="none" mat-flat-button (click)="agregarInsumo(insumo)">
+                                            <mat-icon>playlist_add</mat-icon>
+                                        </button>
                                     </div>
                                 </div>
                                 <mat-divider [inset]="true"></mat-divider>
@@ -120,16 +123,43 @@
             <div fxFlex="none" fxLayout="row">
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <mat-button-toggle-group appearance="legacy" name="fontStyle" aria-label="Font Style">
+                    <mat-button-toggle-group appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo">
                         <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
-                        <mat-button-toggle value="MED">Medicamentos: {{totales.medicamentos | number}}</mat-button-toggle>
-                        <mat-button-toggle value="MTC">Material de Curación: {{totales.mat_curacion | number}}</mat-button-toggle>
+                        <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{totales.medicamentos | number}}</mat-button-toggle>
+                        <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{totales.mat_curacion | number}}</mat-button-toggle>
                     </mat-button-toggle-group>
                 </div>
                 <div fxFlex></div>
             </div>
             <mat-divider [inset]="true"></mat-divider>
-            <div fxFlex>lista</div>
+            <div fxFlex style="overflow: auto; background-color: whitesmoke;">
+                <mat-grid-list cols="3" rowHeight="1:0.8">
+                    <mat-grid-tile class="insumo-lotes-tile" *ngFor="let insumo of listadoLotesMovimiento; index as i;" [ngClass]="{'medicamento-bg-color':insumo.tipo_insumo=='MED','mat-curacion-bg-color':insumo.tipo_insumo=='MTC'}">
+                        <div fxFill fxLayout="column">
+                            <div fxFlex="none" style="padding:8px; color:whitesmoke; text-align: center;">
+                                {{insumo.clave}}
+                            </div>
+                            <div fxFlex style="margin: 0px 8px ; background-color:whitesmoke;"><p>{{insumo.nombre}}</p></div>
+                            <div fxFlex="none" fxLayout="row" style="padding: 5px;">
+                                <div fxFlex="none">
+                                    <button mat-raised-button color="warn" style="padding: 0px 8px; min-width: 0px;"><mat-icon>delete</mat-icon></button>
+                                </div>
+                                <div fxFlex="none" style="text-align: center; color:whitesmoke; padding:8px;">L: {{ insumo.lotes.length | number }}</div>
+                                <div fxFlex style="text-align: center; color:whitesmoke; padding:8px;">P: {{ insumo.total_piezas | number }}</div>
+                                <div fxFlex="none">
+                                    <button mat-raised-button (click)="agregarLoteInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;"><mat-icon>playlist_add</mat-icon></button>
+                                </div>
+                            </div>
+                        </div>
+                        <!--mat-grid-list cols="2" rowHeight="1:0.5" style="width: 100%; color:whitesmoke;">
+                            <mat-grid-tile [colspan]="2">{{insumo.nombre}}</mat-grid-tile>
+                            <mat-grid-tile [colspan]="2">cosas, casas, que cacas?</mat-grid-tile>
+                            <mat-grid-tile>editar</mat-grid-tile>
+                            <mat-grid-tile>eliminar</mat-grid-tile>
+                        </mat-grid-list-->
+                    </mat-grid-tile>
+                </mat-grid-list>
+            </div>
         </mat-card>
     </section>
 </section>

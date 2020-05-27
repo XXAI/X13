@@ -10,4 +10,15 @@ export class CustomValidator {
         };
     }
 
+    static isValidDate(format = "YYYY-MM-dd"){
+        return (control: AbstractControl): { [key:string]:any } | null =>{
+            if(control.value != null && control.value.length >= 10){
+                //let date = new Date(control.value.substring(0,4),(control.value.substring(5,7)-1), control.value.substring(8,10),12,0,0,0);
+                let value = control.value.substring(0,10) + 'T00:00:00';
+                let date = new Date(value);
+                console.log(date);
+                return date.toString() == 'Invalid Date' ? { isValidDate:true } : null; 
+            }
+        };
+    }
 }

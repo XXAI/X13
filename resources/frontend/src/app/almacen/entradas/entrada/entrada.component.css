@@ -1,9 +1,25 @@
-.color-medicamento{
-    background-color: cornflowerblue;
+.medicamento-bg-color{
+    background-color: cornflowerblue !important;
 }
 
-.color-mat-curacion{
-    background-color: coral;
+.mat-curacion-bg-color{
+    background-color: coral !important;
+}
+
+.medicamento-color{
+    color: cornflowerblue !important;
+}
+
+.mat-curacion-color{
+    color: coral !important;
+}
+
+.icono-tipo-insumo{
+    height: 25px;
+}
+
+:host ::ng-deep .filtro-tipo-insumo .mat-button-toggle-button{
+    text-shadow: 1px 1px black !important;
 }
 
 .mat-button-toggle {
@@ -42,16 +58,29 @@
     height: 272px;
     overflow: hidden;
     padding:8px;
-    background-color: rgb(233, 224, 224);
+    background-color:whitesmoke;
 }
+
 
 /*.lista-insumos-item-contenido{
     padding: 0px 8px 8px 8px;
 }*/
 
+.lista-insumo-item-acciones{
+    /* flex-direction: row;
+    box-sizing: border-box;
+    display: flex;
+    display: block; */
+    margin: 0px -8px -8px -8px;
+    padding: 9px 8px;
+    background-color: lightgray;
+    filter: brightness(1.1);
+}
+
 .lista-insumos-item:hover{
     /*background-color: lightgoldenrodyellow;*/
-    background-color: whitesmoke;
+    border: dashed thin black;
+    background-color: white;
 }
 
 .lista-insumos-item.selected{
@@ -66,7 +95,9 @@
     height: 49px;
     width: 100%;
     display: table;
-    border-radius: 2%;
+    color: whitesmoke;
+    margin: -8px -8px 0px -8px;
+    padding: 0px 8px 0px 8px;
 }
 
 .lista-insumos-item .lista-insumos-item-etiqueta-icono{
@@ -117,4 +148,14 @@
     text-overflow: ellipsis;
     text-align: justify;
     text-justify: inter-word;
+}
+
+.insumo-lotes-tile:hover {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border: dashed thin black;
+    z-index: 99999;
+
+    filter: brightness(125%);
 }
