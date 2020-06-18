@@ -159,3 +159,26 @@
 
     filter: brightness(125%);
 }
+
+.small-search-input{
+    padding: 0px 10px 0px 0px;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+

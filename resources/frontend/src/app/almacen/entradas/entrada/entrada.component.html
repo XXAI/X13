@@ -19,6 +19,7 @@
                         <input matInput mascaraFecha formControlName="fecha_movimiento" required>
                         <mat-hint>Ejemplo: 1985-08-15</mat-hint>
                         <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+                        <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('isValidDate')">La fecha no es valida</mat-error>
                     </mat-form-field>
                     <mat-form-field fxFlex="100">
                         <mat-label>Folio</mat-label>
@@ -52,7 +53,7 @@
                 <div fxFlex></div>
                 <div fxFlex="none" fxLayout="row">
                     <div fxFlex></div>
-                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = true"><mat-icon>chevron_right</mat-icon> Insumos</button>
+                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = true" [disabled]="!formEntrada.valid"><mat-icon>chevron_right</mat-icon> Insumos</button>
                 </div>
             </mat-card>
             <mat-card fxFlex="100" fxLayout="column" *ngIf="mostrarBuscadorInsumos">
@@ -67,7 +68,7 @@
                                         <mat-icon>close</mat-icon>
                                     </button>
                                     <mat-hint>
-                                        <mat-radio-group [(ngModel)]="filtroTipoInsumo" aria-label="Select an option">
+                                        <mat-radio-group [(ngModel)]="busquedaTipoInsumo" aria-label="Select an option">
                                             <mat-radio-button color="primary" value="*">Todos</mat-radio-button>
                                             <mat-radio-button value="MED">Meds</mat-radio-button>
                                             <mat-radio-button value="MTC">Mat Curación</mat-radio-button>
@@ -82,8 +83,8 @@
                     </section>
                     <mat-divider [inset]="true"></mat-divider>
                     <section fxFlex style="overflow: hidden;">
-                        <div style="overflow: auto; height: 100%;">
-                            <div *ngFor="let insumo of listadoInsumos;">
+                        <cdk-virtual-scroll-viewport itemSize="289" style="overflow: auto; height: 100%;">
+                            <div *cdkVirtualFor="let insumo of listadoInsumos;">
                                 <div class="lista-insumos-item" [ngClass]="{'selected': insumo.clave==claveInsumoSeleccionado}">
                                     <div class="lista-insumos-item-etiqueta" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
                                         <div class="lista-insumos-item-etiqueta-icono"><img src="{{insumo.icono}}" alt="Icon"></div>
@@ -103,38 +104,45 @@
                                             Stock: 0
                                         </div>
                                         <button fxFlex="none" mat-flat-button (click)="agregarInsumo(insumo)">
-                                            <mat-icon>playlist_add</mat-icon>
+                                            <mat-icon>{{(controlInsumosAgregados[insumo.id])?'subject':'playlist_add'}}</mat-icon>
                                         </button>
                                     </div>
                                 </div>
                                 <mat-divider [inset]="true"></mat-divider>
                             </div>
-                        </div>
+                        </cdk-virtual-scroll-viewport>
                     </section>
                 </div>
-                <div fxFlex="none" fxLayout="row">
+                <mat-divider [inset]="true"></mat-divider>
+                <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
                     <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = false"><mat-icon>chevron_left</mat-icon> Datos Entrada</button>
                     <div fxFlex></div>
+                    <div fxFlex="none">
+                        <mat-hint>Resultados: {{listadoInsumos.length | number}}</mat-hint>
+                    </div>
                 </div>
             </mat-card>
         </section>
         
         <mat-card fxFlex fxLayout="column" fxLayoutGap="5px">
             <div fxFlex="none" fxLayout="row">
-                <div fxFlex></div>
+                <div fxFlex class="small-search-input">
+                    <mat-form-field appearance="outline">
+                        <input matInput [(ngModel)]="filtroInsumos" (keyup.enter)="filtrarInsumos()" placeholder="Filtrar">
+                    </mat-form-field>
+                </div>
                 <div fxFlex="none">
-                    <mat-button-toggle-group appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo">
+                    <mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="filtrarInsumos()">
                         <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
                         <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{totales.medicamentos | number}}</mat-button-toggle>
                         <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{totales.mat_curacion | number}}</mat-button-toggle>
                     </mat-button-toggle-group>
                 </div>
-                <div fxFlex></div>
             </div>
             <mat-divider [inset]="true"></mat-divider>
             <div fxFlex style="overflow: auto; background-color: whitesmoke;">
-                <mat-grid-list cols="3" rowHeight="1:0.8">
-                    <mat-grid-tile class="insumo-lotes-tile" *ngFor="let insumo of listadoLotesMovimiento; index as i;" [ngClass]="{'medicamento-bg-color':insumo.tipo_insumo=='MED','mat-curacion-bg-color':insumo.tipo_insumo=='MTC'}">
+                <mat-grid-list cols="3" rowHeight="176">
+                    <mat-grid-tile class="insumo-lotes-tile" *ngFor="let insumo of filtroInsumosMovimiento; index as i;" [ngClass]="{'medicamento-bg-color':insumo.tipo_insumo=='MED','mat-curacion-bg-color':insumo.tipo_insumo=='MTC'}">
                         <div fxFill fxLayout="column">
                             <div fxFlex="none" style="padding:8px; color:whitesmoke; text-align: center;">
                                 {{insumo.clave}}
@@ -142,12 +150,12 @@
                             <div fxFlex style="margin: 0px 8px ; background-color:whitesmoke;"><p>{{insumo.nombre}}</p></div>
                             <div fxFlex="none" fxLayout="row" style="padding: 5px;">
                                 <div fxFlex="none">
-                                    <button mat-raised-button color="warn" style="padding: 0px 8px; min-width: 0px;"><mat-icon>delete</mat-icon></button>
+                                    <button mat-raised-button (click)="eliminarInsumo(i)" color="warn" style="padding: 0px 8px; min-width: 0px;"><mat-icon>delete</mat-icon></button>
                                 </div>
                                 <div fxFlex="none" style="text-align: center; color:whitesmoke; padding:8px;">L: {{ insumo.lotes.length | number }}</div>
                                 <div fxFlex style="text-align: center; color:whitesmoke; padding:8px;">P: {{ insumo.total_piezas | number }}</div>
                                 <div fxFlex="none">
-                                    <button mat-raised-button (click)="agregarLoteInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;"><mat-icon>playlist_add</mat-icon></button>
+                                    <button mat-raised-button (click)="agregarLoteInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;"><mat-icon>subject</mat-icon></button>
                                 </div>
                             </div>
                         </div>
@@ -159,6 +167,9 @@
                         </mat-grid-list-->
                     </mat-grid-tile>
                 </mat-grid-list>
+            </div>
+            <div fxFlex="none">
+                <!-- Puede haber algo -->
             </div>
         </mat-card>
     </section>

@@ -1,4 +1,4 @@
-<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;" (document:keydown.control.enter)="aceptarLotes()">
     <section fxFlex="none">
         <div>
             <div class="lista-insumos-item" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
@@ -38,7 +38,7 @@
             </mat-form-field>
             <mat-form-field fxFlex>
                 <mat-label>Cantidad</mat-label>
-                <input matInput formControlName="cantidad" (keydown.enter)="agregarLote()" required>
+                <input matInput formControlName="cantidad" (keydown.enter)="agregarLote()" type="number" required>
                 <mat-error *ngIf="formLote.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
         </div>
@@ -91,7 +91,7 @@
             <div fxFlex></div>
             <div fxFlex="none">
                 <button mat-button (click)="close()">Cancelar</button>&nbsp;
-                <button mat-raised-button color="primary" (click)="aceptarLotes()"><mat-icon>playlist_add</mat-icon> Aplicar</button>
+                <button mat-raised-button color="primary" (click)="aceptarLotes()"><mat-icon>playlist_add_check</mat-icon> Aplicar</button>
             </div>
         </div>
     </section>
