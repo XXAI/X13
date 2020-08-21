@@ -16,16 +16,14 @@ class CreateTableInsumosMedicos extends Migration
         Schema::create('insumos_medicos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('clave',25);
-            $table->string('tipo_insumo',3);
-            $table->string('descripcion');
-            $table->bigInteger('nombre_generico_id')->unsigned()->nullable();
+            $table->string('tipo_insumo',3)->comment('MED = Medicamento; MTC = Material de Curación');
+            $table->string('nombre_generico')->nullable();
+            $table->text('descripcion');
             $table->boolean('es_unidosis')->default(false);
             $table->boolean('tiene_fecha_caducidad')->default(false);
-            $table->boolean('descontinuado')->default(false);
+            $table->date('fecha_descontinuado')->nullable();
             $table->timestamps();
             $table->softDeletes();
-
-            $table->foreign('nombre_generico_id')->references('id')->on('nombres_genericos');
         });
     }
 

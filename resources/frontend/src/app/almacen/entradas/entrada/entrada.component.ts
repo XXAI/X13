@@ -1,9 +1,13 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material';
 import { InsumoLoteDialogoComponent } from '../insumo-lote-dialogo/insumo-lote-dialogo.component';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import { CustomValidator } from '../../../utils/classes/custom-validator';
+import { EntradasService } from '../entradas.service';
+import { SharedService } from '../../../shared/shared.service';
 import { startWith, map } from 'rxjs/operators';
 
 @Component({
@@ -12,7 +16,11 @@ import { startWith, map } from 'rxjs/operators';
   styleUrls: ['./entrada.component.css']
 })
 export class EntradaComponent implements OnInit {
-  constructor(private formBuilder: FormBuilder, private dialog: MatDialog) { }
+  @ViewChild(MatPaginator, {static: false}) insumosPaginator: MatPaginator;
+
+  constructor(private formBuilder: FormBuilder, private dialog: MatDialog, private entradasService: EntradasService, private sharedService: SharedService) { }
+
+  isLoadingInsumos:boolean;
 
   formEntrada:FormGroup;
   catalogos: any;
@@ -33,10 +41,18 @@ export class EntradaComponent implements OnInit {
 
   filtroInsumos:string;
   filtroTipoInsumos:string;
+
+  pageEvent: PageEvent;
+  resultsLength: number = 0;
+  currentPage: number = 0;
+  pageSize: number = 9;
+  dataSourceInsumos: MatTableDataSource<any>;
   
   ngOnInit() {
     this.mostrarBuscadorInsumos = false;
     this.busquedaTipoInsumo = '*';
+    this.filtroTipoInsumos = '*';
+    this.filtroInsumos = '';
     this.listadoInsumosMovimiento = [];
     this.controlInsumosAgregados = {};
     this.listadoInsumos = [];
@@ -50,7 +66,7 @@ export class EntradaComponent implements OnInit {
       observaciones:[''],
     });
 
-    this.filtrarInsumos();
+    this.cargarPaginaInsumos();
 
     this.catalogos = {programas:[]};
 
@@ -61,12 +77,79 @@ export class EntradaComponent implements OnInit {
     }
   }
 
+  cargarPaginaInsumos(){
+    if(this.dataSourceInsumos){
+      this.dataSourceInsumos.disconnect();
+    }
+
+    this.dataSourceInsumos = new MatTableDataSource<any>(this.listadoInsumosMovimiento);
+    this.dataSourceInsumos.paginator = this.insumosPaginator;
+
+    this.dataSourceInsumos.filterPredicate = (data:any, filter:string) => {
+      let filtroTexto:boolean;
+      let filtroTipo:boolean;
+      let filtros = filter.split('|');
+
+      //index:0 = tipo insumo
+      if(filtros[0] != '*'){
+        filtroTipo = data.tipo_insumo == filtros[0];
+      }else{
+        filtroTipo = true;
+      }
+      
+      //index:1 = texto a buscar
+      if(filtros[1]){
+        filtros[1] = filtros[1].toLowerCase()
+        filtroTexto = data.clave.toLowerCase().includes(filtros[1]) || data.nombre_generico.toLowerCase().includes(filtros[1]) || data.descripcion.toLowerCase().includes(filtros[1]);
+      }else{
+        filtroTexto = true;
+      }
+
+      return filtroTexto && filtroTipo;
+    };
+    
+    this.filtroInsumosMovimiento = this.dataSourceInsumos.connect().value;
+  }
+
+  aplicarFiltroInsumos(){
+    let filter_value;
+
+    if(this.filtroInsumos || this.filtroTipoInsumos != '*'){
+      filter_value = this.filtroTipoInsumos + '|' + this.filtroInsumos;
+    }
+    
+    this.dataSourceInsumos.filter = filter_value;
+    this.filtroInsumosMovimiento = this.dataSourceInsumos.connect().value;
+  }
+
   applySearch(){
     this.listadoInsumos = [];
-    /*this.selectedItemIndex = -1;
-    this.paginator.pageIndex = 0;
-    this.paginator.pageSize = this.pageSize;
-    this.loadListadoLlamadas(null);*/
+    this.isLoadingInsumos = true;
+    let params = {
+      query: this.insumoQuery,
+      tipo_insumo: this.busquedaTipoInsumo
+    }
+
+    this.entradasService.buscarInsumos(params).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          this.listadoInsumos = response.data;
+        }
+        this.isLoadingInsumos = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingInsumos = false;
+      }
+    );
+    /*
     let total_resultados = Math.floor(Math.random() * (150 - 1 + 1) + 1);
     for (let index = 0; index < total_resultados; index++) {
       let tipo_insumo = 0;
@@ -96,27 +179,7 @@ export class EntradaComponent implements OnInit {
         descripcion:'The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan. A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally bred for hunting.'
       });
     }
-  }
-
-  private filtrarInsumos(){
-    let filterValue;
-    let filterTipoInsumo;
-
-    if(this.filtroInsumos){
-      filterValue = this.filtroInsumos.toLowerCase();
-    }
-
-    if(this.filtroTipoInsumos != '*'){
-      filterTipoInsumo = this.filtroTipoInsumos;
-    }
-    //TODO:Agregar filtros por tipo de medicamento
-    if(filterValue || filterTipoInsumo){
-      this.filtroInsumosMovimiento = this.listadoInsumosMovimiento.filter(
-        option => (!filterValue || ( filterValue && (option.clave.toLowerCase().includes(filterValue.toLowerCase()) || option.nombre.toLowerCase().includes(filterValue.toLowerCase())) )) && ( !filterTipoInsumo || ( filterTipoInsumo && (option.tipo_insumo == filterTipoInsumo) ) )
-      );  
-    }else{
-      this.filtroInsumosMovimiento = this.listadoInsumosMovimiento;
-    }
+    */
   }
 
   agregarInsumo(insumo){
@@ -162,7 +225,7 @@ export class EntradaComponent implements OnInit {
           this.listadoInsumosMovimiento[index] = response;
         }
 
-        this.filtrarInsumos();
+        this.cargarPaginaInsumos();
       }else{
         console.log('Cancelar');
       }
@@ -188,7 +251,7 @@ export class EntradaComponent implements OnInit {
         this.controlInsumosAgregados[insumo.id] = false;
         this.listadoInsumosMovimiento.splice(index,1);
 
-        this.filtrarInsumos();
+        this.cargarPaginaInsumos();
       }
     });
   }

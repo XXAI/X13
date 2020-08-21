@@ -41,6 +41,11 @@ Route::group(['middleware'=>'auth'],function($router){
      * Modulos Almacen
      */
     Route::apiResource('almacen-entradas',          'API\Modulos\AlmacenEntradaController');
+
+    /*
+    *   Modulos generales
+    */
+    Route::apiResource('insumos-medicos',          'API\Modulos\InsumosMedicosController');
 });
 
 Route::middleware('auth')->get('/avatar-images', function (Request $request) {

@@ -53,7 +53,7 @@
                 <div fxFlex></div>
                 <div fxFlex="none" fxLayout="row">
                     <div fxFlex></div>
-                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = true" [disabled]="!formEntrada.valid"><mat-icon>chevron_right</mat-icon> Insumos</button>
+                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = true" [disabled]="false && !formEntrada.valid"><mat-icon>chevron_right</mat-icon> Insumos</button>
                 </div>
             </mat-card>
             <mat-card fxFlex="100" fxLayout="column" *ngIf="mostrarBuscadorInsumos">
@@ -76,7 +76,7 @@
                                     </mat-hint>
                                 </mat-form-field>
                             </div>
-                            <button fxFlex mat-raised-button color="accent" (click)="applySearch()">
+                            <button fxFlex mat-raised-button color="accent" (click)="applySearch()" [disabled]="isLoadingInsumos">
                                 <mat-icon>search</mat-icon> Buscar
                             </button>
                         </div>
@@ -87,12 +87,12 @@
                             <div *cdkVirtualFor="let insumo of listadoInsumos;">
                                 <div class="lista-insumos-item" [ngClass]="{'selected': insumo.clave==claveInsumoSeleccionado}">
                                     <div class="lista-insumos-item-etiqueta" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
-                                        <div class="lista-insumos-item-etiqueta-icono"><img src="{{insumo.icono}}" alt="Icon"></div>
+                                        <div class="lista-insumos-item-etiqueta-icono"><img src="{{(insumo.tipo_insumo=='MED')?iconoMedicamento:iconoMatCuracion}}" alt="Icon"></div>
                                         <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
                                     </div>
                                     <div class="lista-insumos-item-contenido">
                                         <div class="lista-insumos-item-cabecera">
-                                            <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre}}</div>
+                                            <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre_generico}}</div>
                                             <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.info}}</div>
                                         </div>
                                         <div class="lista-insumos-item-texto">
@@ -118,7 +118,7 @@
                     <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = false"><mat-icon>chevron_left</mat-icon> Datos Entrada</button>
                     <div fxFlex></div>
                     <div fxFlex="none">
-                        <mat-hint>Resultados: {{listadoInsumos.length | number}}</mat-hint>
+                        <mat-hint>Resultados:<br> {{listadoInsumos.length | number}}</mat-hint>
                     </div>
                 </div>
             </mat-card>
@@ -128,11 +128,11 @@
             <div fxFlex="none" fxLayout="row">
                 <div fxFlex class="small-search-input">
                     <mat-form-field appearance="outline">
-                        <input matInput [(ngModel)]="filtroInsumos" (keyup.enter)="filtrarInsumos()" placeholder="Filtrar">
+                        <input matInput [(ngModel)]="filtroInsumos" (keyup.enter)="aplicarFiltroInsumos()" placeholder="Filtrar">
                     </mat-form-field>
                 </div>
                 <div fxFlex="none">
-                    <mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="filtrarInsumos()">
+                    <mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="aplicarFiltroInsumos()">
                         <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
                         <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{totales.medicamentos | number}}</mat-button-toggle>
                         <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{totales.mat_curacion | number}}</mat-button-toggle>
@@ -147,7 +147,7 @@
                             <div fxFlex="none" style="padding:8px; color:whitesmoke; text-align: center;">
                                 {{insumo.clave}}
                             </div>
-                            <div fxFlex style="margin: 0px 8px ; background-color:whitesmoke;"><p>{{insumo.nombre}}</p></div>
+                            <div fxFlex style="margin: 0px 8px ; background-color:whitesmoke;"><p>{{insumo.nombre_generico}}</p></div>
                             <div fxFlex="none" fxLayout="row" style="padding: 5px;">
                                 <div fxFlex="none">
                                     <button mat-raised-button (click)="eliminarInsumo(i)" color="warn" style="padding: 0px 8px; min-width: 0px;"><mat-icon>delete</mat-icon></button>
@@ -170,6 +170,7 @@
             </div>
             <div fxFlex="none">
                 <!-- Puede haber algo -->
+                <mat-paginator #insumosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaInsumos($event)"></mat-paginator>
             </div>
         </mat-card>
     </section>

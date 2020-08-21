@@ -20,7 +20,7 @@ class CreateTableMedicamentos extends Migration
             $table->string('concentracion',150)->nullable();
             $table->string('contenido')->nullable();
             $table->decimal('cantidad_x_envase',15,2)->nullable();
-            $table->string('indicaciones')->nullable();
+            $table->text('indicaciones')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

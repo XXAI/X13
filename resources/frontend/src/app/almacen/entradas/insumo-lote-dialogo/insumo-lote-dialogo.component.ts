@@ -21,8 +21,16 @@ export class InsumoLoteDialogoComponent implements OnInit {
       private formBuilder: FormBuilder
     ) { }
 
+    fechaMovimiento:any;
+    fechaActual:any;
+
+    estatusCaducidad:number; // 0 = Sin Caducidad, 1 = Normal, 2 = Por Caducar, 3 = Caducado
+
     insumo:any;
     formLote:FormGroup;
+
+    iconoMedicamento:string = 'assets/icons-ui/MED.svg';
+    iconoMatCuracion:string = 'assets/icons-ui/MTC.svg';
 
     loteEditIndex:number;
 
@@ -42,19 +50,61 @@ export class InsumoLoteDialogoComponent implements OnInit {
         this.listaLotes = this.insumo.lotes;
       }
 
-      this.formLote = this.formBuilder.group({
+      let formConfig:any = {
         id:[''],
         lote:['',Validators.required],
-        fecha_caducidad:['',CustomValidator.isValidDate()],
+        //fecha_caducidad:['',CustomValidator.isValidDate()],
         codigo_barras:[''],
         cantidad:['',Validators.required]
-      });
+      };
+
+      if(this.insumo.tiene_fecha_caducidad){
+        this.estatusCaducidad = 1;
+        formConfig.fecha_caducidad = ['',[Validators.required,CustomValidator.isValidDate()]];
+      }else{
+        this.estatusCaducidad = 0;
+        formConfig.fecha_caducidad = ['',CustomValidator.isValidDate()];
+      }
+      
+      this.formLote = this.formBuilder.group(formConfig);
       this.formLote.reset();
+
+      this.fechaActual = new Date();
+    }
+
+    verificarFechaCaducidad(){
+      this.estatusCaducidad = 1;
+
+      if(this.insumo.tiene_fecha_caducidad){
+        let value = this.formLote.get('fecha_caducidad').value + 'T00:00:00';
+        let fecha_caducidad = new Date(value);
+        
+        let fecha_comparacion = this.fechaActual;
+        if(this.fechaMovimiento){
+          fecha_comparacion = this.fechaMovimiento;
+        }
+
+        let diferencia_fechas = new Date(fecha_caducidad.getTime() - fecha_comparacion.getTime());
+        let diferencia_dias = Math.floor(diferencia_fechas.getTime() / (1000*60*60*24));
+
+        console.log(diferencia_dias);
+
+        if (diferencia_dias < 0){
+          this.estatusCaducidad = 3; //Caducado
+        }else if (diferencia_dias >= 60){
+          this.estatusCaducidad = 1; //Normal
+        }else{
+          this.estatusCaducidad = 2; //Por caducar
+        }
+      }
     }
 
     agregarLote(){
       if(this.formLote.valid){
+        this.verificarFechaCaducidad();
+
         let loteData = this.formLote.value;
+        loteData.estatusCaducidad = this.estatusCaducidad;
 
         if(this.loteEditIndex >= 0){
           this.insumo.total_piezas -= this.listaLotes[this.loteEditIndex].cantidad;
@@ -68,6 +118,7 @@ export class InsumoLoteDialogoComponent implements OnInit {
         
         this.loteInput.nativeElement.focus();
         this.formLote.reset();
+        this.estatusCaducidad = 1;
       }else{
         this.formLote.markAllAsTouched();
       }
@@ -76,6 +127,7 @@ export class InsumoLoteDialogoComponent implements OnInit {
     editarLote(index:number){
       let loteEditar = this.listaLotes[index];
       this.formLote.patchValue(loteEditar);
+      this.estatusCaducidad = loteEditar.estatusCaducidad;
       this.loteEditIndex = index;
     }
 
@@ -90,6 +142,7 @@ export class InsumoLoteDialogoComponent implements OnInit {
       this.formLote.reset();
       this.loteEditIndex = -1;
       this.loteInput.nativeElement.focus();
+      this.estatusCaducidad = 1;
     }
 
     aceptarLotes(){

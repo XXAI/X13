@@ -81,6 +81,7 @@
     /*background-color: lightgoldenrodyellow;*/
     border: dashed thin black;
     background-color: white;
+    cursor: default;
 }
 
 .lista-insumos-item.selected{

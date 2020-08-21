@@ -3,12 +3,14 @@
         <div>
             <div class="lista-insumos-item" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
                 <div class="lista-insumos-item-etiqueta">
-                    <div class="lista-insumos-item-etiqueta-icono" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}"><img src="{{insumo.icono}}" alt="Icon"></div>
+                    <div class="lista-insumos-item-etiqueta-icono" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
+                        <img src="{{(insumo.tipo_insumo=='MED')?iconoMedicamento:iconoMatCuracion}}" alt="Icon">
+                    </div>
                     <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
                 </div>
                 <div class="lista-insumos-item-contenido">
                     <div class="lista-insumos-item-cabecera">
-                        <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre}}</div>
+                        <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre_generico}}</div>
                         <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.info}}</div>
                     </div>
                     <div class="lista-insumos-item-texto">
@@ -19,7 +21,10 @@
         </div>
     </section>
     <section fxFlex="none" fxLayout="column">
-        <div fxFlex>Nuevo Lote:</div>
+        <div fxFlex class="caducidad-insumo">
+            Nuevo Lote: 
+            <span [ngClass]="{'caducado':estatusCaducidad == 3, 'por-caducar': estatusCaducidad == 2}" *ngIf="insumo.tiene_fecha_caducidad && estatusCaducidad > 1"> Lote {{(estatusCaducidad == 2)?'Por Caducar':'Caducado'}}</span>
+        </div>
         <div fxFlex fxLayout="row" [formGroup]="formLote">
             <mat-form-field fxFlex>
                 <mat-label>Lote</mat-label>
@@ -27,10 +32,12 @@
                 <mat-error *ngIf="formLote.get('lote').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
             <mat-form-field fxFlex>
-                <mat-label>Fecha Caducidad (aaaa-mm-dd)</mat-label>
-                <input matInput mascaraFecha formControlName="fecha_caducidad" (keydown.enter)="agregarLote()">
-                <mat-hint>Ejemplo: 1985-08-15</mat-hint>
+                <mat-label>Fecha Caducidad</mat-label>
+                <input matInput mascaraFecha formControlName="fecha_caducidad" [required]="insumo.tiene_fecha_caducidad > 0" (keydown.enter)="agregarLote()" (blur)="verificarFechaCaducidad()">
+                <mat-hint>Formato: aaaa-mm-dd</mat-hint>
+                <mat-icon *ngIf="estatusCaducidad > 1" matPrefix color="warn">warning</mat-icon>
                 <mat-error *ngIf="formLote.get('fecha_caducidad').hasError('isValidDate')">La fecha no es valida</mat-error>
+                <mat-error *ngIf="formLote.get('lote').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
             <mat-form-field fxFlex>
                 <mat-label>Código de Barras</mat-label>
@@ -42,6 +49,9 @@
                 <mat-error *ngIf="formLote.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
         </div>
+        <!--div fxFlex fxLayout="column" class="caducidad-insumo" *ngIf="insumo.tiene_fecha_caducidad && estatusCaducidad > 1">
+            <div fxFlex [ngClass]="{'caducado':estatusCaducidad == 3, 'por-caducar': estatusCaducidad == 2}" >Lote {{(estatusCaducidad == 2)?'Por Caducar':'Caducado'}}</div>
+        </div-->
         <div fxFlex fxLayout="row">
             <div fxFlex></div>
             <div fxFlex="none">
@@ -70,7 +80,7 @@
         <div fxFlex style="overflow: auto; overflow-x:hidden; background-color: whitesmoke;"> <!-- fxLayout="row raw"  -->
             <mat-grid-list style="width: 100%;" cols="4" rowHeight="2:1">
                 <mat-grid-tile class="outer-grid-tile" *ngFor="let item of listaLotes; let i = index" [ngClass]="{'selected': i==loteEditIndex}">
-                    <mat-grid-list class="inner-grid" style="width: 100%;" cols="4" rowHeight="2:1">
+                    <mat-grid-list class="inner-grid" [ngClass]="{'caducado':item.estatusCaducidad == 3, 'por-caducar': item.estatusCaducidad == 2}" style="width: 100%;" cols="4" rowHeight="2:1">
                         <mat-grid-tile class="inner-grid-tile label">Lte:</mat-grid-tile>
                         <mat-grid-tile class="inner-grid-tile" [colspan]="2">{{item.lote}}</mat-grid-tile>
                         <mat-grid-tile class="inner-grid-tile" [rowspan]="2"><button mat-icon-button color="primary" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button></mat-grid-tile>

@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
 })
 export class EntradasService {
   url_entradas = `${environment.base_url}/almacen-entradas`;
+  url_insumos = `${environment.base_url}/insumos-medicos`;
 
   constructor(private http: HttpClient) { }
 
@@ -34,5 +35,13 @@ export class EntradasService {
         return response;
       }
     ));
+  }
+
+  buscarInsumos(payload):Observable<any> {
+    return this.http.get<any>(this.url_insumos,{params:payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
   }
 }

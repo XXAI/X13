@@ -80,7 +80,7 @@
 }
 
 .outer-grid-tile{
-    border: solid thin lightblue;
+    /*border: solid thin lightblue;*/
     /*background: lightblue;*/
     background-color: whitesmoke;
 }
@@ -92,8 +92,22 @@
     -webkit-box-sizing: border-box;
     text-shadow: 1px 1px darkgrey;
     background-color: lightskyblue;
-    border: solid thin steelblue;
+    /*border: solid thin steelblue;*/
     background: white;
+}
+
+.inner-grid{
+    border: solid thin lightblue;
+}
+
+.inner-grid.caducado .inner-grid-tile{
+    /*background: white;*/
+    /*border:solid thin #ff1e1e;*/
+    color: #ff1e1e;
+}
+
+.inner-grid.por-caducar .inner-grid-tile{
+    color: #937c1f;
 }
 
 .inner-grid-tile{
@@ -109,4 +123,30 @@
 .outer-grid-tile.selected{
     background-color: steelblue;
     color:lightblue;
+}
+
+.outer-grid-tile.selected .inner-grid.caducado .inner-grid-tile{
+    background-color: #ff1e1e;
+    color:#ffffff !important;
+}
+
+.outer-grid-tile.selected .inner-grid.por-caducar .inner-grid-tile{
+    background-color: #ffe476;
+    color:#000000 !important;
+}
+
+.caducidad-insumo{
+    /*text-align: center;*/
+    font-weight: 500;
+}
+
+.caducidad-insumo .caducado{
+    padding: 0px 5px;
+    background-color: #ff1e1e;
+    color:white;
+}
+
+.caducidad-insumo .por-caducar{
+    padding: 0px 5px;
+    background-color: #ffe476;
 }
