@@ -77,7 +77,7 @@ export class EntradaComponent implements OnInit {
     }
   }
 
-  cargarPaginaInsumos(){
+  cargarPaginaInsumos(event?){
     if(this.dataSourceInsumos){
       this.dataSourceInsumos.disconnect();
     }
