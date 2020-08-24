@@ -77,7 +77,7 @@ export class EntradaComponent implements OnInit {
     }
   }
 
-  cargarPaginaInsumos(event?){
+  cargarPaginaInsumos(event = null){
     if(this.dataSourceInsumos){
       this.dataSourceInsumos.disconnect();
     }
@@ -109,6 +109,8 @@ export class EntradaComponent implements OnInit {
     };
     
     this.filtroInsumosMovimiento = this.dataSourceInsumos.connect().value;
+
+    return event;
   }
 
   aplicarFiltroInsumos(){
