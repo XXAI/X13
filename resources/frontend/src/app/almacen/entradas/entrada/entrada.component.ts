@@ -258,6 +258,15 @@ export class EntradaComponent implements OnInit {
     });
   }
 
+  guardarMovimiento(){
+    let datos_servidor:any = {};
+
+    datos_servidor.lista_insumos = this.listadoInsumosMovimiento;
+    datos_servidor.datos_movimiento = this.formEntrada.value;
+
+    console.log(datos_servidor);
+  }
+
   cleanSearch(){
     this.insumoQuery = '';
   }

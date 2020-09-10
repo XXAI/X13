@@ -33,6 +33,7 @@ import { DevToolsModule } from './dev-tools/dev-tools.module';
 
 //Modulos del Sistema
 import { AlmacenModule } from './almacen/almacen.module';
+import { CatalogosModule } from './catalogos/catalogos.module';
 
 @NgModule({
   declarations: [
@@ -55,6 +56,7 @@ import { AlmacenModule } from './almacen/almacen.module';
     SecurityModule,
     DevToolsModule,
     AlmacenModule,
+    CatalogosModule,
     ProfileModule,
     AppRoutingModule,
     WildcardRoutingModule,

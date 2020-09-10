@@ -23,6 +23,11 @@ export const APPS:App [] = [
         { name:'Inventario',      route: "almacen/inventario",      icon: "assets/icons/inventario.svg" },
       ]
     },
+    { name:'Catalogos',   route: "catalogos",       icon: "assets/icons/catalogos.svg",
+      apps:[
+        { name:'Almacenes',        route: "catalogos/almacenes",        icon: "assets/icons/catalogo-almacenes.svg" },
+      ]
+    },
     { name:'Herramientas Dev', route: "dev-tools",  icon: "assets/icons/toolbox.svg", isHub:true, hideHome:true, 
       children:[
         {name:'Reportes MySQL',route:'dev-tools/mysql-reportes', icon:'insert_drive_file', permission:"6ARHQGj1N8YPkr02DY04K1Zy7HjIdDcj"}

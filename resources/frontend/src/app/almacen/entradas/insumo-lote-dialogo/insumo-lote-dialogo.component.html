@@ -35,7 +35,7 @@
                 <mat-label>Fecha Caducidad</mat-label>
                 <input matInput mascaraFecha formControlName="fecha_caducidad" [required]="insumo.tiene_fecha_caducidad > 0" (keydown.enter)="agregarLote()" (blur)="verificarFechaCaducidad()">
                 <mat-hint>Formato: aaaa-mm-dd</mat-hint>
-                <mat-icon *ngIf="estatusCaducidad > 1" matPrefix color="warn">warning</mat-icon>
+                <mat-icon *ngIf="estatusCaducidad > 1" matPrefix color="warn">error</mat-icon>
                 <mat-error *ngIf="formLote.get('fecha_caducidad').hasError('isValidDate')">La fecha no es valida</mat-error>
                 <mat-error *ngIf="formLote.get('lote').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
