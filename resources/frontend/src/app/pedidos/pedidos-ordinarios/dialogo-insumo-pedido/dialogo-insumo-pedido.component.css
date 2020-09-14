@@ -1,0 +1,80 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.medicamento-bg-color{
+    background-color: cornflowerblue;
+}
+
+.mat-curacion-bg-color{
+    background-color: coral;
+}
+
+.lista-insumos-item{
+    overflow: hidden;
+    padding:8px;
+    /*background-color: rgb(233, 224, 224);*/
+    margin: -10px -10px 0px -10px;
+    color:whitesmoke;
+}
+
+/*.lista-insumos-item-contenido{
+    padding: 0px 8px 8px 8px;
+}*/
+
+.lista-insumos-item .lista-insumos-item-etiqueta{
+    height: 49px;
+    width: 100%;
+    display: table;
+    border-radius: 2%;
+}
+
+.lista-insumos-item .lista-insumos-item-etiqueta-icono{
+    height: 35px;
+    width: 35px;
+    border-radius: 25%;
+    flex-shrink: 0;
+    object-fit: cover;
+    padding:5px;
+    display: table-cell;
+}
+
+.lista-insumos-item .lista-insumos-item-etiqueta-texto{
+    padding:5px;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    height: 18px;
+}
+
+.lista-insumos-item-cabecera{
+    display: flex;
+    flex-direction: column;
+}
+
+.lista-insumos-item-cabecera-titulo{
+    height: 48px;
+    display: block;
+    font-weight: 450;
+    font-size: 20px;
+    text-overflow: ellipsis;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.lista-insumos-item-cabecera-subtitulo{
+    height: 17px;
+    display: block;
+    font-size: 14px;
+    color: rgba(0,0,0,.54);
+}
+
+.lista-insumos-item-texto{
+    height: 60px;
+    display: block;
+    font-size: 14px;
+    padding: 5px 0;
+    overflow-y: auto;
+    text-align: justify;
+    text-justify: inter-word;
+}

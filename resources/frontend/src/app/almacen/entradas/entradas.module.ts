@@ -5,7 +5,7 @@ import { EntradasRoutingModule } from './entradas-routing.module';
 import { ListaComponent } from './lista/lista.component';
 import { EntradaComponent } from './entrada/entrada.component';
 import { InsumoLoteDialogoComponent } from './insumo-lote-dialogo/insumo-lote-dialogo.component';
-import { ScrollDispatchModule } from '@angular/cdk/scrolling';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 @NgModule({
   declarations: [ListaComponent, EntradaComponent, InsumoLoteDialogoComponent],
@@ -13,7 +13,7 @@ import { ScrollDispatchModule } from '@angular/cdk/scrolling';
     CommonModule,
     SharedModule,
     EntradasRoutingModule,
-    ScrollDispatchModule
+    ScrollingModule
   ],
   entryComponents:[
     InsumoLoteDialogoComponent

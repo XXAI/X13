@@ -23,6 +23,11 @@ export const APPS:App [] = [
         { name:'Inventario',      route: "almacen/inventario",      icon: "assets/icons/inventario.svg" },
       ]
     },
+    { name:'Pedidos',   route: "pedidos",       icon: "assets/icons/pedidos-hub.svg",
+      apps:[
+        { name:'Pedidos Ordinarios',        route: "pedidos/pedidos-ordinarios",        icon: "assets/icons/pedidos.svg" },
+      ]
+    },
     { name:'Catalogos',   route: "catalogos",       icon: "assets/icons/catalogos.svg",
       apps:[
         { name:'Almacenes',        route: "catalogos/almacenes",        icon: "assets/icons/catalogo-almacenes.svg" },

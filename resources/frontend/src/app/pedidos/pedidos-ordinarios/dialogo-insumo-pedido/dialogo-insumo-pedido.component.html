@@ -1,0 +1,51 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;" (document:keydown.control.enter)="aceptarLotes()">
+    <section fxFlex="none">
+        <div>
+            <div class="lista-insumos-item" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
+                <div class="lista-insumos-item-etiqueta">
+                    <div class="lista-insumos-item-etiqueta-icono" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
+                        <img src="{{(insumo.tipo_insumo=='MED')?iconoMedicamento:iconoMatCuracion}}" alt="Icon">
+                    </div>
+                    <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
+                </div>
+                <div class="lista-insumos-item-contenido">
+                    <div class="lista-insumos-item-cabecera">
+                        <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre_generico}}</div>
+                        <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.info}}</div>
+                    </div>
+                    <div class="lista-insumos-item-texto">
+                        {{insumo.descripcion}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section fxFlex="none" fxLayout="column">
+        <div fxFlex>
+            Nuevo Lote: 
+        </div>
+        <div fxFlex fxLayout="row">
+            <mat-form-field fxFlex>
+                <mat-label>Cantidad</mat-label>
+                <input matInput [(ngModel)]="insumo.cantidad" (keydown.enter)="aceptarInsumo()" type="number" required>
+                <mat-error *ngIf="!cantidad || cantidad <= 0">Este campo es obligatorio</mat-error>
+            </mat-form-field>
+        </div>
+        <!--div fxFlex fxLayout="row">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-button (click)="cancelarLote()">Cancelar</button>
+                <button mat-stroked-button color="primary" (click)="agregarLote()" [disabled]="!formLote.valid"><mat-icon>add_circle</mat-icon> Aceptar</button>
+            </div>
+        </div-->
+    </section>
+    <section fxFlex="none">
+        <div fxLayout="row">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-button (click)="close()">Cancelar</button>&nbsp;
+                <button mat-raised-button color="primary" (click)="aceptarInsumo()"><mat-icon>playlist_add_check</mat-icon> Aplicar</button>
+            </div>
+        </div>
+    </section>
+</section>
