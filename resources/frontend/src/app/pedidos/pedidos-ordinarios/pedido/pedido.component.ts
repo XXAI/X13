@@ -1,9 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PedidosService } from '../../pedidos.service';
 import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatTableDataSource } from '@angular/material';
+import { MatDrawer, MatInput, MatTableDataSource } from '@angular/material';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
 
@@ -14,12 +14,15 @@ import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-i
 })
 export class PedidoComponent implements OnInit {
   @ViewChild(MatPaginator, {static: false}) insumosPaginator: MatPaginator;
+  @ViewChild(MatDrawer, {static: false}) insumosDrawer: MatDrawer;
+  @ViewChild(MatInput, {static: false}) busquedaInsumoQuery: MatInput;
 
   constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private sharedService: SharedService, private dialog: MatDialog) { }
 
   formPedido:FormGroup;
   catalogos:any;
-  totales: any;
+  clavesTotales: any;
+  clavesTotalesFiltro: any;
 
   isLoadingInsumos:boolean;
   insumoQuery:string;
@@ -30,12 +33,16 @@ export class PedidoComponent implements OnInit {
   listadoInsumosPedido:any[];
   filtroInsumosPedido:any[];
   controlInsumosAgregados:any;
+  selectedItemIndex:number;
 
   iconoMedicamento:string = 'assets/icons-ui/MED.svg';
   iconoMatCuracion:string = 'assets/icons-ui/MTC.svg';
 
   filtroInsumos:string;
   filtroTipoInsumos:string;
+  filtroAplicado:boolean;
+
+  mostrarTarjetas:boolean = false;
 
   pageEvent: PageEvent;
   resultsLength: number = 0;
@@ -57,11 +64,8 @@ export class PedidoComponent implements OnInit {
     this.busquedaTipoInsumo = '*';
     this.catalogos = {programas:[]};
 
-    this.totales = {
-      insumos: 0,
-      medicamentos: 0,
-      mat_curacion: 0
-    }
+    this.clavesTotales = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
+    this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
 
     this.catalogos.meses = [
       {clave:1,  etiqueta:'Enero'},
@@ -91,40 +95,6 @@ export class PedidoComponent implements OnInit {
     this.formPedido.get('anio').patchValue(fecha_actual.getFullYear());
     this.formPedido.get('mes').patchValue(fecha_actual.getMonth()+1);
 
-    ////Prueba dummy para lista de insumos en pedido
-    /*
-    let total_resultados = Math.floor(Math.random() * (150 - 1 + 1) + 1);
-    this.totales.insumos = total_resultados;
-    for (let index = 0; index < total_resultados; index++) {
-      let tipo_insumo = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
-
-      if(tipo_insumo < 5){
-        this.totales.mat_curacion += 1;
-      }else{
-        this.totales.medicamentos += 1;
-      }
-
-      let id = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
-
-      let clave = id+"";
-      while (clave.length < 4) clave = "0" + clave;
-
-      let precio_unitario = Math.floor(Math.random() * (4999 - 1 + 1) + 1);
-      let cantidad = Math.floor(Math.random() * (199 - 1 + 1) + 1);
-
-      this.listadoInsumosPedido.push({
-        id:id,
-        icono:(tipo_insumo < 5)?this.iconoMatCuracion:this.iconoMedicamento,
-        tipo_insumo:(tipo_insumo < 5)?'MTC':'MED',
-        clave:'0052.0136.0025.'+clave,
-        cantidad:cantidad,
-        monto:cantidad*precio_unitario,
-        nombre_generico:'REACTIVOS Y JUEGOS DE REACTIVOS',
-        descripcion:'The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan. A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally bred for hunting.'
-      });
-    }
-    */
-
     this.cargarPaginaInsumos();
   }
 
@@ -143,6 +113,28 @@ export class PedidoComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
           this.listadoInsumos = response.data;
+
+          //Para probar el filtro en la lista de insumos del pedido
+          for(let i in this.listadoInsumos){
+            let insumo = this.listadoInsumos[i];
+            if(insumo.nombre_generico){
+              let cantidad = Math.floor(Math.random() * (100 - 1 + 1) + 1);
+
+              insumo.cantidad = cantidad;
+              insumo.monto = 0;
+
+              this.listadoInsumosPedido.push(insumo);
+              this.controlInsumosAgregados[insumo.id] = true;
+              
+              this.clavesTotales.insumos += 1;
+              if(insumo.tipo_insumo == 'MED'){
+                this.clavesTotales.medicamentos += 1;
+              }else{
+                this.clavesTotales.mat_curacion += 1;
+              }
+            }
+          }
+          this.cargarPaginaInsumos();
         }
         this.isLoadingInsumos = false;
       },
@@ -155,36 +147,6 @@ export class PedidoComponent implements OnInit {
         this.isLoadingInsumos = false;
       }
     );
-    /*
-    let total_resultados = Math.floor(Math.random() * (150 - 1 + 1) + 1);
-    for (let index = 0; index < total_resultados; index++) {
-      let tipo_insumo = 0;
-
-      if(this.busquedaTipoInsumo == 'MED'){
-        tipo_insumo = 10;
-      }else if(this.busquedaTipoInsumo == 'MTC'){
-        tipo_insumo = 1;
-      }else{
-        tipo_insumo = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
-      }
-
-      let id = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
-
-      let clave = id+"";
-      while (clave.length < 4) clave = "0" + clave;
-
-      this.listadoInsumos.push({
-        id:id,
-        icono:(tipo_insumo < 5)?this.iconoMatCuracion:this.iconoMedicamento,
-        tipo_insumo:(tipo_insumo < 5)?'MTC':'MED',
-        clave:'0052.0136.0025.'+clave,
-        //color:(tipo_insumo < 5)?'coral':'cornflowerblue',
-        nombre:'REACTIVOS Y JUEGOS DE REACTIVOS',
-        info:'informacion del medicamento',
-        descripcion:'The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan. A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally bred for hunting.'
-      });
-    }
-    */
   }
 
   cleanSearch(){
@@ -219,12 +181,28 @@ export class PedidoComponent implements OnInit {
         filtroTexto = true;
       }
 
+      if(filtroTexto){
+        this.clavesTotalesFiltro.insumos += 1
+        if(data.tipo_insumo == 'MED'){
+          this.clavesTotalesFiltro.medicamentos += 1;
+        }else{
+          this.clavesTotalesFiltro.mat_curacion += 1;
+        }
+      }
+
       return filtroTexto && filtroTipo;
     };
-    
+    this.aplicarFiltroInsumos();
+
     this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
 
     return event;
+  }
+
+  limpiarFiltroInsumos(){
+    this.filtroInsumos = '';
+    this.filtroTipoInsumos = '*';
+    this.aplicarFiltroInsumos();
   }
 
   aplicarFiltroInsumos(){
@@ -234,8 +212,27 @@ export class PedidoComponent implements OnInit {
       filter_value = this.filtroTipoInsumos + '|' + this.filtroInsumos;
     }
     
+    if(filter_value){
+      this.filtroAplicado = true;
+    }else{
+      this.filtroAplicado = false;
+    }
+
+    this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.dataSourceInsumos.filter = filter_value;
     this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
+  }
+
+  cerrarBuscadorInsumos(){
+    this.insumosDrawer.close();
+    this.cleanSearch();
+    this.listadoInsumos = [];
+    this.busquedaTipoInsumo = '*';
+  }
+
+  abrirBuscadorInsumos(){
+    this.insumosDrawer.open().finally(() => this.busquedaInsumoQuery.focus() );
+    //this.busquedaInsumoQuery.focus();
   }
 
   agregarInsumo(insumo){
@@ -260,18 +257,23 @@ export class PedidoComponent implements OnInit {
     dialogRef.afterClosed().subscribe(response => {
       if(response){
         if(!this.controlInsumosAgregados[response.id]){
-          this.listadoInsumosPedido.push(response);
-          this.totales.insumos = this.listadoInsumosPedido.length;
+          this.listadoInsumosPedido.unshift(response);
+          this.clavesTotales.insumos = this.listadoInsumosPedido.length;
           
           if(response.tipo_insumo == 'MED'){
-            this.totales.medicamentos += 1;
+            this.clavesTotales.medicamentos += 1;
           }else{
-            this.totales.mat_curacion += 1;
+            this.clavesTotales.mat_curacion += 1;
           }
           this.controlInsumosAgregados[response.id] = true;
         }else{
           let index = this.listadoInsumosPedido.findIndex(x => x.id === response.id);
-          this.listadoInsumosPedido[index] = response;
+          if(index > 0){
+            this.listadoInsumosPedido.splice(index,1);
+            this.listadoInsumosPedido.unshift(response);
+          }else{
+            this.listadoInsumosPedido[index] = response;
+          }
         }
 
         this.cargarPaginaInsumos();
@@ -282,3 +284,36 @@ export class PedidoComponent implements OnInit {
   }
 
 }
+
+
+/* Creando insumos fixticios, solo para fines de pruebas */
+/*
+    let total_resultados = Math.floor(Math.random() * (150 - 1 + 1) + 1);
+    for (let index = 0; index < total_resultados; index++) {
+      let tipo_insumo = 0;
+
+      if(this.busquedaTipoInsumo == 'MED'){
+        tipo_insumo = 10;
+      }else if(this.busquedaTipoInsumo == 'MTC'){
+        tipo_insumo = 1;
+      }else{
+        tipo_insumo = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
+      }
+
+      let id = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
+
+      let clave = id+"";
+      while (clave.length < 4) clave = "0" + clave;
+
+      this.listadoInsumos.push({
+        id:id,
+        icono:(tipo_insumo < 5)?this.iconoMatCuracion:this.iconoMedicamento,
+        tipo_insumo:(tipo_insumo < 5)?'MTC':'MED',
+        clave:'0052.0136.0025.'+clave,
+        //color:(tipo_insumo < 5)?'coral':'cornflowerblue',
+        nombre:'REACTIVOS Y JUEGOS DE REACTIVOS',
+        info:'informacion del medicamento',
+        descripcion:'The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan. A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally bred for hunting.'
+      });
+    }
+    */

@@ -24,9 +24,25 @@
     text-align: center;
 }
 
+table td {
+    padding:0 2px;
+}
+
+.selected-item{
+    font-weight: bold;
+}
+
 .hide{
     display: none;
-  }
+}
+
+.medicamento-row-color{
+    background-color: #b0ccff !important;
+}
+
+.mat-curacion-row-color{
+    background-color: #ffb498 !important;
+}
 
 .medicamento-bg-color{
     background-color: cornflowerblue !important;
@@ -50,6 +66,7 @@
 
 :host ::ng-deep .filtro-tipo-insumo .mat-button-toggle-button{
     text-shadow: 1px 1px black !important;
+    font-size: small;
 }
 
 .mat-button-toggle {

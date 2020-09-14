@@ -8,7 +8,7 @@
                         <div fxFlex fxLayout="row wrap">
                             <mat-form-field fxFill appearance="outline">
                                 <mat-label>Buscar</mat-label>
-                                <input matInput [(ngModel)]="insumoQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Buscar">
+                                <input #busquedaInsumoQuery matInput [(ngModel)]="insumoQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Buscar">
                                 <button matSuffix *ngIf="insumoQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
                                     <mat-icon>close</mat-icon>
                                 </button>
@@ -43,10 +43,10 @@
                                 </div>
                                 <div class="lista-insumo-item-acciones" fxLayout="row">
                                     <div fxFlex style="padding: 8px 0px;">
-                                        Cantidad: 0
+                                        Existencias: 0
                                     </div>
                                     <button fxFlex="none" mat-flat-button (click)="agregarInsumo(insumo)">
-                                        <mat-icon>playlist_add</mat-icon>
+                                        <mat-icon>{{(controlInsumosAgregados[insumo.id])?'edit':'add'}}</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -58,7 +58,7 @@
             <mat-divider [inset]="true"></mat-divider>
             <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
                 <div fxFlex="none">
-                    <button mat-raised-button (click)="insumosDrawer.toggle()"><mat-icon>close</mat-icon> Cerrar</button>
+                    <button mat-raised-button (click)="cerrarBuscadorInsumos()"><mat-icon>chevron_left</mat-icon> Cerrar</button>
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
@@ -126,7 +126,7 @@
                         <div fxFlex="none" fxLayout="row">
                             <div fxFlex></div>
                             <div fxFlex="none">
-                                <button mat-raised-button (click)="insumosDrawer.toggle()"><mat-icon>launch</mat-icon> Insumos</button>
+                                <button mat-raised-button (click)="abrirBuscadorInsumos()"><mat-icon>launch</mat-icon> Insumos</button>
                             </div>
                         </div>
                     </mat-card>
@@ -141,9 +141,9 @@
                             </div>
                             <div fxFlex="none">
                                 <mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="aplicarFiltroInsumos()">
-                                    <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
-                                    <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{totales.medicamentos | number}}</mat-button-toggle>
-                                    <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{totales.mat_curacion | number}}</mat-button-toggle>
+                                    <mat-button-toggle [checked]="true" value="*">Insumos: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.insumos | number)+'/':'' }}{{clavesTotales.insumos | number}}</mat-button-toggle>
+                                    <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.medicamentos | number)+'/':'' }}{{clavesTotales.medicamentos | number}}</mat-button-toggle>
+                                    <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.mat_curacion | number)+'/':'' }}{{clavesTotales.mat_curacion | number}}</mat-button-toggle>
                                 </mat-button-toggle-group>
                             </div>
                         </div>
@@ -185,7 +185,7 @@
                                 </ng-container>
                                 
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                                <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                                <tr mat-row [ngClass]="{'selected-item': row.clave==claveInsumoSeleccionado, 'medicamento-row-color':row.tipo_insumo == 'MED', 'mat-curacion-row-color':row.tipo_insumo == 'MTC'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
                                 <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroInsumosPedido!=null && filtroInsumosPedido.length==0)}"></tr>
                             </table>
@@ -214,9 +214,14 @@
                                 </mat-grid-tile>
                             </mat-grid-list>
                         </div>
-                        <div fxFlex="none">
+                        <div fxFlex="none" fxLayout="row">
+                            <div fxFlex="none" style="padding-top: 10px;">
+                                <button mat-raised-button (click)="limpiarFiltroInsumos()" *ngIf="filtroAplicado"><mat-icon>clear</mat-icon> Limpiar Filtro</button>
+                            </div>
                             <!-- Puede haber algo -->
-                            <mat-paginator #insumosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaInsumos($event)"></mat-paginator>
+                            <div fxFlex>
+                                <mat-paginator #insumosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaInsumos($event)"></mat-paginator>
+                            </div>
                         </div>
                     </mat-card>
                 </section>
