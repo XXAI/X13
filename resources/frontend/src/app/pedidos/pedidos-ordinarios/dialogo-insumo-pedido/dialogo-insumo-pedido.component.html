@@ -1,4 +1,4 @@
-<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;" (document:keydown.control.enter)="aceptarLotes()">
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
     <section fxFlex="none">
         <div>
             <div class="lista-insumos-item" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
@@ -28,7 +28,7 @@
             <mat-form-field fxFlex>
                 <mat-label>Cantidad</mat-label>
                 <input matInput [(ngModel)]="insumo.cantidad" (keydown.enter)="aceptarInsumo()" type="number" required>
-                <mat-error *ngIf="!cantidad || cantidad <= 0">Este campo es obligatorio</mat-error>
+                <mat-error *ngIf="!insumo.cantidad || insumo.cantidad <= 0">Este campo es obligatorio</mat-error>
             </mat-form-field>
         </div>
         <!--div fxFlex fxLayout="row">

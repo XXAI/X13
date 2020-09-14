@@ -283,6 +283,9 @@ export class PedidoComponent implements OnInit {
     });
   }
 
+  guardarPedido(){
+    //
+  }
 }
 
 

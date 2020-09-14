@@ -32,4 +32,20 @@ export class ListaComponent implements OnInit {
     });
   }
 
+  mostrarFormAlmacen(){
+    //
+  }
+
+  applyFilter(){
+    //
+  }
+
+  cleanSearch(){
+    //
+  }
+
+  loadListadoAlmacenes(event = null){
+    return event;
+  }
+
 }

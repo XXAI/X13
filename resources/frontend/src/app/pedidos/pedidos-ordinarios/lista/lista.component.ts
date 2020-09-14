@@ -85,4 +85,15 @@ export class ListaComponent implements OnInit {
     this.listadoPedidos = this.dataSource.connect().value;
   }
   
+  applyFilter(){
+    //
+  }
+
+  cleanSearch(){
+    //
+  }
+
+  loadListadoPedidos(event = null){
+    return event;
+  }
 }

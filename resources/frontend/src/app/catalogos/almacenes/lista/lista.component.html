@@ -52,10 +52,10 @@
                                 </button>
 
                                 <mat-menu #appMenu="matMenu">
-                                    <button mat-menu-item (click)="mostrarListaUsuarios(grupo.id)"><mat-icon color="accent">add_circle</mat-icon> Asignar Usuarios</button>
-                                    <button mat-menu-item (click)="mostrarFormGrupo(grupo.id)"><mat-icon color="primary">edit</mat-icon> Editar</button>
+                                    <button mat-menu-item><mat-icon color="accent">add_circle</mat-icon> Asignar Usuarios</button>
+                                    <button mat-menu-item><mat-icon color="primary">edit</mat-icon> Editar</button>
                                     <mat-divider></mat-divider>
-                                    <button mat-menu-item (click)="eliminarGrupo(grupo.id)"><mat-icon color="warn">delete</mat-icon> Eliminar</button>
+                                    <button mat-menu-item><mat-icon color="warn">delete</mat-icon> Eliminar</button>
                                 </mat-menu>
                             </div>
                         </div>
@@ -64,7 +64,7 @@
             </div>
 
             <div fxFlex="none">
-                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoGrupos($event)"></mat-paginator>
+                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoAlmacenes($event)"></mat-paginator>
             </div>
         </mat-card>
     </section>

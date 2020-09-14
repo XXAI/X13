@@ -78,7 +78,7 @@
                 <div fxFlex="none">
                     <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>Cancelar</button>
                     &nbsp;
-                    <button mat-raised-button color="accent" (click)="guardarMovimiento()"><mat-icon>save</mat-icon> Guardar</button>
+                    <button mat-raised-button color="accent" (click)="guardarPedido()"><mat-icon>save</mat-icon> Guardar</button>
                 </div>
             </section>
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
@@ -205,7 +205,7 @@
                                             <div fxFlex style="text-align: center; color:whitesmoke;">Cantidad:<br> {{ insumo.cantidad | number:'1.0-0' }}</div>
                                             <div fxFlex style="text-align: center; color:whitesmoke;">Monto:<br> ${{ insumo.monto | number:'1.2-2' }}</div>
                                             <div fxFlex="none">
-                                                <button mat-icon-button (click)="agregarLoteInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;">
+                                                <button mat-icon-button (click)="agregarInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;">
                                                     <mat-icon>edit</mat-icon>
                                                 </button>
                                             </div>
