@@ -6,6 +6,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDrawer, MatInput, MatTableDataSource } from '@angular/material';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
+import { DialogoSeleccionarUnidadesMedicasComponent } from '../dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
 
 @Component({
   selector: 'app-pedido',
@@ -18,6 +19,11 @@ export class PedidoComponent implements OnInit {
   @ViewChild(MatInput, {static: false}) busquedaInsumoQuery: MatInput;
 
   constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private sharedService: SharedService, private dialog: MatDialog) { }
+
+  tituloGrupoPedidos: string;
+  mostrarBotonAgregarUnidades:boolean;
+  unidadesSeleccionadas:any[];
+  listaUnidadesAsignadas:any[];
 
   formPedido:FormGroup;
   catalogos:any;
@@ -60,6 +66,8 @@ export class PedidoComponent implements OnInit {
     this.listadoInsumosPedido = [];
     this.controlInsumosAgregados = {};
 
+    this.unidadesSeleccionadas = [];
+    
     this.listadoInsumos = [];
     this.busquedaTipoInsumo = '*';
     this.catalogos = {programas:[]};
@@ -94,6 +102,35 @@ export class PedidoComponent implements OnInit {
     //Si es crear nuevo Pedido
     this.formPedido.get('anio').patchValue(fecha_actual.getFullYear());
     this.formPedido.get('mes').patchValue(fecha_actual.getMonth()+1);
+
+    this.pedidosService.obtenerDatosCatalogo().subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          console.log(response);
+          if(response.data.grupo_pedidos.unidades_medicas.length == 1){
+            this.tituloGrupoPedidos = response.data.grupo_pedidos.unidades_medicas[0].nombre;
+            this.mostrarBotonAgregarUnidades = false;
+            this.listaUnidadesAsignadas.push(response.data.grupo_pedidos.unidades_medicas[0]);
+          }else{
+            this.tituloGrupoPedidos = response.data.grupo_pedidos.descripcion;
+            this.mostrarBotonAgregarUnidades = true;
+            this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
+          }
+        }
+        //this.isLoadingInsumos = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.isLoadingInsumos = false;
+      }
+    );
 
     this.cargarPaginaInsumos();
   }
@@ -233,6 +270,26 @@ export class PedidoComponent implements OnInit {
   abrirBuscadorInsumos(){
     this.insumosDrawer.open().finally(() => this.busquedaInsumoQuery.focus() );
     //this.busquedaInsumoQuery.focus();
+  }
+
+  seleccionarUnidades(){
+    let configDialog = {
+      width: '99%',
+      maxHeight: '90vh',
+      height: '643px',
+      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas},
+      panelClass: 'no-padding-dialog'
+    };
+
+    const dialogRef = this.dialog.open(DialogoSeleccionarUnidadesMedicasComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        this.unidadesSeleccionadas = response;
+      }else{
+        console.log('Cancelar');
+      }
+    });
   }
 
   agregarInsumo(insumo){

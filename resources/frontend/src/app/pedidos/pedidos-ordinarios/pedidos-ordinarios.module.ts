@@ -8,10 +8,11 @@ import { PedidosOrdinariosRoutingModule } from './pedidos-ordinarios-routing.mod
 import { ListaComponent } from './lista/lista.component';
 import { PedidoComponent } from './pedido/pedido.component';
 import { DialogoInsumoPedidoComponent } from './dialogo-insumo-pedido/dialogo-insumo-pedido.component';
+import { DialogoSeleccionarUnidadesMedicasComponent } from './dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
 
 
 @NgModule({
-  declarations: [ListaComponent, PedidoComponent, DialogoInsumoPedidoComponent],
+  declarations: [ListaComponent, PedidoComponent, DialogoInsumoPedidoComponent, DialogoSeleccionarUnidadesMedicasComponent],
   imports: [
     CommonModule,
     SharedModule,
@@ -19,7 +20,8 @@ import { DialogoInsumoPedidoComponent } from './dialogo-insumo-pedido/dialogo-in
     ScrollingModule,
   ],
   entryComponents: [
-    DialogoInsumoPedidoComponent
+    DialogoInsumoPedidoComponent,
+    DialogoSeleccionarUnidadesMedicasComponent
   ]
 })
 export class PedidosOrdinariosModule { }

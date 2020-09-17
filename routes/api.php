@@ -42,6 +42,12 @@ Route::group(['middleware'=>'auth'],function($router){
      */
     Route::apiResource('almacen-entradas',          'API\Modulos\AlmacenEntradaController');
 
+    /**
+     * Modulos Pedidos
+     */
+    Route::get('datos-catalogo',                    'API\Modulos\PedidoOrdinarioController@datosCatalogo');
+    Route::apiResource('pedido-ordinario',          'API\Modulos\PedidoOrdinarioController');
+
     /*
     *   Modulos generales
     */

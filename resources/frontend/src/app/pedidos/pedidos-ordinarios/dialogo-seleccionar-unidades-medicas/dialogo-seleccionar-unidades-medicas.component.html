@@ -1,0 +1,101 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Listado de Unidades Médicas
+    </section>
+    <section fxFlex="none" fxLayout="column" style="font-size: 14px;">
+        Selecciones las unidades a utilizar en el pedido
+    </section>
+    <section fxFlex fxLayout="row">
+        <mat-card fxFlex fxLayout="column">
+            <div fxFlex="none">
+                <div class="small-search-input">
+                    <mat-form-field appearance="outline">
+                        <input matInput [(ngModel)]="filtroUnidadesGrupo" (keyup)="aplicarFiltroGrupo()" placeholder="Filtrar">
+                    </mat-form-field>
+                </div>
+                <mat-divider></mat-divider>
+            </div>
+            <div fxFlex>
+                <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                    <div *ngIf="listaUnidadesGrupo.length == 0" class="no-items-found">
+                        No se encontraron resultados
+                    </div>
+                    <div *cdkVirtualFor="let unidad of listaUnidadesGrupo;" class="unidad-medica-item">
+                        <div fxLayout="row">
+                            <div fxFlex fxLayout="column" class="datos-unidad">
+                                <div fxFlex="none" class="titulo">
+                                    CLUES: {{unidad.clues}}
+                                </div>
+                                <div fxFlex class="descripcion">
+                                    {{unidad.nombre}}
+                                </div>
+                            </div>
+                            <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
+                                <div fxFlex>
+                                    <button mat-icon-button (click)="agregarUnidadMedica(unidad)" *ngIf="!controlUnidadesSeleccionadas[unidad.id]">
+                                        <mat-icon>chevron_right</mat-icon>
+                                    </button>
+                                    <button mat-icon-button (click)="quitarUnidadMedica(unidad)" *ngIf="controlUnidadesSeleccionadas[unidad.id]">
+                                        <mat-icon>undo</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </mat-card>
+        <div fxFlex="none" fxLayout="column" style="padding:0px 10px;">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <mat-icon>sync_alt</mat-icon>
+            </div>
+            <div fxFlex></div>
+        </div>
+        <mat-card fxFlex fxLayout="column">
+            <div fxFlex="none">
+                <div class="small-search-input">
+                    <mat-form-field appearance="outline">
+                        <input matInput [(ngModel)]="filtroUnidadesPedido" (keyup)="aplicarFiltroPedido()" placeholder="Filtrar">
+                    </mat-form-field>
+                </div>
+                <mat-divider></mat-divider>
+            </div>
+            <div fxFlex>
+                <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                    <div *ngIf="listaUnidadesPedido.length == 0" class="no-items-found">
+                        Sin unidades seleccionadas
+                    </div>
+                    <div *cdkVirtualFor="let unidad of listaUnidadesPedido;" class="unidad-medica-item">
+                        <div fxLayout="row">
+                            <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
+                                <div fxFlex>
+                                    <button mat-icon-button (click)="quitarUnidadMedica(unidad)">
+                                        <mat-icon>chevron_left</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                            <div fxFlex fxLayout="column" class="datos-unidad">
+                                <div fxFlex="none" class="titulo">
+                                    CLUES: {{unidad.clues}}
+                                </div>
+                                <div fxFlex class="descripcion">
+                                    {{unidad.nombre}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </mat-card>
+    </section>
+    <section fxFlex="none">
+        <div fxLayout="row">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-button (click)="close()">Cancelar</button>&nbsp;
+                <button mat-raised-button color="primary" (click)="aplicarCambios()"><mat-icon>check</mat-icon> Aplicar</button>
+            </div>
+        </div>
+    </section>
+</section>

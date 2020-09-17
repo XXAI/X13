@@ -84,6 +84,20 @@
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
                 <section fxFlex="30" fxLayout="row" *ngIf="!insumosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
+                        <div fxFlex="none" style="padding-bottom: 5px;">
+                            <div fxLayout="column">
+                                <div fxFlex style="text-align: center; font-weight: 450; font-size: 20px;">
+                                    {{tituloGrupoPedidos}}
+                                </div>
+                                <div fxFlex style="text-align: center; font-weight: 200; font-size: 15px; color:#a9a9a9; padding-bottom:5px;" *ngIf="mostrarBotonAgregarUnidades">
+                                    {{unidadesSeleccionadas.length}} Unidades Medicas en el pedido
+                                </div>
+                                <div fxFlex style="text-align: center;" *ngIf="mostrarBotonAgregarUnidades">
+                                    <button mat-button color="info" (click)="seleccionarUnidades()"><mat-icon>home</mat-icon> Unidades en el Pedido</button>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div fxFlex="none" fxLayout="row raw" [formGroup]="formPedido">
                             <mat-form-field fxFlex="100">
                                 <mat-label>Descripcion</mat-label>
