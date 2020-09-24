@@ -1,13 +1,13 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PedidosService } from '../../pedidos.service';
+import { PedidosOrdinariosService } from '../pedidos-ordinarios.service';
 import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDrawer, MatInput, MatTableDataSource } from '@angular/material';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
 import { DialogoSeleccionarUnidadesMedicasComponent } from '../dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
-import { config } from 'process';
 
 @Component({
   selector: 'app-pedido',
@@ -19,13 +19,15 @@ export class PedidoComponent implements OnInit {
   @ViewChild(MatDrawer, {static: false}) insumosDrawer: MatDrawer;
   @ViewChild(MatInput, {static: false}) busquedaInsumoQuery: MatInput;
 
-  constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private sharedService: SharedService, private dialog: MatDialog) { }
+  constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private pedidosOrdinarios: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog) { }
 
   tituloGrupoPedidos: string;
   mostrarBotonAgregarUnidades:boolean;
   unidadesSeleccionadas:any[];
   listaUnidadesAsignadas:any[];
   unidadesConInsumos:any;
+
+  unidadMedicaEntrega:any;
 
   formPedido:FormGroup;
   catalogos:any;
@@ -100,6 +102,7 @@ export class PedidoComponent implements OnInit {
       anio:['',Validators.required],
       programa_id:[''],
       observaciones:[''],
+      id:['']
     });
 
     //Si es crear nuevo Pedido
@@ -112,19 +115,21 @@ export class PedidoComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response);
-          if(response.data.grupo_pedidos.unidades_medicas.length == 1){
-            this.tituloGrupoPedidos = response.data.grupo_pedidos.unidades_medicas[0].nombre;
-            this.mostrarBotonAgregarUnidades = false;
-            this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
-            this.unidadesSeleccionadas.push(response.data.grupo_pedidos.unidades_medicas[0]);
-          }else{
-            this.tituloGrupoPedidos = response.data.grupo_pedidos.descripcion;
+          if(response.data.grupo_pedidos.unidad_medica_principal){
+            this.unidadMedicaEntrega = response.data.grupo_pedidos.unidad_medica_principal;
+            this.formPedido.get('unidad_medica_id').patchValue(this.unidadMedicaEntrega.id);
+          }
+
+          this.tituloGrupoPedidos = response.data.grupo_pedidos.descripcion;
+          if(response.data.grupo_pedidos.unidades_medicas.length > 0){
             this.mostrarBotonAgregarUnidades = true;
             this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
+          }else{
+            this.mostrarBotonAgregarUnidades = false;
+            //this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
+            //this.unidadesSeleccionadas.push(response.data.grupo_pedidos.unidades_medicas[0]);
           }
         }
-        //this.isLoadingInsumos = false;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -132,7 +137,6 @@ export class PedidoComponent implements OnInit {
           errorMessage = errorResponse.error.error.message;
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
-        //this.isLoadingInsumos = false;
       }
     );
 
@@ -273,7 +277,6 @@ export class PedidoComponent implements OnInit {
 
   abrirBuscadorInsumos(){
     this.insumosDrawer.open().finally(() => this.busquedaInsumoQuery.focus() );
-    //this.busquedaInsumoQuery.focus();
   }
 
   seleccionarUnidades(){
@@ -289,7 +292,6 @@ export class PedidoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
-        //console.log(response);
         this.unidadesSeleccionadas = response.unidadesSeleccionadas;
 
         if(response.unidadesEliminarInsumos.length){
@@ -309,6 +311,10 @@ export class PedidoComponent implements OnInit {
               this.listadoInsumosPedido[i] = insumo;
             }
           }
+          for(let i in response.unidadesEliminarInsumos){
+            let unidad_id = response.unidadesEliminarInsumos[i];
+            this.unidadesConInsumos[unidad_id] = 0;
+          }
         }
       }else{
         console.log('Cancelar');
@@ -318,7 +324,6 @@ export class PedidoComponent implements OnInit {
 
   agregarInsumo(insumo){
     this.claveInsumoSeleccionado = insumo.clave;
-    //console.log(insumo);
 
     if(this.controlInsumosAgregados[insumo.id]){
       let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
@@ -385,12 +390,32 @@ export class PedidoComponent implements OnInit {
       }else{
         console.log('Cancelar');
       }
-      console.log(this.unidadesConInsumos);
     });
   }
 
-  guardarPedido(){
-    //
+  guardarPedido(concluir:boolean = false){
+    let datosPedido = {
+      pedido: this.formPedido.value,
+      insumosPedido: this.listadoInsumosPedido,
+      unidadesPedido: this.unidadesSeleccionadas,
+      concluir: concluir
+    };
+
+    if(datosPedido.pedido.id){
+      this.pedidosOrdinarios.actualizarPedido(datosPedido,datosPedido.pedido.id).subscribe(
+        response=>{
+          if(response.guardado){
+            this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+          }
+        }
+      );
+    }else{
+      this.pedidosOrdinarios.crearPedido(datosPedido).subscribe(
+        response =>{
+          this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+        }
+      );
+    }
   }
 }
 

@@ -72,13 +72,13 @@
         <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
             <section fxFlex="none" fxLayout="row">
                 <div fxFlex="none" *ngIf="!insumosDrawer.opened">
-                    <button mat-raised-button color="primary"><mat-icon>send</mat-icon> Concluir</button>
+                    <button mat-raised-button color="primary" (click)="guardarPedido(true)" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
                     <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>Cancelar</button>
                     &nbsp;
-                    <button mat-raised-button color="accent" (click)="guardarPedido()"><mat-icon>save</mat-icon> Guardar</button>
+                    <button mat-raised-button color="accent" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
                 </div>
             </section>
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
@@ -97,10 +97,18 @@
                                 </div>
                             </div>
                         </div>
-                        
+                        <mat-divider [inset]="true"></mat-divider>
+                        <div fxFlex="none" fxLayout="column" *ngIf="unidadMedicaEntrega" style="padding: 5px 0px;">
+                            <div fxFlex class="label-unidad-entrega">
+                                Entregar en:
+                            </div>
+                            <div fxFlex class="unidad-entrega">
+                                {{unidadMedicaEntrega.nombre}}
+                            </div>
+                        </div>
                         <div fxFlex="none" fxLayout="row raw" [formGroup]="formPedido">
                             <mat-form-field fxFlex="100">
-                                <mat-label>Descripcion</mat-label>
+                                <mat-label>Descripcion del Pedido</mat-label>
                                 <input matInput formControlName="descripcion" required>
                                 <mat-error *ngIf="formPedido.get('descripcion').hasError('required')">Descripción es obligatorio</mat-error>
                             </mat-form-field>

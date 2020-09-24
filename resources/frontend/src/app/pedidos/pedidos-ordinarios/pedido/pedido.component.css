@@ -208,6 +208,19 @@ table td {
     filter: brightness(125%);
 }
 
+.unidad-entrega{
+    text-align: center;
+    font-weight: 400;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+
+.label-unidad-entrega{
+    font-weight: 300;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
 .small-search-input{
     padding: 0px 10px 0px 0px;
 }
