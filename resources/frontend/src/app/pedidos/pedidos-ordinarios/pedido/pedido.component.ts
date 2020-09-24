@@ -7,6 +7,7 @@ import { MatDrawer, MatInput, MatTableDataSource } from '@angular/material';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
 import { DialogoSeleccionarUnidadesMedicasComponent } from '../dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
+import { config } from 'process';
 
 @Component({
   selector: 'app-pedido',
@@ -24,6 +25,7 @@ export class PedidoComponent implements OnInit {
   mostrarBotonAgregarUnidades:boolean;
   unidadesSeleccionadas:any[];
   listaUnidadesAsignadas:any[];
+  unidadesConInsumos:any;
 
   formPedido:FormGroup;
   catalogos:any;
@@ -67,6 +69,7 @@ export class PedidoComponent implements OnInit {
     this.controlInsumosAgregados = {};
 
     this.unidadesSeleccionadas = [];
+    this.unidadesConInsumos = {};
     
     this.listadoInsumos = [];
     this.busquedaTipoInsumo = '*';
@@ -74,7 +77,7 @@ export class PedidoComponent implements OnInit {
 
     this.clavesTotales = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
-
+    
     this.catalogos.meses = [
       {clave:1,  etiqueta:'Enero'},
       {clave:2,  etiqueta:'Febrero'},
@@ -113,7 +116,8 @@ export class PedidoComponent implements OnInit {
           if(response.data.grupo_pedidos.unidades_medicas.length == 1){
             this.tituloGrupoPedidos = response.data.grupo_pedidos.unidades_medicas[0].nombre;
             this.mostrarBotonAgregarUnidades = false;
-            this.listaUnidadesAsignadas.push(response.data.grupo_pedidos.unidades_medicas[0]);
+            this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
+            this.unidadesSeleccionadas.push(response.data.grupo_pedidos.unidades_medicas[0]);
           }else{
             this.tituloGrupoPedidos = response.data.grupo_pedidos.descripcion;
             this.mostrarBotonAgregarUnidades = true;
@@ -152,7 +156,7 @@ export class PedidoComponent implements OnInit {
           this.listadoInsumos = response.data;
 
           //Para probar el filtro en la lista de insumos del pedido
-          for(let i in this.listadoInsumos){
+          /*for(let i in this.listadoInsumos){
             let insumo = this.listadoInsumos[i];
             if(insumo.nombre_generico){
               let cantidad = Math.floor(Math.random() * (100 - 1 + 1) + 1);
@@ -171,7 +175,7 @@ export class PedidoComponent implements OnInit {
               }
             }
           }
-          this.cargarPaginaInsumos();
+          this.cargarPaginaInsumos();*/
         }
         this.isLoadingInsumos = false;
       },
@@ -277,7 +281,7 @@ export class PedidoComponent implements OnInit {
       width: '99%',
       maxHeight: '90vh',
       height: '643px',
-      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas},
+      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas, unidadesConInsumos: this.unidadesConInsumos},
       panelClass: 'no-padding-dialog'
     };
 
@@ -285,7 +289,27 @@ export class PedidoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
-        this.unidadesSeleccionadas = response;
+        //console.log(response);
+        this.unidadesSeleccionadas = response.unidadesSeleccionadas;
+
+        if(response.unidadesEliminarInsumos.length){
+          for(let i in this.listadoInsumosPedido){
+            let insumo = this.listadoInsumosPedido[i];
+            let cantidad = 0;
+            for(let j in insumo.cuadro_distribucion){
+              let unidad = insumo.cuadro_distribucion[j];
+              let index = response.unidadesEliminarInsumos.indexOf(unidad.id);
+              if(index >= 0){
+                cantidad += unidad.cantidad;
+                insumo.cuadro_distribucion.splice(j,1);
+              }
+            }
+            if(cantidad > 0){
+              insumo.cantidad -= cantidad;
+              this.listadoInsumosPedido[i] = insumo;
+            }
+          }
+        }
       }else{
         console.log('Cancelar');
       }
@@ -300,14 +324,17 @@ export class PedidoComponent implements OnInit {
       let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
       insumo = this.listadoInsumosPedido[index];
     }
-    
-    let configDialog = {
+
+    let configDialog:any = {
       width: '99%',
       maxHeight: '90vh',
-      //height: '643px',
-      data:{insumoInfo: insumo},
+      data:{insumoInfo: insumo, listaUnidades: this.unidadesSeleccionadas},
       panelClass: 'no-padding-dialog'
     };
+
+    if(this.unidadesSeleccionadas.length > 1){
+      configDialog.height = '643px';
+    }
 
     const dialogRef = this.dialog.open(DialogoInsumoPedidoComponent, configDialog);
 
@@ -325,6 +352,17 @@ export class PedidoComponent implements OnInit {
           this.controlInsumosAgregados[response.id] = true;
         }else{
           let index = this.listadoInsumosPedido.findIndex(x => x.id === response.id);
+
+          let insumo_anterior = this.listadoInsumosPedido[index];
+          if(insumo_anterior.cuadro_distribucion && insumo_anterior.cuadro_distribucion.length > 0){
+            for(let i in insumo_anterior.cuadro_distribucion){
+              let unidad = insumo_anterior.cuadro_distribucion[i];
+              if(this.unidadesConInsumos[unidad.id]){
+                this.unidadesConInsumos[unidad.id] -= 1;
+              }
+            }
+          }
+
           if(index > 0){
             this.listadoInsumosPedido.splice(index,1);
             this.listadoInsumosPedido.unshift(response);
@@ -333,10 +371,21 @@ export class PedidoComponent implements OnInit {
           }
         }
 
+        if(this.unidadesSeleccionadas.length > 1 && response.cuadro_distribucion.length > 0){
+          for(let i in response.cuadro_distribucion){
+            let unidad = response.cuadro_distribucion[i];
+            if(!this.unidadesConInsumos[unidad.id]){
+              this.unidadesConInsumos[unidad.id] = 0;
+            }
+            this.unidadesConInsumos[unidad.id] += 1;
+          }
+        }
+
         this.cargarPaginaInsumos();
       }else{
         console.log('Cancelar');
       }
+      console.log(this.unidadesConInsumos);
     });
   }
 

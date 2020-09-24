@@ -78,3 +78,23 @@
     text-align: justify;
     text-justify: inter-word;
 }
+
+.unidad-medica-item{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+}
+
+.unidad-medica-item .datos-unidad .titulo{
+    font-weight: 450; 
+    font-size: 16px; 
+    padding-top:5px;
+}
+
+.unidad-medica-item .datos-unidad .descripcion{
+    font-size: 14px;
+    color:#a9a9a9;
+}

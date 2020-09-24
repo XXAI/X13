@@ -20,24 +20,61 @@
             </div>
         </div>
     </section>
-    <section fxFlex="none" fxLayout="column">
-        <div fxFlex>
-            Nuevo Lote: 
-        </div>
+    <section fxFlex="none" fxLayout="column" *ngIf="listaUnidades.length == 1">
         <div fxFlex fxLayout="row">
+            <div fxFlex="none" style="padding-top:20px; padding-right: 10px;">
+                {{listaUnidades[0].nombre}}
+            </div>
             <mat-form-field fxFlex>
                 <mat-label>Cantidad</mat-label>
                 <input matInput [(ngModel)]="insumo.cantidad" (keydown.enter)="aceptarInsumo()" type="number" required>
                 <mat-error *ngIf="!insumo.cantidad || insumo.cantidad <= 0">Este campo es obligatorio</mat-error>
             </mat-form-field>
         </div>
-        <!--div fxFlex fxLayout="row">
-            <div fxFlex></div>
-            <div fxFlex="none">
-                <button mat-button (click)="cancelarLote()">Cancelar</button>
-                <button mat-stroked-button color="primary" (click)="agregarLote()" [disabled]="!formLote.valid"><mat-icon>add_circle</mat-icon> Aceptar</button>
+    </section>
+    <section fxFlex fxLayout="column" *ngIf="listaUnidades.length > 1">
+        <div fxFlex fxLayout="column">
+            <div fxFlex>
+                <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                    <div *cdkVirtualFor="let unidad of listaUnidades;" class="unidad-medica-item">
+                        <div fxLayout="row">
+                            <div fxFlex fxLayout="column" class="datos-unidad">
+                                <div fxFlex="none" class="titulo">
+                                    CLUES: {{unidad.clues}}
+                                </div>
+                                <div fxFlex class="descripcion">
+                                    {{unidad.nombre}}
+                                </div>
+                            </div>
+                            <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
+                                <div fxFlex style="padding:0px 10px;">
+                                    <mat-form-field>
+                                        <input matInput [(ngModel)]="unidad.cantidad" type="number" (keyup)="sumarCantidades()">
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </cdk-virtual-scroll-viewport>
+                <!--cdk-virtual-scroll-viewport itemSize="50" style="overflow: auto; height: 100%;">
+                    <div fxLayout="row" *cdkVirtualFor="let unidad of listaUnidades;" style="height: 50px; width: 100%;">
+                        <div fxFlex="none">{{unidad.clues}}</div>
+                        <div fxFlex="70">{{unidad.nombre}}</div>
+                        <div fxFlex>
+                            <input [(ngModel)]="unidad.cantidad" type="number">
+                        </div>
+                    </div>
+                </cdk-virtual-scroll-viewport-->
             </div>
-        </div-->
+            <div fxFlex="none" fxLayout="row" style="padding:10px;">
+                <div fxFlex style="font-weight: bolder;">
+                    TOTAL
+                </div>
+                <div fxFlex="none">
+                    {{insumo.cantidad | number:'1.0-0'}}
+                </div>
+            </div>
+        </div>
     </section>
     <section fxFlex="none">
         <div fxLayout="row">

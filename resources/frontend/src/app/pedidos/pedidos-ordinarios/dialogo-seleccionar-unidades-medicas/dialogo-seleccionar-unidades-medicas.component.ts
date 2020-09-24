@@ -6,6 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 export interface GrupoData {
   listaUnidades: any;
   listaSeleccionadas: any[];
+  unidadesConInsumos: any;
 }
 
 @Component({
@@ -30,17 +31,21 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   unidadesPedidoDataSource: MatTableDataSource<any>;
   listaUnidadesGrupo:any[];
   listaUnidadesPedido:any[];
+  unidadesConInsumos:any;
+  unidadesEliminarInsumos:any;
 
   controlUnidadesSeleccionadas:any;
 
   ngOnInit() {
-    this.grupo = JSON.parse(JSON.stringify(this.data));
+    let grupo = JSON.parse(JSON.stringify(this.data));
     this.listaUnidadesGrupo = [];
     this.listaUnidadesPedido = [];
     this.controlUnidadesSeleccionadas = {};
+    this.unidadesConInsumos = {};
+    this.unidadesEliminarInsumos = {};
 
-    if(this.grupo.listaUnidades){
-      this.unidadesGrupoDataSource = new MatTableDataSource<any>(this.grupo.listaUnidades);
+    if(grupo.listaUnidades){
+      this.unidadesGrupoDataSource = new MatTableDataSource<any>(grupo.listaUnidades);
 
       this.unidadesGrupoDataSource.filterPredicate = (data:any, filter:string) => {
         let filtroTexto:boolean;
@@ -60,12 +65,18 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
 
       //Unidades seleccionadas para el pedido
       let unidadesSeleccionadas:any[] = [];
-      if(this.grupo.listaSeleccionadas.length){
-        unidadesSeleccionadas = this.grupo.listaSeleccionadas;
+      if(grupo.listaSeleccionadas.length){
+        unidadesSeleccionadas = grupo.listaSeleccionadas;
         for(let i in unidadesSeleccionadas){
           this.controlUnidadesSeleccionadas[unidadesSeleccionadas[i].id] = true;
         }
       }
+      
+      //Unidades con insumos asignados
+      if(grupo.unidadesConInsumos){
+        this.unidadesConInsumos = grupo.unidadesConInsumos;
+      }
+      console.log(this.unidadesConInsumos);
       
       this.unidadesPedidoDataSource = new MatTableDataSource<any>(unidadesSeleccionadas);
 
@@ -112,8 +123,32 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     }
   }
 
+  marcarEliminarInsumos(unidad){
+    if(this.unidadesEliminarInsumos[unidad.id]){
+      this.unidadesEliminarInsumos[unidad.id] = false;
+    }else{
+      this.unidadesEliminarInsumos[unidad.id] = true;
+    }
+  }
+
   aplicarCambios(){
-    this.dialogRef.close(this.unidadesPedidoDataSource.data);
+    let listaUnidadesEliminar:number[] = [];
+    for(let i in this.unidadesEliminarInsumos){
+      if(this.unidadesEliminarInsumos[i]){
+        let unidad_id = +i;
+        listaUnidadesEliminar.push(unidad_id);
+      }
+    }
+
+    if(listaUnidadesEliminar.length){
+      for(let i in listaUnidadesEliminar){
+        let unidad_id = listaUnidadesEliminar[i];
+        let index_eliminar = this.unidadesPedidoDataSource.data.findIndex(x => x.id === unidad_id);
+        this.unidadesPedidoDataSource.data.splice(index_eliminar,1);
+      }
+    }
+    
+    this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar});
   }
 
   close(): void {

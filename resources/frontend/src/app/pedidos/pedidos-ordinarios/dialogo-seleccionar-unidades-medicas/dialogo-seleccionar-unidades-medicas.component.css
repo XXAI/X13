@@ -46,6 +46,10 @@
     z-index: 99999;
 }
 
+.marcado-borrar{
+    text-decoration-line: line-through;
+}
+
 .unidad-medica-item .datos-unidad .titulo{
     font-weight: 450; 
     font-size: 16px; 

@@ -32,11 +32,14 @@
                             </div>
                             <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
                                 <div fxFlex>
-                                    <button mat-icon-button (click)="agregarUnidadMedica(unidad)" *ngIf="!controlUnidadesSeleccionadas[unidad.id]">
-                                        <mat-icon>chevron_right</mat-icon>
+                                    <button mat-icon-button (click)="agregarUnidadMedica(unidad)" *ngIf="!controlUnidadesSeleccionadas[unidad.id] && !unidadesConInsumos[unidad.id]">
+                                        <mat-icon>check_box_outline_blank</mat-icon>
                                     </button>
-                                    <button mat-icon-button (click)="quitarUnidadMedica(unidad)" *ngIf="controlUnidadesSeleccionadas[unidad.id]">
-                                        <mat-icon>undo</mat-icon>
+                                    <button mat-icon-button (click)="quitarUnidadMedica(unidad)" *ngIf="controlUnidadesSeleccionadas[unidad.id] && !unidadesConInsumos[unidad.id]">
+                                        <mat-icon>check_box</mat-icon>
+                                    </button>
+                                    <button mat-icon-button *ngIf="unidadesConInsumos[unidad.id]">
+                                        <mat-icon>lock</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -70,12 +73,15 @@
                         <div fxLayout="row">
                             <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
                                 <div fxFlex>
-                                    <button mat-icon-button (click)="quitarUnidadMedica(unidad)">
-                                        <mat-icon>chevron_left</mat-icon>
+                                    <button mat-icon-button (click)="quitarUnidadMedica(unidad)" *ngIf="!unidadesConInsumos[unidad.id]">
+                                        <mat-icon>undo</mat-icon>
+                                    </button>
+                                    <button mat-icon-button (click)="marcarEliminarInsumos(unidad)" *ngIf="unidadesConInsumos[unidad.id]">
+                                        <mat-icon>{{(unidadesEliminarInsumos[unidad.id])?'delete':'delete_outline'}}</mat-icon>
                                     </button>
                                 </div>
                             </div>
-                            <div fxFlex fxLayout="column" class="datos-unidad">
+                            <div fxFlex fxLayout="column" class="datos-unidad" [ngClass]="{'marcado-borrar':unidadesEliminarInsumos[unidad.id]}">
                                 <div fxFlex="none" class="titulo">
                                     CLUES: {{unidad.clues}}
                                 </div>
