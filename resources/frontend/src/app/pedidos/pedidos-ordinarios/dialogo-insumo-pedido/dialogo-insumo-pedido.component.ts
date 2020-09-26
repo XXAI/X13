@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms'
 export interface InsumoData {
   insumoInfo: any;
   listaUnidades: any[];
+  unidadEntrega: any;
 }
 
 @Component({
@@ -24,6 +25,7 @@ export class DialogoInsumoPedidoComponent implements OnInit {
   formInsumo:FormGroup;
 
   listaUnidades:any[];
+  unidadEntrega:any;
 
   iconoMedicamento:string = 'assets/icons-ui/MED.svg';
   iconoMatCuracion:string = 'assets/icons-ui/MTC.svg';
@@ -31,7 +33,8 @@ export class DialogoInsumoPedidoComponent implements OnInit {
   ngOnInit() {
     this.insumo = JSON.parse(JSON.stringify(this.data.insumoInfo));
     this.listaUnidades = JSON.parse(JSON.stringify(this.data.listaUnidades));
-
+    this.unidadEntrega = JSON.parse(JSON.stringify(this.data.unidadEntrega));
+    
     if(!this.insumo.cantidad){
       this.insumo.cantidad = undefined;
       this.insumo.monto = 0;
@@ -51,7 +54,7 @@ export class DialogoInsumoPedidoComponent implements OnInit {
   aceptarInsumo(){
     let insumo = this.insumo;
     //insumo.lotes = this.listaLotes;
-    if(this.listaUnidades.length > 1){
+    if(this.listaUnidades.length > 0){
       let distribucion_unidades = [];
       for(let i in this.listaUnidades){
         if(this.listaUnidades[i].cantidad){
@@ -64,7 +67,7 @@ export class DialogoInsumoPedidoComponent implements OnInit {
       }
       this.insumo.cuadro_distribucion = distribucion_unidades;
     }
-    console.log(this.insumo);
+    //console.log(this.insumo);
     this.dialogRef.close(insumo);
   }
 

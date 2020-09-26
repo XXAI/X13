@@ -20,10 +20,10 @@
             </div>
         </div>
     </section>
-    <section fxFlex="none" fxLayout="column" *ngIf="listaUnidades.length == 1">
+    <section fxFlex="none" fxLayout="column" *ngIf="listaUnidades.length == 0 && unidadEntrega">
         <div fxFlex fxLayout="row">
             <div fxFlex="none" style="padding-top:20px; padding-right: 10px;">
-                {{listaUnidades[0].nombre}}
+                {{unidadEntrega.nombre}}
             </div>
             <mat-form-field fxFlex>
                 <mat-label>Cantidad</mat-label>
@@ -32,7 +32,7 @@
             </mat-form-field>
         </div>
     </section>
-    <section fxFlex fxLayout="column" *ngIf="listaUnidades.length > 1">
+    <section fxFlex fxLayout="column" *ngIf="listaUnidades.length > 0">
         <div fxFlex fxLayout="column">
             <div fxFlex>
                 <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">

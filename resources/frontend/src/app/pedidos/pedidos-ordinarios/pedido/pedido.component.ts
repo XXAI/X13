@@ -8,6 +8,7 @@ import { MatDrawer, MatInput, MatTableDataSource } from '@angular/material';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
 import { DialogoSeleccionarUnidadesMedicasComponent } from '../dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
+import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 
 @Component({
   selector: 'app-pedido',
@@ -60,7 +61,7 @@ export class PedidoComponent implements OnInit {
   pageSize: number = 9;
   dataSourceInsumos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['clave','nombre','cantidad','monto','actions'];
+  displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
 
   ngOnInit() {
     let fecha_actual = new Date();
@@ -158,28 +159,6 @@ export class PedidoComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
           this.listadoInsumos = response.data;
-
-          //Para probar el filtro en la lista de insumos del pedido
-          /*for(let i in this.listadoInsumos){
-            let insumo = this.listadoInsumos[i];
-            if(insumo.nombre_generico){
-              let cantidad = Math.floor(Math.random() * (100 - 1 + 1) + 1);
-
-              insumo.cantidad = cantidad;
-              insumo.monto = 0;
-
-              this.listadoInsumosPedido.push(insumo);
-              this.controlInsumosAgregados[insumo.id] = true;
-              
-              this.clavesTotales.insumos += 1;
-              if(insumo.tipo_insumo == 'MED'){
-                this.clavesTotales.medicamentos += 1;
-              }else{
-                this.clavesTotales.mat_curacion += 1;
-              }
-            }
-          }
-          this.cargarPaginaInsumos();*/
         }
         this.isLoadingInsumos = false;
       },
@@ -298,17 +277,22 @@ export class PedidoComponent implements OnInit {
           for(let i in this.listadoInsumosPedido){
             let insumo = this.listadoInsumosPedido[i];
             let cantidad = 0;
+            let ids_a_borrar = [];
             for(let j in insumo.cuadro_distribucion){
               let unidad = insumo.cuadro_distribucion[j];
               let index = response.unidadesEliminarInsumos.indexOf(unidad.id);
               if(index >= 0){
                 cantidad += unidad.cantidad;
-                insumo.cuadro_distribucion.splice(j,1);
+                ids_a_borrar.push(unidad.id);
               }
             }
             if(cantidad > 0){
               insumo.cantidad -= cantidad;
-              this.listadoInsumosPedido[i] = insumo;
+              //this.listadoInsumosPedido[i] = insumo;
+              for(let j in ids_a_borrar){
+                let index = insumo.cuadro_distribucion.findIndex(x => x.id === ids_a_borrar[j]);
+                insumo.cuadro_distribucion.splice(index,1);
+              }
             }
           }
           for(let i in response.unidadesEliminarInsumos){
@@ -318,6 +302,40 @@ export class PedidoComponent implements OnInit {
         }
       }else{
         console.log('Cancelar');
+      }
+    });
+  }
+
+  quitarInsumo(insumo){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Insumo',dialogMessage:'Esta seguro de eliminar este insumo?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.controlInsumosAgregados[insumo.id] = false;
+
+        this.clavesTotales.insumos -= 1;
+        if(insumo.tipo_insumo == 'MED'){
+          this.clavesTotales.medicamentos -= 1;
+        }else{
+          this.clavesTotales.mat_curacion -= 1;
+        }
+
+        if(this.unidadesSeleccionadas.length > 1 && insumo.cuadro_distribucion.length > 0){
+          for(let i in insumo.cuadro_distribucion){
+            let unidad = insumo.cuadro_distribucion[i];
+            if(this.unidadesConInsumos[unidad.id]){
+              this.unidadesConInsumos[unidad.id] -= 1;
+            }
+          }
+        }
+
+        let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
+        this.listadoInsumosPedido.splice(index,1);
+
+        this.cargarPaginaInsumos();
       }
     });
   }
@@ -333,11 +351,11 @@ export class PedidoComponent implements OnInit {
     let configDialog:any = {
       width: '99%',
       maxHeight: '90vh',
-      data:{insumoInfo: insumo, listaUnidades: this.unidadesSeleccionadas},
+      data:{insumoInfo: insumo, listaUnidades: this.unidadesSeleccionadas, unidadEntrega: this.unidadMedicaEntrega},
       panelClass: 'no-padding-dialog'
     };
 
-    if(this.unidadesSeleccionadas.length > 1){
+    if(this.unidadesSeleccionadas.length > 0){
       configDialog.height = '643px';
     }
 
