@@ -411,6 +411,10 @@ export class PedidoComponent implements OnInit {
     });
   }
 
+  verUnidadesSeleccionadas(){
+    console.log('Proximamente');
+  }
+
   guardarPedido(concluir:boolean = false){
     let datosPedido = {
       pedido: this.formPedido.value,
