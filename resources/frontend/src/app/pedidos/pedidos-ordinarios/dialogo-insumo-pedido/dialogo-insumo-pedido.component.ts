@@ -54,21 +54,23 @@ export class DialogoInsumoPedidoComponent implements OnInit {
   aceptarInsumo(){
     let insumo = this.insumo;
     //insumo.lotes = this.listaLotes;
-    if(this.listaUnidades.length > 0){
-      let distribucion_unidades = [];
-      for(let i in this.listaUnidades){
-        if(this.listaUnidades[i].cantidad){
-          distribucion_unidades.push({
-            id: this.listaUnidades[i].id,
-            clues: this.listaUnidades[i].clues,
-            cantidad: this.listaUnidades[i].cantidad
-          });
+    if(insumo.cantidad > 0){
+      if(this.listaUnidades.length > 0){
+        let distribucion_unidades = [];
+        for(let i in this.listaUnidades){
+          if(this.listaUnidades[i].cantidad){
+            distribucion_unidades.push({
+              id: this.listaUnidades[i].id,
+              clues: this.listaUnidades[i].clues,
+              cantidad: this.listaUnidades[i].cantidad
+            });
+          }
         }
+        this.insumo.cuadro_distribucion = distribucion_unidades;
       }
-      this.insumo.cuadro_distribucion = distribucion_unidades;
+      //console.log(this.insumo);
+      this.dialogRef.close(insumo);
     }
-    //console.log(this.insumo);
-    this.dialogRef.close(insumo);
   }
 
   sumarCantidades(){

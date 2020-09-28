@@ -39,7 +39,7 @@ export class PedidoComponent implements OnInit {
   insumoQuery:string;
   listadoInsumos:any[];
   busquedaTipoInsumo:string;
-  claveInsumoSeleccionado:string;
+  idInsumoSeleccionado:number;
 
   listadoInsumosPedido:any[];
   filtroInsumosPedido:any[];
@@ -252,6 +252,7 @@ export class PedidoComponent implements OnInit {
     this.cleanSearch();
     this.listadoInsumos = [];
     this.busquedaTipoInsumo = '*';
+    this.idInsumoSeleccionado = 0;
   }
 
   abrirBuscadorInsumos(){
@@ -259,11 +260,17 @@ export class PedidoComponent implements OnInit {
   }
 
   seleccionarUnidades(){
+    let hayInsumosCapturados:boolean = false;
+
+    if(this.clavesTotales.insumos > 0){
+      hayInsumosCapturados = true;
+    }
+
     let configDialog = {
       width: '99%',
       maxHeight: '90vh',
       height: '643px',
-      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas, unidadesConInsumos: this.unidadesConInsumos},
+      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas, unidadesConInsumos: this.unidadesConInsumos, hayInsumosCapturados: hayInsumosCapturados},
       panelClass: 'no-padding-dialog'
     };
 
@@ -341,7 +348,7 @@ export class PedidoComponent implements OnInit {
   }
 
   agregarInsumo(insumo){
-    this.claveInsumoSeleccionado = insumo.clave;
+    this.idInsumoSeleccionado = insumo.id;
 
     if(this.controlInsumosAgregados[insumo.id]){
       let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);

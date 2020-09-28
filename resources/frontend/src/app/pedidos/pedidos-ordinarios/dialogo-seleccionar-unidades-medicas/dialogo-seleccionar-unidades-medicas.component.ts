@@ -7,6 +7,7 @@ export interface GrupoData {
   listaUnidades: any;
   listaSeleccionadas: any[];
   unidadesConInsumos: any;
+  hayInsumosCapturados: boolean;
 }
 
 @Component({
@@ -23,14 +24,15 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   ) { }
 
   grupo:any;
+  hayInsumosCapturados:boolean;
 
   filtroUnidadesGrupo:string;
   filtroUnidadesPedido:string;
-
   unidadesGrupoDataSource: MatTableDataSource<any>;
   unidadesPedidoDataSource: MatTableDataSource<any>;
   listaUnidadesGrupo:any[];
   listaUnidadesPedido:any[];
+
   unidadesConInsumos:any;
   unidadesEliminarInsumos:any;
 
@@ -43,6 +45,12 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     this.controlUnidadesSeleccionadas = {};
     this.unidadesConInsumos = {};
     this.unidadesEliminarInsumos = {};
+
+    if(grupo.hayInsumosCapturados){
+      this.hayInsumosCapturados = true;
+    }else{
+      this.hayInsumosCapturados = false;
+    }
 
     if(grupo.listaUnidades){
       this.unidadesGrupoDataSource = new MatTableDataSource<any>(grupo.listaUnidades);
@@ -76,7 +84,7 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
       if(grupo.unidadesConInsumos){
         this.unidadesConInsumos = grupo.unidadesConInsumos;
       }
-      console.log(this.unidadesConInsumos);
+      //console.log(this.unidadesConInsumos);
       
       this.unidadesPedidoDataSource = new MatTableDataSource<any>(unidadesSeleccionadas);
 
@@ -146,6 +154,36 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
         let index_eliminar = this.unidadesPedidoDataSource.data.findIndex(x => x.id === unidad_id);
         this.unidadesPedidoDataSource.data.splice(index_eliminar,1);
       }
+    }
+
+    console.log('###########################################---------------------------------------###########################################');
+
+    console.log(this.unidadesConInsumos);
+    let unidades_con_insumos = 0;
+    for(let i in this.unidadesConInsumos){
+      if(this.unidadesConInsumos[i]){
+        unidades_con_insumos++;
+      }
+    }
+
+    if(unidades_con_insumos){
+      console.log('insumos agregados a alguna unidad');
+    }else{
+      console.log('sin insumos agregrados a ninguna unidad');
+    }
+
+    if(this.hayInsumosCapturados){
+      console.log('ya hay insumos capturados');
+    }else{
+      console.log('no hay insumos capturados');
+    }
+
+    if(unidades_con_insumos == 0 && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length > 0){
+      console.log('######### Acción requerida: ya hay insumos capturados, sin unidades seleccionadas anteriormente');
+    }
+
+    if(unidades_con_insumos > 0 && this.hayInsumosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
+      console.log('######### Acción requerida: ya hay insumos capturados con unidades seleccionadas anteriormente con insumos asignados');
     }
     
     this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar});

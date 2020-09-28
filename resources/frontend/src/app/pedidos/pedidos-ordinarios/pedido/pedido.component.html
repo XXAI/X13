@@ -30,7 +30,7 @@
                 <section fxFlex style="overflow: hidden;">
                     <cdk-virtual-scroll-viewport itemSize="222" style="overflow: auto; height: 100%;">
                         <div *cdkVirtualFor="let insumo of listadoInsumos;">
-                            <div class="lista-insumos-item" [ngClass]="{'selected': insumo.clave==claveInsumoSeleccionado}">
+                            <div class="lista-insumos-item" [ngClass]="{'selected': insumo.id==idInsumoSeleccionado}">
                                 <div class="lista-insumos-item-etiqueta" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
                                     <div class="lista-insumos-item-etiqueta-icono"><img src="{{(insumo.tipo_insumo=='MED')?iconoMedicamento:iconoMatCuracion}}" alt="Icon"></div>
                                     <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
@@ -212,7 +212,7 @@
                                 </ng-container>
                                 
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                                <tr mat-row [ngClass]="{'selected-item': row.clave==claveInsumoSeleccionado, 'medicamento-row-color':row.tipo_insumo == 'MED', 'mat-curacion-row-color':row.tipo_insumo == 'MTC'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                                <tr mat-row [ngClass]="{'selected-item': row.id==idInsumoSeleccionado, 'medicamento-row-color':row.tipo_insumo == 'MED', 'mat-curacion-row-color':row.tipo_insumo == 'MTC'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
                                 <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroInsumosPedido!=null && filtroInsumosPedido.length==0)}"></tr>
                             </table>
