@@ -222,7 +222,7 @@ table td {
 }
 
 .small-search-input{
-    padding: 0px 10px 0px 0px;
+    padding: 0px 5px 5px 5px;
 }
 
 :host ::ng-deep .small-search-input > .mat-form-field{
@@ -243,3 +243,39 @@ table td {
     border-top:none;
 }
 
+.no-items-found{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+    text-align: center;
+    color:#a9a9a9;
+    font-size: 16px;
+    padding-top: 15px;
+}
+
+.unidad-seleccionada{
+    background-color: #dce2f9;
+}
+
+.unidad-medica-item{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+}
+
+.unidad-medica-item .datos-unidad .titulo{
+    font-weight: 450; 
+    font-size: 16px; 
+    padding-top:5px;
+}
+
+.unidad-medica-item .datos-unidad .descripcion{
+    font-size: 14px;
+    color:#a9a9a9;
+}

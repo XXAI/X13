@@ -24,17 +24,24 @@ export class PedidoComponent implements OnInit {
 
   tituloGrupoPedidos: string;
   mostrarBotonAgregarUnidades:boolean;
-  unidadesSeleccionadas:any[];
   listaUnidadesAsignadas:any[];
   unidadesConInsumos:any;
+
+  unidadesSeleccionadas:any[];
+  dataSourceUnidadesSeleccionadas:MatTableDataSource<any>;
+  listaFiltroUnidadesSeleccionadas:any[];
+  filtroUnidadesSeleccionadas:string;
+  pedidoInternoSeleccionado:number;
 
   unidadMedicaEntrega:any;
 
   formPedido:FormGroup;
   catalogos:any;
+
   clavesTotales: any;
   clavesTotalesFiltro: any;
-
+  clavesTotalesPedido: any;
+  
   isLoadingInsumos:boolean;
   insumoQuery:string;
   listadoInsumos:any[];
@@ -54,6 +61,7 @@ export class PedidoComponent implements OnInit {
   filtroAplicado:boolean;
 
   mostrarTarjetas:boolean = false;
+  mostrarPedidosInternos:boolean = false;
 
   pageEvent: PageEvent;
   resultsLength: number = 0;
@@ -78,7 +86,7 @@ export class PedidoComponent implements OnInit {
     this.busquedaTipoInsumo = '*';
     this.catalogos = {programas:[]};
 
-    this.clavesTotales = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
+    this.clavesTotalesPedido = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     
     this.catalogos.meses = [
@@ -178,44 +186,65 @@ export class PedidoComponent implements OnInit {
   }
 
   cargarPaginaInsumos(event = null){
-    if(this.dataSourceInsumos){
+    /*if(this.dataSourceInsumos){
       this.dataSourceInsumos.disconnect();
+    }*/
+    let pedido_interno:any = {}
+    if(this.pedidoInternoSeleccionado){
+      pedido_interno = this.generarPedidoInterno();
     }
 
-    this.dataSourceInsumos = new MatTableDataSource<any>(this.listadoInsumosPedido);
-    this.dataSourceInsumos.paginator = this.insumosPaginator;
+    if(pedido_interno.total_claves){
+      this.clavesTotales = pedido_interno.total_claves;
+    }else{
+      this.clavesTotales = this.clavesTotalesPedido;
+    }
 
-    this.dataSourceInsumos.filterPredicate = (data:any, filter:string) => {
-      let filtroTexto:boolean;
-      let filtroTipo:boolean;
-      let filtros = filter.split('|');
-
-      //index:0 = tipo insumo
-      if(filtros[0] != '*'){
-        filtroTipo = data.tipo_insumo == filtros[0];
-      }else{
-        filtroTipo = true;
-      }
+    let listado_insumos_tabla:any[];
+    if(pedido_interno.listado_insumos){
+      listado_insumos_tabla = pedido_interno.listado_insumos;
+    }else{
+      listado_insumos_tabla = this.listadoInsumosPedido;
+    }
+    
+    if(!this.dataSourceInsumos){
+      this.dataSourceInsumos = new MatTableDataSource<any>(listado_insumos_tabla);
       
-      //index:1 = texto a buscar
-      if(filtros[1]){
-        filtros[1] = filtros[1].toLowerCase()
-        filtroTexto = data.clave.toLowerCase().includes(filtros[1]) || data.nombre_generico.toLowerCase().includes(filtros[1]) || data.descripcion.toLowerCase().includes(filtros[1]);
-      }else{
-        filtroTexto = true;
-      }
+      this.dataSourceInsumos.filterPredicate = (data:any, filter:string) => {
+        let filtroTexto:boolean;
+        let filtroTipo:boolean;
+        let filtros = filter.split('|');
 
-      if(filtroTexto){
-        this.clavesTotalesFiltro.insumos += 1
-        if(data.tipo_insumo == 'MED'){
-          this.clavesTotalesFiltro.medicamentos += 1;
+        //index:0 = tipo insumo
+        if(filtros[0] != '*'){
+          filtroTipo = data.tipo_insumo == filtros[0];
         }else{
-          this.clavesTotalesFiltro.mat_curacion += 1;
+          filtroTipo = true;
         }
-      }
+        
+        //index:1 = texto a buscar
+        if(filtros[1]){
+          filtros[1] = filtros[1].toLowerCase()
+          filtroTexto = data.clave.toLowerCase().includes(filtros[1]) || data.nombre_generico.toLowerCase().includes(filtros[1]) || data.descripcion.toLowerCase().includes(filtros[1]);
+        }else{
+          filtroTexto = true;
+        }
 
-      return filtroTexto && filtroTipo;
-    };
+        if(filtroTexto){
+          this.clavesTotalesFiltro.insumos += 1
+          if(data.tipo_insumo == 'MED'){
+            this.clavesTotalesFiltro.medicamentos += 1;
+          }else{
+            this.clavesTotalesFiltro.mat_curacion += 1;
+          }
+        }
+
+        return filtroTexto && filtroTipo;
+      };
+    }else{
+      this.dataSourceInsumos.data = listado_insumos_tabla;
+    }
+    this.dataSourceInsumos.paginator = this.insumosPaginator;
     this.aplicarFiltroInsumos();
 
     this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
@@ -262,7 +291,7 @@ export class PedidoComponent implements OnInit {
   seleccionarUnidades(){
     let hayInsumosCapturados:boolean = false;
 
-    if(this.clavesTotales.insumos > 0){
+    if(this.clavesTotalesPedido.insumos > 0){
       hayInsumosCapturados = true;
     }
 
@@ -323,11 +352,11 @@ export class PedidoComponent implements OnInit {
       if(valid){
         this.controlInsumosAgregados[insumo.id] = false;
 
-        this.clavesTotales.insumos -= 1;
+        this.clavesTotalesPedido.insumos -= 1;
         if(insumo.tipo_insumo == 'MED'){
-          this.clavesTotales.medicamentos -= 1;
+          this.clavesTotalesPedido.medicamentos -= 1;
         }else{
-          this.clavesTotales.mat_curacion -= 1;
+          this.clavesTotalesPedido.mat_curacion -= 1;
         }
 
         if(this.unidadesSeleccionadas.length > 1 && insumo.cuadro_distribucion.length > 0){
@@ -372,12 +401,12 @@ export class PedidoComponent implements OnInit {
       if(response){
         if(!this.controlInsumosAgregados[response.id]){
           this.listadoInsumosPedido.unshift(response);
-          this.clavesTotales.insumos = this.listadoInsumosPedido.length;
+          this.clavesTotalesPedido.insumos = this.listadoInsumosPedido.length;
           
           if(response.tipo_insumo == 'MED'){
-            this.clavesTotales.medicamentos += 1;
+            this.clavesTotalesPedido.medicamentos += 1;
           }else{
-            this.clavesTotales.mat_curacion += 1;
+            this.clavesTotalesPedido.mat_curacion += 1;
           }
           this.controlInsumosAgregados[response.id] = true;
         }else{
@@ -418,8 +447,81 @@ export class PedidoComponent implements OnInit {
     });
   }
 
-  verUnidadesSeleccionadas(){
-    console.log('Proximamente');
+  aplicarFiltroUnidadesSeleccionadas(){
+    this.dataSourceUnidadesSeleccionadas.filter = this.filtroUnidadesSeleccionadas;
+    this.listaFiltroUnidadesSeleccionadas = this.dataSourceUnidadesSeleccionadas.connect().value;
+  }
+
+  generarPedidoInterno(){
+    let pedido_interno:any = {
+      listado_insumos: [],
+      total_claves: {insumos:0, medicamentos:0, mat_curacion:0}
+    }
+
+    if(this.pedidoInternoSeleccionado){
+      for(let i in this.listadoInsumosPedido){
+        let insumo = JSON.parse(JSON.stringify(this.listadoInsumosPedido[i]));
+        let unidad_index = insumo.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+        if(unidad_index >= 0){
+          let cantidad = insumo.cuadro_distribucion[unidad_index].cantidad;
+          insumo.cuadro_distribucion = [];
+          insumo.cantidad = cantidad;
+          
+          pedido_interno.listado_insumos.unshift(insumo);
+
+          pedido_interno.total_claves.insumos += 1;
+          if(insumo.tipo_insumo == 'MED'){
+            pedido_interno.total_claves.medicamentos += 1;
+          }else{
+            pedido_interno.total_claves.mat_curacion += 1;
+          }
+        }
+      }
+    }
+    return pedido_interno;
+  }
+
+  verPedidosInternos(){
+    if(!this.dataSourceUnidadesSeleccionadas){
+      this.dataSourceUnidadesSeleccionadas = new MatTableDataSource<any>(this.unidadesSeleccionadas);
+      this.dataSourceUnidadesSeleccionadas.filterPredicate = (data:any, filter:string) => {
+        let filtroTexto:boolean;
+        let filtro = filter.trim();
+
+        if(filtro && filtro != ''){
+          filtro = filtro.toLowerCase()
+          filtroTexto = data.clues.toLowerCase().includes(filtro) || data.nombre.toLowerCase().includes(filtro);
+        }else{
+          filtroTexto = true;
+        }
+        
+        return filtroTexto;
+      };
+    }else{
+      this.dataSourceUnidadesSeleccionadas.data = this.unidadesSeleccionadas;
+    }
+    this.listaFiltroUnidadesSeleccionadas = this.dataSourceUnidadesSeleccionadas.connect().value;
+    this.mostrarPedidosInternos = true;
+  }
+
+  cerrarPedidosInternos(){
+    this.mostrarPedidosInternos = false;
+    this.filtroUnidadesSeleccionadas = '';
+    this.listaFiltroUnidadesSeleccionadas = [];
+    if(this.pedidoInternoSeleccionado){
+      this.pedidoInternoSeleccionado = 0;
+      this.cargarPaginaInsumos();
+    }
+  }
+
+  mostrarInsumosPedidoInterno(unidad){
+    this.pedidoInternoSeleccionado = unidad.id;
+    this.cargarPaginaInsumos();
+  }
+
+  ocultarInsumosPedidoInterno(){
+    this.pedidoInternoSeleccionado = 0;
+    this.cargarPaginaInsumos();
   }
 
   guardarPedido(concluir:boolean = false){

@@ -84,75 +84,124 @@
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
                 <section fxFlex="30" fxLayout="row" *ngIf="!insumosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
-                        <!--div fxFlex="none" style="padding-bottom: 5px;">
-                            <div fxLayout="column">
-                                <div fxFlex style="text-align: center; font-weight: 450; font-size: 20px;">
-                                    {{tituloGrupoPedidos}}
+                        <div fxFlex fxLayout="column" *ngIf="!mostrarPedidosInternos"> <!-- Panel principal del pedido -->
+                            <div fxFlex="none" fxLayout="column" *ngIf="unidadMedicaEntrega" style="padding: 5px 0px;">
+                                <div fxFlex class="label-unidad-entrega">
+                                    Entregar en:
                                 </div>
-                                <div fxFlex style="text-align: center; font-weight: 200; font-size: 15px; color:#a9a9a9; padding-bottom:5px;" *ngIf="mostrarBotonAgregarUnidades">
-                                    {{unidadesSeleccionadas.length}} Unidades Medicas en el pedido
+                                <div fxFlex class="unidad-entrega">
+                                    {{unidadMedicaEntrega.nombre}}
                                 </div>
                             </div>
-                        </div-->
-                        <div fxFlex="none" fxLayout="column" *ngIf="unidadMedicaEntrega" style="padding: 5px 0px;">
-                            <div fxFlex class="label-unidad-entrega">
-                                Entregar en:
-                            </div>
-                            <div fxFlex class="unidad-entrega">
-                                {{unidadMedicaEntrega.nombre}}
-                            </div>
-                        </div>
-                        <div fxFlex="none" fxLayout="row raw" [formGroup]="formPedido">
-                            <mat-form-field fxFlex="100">
-                                <mat-label>Descripcion del Pedido</mat-label>
-                                <input matInput formControlName="descripcion" required>
-                                <mat-error *ngIf="formPedido.get('descripcion').hasError('required')">Descripción es obligatorio</mat-error>
-                            </mat-form-field>
-        
-                            <mat-form-field fxFlex="50">
-                                <mat-label>Mes</mat-label>
-                                <mat-select  formControlName="mes" required>
-                                    <mat-option *ngFor="let item of catalogos['meses']" [value]="item.clave">
-                                        {{item.etiqueta}}
-                                    </mat-option>
-                                </mat-select>
-                                <mat-error *ngIf="formPedido.get('mes').hasError('required')">Mes es obligatorio</mat-error>
-                            </mat-form-field>
-        
-                            <mat-form-field fxFlex="50">
-                                <mat-label>Año</mat-label>
-                                <input matInput formControlName="anio" required>
-                                <mat-error *ngIf="formPedido.get('anio').hasError('required')">Año es obligatorio</mat-error>
-                            </mat-form-field>
-                            
-                            <mat-form-field fxFlex="100">
-                                <mat-label>Programa</mat-label>
-                                <mat-select formControlName="programa_id">
-                                    <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
-                                    <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
-                                        {{item.descripcion}}
-                                    </mat-option>
-                                </mat-select>
-                            </mat-form-field>
-                            
-                            <mat-form-field  fxFlex="100">
-                                <mat-label>Observaciones</mat-label>
-                                <textarea matInput formControlName="observaciones" rows="2"></textarea>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex></div>
-                        <div fxFlex="none" fxLayout="row">
-                            <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
-                                <button mat-button color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
-                                    <mat-icon>house</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Lista de Unidades Seleccionadas" (click)="verUnidadesSeleccionadas()" [disabled]="unidadesSeleccionadas.length == 0">
-                                    <mat-icon>home_work</mat-icon>
-                                </button>
+                            <div fxFlex="none" fxLayout="row raw" [formGroup]="formPedido">
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Descripcion del Pedido</mat-label>
+                                    <input matInput formControlName="descripcion" required>
+                                    <mat-error *ngIf="formPedido.get('descripcion').hasError('required')">Descripción es obligatorio</mat-error>
+                                </mat-form-field>
+            
+                                <mat-form-field fxFlex="50">
+                                    <mat-label>Mes</mat-label>
+                                    <mat-select  formControlName="mes" required>
+                                        <mat-option *ngFor="let item of catalogos['meses']" [value]="item.clave">
+                                            {{item.etiqueta}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error *ngIf="formPedido.get('mes').hasError('required')">Mes es obligatorio</mat-error>
+                                </mat-form-field>
+            
+                                <mat-form-field fxFlex="50">
+                                    <mat-label>Año</mat-label>
+                                    <input matInput formControlName="anio" required>
+                                    <mat-error *ngIf="formPedido.get('anio').hasError('required')">Año es obligatorio</mat-error>
+                                </mat-form-field>
+                                
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Programa</mat-label>
+                                    <mat-select formControlName="programa_id">
+                                        <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
+                                        <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
+                                            {{item.descripcion}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                
+                                <mat-form-field  fxFlex="100">
+                                    <mat-label>Observaciones</mat-label>
+                                    <textarea matInput formControlName="observaciones" rows="2"></textarea>
+                                </mat-form-field>
                             </div>
                             <div fxFlex></div>
+                            <div fxFlex="none" fxLayout="row">
+                                <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
+                                    <button mat-button color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
+                                        <mat-icon>house</mat-icon>
+                                    </button>
+                                    <button mat-icon-button matTooltip="Lista de Pedidos por Unidad" (click)="verPedidosInternos()" [disabled]="unidadesSeleccionadas.length == 0">
+                                        <mat-icon>home_work</mat-icon>
+                                    </button>
+                                </div>
+                                <div fxFlex></div>
+                                <div fxFlex="none">
+                                    <button mat-raised-button (click)="abrirBuscadorInsumos()"><mat-icon>launch</mat-icon> Insumos</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxFlex fxLayout="column" *ngIf="mostrarPedidosInternos">
                             <div fxFlex="none">
-                                <button mat-raised-button (click)="abrirBuscadorInsumos()"><mat-icon>launch</mat-icon> Insumos</button>
+                                <div class="small-search-input">
+                                    <mat-form-field appearance="outline">
+                                        <input matInput [(ngModel)]="filtroUnidadesSeleccionadas" (keyup)="aplicarFiltroUnidadesSeleccionadas()" placeholder="Filtrar">
+                                    </mat-form-field>
+                                </div>
+                                <mat-divider></mat-divider>
+                            </div>
+                            <div fxFlex>
+                                <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                                    <div *ngIf="listaFiltroUnidadesSeleccionadas.length == 0" class="no-items-found">
+                                        No se encontraron resultados
+                                    </div>
+                                    <div *cdkVirtualFor="let unidad of listaFiltroUnidadesSeleccionadas;" [ngClass]="{'unidad-seleccionada':pedidoInternoSeleccionado == unidad.id}" class="unidad-medica-item">
+                                        <div fxLayout="row">
+                                            <div fxFlex fxLayout="column" class="datos-unidad">
+                                                <div fxFlex="none" class="titulo">
+                                                    CLUES: {{unidad.clues}}
+                                                </div>
+                                                <div fxFlex class="descripcion">
+                                                    {{unidad.nombre}}
+                                                </div>
+                                            </div>
+                                            <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
+                                                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado != unidad.id">
+                                                    <button mat-icon-button (click)="mostrarInsumosPedidoInterno(unidad)">
+                                                        <mat-icon>find_in_page</mat-icon>
+                                                    </button>
+                                                </div>
+                                                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
+                                                    <button mat-icon-button (click)="ocultarInsumosPedidoInterno()">
+                                                        <mat-icon>close</mat-icon>
+                                                    </button>
+                                                </div>
+                                                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
+                                                    <button mat-icon-button color="accent" (click)="imprimirPedidoInterno()">
+                                                        <mat-icon>print</mat-icon>
+                                                    </button>
+                                                </div>
+                                                <div fxFlex></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </cdk-virtual-scroll-viewport>
+                                <mat-divider></mat-divider>
+                            </div>
+                            <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
+                                <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
+                                    <mat-hint>{{listaFiltroUnidadesSeleccionadas.length | number}} Unidades</mat-hint>
+                                </div>
+                                <div fxFlex></div>
+                                <div fxFlex="none">
+                                    <button mat-raised-button (click)="cerrarPedidosInternos()"><mat-icon>close</mat-icon> Cerrar</button>
+                                </div>
                             </div>
                         </div>
                     </mat-card>
