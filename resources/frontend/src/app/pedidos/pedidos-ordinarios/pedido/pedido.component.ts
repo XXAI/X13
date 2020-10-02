@@ -350,27 +350,50 @@ export class PedidoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(valid => {
       if(valid){
-        this.controlInsumosAgregados[insumo.id] = false;
+        if(this.pedidoInternoSeleccionado){
+          let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
+          let insumo_pedido = this.listadoInsumosPedido[index];
 
-        this.clavesTotalesPedido.insumos -= 1;
-        if(insumo.tipo_insumo == 'MED'){
-          this.clavesTotalesPedido.medicamentos -= 1;
+          let index_unidad = insumo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+          insumo_pedido.cuadro_distribucion.splice(index_unidad,1);
+          insumo_pedido.cantidad -= insumo.cantidad;
+          this.unidadesConInsumos[this.pedidoInternoSeleccionado] -= 1;
+          
+          if(insumo_pedido.cantidad == 0){
+            this.controlInsumosAgregados[insumo_pedido.id] = false;
+
+            this.clavesTotalesPedido.insumos -= 1;
+            if(insumo_pedido.tipo_insumo == 'MED'){
+              this.clavesTotalesPedido.medicamentos -= 1;
+            }else{
+              this.clavesTotalesPedido.mat_curacion -= 1;
+            }
+
+            this.listadoInsumosPedido.splice(index,1);
+          }
         }else{
-          this.clavesTotalesPedido.mat_curacion -= 1;
-        }
+          this.controlInsumosAgregados[insumo.id] = false;
 
-        if(this.unidadesSeleccionadas.length > 1 && insumo.cuadro_distribucion.length > 0){
-          for(let i in insumo.cuadro_distribucion){
-            let unidad = insumo.cuadro_distribucion[i];
-            if(this.unidadesConInsumos[unidad.id]){
-              this.unidadesConInsumos[unidad.id] -= 1;
+          this.clavesTotalesPedido.insumos -= 1;
+          if(insumo.tipo_insumo == 'MED'){
+            this.clavesTotalesPedido.medicamentos -= 1;
+          }else{
+            this.clavesTotalesPedido.mat_curacion -= 1;
+          }
+
+          if(this.unidadesSeleccionadas.length > 0 && insumo.cuadro_distribucion.length > 0){
+            for(let i in insumo.cuadro_distribucion){
+              let unidad = insumo.cuadro_distribucion[i];
+              if(this.unidadesConInsumos[unidad.id]){
+                this.unidadesConInsumos[unidad.id] -= 1;
+              }
             }
           }
+
+          let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
+          this.listadoInsumosPedido.splice(index,1);
         }
-
-        let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
-        this.listadoInsumosPedido.splice(index,1);
-
+        
         this.cargarPaginaInsumos();
       }
     });
@@ -379,26 +402,34 @@ export class PedidoComponent implements OnInit {
   agregarInsumo(insumo){
     this.idInsumoSeleccionado = insumo.id;
 
-    if(this.controlInsumosAgregados[insumo.id]){
-      let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
-      insumo = this.listadoInsumosPedido[index];
-    }
-
     let configDialog:any = {
       width: '99%',
       maxHeight: '90vh',
-      data:{insumoInfo: insumo, listaUnidades: this.unidadesSeleccionadas, unidadEntrega: this.unidadMedicaEntrega},
+      //data:{},
       panelClass: 'no-padding-dialog'
     };
 
-    if(this.unidadesSeleccionadas.length > 0){
-      configDialog.height = '643px';
+    if(this.pedidoInternoSeleccionado){
+      let index = this.unidadesSeleccionadas.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+      configDialog.data = {insumoInfo: insumo, listaUnidades: [], unidadEntrega: this.unidadesSeleccionadas[index]};
+    }else{
+      if(this.controlInsumosAgregados[insumo.id]){
+        let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
+        insumo = this.listadoInsumosPedido[index];
+      }
+      
+      if(this.unidadesSeleccionadas.length > 0){
+        configDialog.height = '643px';
+      }
+      configDialog.data = {insumoInfo: insumo, listaUnidades: this.unidadesSeleccionadas, unidadEntrega: this.unidadMedicaEntrega};
     }
+    
 
     const dialogRef = this.dialog.open(DialogoInsumoPedidoComponent, configDialog);
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
+
         if(!this.controlInsumosAgregados[response.id]){
           this.listadoInsumosPedido.unshift(response);
           this.clavesTotalesPedido.insumos = this.listadoInsumosPedido.length;
@@ -411,26 +442,37 @@ export class PedidoComponent implements OnInit {
           this.controlInsumosAgregados[response.id] = true;
         }else{
           let index = this.listadoInsumosPedido.findIndex(x => x.id === response.id);
+          
+          if(!this.pedidoInternoSeleccionado){
+            let insumo_anterior = this.listadoInsumosPedido[index];
 
-          let insumo_anterior = this.listadoInsumosPedido[index];
-          if(insumo_anterior.cuadro_distribucion && insumo_anterior.cuadro_distribucion.length > 0){
-            for(let i in insumo_anterior.cuadro_distribucion){
-              let unidad = insumo_anterior.cuadro_distribucion[i];
-              if(this.unidadesConInsumos[unidad.id]){
-                this.unidadesConInsumos[unidad.id] -= 1;
+            if(insumo_anterior.cuadro_distribucion && insumo_anterior.cuadro_distribucion.length > 0){
+              for(let i in insumo_anterior.cuadro_distribucion){
+                let unidad = insumo_anterior.cuadro_distribucion[i];
+                if(this.unidadesConInsumos[unidad.id]){
+                  this.unidadesConInsumos[unidad.id] -= 1;
+                }
               }
             }
-          }
-
-          if(index > 0){
-            this.listadoInsumosPedido.splice(index,1);
-            this.listadoInsumosPedido.unshift(response);
+  
+            if(index > 0){
+              this.listadoInsumosPedido.splice(index,1);
+              this.listadoInsumosPedido.unshift(response);
+            }else{
+              this.listadoInsumosPedido[index] = response;
+            }
           }else{
-            this.listadoInsumosPedido[index] = response;
+            let insumo_pedido = this.listadoInsumosPedido[index];
+
+            let unidad_index = insumo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+            let cantidad_anterior = insumo_pedido.cuadro_distribucion[unidad_index].cantidad;
+            insumo_pedido.cuadro_distribucion[unidad_index].cantidad = response.cantidad;
+            insumo_pedido.cantidad -= cantidad_anterior;
+            insumo_pedido.cantidad += response.cantidad;
           }
         }
 
-        if(this.unidadesSeleccionadas.length > 1 && response.cuadro_distribucion.length > 0){
+        if(this.unidadesSeleccionadas.length > 0 && response.cuadro_distribucion.length > 0){
           for(let i in response.cuadro_distribucion){
             let unidad = response.cuadro_distribucion[i];
             if(!this.unidadesConInsumos[unidad.id]){
@@ -515,8 +557,10 @@ export class PedidoComponent implements OnInit {
   }
 
   mostrarInsumosPedidoInterno(unidad){
-    this.pedidoInternoSeleccionado = unidad.id;
-    this.cargarPaginaInsumos();
+    if(this.unidadesConInsumos[unidad.id]){
+      this.pedidoInternoSeleccionado = unidad.id;
+      this.cargarPaginaInsumos();
+    }    
   }
 
   ocultarInsumosPedidoInterno(){

@@ -267,6 +267,11 @@ table td {
     -webkit-box-sizing: border-box;
     border-bottom: solid thin #dddddd;
     z-index: 99999;
+    cursor: default;
+}
+
+.seleccionable{
+    cursor: pointer;
 }
 
 .unidad-medica-item .datos-unidad .titulo{
@@ -277,5 +282,11 @@ table td {
 
 .unidad-medica-item .datos-unidad .descripcion{
     font-size: 14px;
-    color:#a9a9a9;
+    font-size: 1vw;
+    color:#8c8c8c;
+}
+
+.unidad-medica-item .datos-unidad .detalles{
+    font-size: 14px;
+    color:#575757;
 }

@@ -78,7 +78,7 @@
                 <div fxFlex="none">
                     <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>Cancelar</button>
                     &nbsp;
-                    <button mat-raised-button color="accent" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
+                    <button mat-raised-button color="success" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
                 </div>
             </section>
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
@@ -134,7 +134,7 @@
                             <div fxFlex></div>
                             <div fxFlex="none" fxLayout="row">
                                 <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
-                                    <button mat-button color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
+                                    <button mat-mini-fab color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
                                         <mat-icon>house</mat-icon>
                                     </button>
                                     <button mat-icon-button matTooltip="Lista de Pedidos por Unidad" (click)="verPedidosInternos()" [disabled]="unidadesSeleccionadas.length == 0">
@@ -143,7 +143,7 @@
                                 </div>
                                 <div fxFlex></div>
                                 <div fxFlex="none">
-                                    <button mat-raised-button (click)="abrirBuscadorInsumos()"><mat-icon>launch</mat-icon> Insumos</button>
+                                    <button mat-raised-button color="accent" (click)="abrirBuscadorInsumos()"><mat-icon>launch</mat-icon> Insumos</button>
                                 </div>
                             </div>
                         </div>
@@ -161,30 +161,28 @@
                                     <div *ngIf="listaFiltroUnidadesSeleccionadas.length == 0" class="no-items-found">
                                         No se encontraron resultados
                                     </div>
-                                    <div *cdkVirtualFor="let unidad of listaFiltroUnidadesSeleccionadas;" [ngClass]="{'unidad-seleccionada':pedidoInternoSeleccionado == unidad.id}" class="unidad-medica-item">
-                                        <div fxLayout="row">
-                                            <div fxFlex fxLayout="column" class="datos-unidad">
+                                    <div *cdkVirtualFor="let unidad of listaFiltroUnidadesSeleccionadas;" [ngClass]="{'unidad-seleccionada':pedidoInternoSeleccionado == unidad.id, 'seleccionable':unidadesConInsumos[unidad.id]}" class="unidad-medica-item">
+                                        <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
+                                            <div fxFlex fxLayout="column" class="datos-unidad" (click)="mostrarInsumosPedidoInterno(unidad)">
                                                 <div fxFlex="none" class="titulo">
                                                     CLUES: {{unidad.clues}}
                                                 </div>
                                                 <div fxFlex class="descripcion">
                                                     {{unidad.nombre}}
                                                 </div>
+                                                <div fxFlex="none" class="detalles">
+                                                    Total Claves: {{((unidadesConInsumos[unidad.id])?unidadesConInsumos[unidad.id]:0) | number:'1.0-0' }}
+                                                </div>
                                             </div>
                                             <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
-                                                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado != unidad.id">
-                                                    <button mat-icon-button (click)="mostrarInsumosPedidoInterno(unidad)">
-                                                        <mat-icon>find_in_page</mat-icon>
-                                                    </button>
-                                                </div>
                                                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
                                                     <button mat-icon-button (click)="ocultarInsumosPedidoInterno()">
                                                         <mat-icon>close</mat-icon>
                                                     </button>
                                                 </div>
                                                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
-                                                    <button mat-icon-button color="accent" (click)="imprimirPedidoInterno()">
-                                                        <mat-icon>print</mat-icon>
+                                                    <button mat-icon-button>
+                                                        <mat-icon>save_alt</mat-icon>
                                                     </button>
                                                 </div>
                                                 <div fxFlex></div>
@@ -195,12 +193,12 @@
                                 <mat-divider></mat-divider>
                             </div>
                             <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
-                                <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
-                                    <mat-hint>{{listaFiltroUnidadesSeleccionadas.length | number}} Unidades</mat-hint>
-                                </div>
-                                <div fxFlex></div>
                                 <div fxFlex="none">
                                     <button mat-raised-button (click)="cerrarPedidosInternos()"><mat-icon>close</mat-icon> Cerrar</button>
+                                </div>
+                                <div fxFlex></div>
+                                <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
+                                    <mat-hint>{{listaFiltroUnidadesSeleccionadas.length | number}} Unidades</mat-hint>
                                 </div>
                             </div>
                         </div>
