@@ -116,6 +116,26 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     this.listaUnidadesPedido = this.unidadesPedidoDataSource.connect().value;
   }
 
+  toggleRemoverUnidadMedica(unidad){
+    if(this.unidadesConInsumos[unidad.id]){
+      this.marcarEliminarInsumos(unidad);
+    }else{
+      this.quitarUnidadMedica(unidad);
+    }
+  }
+
+  toggleSeleccionarUnidadMedica(unidad){
+    if(this.unidadesConInsumos[unidad.id]){
+      return false;
+    }
+
+    if(!this.controlUnidadesSeleccionadas[unidad.id]){
+      this.agregarUnidadMedica(unidad);
+    }else{
+      this.quitarUnidadMedica(unidad);
+    }
+  }
+
   agregarUnidadMedica(unidad){
     this.controlUnidadesSeleccionadas[unidad.id] = true;
     this.unidadesPedidoDataSource.data.unshift(unidad);

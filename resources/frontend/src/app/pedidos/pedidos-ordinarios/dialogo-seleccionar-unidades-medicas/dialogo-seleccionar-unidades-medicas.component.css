@@ -44,10 +44,15 @@
     -webkit-box-sizing: border-box;
     border-bottom: solid thin #dddddd;
     z-index: 99999;
+    cursor: default;
 }
 
 .marcado-borrar{
     text-decoration-line: line-through;
+}
+
+.seleccionable{
+    cursor: pointer;
 }
 
 .unidad-medica-item .datos-unidad .titulo{
@@ -58,5 +63,6 @@
 
 .unidad-medica-item .datos-unidad .descripcion{
     font-size: 14px;
+    font-size: 1vw;
     color:#a9a9a9;
 }
