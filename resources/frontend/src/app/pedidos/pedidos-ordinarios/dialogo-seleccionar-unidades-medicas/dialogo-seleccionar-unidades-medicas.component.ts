@@ -1,7 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
+import { DialogoSelecAccionInsumosUnidadesComponent } from '../dialogo-selec-accion-insumos-unidades/dialogo-selec-accion-insumos-unidades.component';
 
 export interface GrupoData {
   listaUnidades: any;
@@ -20,7 +21,8 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<DialogoSeleccionarUnidadesMedicasComponent>,
     @Inject(MAT_DIALOG_DATA) public data: GrupoData,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private dialog: MatDialog
   ) { }
 
   grupo:any;
@@ -160,6 +162,9 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   }
 
   aplicarCambios(){
+    let aplicar_accion:boolean = false;
+    let data_accion:any;
+
     let listaUnidadesEliminar:number[] = [];
     for(let i in this.unidadesEliminarInsumos){
       if(this.unidadesEliminarInsumos[i]){
@@ -176,9 +181,6 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
       }
     }
 
-    console.log('###########################################---------------------------------------###########################################');
-
-    console.log(this.unidadesConInsumos);
     let unidades_con_insumos = 0;
     for(let i in this.unidadesConInsumos){
       if(this.unidadesConInsumos[i]){
@@ -186,27 +188,39 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
       }
     }
 
-    if(unidades_con_insumos){
-      console.log('insumos agregados a alguna unidad');
-    }else{
-      console.log('sin insumos agregrados a ninguna unidad');
-    }
-
-    if(this.hayInsumosCapturados){
-      console.log('ya hay insumos capturados');
-    }else{
-      console.log('no hay insumos capturados');
-    }
-
     if(unidades_con_insumos == 0 && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length > 0){
       console.log('######### Acción requerida: ya hay insumos capturados, sin unidades seleccionadas anteriormente');
+      aplicar_accion = true;
+      data_accion = {tipo_accion:'ICSU', lista_unidades: this.unidadesPedidoDataSource.data};
     }
 
     if(unidades_con_insumos > 0 && this.hayInsumosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
       console.log('######### Acción requerida: ya hay insumos capturados con unidades seleccionadas anteriormente con insumos asignados');
+      aplicar_accion = true;
+      data_accion = {tipo_accion:'ICUS', lista_unidades: this.unidadesPedidoDataSource.data, unidades_con_insumos: this.unidadesConInsumos};
     }
-    
-    this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar});
+
+    if(aplicar_accion){
+      let configDialog = {
+        width: '90%',
+        maxHeight: '90vh',
+        //height: '643px',
+        data: data_accion,
+        panelClass: 'no-padding-dialog'
+      };
+  
+      const dialogRef = this.dialog.open(DialogoSelecAccionInsumosUnidadesComponent, configDialog);
+  
+      dialogRef.afterClosed().subscribe(response => {
+        if(response){
+          this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar, accion:response});
+        }else{
+          console.log('Cancelar');
+        }
+      });
+    }else{
+      this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar});
+    }
   }
 
   close(): void {

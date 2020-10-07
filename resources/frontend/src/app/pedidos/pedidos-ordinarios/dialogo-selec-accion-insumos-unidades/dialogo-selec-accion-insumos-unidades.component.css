@@ -1,0 +1,74 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.small-search-input{
+    padding: 0px 0px 10px 0px;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.no-items-found{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+    text-align: center;
+    color:#a9a9a9;
+    font-size: 16px;
+    padding-top: 15px;
+}
+
+.unidad-medica-item{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+    cursor: default;
+}
+
+.seleccionable{
+    cursor: pointer;
+}
+
+.unidad-medica-item .datos-unidad .titulo{
+    font-weight: 450; 
+    font-size: 16px; 
+    padding-top:5px;
+}
+
+.unidad-medica-item .datos-unidad .descripcion{
+    font-size: 14px;
+    font-size: 1vw;
+    color:#a9a9a9;
+}
+
+.grupo-acciones {
+    display: flex;
+    flex-direction: column;
+    margin: 15px 0;
+}
+  
+.boton-accion {
+    margin: 5px;
+}

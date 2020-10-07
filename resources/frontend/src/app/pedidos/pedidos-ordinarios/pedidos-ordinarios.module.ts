@@ -9,10 +9,11 @@ import { ListaComponent } from './lista/lista.component';
 import { PedidoComponent } from './pedido/pedido.component';
 import { DialogoInsumoPedidoComponent } from './dialogo-insumo-pedido/dialogo-insumo-pedido.component';
 import { DialogoSeleccionarUnidadesMedicasComponent } from './dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
+import { DialogoSelecAccionInsumosUnidadesComponent } from './dialogo-selec-accion-insumos-unidades/dialogo-selec-accion-insumos-unidades.component';
 
 
 @NgModule({
-  declarations: [ListaComponent, PedidoComponent, DialogoInsumoPedidoComponent, DialogoSeleccionarUnidadesMedicasComponent],
+  declarations: [ListaComponent, PedidoComponent, DialogoInsumoPedidoComponent, DialogoSeleccionarUnidadesMedicasComponent, DialogoSelecAccionInsumosUnidadesComponent],
   imports: [
     CommonModule,
     SharedModule,
@@ -21,7 +22,8 @@ import { DialogoSeleccionarUnidadesMedicasComponent } from './dialogo-selecciona
   ],
   entryComponents: [
     DialogoInsumoPedidoComponent,
-    DialogoSeleccionarUnidadesMedicasComponent
+    DialogoSeleccionarUnidadesMedicasComponent,
+    DialogoSelecAccionInsumosUnidadesComponent
   ]
 })
 export class PedidosOrdinariosModule { }

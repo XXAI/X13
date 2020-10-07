@@ -307,6 +307,7 @@ export class PedidoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
+        console.log(response);
         this.unidadesSeleccionadas = response.unidadesSeleccionadas;
 
         if(response.unidadesEliminarInsumos.length){
