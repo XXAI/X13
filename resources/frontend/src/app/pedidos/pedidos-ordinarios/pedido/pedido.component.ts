@@ -310,6 +310,86 @@ export class PedidoComponent implements OnInit {
         console.log(response);
         this.unidadesSeleccionadas = response.unidadesSeleccionadas;
 
+        //Al agregar unidades medicas con insumos capturados anteriormente.
+        if(response.accion){
+          if(response.accion.tipo_accion == 'DIV' || response.accion.tipo_accion == 'MUL'){
+            for(let i in this.listadoInsumosPedido){
+              let insumo = this.listadoInsumosPedido[i];
+
+              let cantidad_unidades = 0;
+              let residuo = 0;
+
+              //((x - (x % y)) / y)
+              if(response.accion.tipo_accion == 'DIV'){
+                cantidad_unidades = ((insumo.cantidad - (insumo.cantidad % this.unidadesSeleccionadas.length)) / this.unidadesSeleccionadas.length);
+                residuo = (insumo.cantidad % this.unidadesSeleccionadas.length);
+              }else if(response.accion.tipo_accion == 'MUL'){
+                cantidad_unidades = insumo.cantidad;
+                insumo.cantidad = insumo.cantidad * this.unidadesSeleccionadas.length;
+              }
+
+              if(insumo.cuadro_distribucion && insumo.cuadro_distribucion.length){
+                for(let j in insumo.cuadro_distribucion){
+                  let unidad = insumo.cuadro_distribucion[j];
+                  unidad.cantidad = cantidad_unidades;
+                }
+              }else{
+                insumo.cuadro_distribucion = [];
+                for(let j in this.unidadesSeleccionadas){
+                  let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[j]));
+                  unidad.cantidad = cantidad_unidades;
+                  insumo.cuadro_distribucion.push(unidad);
+
+                  if(!this.unidadesConInsumos[unidad.id]){
+                    this.unidadesConInsumos[unidad.id] = 1;
+                  }else{
+                    this.unidadesConInsumos[unidad.id] += 1;
+                  }
+                }
+              }
+              
+              if(residuo > 0){
+                for (let index = 0; index < residuo; index++) {
+                  insumo.cuadro_distribucion[index].cantidad += 1;
+                }
+              }
+            }
+          }else if(response.accion.tipo_accion == 'SEL'){
+            let unidad_seleccionada = response.accion.unidad_seleccionada;
+            let index = this.unidadesSeleccionadas.findIndex(x => x.id === unidad_seleccionada.id);
+
+            for(let i in this.listadoInsumosPedido){
+              let insumo = this.listadoInsumosPedido[i];
+
+              /*if(insumo.cuadro_distribucion && insumo.cuadro_distribucion.length > 0){
+                let index_cuadro = insumo.cuadro_distribucion.findIndex(x => x.id === unidad_seleccionada.id);
+                let unidad:any;
+
+                if(index_cuadro >= 0){
+                  unidad = insumo.cuadro_distribucion[index_cuadro];
+                }else{
+                  unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[index]));
+                }
+                
+                unidad.cantidad = insumo.cantidad;
+                insumo.cuadro_distribucion.push(unidad);
+              }else{*/
+                insumo.cuadro_distribucion = [];
+                let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[index]));
+                unidad.cantidad = insumo.cantidad;
+                insumo.cuadro_distribucion.push(unidad);
+
+                if(!this.unidadesConInsumos[unidad.id]){
+                  this.unidadesConInsumos[unidad.id] = 1;
+                }else{
+                  this.unidadesConInsumos[unidad.id] += 1;
+                }
+              //}
+            }
+            
+          }
+        }
+
         if(response.unidadesEliminarInsumos.length){
           for(let i in this.listadoInsumosPedido){
             let insumo = this.listadoInsumosPedido[i];

@@ -24,55 +24,6 @@
                 </mat-form-field>
             </div>
         </div>
-        <div fxFlex="50" *ngIf="mostrarListaUnidades" fxLayout="column">
-            <mat-card fxFlex fxLayout="column">
-                <div fxFlex="none" style="font-size: 14px;">
-                    <mat-hint>Dividir de manera equitativa la cantidad asignada a cada insumo, entre las siguientes unidades:</mat-hint>
-                    <mat-divider></mat-divider>
-                </div>
-                <div fxFlex="none">
-                    <div class="small-search-input" style="padding-top: 5px;">
-                        <mat-form-field appearance="outline">
-                            <input matInput [(ngModel)]="filtroUnidades" (keyup)="aplicarFiltroUnidades()" placeholder="Filtrar">
-                        </mat-form-field>
-                    </div>
-                    <mat-divider></mat-divider>
-                </div>
-                <div fxFlex>
-                    <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 400px;">
-                        <div *ngIf="listaUnidades.length == 0" class="no-items-found">
-                            No se encontraron resultados
-                        </div>
-                        <div *cdkVirtualFor="let unidad of listaUnidades;" class="unidad-medica-item">
-                            <div fxLayout="row" (click)="toggleSeleccionarUnidad(unidad)" class="seleccionable">
-                                <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
-                                    <div fxFlex>
-                                        <button mat-icon-button *ngIf="!controlUnidadesSeleccionadas[unidad.id]">
-                                            <mat-icon>check_box_outline_blank</mat-icon>
-                                        </button>
-                                        <button mat-icon-button *ngIf="controlUnidadesSeleccionadas[unidad.id]">
-                                            <mat-icon>check_box</mat-icon>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div fxFlex fxLayout="column" class="datos-unidad">
-                                    <div fxFlex="none" class="titulo">
-                                        CLUES: {{unidad.clues}}
-                                    </div>
-                                    <div fxFlex class="descripcion">
-                                        {{unidad.nombre}}
-                                    </div>
-                                    <div fxFlex="none" *ngIf="controlUnidadesConInsumos[unidad.id]">
-                                        <mat-hint>Esta unidad ya tiene insumos asignados</mat-hint>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </cdk-virtual-scroll-viewport>
-                </div>
-            </mat-card>
-            <mat-hint><mat-checkbox [(ngModel)]="seleccionarTodos" (change)="seleccionarTodasUnidades()">Seleccionar todos</mat-checkbox></mat-hint>
-        </div>
         <div fxFlex></div>
     </section>
     <section fxFlex="none">
@@ -81,7 +32,7 @@
             </div>
             <div fxFlex="none">
                 <button mat-button (click)="close()">Cancelar</button>&nbsp;
-                <button mat-raised-button color="info" (click)="aplicarAccion()">Aceptar</button>
+                <button mat-raised-button color="info" (click)="aplicarAccion()" [disabled]="!accionSeleccionada">Aceptar</button>
             </div>
         </div>
     </section>

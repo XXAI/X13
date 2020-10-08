@@ -63,7 +63,14 @@ export class DialogoSelecAccionInsumosUnidadesComponent implements OnInit {
   }
 
   aplicarAccion(){
-    this.dialogRef.close({accion: this.accionSeleccionada, unidad_seleccionada: this.unidadSeleccionada.value});
+    let response:any = {};
+    response.tipo_accion = this.accionSeleccionada;
+
+    if(this.accionSeleccionada == 'SEL'){
+      response.unidad_seleccionada = this.unidadSeleccionada.value;
+    }
+
+    this.dialogRef.close(response);
   }
 
   close(): void {

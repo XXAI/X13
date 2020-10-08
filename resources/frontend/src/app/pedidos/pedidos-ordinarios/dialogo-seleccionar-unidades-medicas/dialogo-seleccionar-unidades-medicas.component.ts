@@ -196,7 +196,7 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
 
     if(unidades_con_insumos > 0 && this.hayInsumosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
       console.log('######### Acción requerida: ya hay insumos capturados con unidades seleccionadas anteriormente con insumos asignados');
-      aplicar_accion = true;
+      aplicar_accion = false;
       data_accion = {tipo_accion:'ICUS', lista_unidades: this.unidadesPedidoDataSource.data, unidades_con_insumos: this.unidadesConInsumos};
     }
 
