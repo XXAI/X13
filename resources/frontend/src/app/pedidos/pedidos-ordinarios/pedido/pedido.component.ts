@@ -329,11 +329,13 @@ export class PedidoComponent implements OnInit {
               }
 
               if(insumo.cuadro_distribucion && insumo.cuadro_distribucion.length){
+                console.log('con cuadro distribucion');
                 for(let j in insumo.cuadro_distribucion){
                   let unidad = insumo.cuadro_distribucion[j];
                   unidad.cantidad = cantidad_unidades;
                 }
               }else{
+                console.log('sin cuadro distribucion');
                 insumo.cuadro_distribucion = [];
                 for(let j in this.unidadesSeleccionadas){
                   let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[j]));
@@ -356,24 +358,13 @@ export class PedidoComponent implements OnInit {
             }
           }else if(response.accion.tipo_accion == 'SEL'){
             let unidad_seleccionada = response.accion.unidad_seleccionada;
-            let index = this.unidadesSeleccionadas.findIndex(x => x.id === unidad_seleccionada.id);
 
-            for(let i in this.listadoInsumosPedido){
-              let insumo = this.listadoInsumosPedido[i];
+            if(this.unidadesSeleccionadas.length > 0){
+              let index = this.unidadesSeleccionadas.findIndex(x => x.id === unidad_seleccionada.id);
 
-              /*if(insumo.cuadro_distribucion && insumo.cuadro_distribucion.length > 0){
-                let index_cuadro = insumo.cuadro_distribucion.findIndex(x => x.id === unidad_seleccionada.id);
-                let unidad:any;
+              for(let i in this.listadoInsumosPedido){
+                let insumo = this.listadoInsumosPedido[i];
 
-                if(index_cuadro >= 0){
-                  unidad = insumo.cuadro_distribucion[index_cuadro];
-                }else{
-                  unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[index]));
-                }
-                
-                unidad.cantidad = insumo.cantidad;
-                insumo.cuadro_distribucion.push(unidad);
-              }else{*/
                 insumo.cuadro_distribucion = [];
                 let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[index]));
                 unidad.cantidad = insumo.cantidad;
@@ -384,34 +375,64 @@ export class PedidoComponent implements OnInit {
                 }else{
                   this.unidadesConInsumos[unidad.id] += 1;
                 }
-              //}
+              }
             }
-            
           }
         }
 
         if(response.unidadesEliminarInsumos.length){
+          let insumos_en_cero:number[] = [];
+
           for(let i in this.listadoInsumosPedido){
             let insumo = this.listadoInsumosPedido[i];
             let cantidad = 0;
             let ids_a_borrar = [];
-            for(let j in insumo.cuadro_distribucion){
-              let unidad = insumo.cuadro_distribucion[j];
-              let index = response.unidadesEliminarInsumos.indexOf(unidad.id);
-              if(index >= 0){
-                cantidad += unidad.cantidad;
-                ids_a_borrar.push(unidad.id);
+
+            if(this.unidadesSeleccionadas.length > 0){
+              for(let j in insumo.cuadro_distribucion){
+                let unidad = insumo.cuadro_distribucion[j];
+                let index = response.unidadesEliminarInsumos.indexOf(unidad.id);
+                if(index >= 0){
+                  cantidad += unidad.cantidad;
+                  ids_a_borrar.push(unidad.id);
+                }
+              }
+  
+              if(cantidad > 0){
+                insumo.cantidad -= cantidad;
+                //this.listadoInsumosPedido[i] = insumo;
+                for(let j in ids_a_borrar){
+                  let index = insumo.cuadro_distribucion.findIndex(x => x.id === ids_a_borrar[j]);
+                  insumo.cuadro_distribucion.splice(index,1);
+                }
+              }
+            }else{
+              if(response.accion.tipo_accion == 'SEL'){
+                let index = insumo.cuadro_distribucion.findIndex(x => x.id === response.accion.unidad_seleccionada.id);
+                if(index >= 0){
+                  cantidad = insumo.cuadro_distribucion[index].cantidad;
+                }
+                
+                insumo.cuadro_distribucion = [];
+                insumo.cantidad = cantidad;
+              }else if(response.accion.tipo_accion == 'MAN'){
+                insumo.cuadro_distribucion = [];
               }
             }
-            if(cantidad > 0){
-              insumo.cantidad -= cantidad;
-              //this.listadoInsumosPedido[i] = insumo;
-              for(let j in ids_a_borrar){
-                let index = insumo.cuadro_distribucion.findIndex(x => x.id === ids_a_borrar[j]);
-                insumo.cuadro_distribucion.splice(index,1);
-              }
+
+            if(insumo.cantidad == 0){
+              insumos_en_cero.push(insumo.id);
             }
           }
+
+          for(let i in insumos_en_cero){
+            let insumo_index = this.listadoInsumosPedido.findIndex(x => x.id === insumos_en_cero[i]);
+
+            let insumo_cero = JSON.parse(JSON.stringify(this.listadoInsumosPedido[insumo_index]));
+            this.listadoInsumosPedido.splice(insumo_index,1);
+            this.listadoInsumosPedido.unshift(insumo_cero);
+          }
+
           for(let i in response.unidadesEliminarInsumos){
             let unidad_id = response.unidadesEliminarInsumos[i];
             this.unidadesConInsumos[unidad_id] = 0;

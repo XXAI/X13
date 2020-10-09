@@ -164,20 +164,21 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   aplicarCambios(){
     let aplicar_accion:boolean = false;
     let data_accion:any;
+    let unidades_eliminadas:any[] = [];
 
-    let listaUnidadesEliminar:number[] = [];
+    let lista_unidades_eliminar:number[] = [];
     for(let i in this.unidadesEliminarInsumos){
       if(this.unidadesEliminarInsumos[i]){
         let unidad_id = +i;
-        listaUnidadesEliminar.push(unidad_id);
+        lista_unidades_eliminar.push(unidad_id);
       }
     }
 
-    if(listaUnidadesEliminar.length){
-      for(let i in listaUnidadesEliminar){
-        let unidad_id = listaUnidadesEliminar[i];
+    if(lista_unidades_eliminar.length){
+      for(let i in lista_unidades_eliminar){
+        let unidad_id = lista_unidades_eliminar[i];
         let index_eliminar = this.unidadesPedidoDataSource.data.findIndex(x => x.id === unidad_id);
-        this.unidadesPedidoDataSource.data.splice(index_eliminar,1);
+        unidades_eliminadas.push(this.unidadesPedidoDataSource.data[index_eliminar]);
       }
     }
 
@@ -189,15 +190,32 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     }
 
     if(unidades_con_insumos == 0 && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length > 0){
-      console.log('######### Acción requerida: ya hay insumos capturados, sin unidades seleccionadas anteriormente');
       aplicar_accion = true;
       data_accion = {tipo_accion:'ICSU', lista_unidades: this.unidadesPedidoDataSource.data};
     }
 
-    if(unidades_con_insumos > 0 && this.hayInsumosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
+    /*if(unidades_con_insumos > 0 && this.hayInsumosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
       console.log('######### Acción requerida: ya hay insumos capturados con unidades seleccionadas anteriormente con insumos asignados');
       aplicar_accion = false;
       data_accion = {tipo_accion:'ICUS', lista_unidades: this.unidadesPedidoDataSource.data, unidades_con_insumos: this.unidadesConInsumos};
+    }*/
+
+    //eliminar unidades con insumos asignados, dejando unidades sin asignar
+    if(unidades_con_insumos > 0 && unidades_eliminadas.length == unidades_con_insumos && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length == unidades_eliminadas.length){
+      aplicar_accion = true;
+      data_accion = {tipo_accion:'EUSU', lista_unidades: unidades_eliminadas};
+    }
+
+    if(unidades_con_insumos > 0 && unidades_eliminadas.length == unidades_con_insumos && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length > unidades_eliminadas.length){
+      aplicar_accion = true;
+      let unidades_restantes:any[] = [];
+      for(let i in this.unidadesPedidoDataSource.data){
+        let index = lista_unidades_eliminar.indexOf(this.unidadesPedidoDataSource.data[i].id);
+        if(index < 0){
+          unidades_restantes.push(this.unidadesPedidoDataSource.data[i]);
+        }
+      }
+      data_accion = {tipo_accion:'EUCU', lista_unidades: unidades_restantes};
     }
 
     if(aplicar_accion){
@@ -213,14 +231,23 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   
       dialogRef.afterClosed().subscribe(response => {
         if(response){
-          this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar, accion:response});
-        }else{
-          console.log('Cancelar');
+          this._aplicarCerrar({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:lista_unidades_eliminar, accion:response},lista_unidades_eliminar);
         }
       });
     }else{
-      this.dialogRef.close({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:listaUnidadesEliminar});
+      this._aplicarCerrar({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:lista_unidades_eliminar},lista_unidades_eliminar);
     }
+  }
+
+  private _aplicarCerrar(return_data,eliminar_unidades:number[] = []){
+    if(eliminar_unidades.length){
+      for(let i in eliminar_unidades){
+        let unidad_id = eliminar_unidades[i];
+        let index_eliminar = this.unidadesPedidoDataSource.data.findIndex(x => x.id === unidad_id);
+        this.unidadesPedidoDataSource.data.splice(index_eliminar,1);
+      }
+    }
+    this.dialogRef.close(return_data);
   }
 
   close(): void {

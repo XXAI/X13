@@ -32,24 +32,33 @@ export class DialogoSelecAccionInsumosUnidadesComponent implements OnInit {
   unidadSeleccionada:FormControl;
 
   ngOnInit() {
-    this.listaAcciones = [
-      {codigo:'DIV',descripcion:'Dividir la cantidad de cada insumo entre las unidades seleccionadas'},
-      {codigo:'MUL',descripcion:'Multiplicar la cantidad de cada insumo entre las unidades seleccionadas'},
-      {codigo:'SEL',descripcion:'Asignar la cantidad del insumo a una unidad seleccionada'}
-    ];
+    if(this.data.tipo_accion == 'ICSU' || this.data.tipo_accion == 'EUCU'){
+      this.listaAcciones = [
+        {codigo:'DIV',descripcion:'Dividir la cantidad de cada insumo entre las unidades seleccionadas'},
+        {codigo:'MUL',descripcion:'Multiplicar la cantidad de cada insumo entre las unidades seleccionadas'},
+        {codigo:'SEL',descripcion:'Asignar la cantidad del insumo a una unidad seleccionada'}
+      ];
+    }else if(this.data.tipo_accion == 'EUSU'){
+      this.listaAcciones = [
+        {codigo:'MAN',descripcion:'Mantener la cantidad total asignada a cada insumo'},
+        {codigo:'SEL',descripcion:'Asignar la cantidad de una unidad seleccionada al insumo'}
+      ];
+    }
 
-    this.unidadSeleccionada = new FormControl();
-    this.listaUnidades = this.data.lista_unidades;
+    if(this.data.lista_unidades.length){
+      this.unidadSeleccionada = new FormControl();
+      this.listaUnidades = this.data.lista_unidades;
 
-    this.unidadesFiltradas = this.unidadSeleccionada.valueChanges.pipe(
-      startWith(''),
-      map(value => {
-        if(!(typeof value === 'object')){
-          return this._filter(value);
-        }
-      })
-    );
-
+      this.unidadesFiltradas = this.unidadSeleccionada.valueChanges.pipe(
+        startWith(''),
+        map(value => {
+          if(!(typeof value === 'object')){
+            return this._filter(value);
+          }
+        })
+      );
+    }
+    
     console.log(this.data);
   }
 
