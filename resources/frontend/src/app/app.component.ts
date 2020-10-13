@@ -17,6 +17,9 @@ export class AppComponent {
     //this.matIconRegistry.addSvgIcon("user-icon", this.domSanitizer.bypassSecurityTrustResourceUrl("assets/avatars/02-man.svg"));
     this.matIconRegistry.addSvgIcon("app-icon", this.domSanitizer.bypassSecurityTrustResourceUrl("assets/app-icon.svg"));
 
+    this.matIconRegistry.addSvgIcon("pdf-icon", this.domSanitizer.bypassSecurityTrustResourceUrl("assets/icons-ui/pdf-icon.svg"));
+    this.matIconRegistry.addSvgIcon("xls-icon", this.domSanitizer.bypassSecurityTrustResourceUrl("assets/icons-ui/xls-icon.svg"));
+
     for(let i in AVATARS){
       this.matIconRegistry.addSvgIcon(AVATARS[i].id, this.domSanitizer.bypassSecurityTrustResourceUrl(AVATARS[i].file));
     }

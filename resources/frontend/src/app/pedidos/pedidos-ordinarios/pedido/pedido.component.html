@@ -75,7 +75,13 @@
                     <button mat-raised-button color="primary" (click)="guardarPedido(true)" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
                 </div>
                 <div fxFlex></div>
-                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">Pedido Interno</div>
+                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">
+                    <mat-chip-list aria-label="Fish selection">
+                        <mat-chip color="primary" selected [disableRipple]="true">
+                            Pedido Interno
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
                     <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>Cancelar</button>
@@ -185,8 +191,8 @@
                                                     </button>
                                                 </div>
                                                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
-                                                    <button mat-icon-button>
-                                                        <mat-icon>save_alt</mat-icon>
+                                                    <button mat-icon-button [matMenuTriggerFor]="menuPedidoInterno">
+                                                        <mat-icon>more_vert</mat-icon>
                                                     </button>
                                                 </div>
                                                 <div fxFlex></div>
@@ -195,6 +201,16 @@
                                     </div>
                                 </cdk-virtual-scroll-viewport>
                                 <mat-divider></mat-divider>
+                                <mat-menu #menuPedidoInterno="matMenu">
+                                    <button mat-menu-item disabled>
+                                        <mat-icon svgIcon="pdf-icon" ></mat-icon>
+                                        <span>Descargar en PDF</span>
+                                    </button>
+                                    <button mat-menu-item disabled>
+                                        <mat-icon svgIcon="xls-icon" ></mat-icon>
+                                        <span>Descargar en Excel</span>
+                                    </button>
+                                </mat-menu>
                             </div>
                             <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
                                 <div fxFlex="none">
