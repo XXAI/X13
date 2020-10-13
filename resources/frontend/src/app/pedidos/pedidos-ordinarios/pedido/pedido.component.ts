@@ -307,7 +307,6 @@ export class PedidoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
-        console.log(response);
         this.unidadesSeleccionadas = response.unidadesSeleccionadas;
 
         //Al agregar unidades medicas con insumos capturados anteriormente.
@@ -329,24 +328,24 @@ export class PedidoComponent implements OnInit {
               }
 
               if(insumo.cuadro_distribucion && insumo.cuadro_distribucion.length){
-                console.log('con cuadro distribucion');
                 for(let j in insumo.cuadro_distribucion){
                   let unidad = insumo.cuadro_distribucion[j];
-                  unidad.cantidad = cantidad_unidades;
+                  unidad.cantidad = 0;
+                  this.unidadesConInsumos[unidad.id] -= 1;
                 }
               }else{
-                console.log('sin cuadro distribucion');
                 insumo.cuadro_distribucion = [];
-                for(let j in this.unidadesSeleccionadas){
-                  let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[j]));
-                  unidad.cantidad = cantidad_unidades;
-                  insumo.cuadro_distribucion.push(unidad);
+              }
 
-                  if(!this.unidadesConInsumos[unidad.id]){
-                    this.unidadesConInsumos[unidad.id] = 1;
-                  }else{
-                    this.unidadesConInsumos[unidad.id] += 1;
-                  }
+              for(let j in this.unidadesSeleccionadas){
+                let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[j]));
+                unidad.cantidad = cantidad_unidades;
+                insumo.cuadro_distribucion.push(unidad);
+
+                if(!this.unidadesConInsumos[unidad.id]){
+                  this.unidadesConInsumos[unidad.id] = 1;
+                }else{
+                  this.unidadesConInsumos[unidad.id] += 1;
                 }
               }
               
