@@ -22,7 +22,6 @@ export class PedidoComponent implements OnInit {
 
   constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private pedidosOrdinarios: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog) { }
 
-  tituloGrupoPedidos: string;
   mostrarBotonAgregarUnidades:boolean;
   listaUnidadesAsignadas:any[];
   unidadesConInsumos:any;
@@ -47,6 +46,9 @@ export class PedidoComponent implements OnInit {
   listadoInsumos:any[];
   busquedaTipoInsumo:string;
   idInsumoSeleccionado:number;
+
+  controlInsumosModificados:any;
+  listadoInsumosEliminados:any[];
 
   listadoInsumosPedido:any[];
   filtroInsumosPedido:any[];
@@ -73,6 +75,9 @@ export class PedidoComponent implements OnInit {
 
   ngOnInit() {
     let fecha_actual = new Date();
+    
+    this.controlInsumosModificados = {};
+    this.listadoInsumosEliminados = [];
 
     this.filtroTipoInsumos = '*';
     this.filtroInsumos = '';
@@ -129,14 +134,11 @@ export class PedidoComponent implements OnInit {
             this.formPedido.get('unidad_medica_id').patchValue(this.unidadMedicaEntrega.id);
           }
 
-          this.tituloGrupoPedidos = response.data.grupo_pedidos.descripcion;
           if(response.data.grupo_pedidos.unidades_medicas.length > 0){
             this.mostrarBotonAgregarUnidades = true;
             this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
           }else{
             this.mostrarBotonAgregarUnidades = false;
-            //this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
-            //this.unidadesSeleccionadas.push(response.data.grupo_pedidos.unidades_medicas[0]);
           }
         }
       },
@@ -532,6 +534,7 @@ export class PedidoComponent implements OnInit {
       if(response){
 
         if(!this.controlInsumosAgregados[response.id]){
+          this.controlInsumosModificados[response.id] = 1;
           this.listadoInsumosPedido.unshift(response);
           this.clavesTotalesPedido.insumos = this.listadoInsumosPedido.length;
           
@@ -545,8 +548,17 @@ export class PedidoComponent implements OnInit {
           let index = this.listadoInsumosPedido.findIndex(x => x.id === response.id);
           
           if(!this.pedidoInternoSeleccionado){
+            let modificado:boolean = false;
             let insumo_anterior = this.listadoInsumosPedido[index];
 
+            if(insumo_anterior.cantidad != response.cantidad ){
+              modificado = true;
+            }else if(insumo_anterior.cuadro_distribucion && response.cuadro_distribucion){
+              if(JSON.stringify(insumo_anterior.cuadro_distribucion) != JSON.stringify(response.cuadro_distribucion)){
+                modificado = true;
+              }
+            }
+            
             if(insumo_anterior.cuadro_distribucion && insumo_anterior.cuadro_distribucion.length > 0){
               for(let i in insumo_anterior.cuadro_distribucion){
                 let unidad = insumo_anterior.cuadro_distribucion[i];
@@ -554,6 +566,10 @@ export class PedidoComponent implements OnInit {
                   this.unidadesConInsumos[unidad.id] -= 1;
                 }
               }
+            }
+
+            if(modificado && !this.controlInsumosModificados[response.id]){
+              this.controlInsumosModificados[response.id] = 2;
             }
   
             if(index > 0){
@@ -567,9 +583,16 @@ export class PedidoComponent implements OnInit {
 
             let unidad_index = insumo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
             let cantidad_anterior = insumo_pedido.cuadro_distribucion[unidad_index].cantidad;
-            insumo_pedido.cuadro_distribucion[unidad_index].cantidad = response.cantidad;
-            insumo_pedido.cantidad -= cantidad_anterior;
-            insumo_pedido.cantidad += response.cantidad;
+
+            if(cantidad_anterior != response.cantidad){
+              insumo_pedido.cuadro_distribucion[unidad_index].cantidad = response.cantidad;
+              insumo_pedido.cantidad -= cantidad_anterior;
+              insumo_pedido.cantidad += response.cantidad;
+
+              if(!this.controlInsumosModificados[insumo_pedido.id]){
+                this.controlInsumosModificados[insumo_pedido.id] = 2;
+              }
+            }
           }
         }
 

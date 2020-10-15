@@ -246,7 +246,7 @@
                                 
                                 <ng-container matColumnDef="clave">
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
-                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;"> {{row.clave}} </td>
+                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">{{(controlInsumosModificados[row.id])?'*':''}} {{row.clave}} </td>
                                 </ng-container>
                                 
                                 <ng-container matColumnDef="nombre" >
