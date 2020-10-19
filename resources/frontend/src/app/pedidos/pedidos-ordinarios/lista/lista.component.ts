@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MediaObserver } from '@angular/flex-layout';
 import { MatTableDataSource } from '@angular/material';
+import { PedidosOrdinariosService } from '../pedidos-ordinarios.service';
+import { SharedService } from '../../../shared/shared.service';
 
 @Component({
   selector: 'app-lista',
@@ -9,8 +11,9 @@ import { MatTableDataSource } from '@angular/material';
   styleUrls: ['./lista.component.css']
 })
 export class ListaComponent implements OnInit {
+  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
 
-  constructor(public mediaObserver: MediaObserver) { }
+  constructor(public mediaObserver: MediaObserver, private pedidosOrdinariosService: PedidosOrdinariosService, private sharedService: SharedService) { }
 
   mostrarTarjetas:boolean = false;
 
@@ -25,14 +28,14 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['id','folio','descripcion','mes_expiracion','total_claves','total_monto','actions'];
+  displayedColumns: string[] = ['id','folio','descripcion','total_claves','total_insumos','actions'];
   dataSource: MatTableDataSource<any>;
   listadoPedidos: any[] = [];
 
   meses:any = {1:'Enero', 2:'Febrero', 3:'Marzo', 4:'Abril', 5:'Mayo', 6:'Junio', 7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'};
-  listaEstatusIconos: any = { 1:'content_paste', 2:'description', 3:'verified', 4:'cancel', 5:'warning' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
-  listaEstatusClaves: any = { 1:'borrador', 2:'concluido', 3:'validado', 4:'cancelado', 5:'expirado' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
-  listaEstatusLabels: any = { 1:'Borrador', 2:'Concluido', 3:'Validado', 4:'Cancelado', 5:'Expirado' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
+  listaEstatusIconos: any = { 'BOR':'content_paste', 2:'description', 3:'verified', 4:'cancel', 5:'warning' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
+  listaEstatusClaves: any = { 'BOR':'borrador', 2:'concluido', 3:'validado', 4:'cancelado', 5:'expirado' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
+  listaEstatusLabels: any = { 'BOR':'Borrador', 2:'Concluido', 3:'Validado', 4:'Cancelado', 5:'Expirado' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
 
   ngOnInit() {
     this.mediaObserver.media$.subscribe(
@@ -42,10 +45,9 @@ export class ListaComponent implements OnInit {
 
     //Pedidos Ficticios
     //let total_resultados = Math.floor(Math.random() * (150 - 1 + 1) + 1);
-    let total_resultados = 20;
-
-    let listado_pedidos = [];
-    for (let index = 0; index < total_resultados; index++) {
+    /*let total_resultados = 20;
+    let listado_pedidos = [];*/
+    /*for (let index = 0; index < total_resultados; index++) {
       let id = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
       let mes = Math.floor(Math.random() * (12 - 1 + 1) + 1);
       let dias_expira = Math.floor(Math.random() * (120 - 0 + 1) + 0);
@@ -71,18 +73,12 @@ export class ListaComponent implements OnInit {
         estatus_icono: this.listaEstatusIconos[estatus],
         anio:2020,
         total_claves: Math.floor(Math.random() * (5000 - 1 + 1) + 1),
-        total_monto: Math.floor(Math.random() * (500000 - 1 + 1) + 1)
+        total_insumos: Math.floor(Math.random() * (500000 - 1 + 1) + 1)
       });
-    }
+    }*/
 
-
-    if(this.dataSource){
-      this.dataSource.disconnect();
-    }
-
-    this.dataSource = new MatTableDataSource<any>(listado_pedidos);
-
-    this.listadoPedidos = this.dataSource.connect().value;
+    this.listadoPedidos = [];
+    this.loadListadoPedidos();
   }
   
   applyFilter(){
@@ -93,7 +89,62 @@ export class ListaComponent implements OnInit {
     //
   }
 
-  loadListadoPedidos(event = null){
+  loadListadoPedidos(event?){
+    this.isLoading = true;
+    let params:any;
+    if(!event){
+      params = { page: 1, per_page: this.pageSize }
+    }else{
+      params = {
+        page: event.pageIndex+1,
+        per_page: event.pageSize
+      };
+    }
+
+    this.listadoPedidos = [];
+    
+    params.query = this.searchQuery;
+    if(!this.dataSource){
+      this.dataSource = new MatTableDataSource<any>([]);
+    }
+    this.resultsLength = 0;
+    
+    this.pedidosOrdinariosService.obtenerListaPedidos(params).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          if(response.data.total > 0){
+            this.listadoPedidos = response.data.data;
+
+            for(let i in this.listadoPedidos){
+              let pedido = this.listadoPedidos[i];
+
+              if(!pedido.folio){
+                pedido.folio = 'S/F';
+              }
+
+              pedido.estatus_label = this.listaEstatusLabels[pedido.estatus];
+              pedido.estatus_clave = this.listaEstatusClaves[pedido.estatus];
+              pedido.estatus_icono = this.listaEstatusIconos[pedido.estatus];
+            }
+
+            this.resultsLength = response.data.total;
+          }
+        }
+        this.isLoading = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoading = false;
+      }
+    );
+    
     return event;
   }
 }

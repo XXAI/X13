@@ -695,8 +695,8 @@ export class PedidoComponent implements OnInit {
   guardarPedido(concluir:boolean = false){
     let datosPedido = {
       pedido: this.formPedido.value,
-      insumosPedido: this.listadoInsumosPedido,
-      unidadesPedido: this.unidadesSeleccionadas,
+      insumos_pedido: this.listadoInsumosPedido,
+      unidades_pedido: this.unidadesSeleccionadas,
       concluir: concluir
     };
 

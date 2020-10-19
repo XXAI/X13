@@ -59,6 +59,11 @@
                         <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_claves | number:'1.0-0'}} </td>
                     </ng-container>
 
+                    <ng-container matColumnDef="total_insumos" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Insumos </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_insumos | number:'1.0-0'}} </td>
+                    </ng-container>
+
                     <ng-container matColumnDef="total_monto" >
                         <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Monto </th>
                         <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;">$ {{row.total_monto | number:'1.2-2'}} </td>
@@ -67,7 +72,7 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>
                         <td mat-cell *matCellDef="let row; let i = index" width="1">
-                            <button mat-button><mat-icon>more_vert</mat-icon></button>
+                            <button mat-button [routerLink]="'/pedidos/pedidos-ordinarios/editar/'+row.id"><mat-icon>more_vert</mat-icon></button>
                         </td>
                     </ng-container>
 

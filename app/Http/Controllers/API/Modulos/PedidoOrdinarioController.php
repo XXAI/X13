@@ -39,15 +39,15 @@ class PedidoOrdinarioController extends Controller
             $parametros = Input::all();
             $almacen_id = '00011';
 
-            $pedidos = Pedido::all();
+            $pedidos = Pedido::getModel();
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
-                /*$pedidos = $pedidos->where(function($query)use($parametros){
-                    return $query//->where('nombre','LIKE','%'.$parametros['query'].'%')
-                                ->whereRaw('CONCAT_WS(" ",personas.apellido_paterno, personas.apellido_materno, personas.nombre) like "%'.$parametros['query'].'%"' )
-                                ->orWhere('formularios.descripcion','LIKE','%'.$parametros['query'].'%');
-                });*/
+                $pedidos = $pedidos->where(function($query)use($parametros){
+                    return $query->where('folio','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('descripcion','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('observaciones','LIKE','%'.$parametros['query'].'%');
+                });
             }
 
             if(isset($parametros['page'])){
@@ -91,8 +91,31 @@ class PedidoOrdinarioController extends Controller
     {
         try{
             $parametros = Input::all();
+
+            $datos_pedido = $parametros['pedido'];
+            $datos_pedido['estatus'] = 'BOR';
+            $datos_pedido['tipo_pedido'] = 'ORD';
+
+            $pedido = Pedido::create($datos_pedido);
+
+            $listado_insumos = [];
+            $total_insumos = 0;
+            foreach ($parametros['insumos_pedido'] as $insumo) {
+                $listado_insumos[] = [
+                    'insumo_medico_id'=>$insumo['id'],
+                    'tipo_insumo'=>$insumo['tipo_insumo'],
+                    'cantidad'=>$insumo['cantidad']
+                ];
+                $total_insumos += $insumo['cantidad'];
+            }
+            $pedido->listaInsumosMedicos()->createMany($listado_insumos);
+
+            $pedido->total_claves = count($listado_insumos);
+            $pedido->total_insumos = $total_insumos;
+            $pedido->save();
+
             $return_data = [
-                'data' => $parametros
+                'data' => $pedido
             ];
 
             return response()->json($return_data,HttpResponse::HTTP_OK);
