@@ -432,6 +432,8 @@ export class PedidoComponent implements OnInit {
             let insumo_cero = JSON.parse(JSON.stringify(this.listadoInsumosPedido[insumo_index]));
             this.listadoInsumosPedido.splice(insumo_index,1);
             this.listadoInsumosPedido.unshift(insumo_cero);
+
+            this.cargarPaginaInsumos();
           }
 
           for(let i in response.unidadesEliminarInsumos){
@@ -472,6 +474,10 @@ export class PedidoComponent implements OnInit {
               this.clavesTotalesPedido.mat_curacion -= 1;
             }
 
+            //Guardar para papelera
+            let insumo_copia = JSON.parse(JSON.stringify(this.listadoInsumosPedido[index]));
+            this.listadoInsumosEliminados.push(insumo_copia);
+            
             this.listadoInsumosPedido.splice(index,1);
           }
         }else{
@@ -494,6 +500,11 @@ export class PedidoComponent implements OnInit {
           }
 
           let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
+
+          //Guardar para papelera
+          let insumo_copia = JSON.parse(JSON.stringify(this.listadoInsumosPedido[index]));
+          this.listadoInsumosEliminados.push(insumo_copia);
+
           this.listadoInsumosPedido.splice(index,1);
         }
         
