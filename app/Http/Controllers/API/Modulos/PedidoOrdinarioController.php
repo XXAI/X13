@@ -73,9 +73,13 @@ class PedidoOrdinarioController extends Controller
     public function show($id)
     {
         try{
-            $return_data = [];
+            $pedido = Pedido::with(['listaInsumosMedicos'=>function($insumos){
+                $insumos->with('insumoMedico.medicamento','insumoMedico.materialCuracion');
+            }])->find($id);
 
-            return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
+            $return_data = ['data'=>$pedido];
+
+            return response()->json($return_data,HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
@@ -134,6 +138,19 @@ class PedidoOrdinarioController extends Controller
     public function update(Request $request, $id)
     {
         try{
+            $parametros = Input::all();
+
+            $pedido = Pedido::find($id);
+
+            $datos_pedido = $parametros['pedido'];
+            $datos_pedido['estatus'] = 'BOR';
+            $datos_pedido['tipo_pedido'] = 'ORD';
+
+            $pedido->update($datos_pedido);
+
+            $listado_insumos = $parametros['insumos_pedido'];
+            //
+
             $return_data = [
                 'id' => $id, 
                 'data' => Input::all()

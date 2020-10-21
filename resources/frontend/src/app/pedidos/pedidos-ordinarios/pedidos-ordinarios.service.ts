@@ -23,7 +23,7 @@ export class PedidosOrdinariosService {
   verPedido(id) {
     return this.http.get<any>(this.url_pedidos+'/'+id,{}).pipe(
       map( (response: any) => {        
-        return response.data;
+        return response;
       }
     ));
   }

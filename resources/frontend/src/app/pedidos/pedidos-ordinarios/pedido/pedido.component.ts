@@ -6,6 +6,7 @@ import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDrawer, MatInput, MatTableDataSource } from '@angular/material';
 import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute } from '@angular/router';
 import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
 import { DialogoSeleccionarUnidadesMedicasComponent } from '../dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
@@ -20,7 +21,7 @@ export class PedidoComponent implements OnInit {
   @ViewChild(MatDrawer, {static: false}) insumosDrawer: MatDrawer;
   @ViewChild(MatInput, {static: false}) busquedaInsumoQuery: MatInput;
 
-  constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private pedidosOrdinarios: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog) { }
+  constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private pedidosOrdinarios: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog, private route: ActivatedRoute) { }
 
   mostrarBotonAgregarUnidades:boolean;
   listaUnidadesAsignadas:any[];
@@ -91,6 +92,7 @@ export class PedidoComponent implements OnInit {
     this.busquedaTipoInsumo = '*';
     this.catalogos = {programas:[]};
 
+    this.clavesTotales = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesPedido = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     
@@ -118,10 +120,6 @@ export class PedidoComponent implements OnInit {
       observaciones:[''],
       id:['']
     });
-
-    //Si es crear nuevo Pedido
-    this.formPedido.get('anio').patchValue(fecha_actual.getFullYear());
-    this.formPedido.get('mes').patchValue(fecha_actual.getMonth()+1);
 
     this.pedidosService.obtenerDatosCatalogo().subscribe(
       response =>{
@@ -151,7 +149,39 @@ export class PedidoComponent implements OnInit {
       }
     );
 
-    this.cargarPaginaInsumos();
+    this.route.paramMap.subscribe(params => {
+      if(params.get('id')){
+        let id = params.get('id');
+        this.pedidosOrdinarios.verPedido(id).subscribe(
+          response =>{
+            console.log(response);
+            this.formPedido.patchValue(response.data);
+            this.clavesTotalesPedido.insumos = response.data.lista_insumos_medicos.length;
+            for(let i in response.data.lista_insumos_medicos){
+              let insumo_server = response.data.lista_insumos_medicos[i];
+              let insumo = JSON.parse(JSON.stringify(insumo_server.insumo_medico));
+
+              insumo.cantidad = insumo_server.cantidad;
+              insumo.monto = insumo_server.monto;
+              insumo.pedido_insumo_id = insumo_server.id;
+
+              this.listadoInsumosPedido.push(insumo);
+              this.controlInsumosAgregados[insumo.id] = true;
+
+              if(insumo.tipo_insumo == 'MED'){
+                this.clavesTotalesPedido.medicamentos += 1;
+              }else{
+                this.clavesTotalesPedido.mat_curacion += 1;
+              }
+            }
+            this.cargarPaginaInsumos();
+          }
+        );
+      }else{
+        this.formPedido.get('anio').patchValue(fecha_actual.getFullYear());
+        this.formPedido.get('mes').patchValue(fecha_actual.getMonth()+1);
+      }
+    });
   }
 
   applySearch(){
