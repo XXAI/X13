@@ -149,11 +149,42 @@ class PedidoOrdinarioController extends Controller
             $pedido->update($datos_pedido);
 
             $listado_insumos = $parametros['insumos_pedido'];
-            //
+            $insumos_editados = [];
+            $insumos_eliminados = [];
+            $insumos_agregados = [];
+            $insumos_pedido = [];
+            //$insumos_pedido = $pedido->listaInsumosMedicos->pluck('cantidad','id');
+            $insumos_pedido_raw = $pedido->listaInsumosMedicos->toArray();
+            
+            foreach ($insumos_pedido_raw as $insumo) {
+                $insumos_pedido[$insumo['id']] = $insumo;
+            }
+
+            foreach ($listado_insumos as $insumo) {
+                if(!isset($insumo['pedido_insumo_id'])){
+                    $insumos_agregados[] = $insumo;
+                }elseif(isset($insumos_pedido[$insumo['pedido_insumo_id']])){
+                    if($insumos_pedido[$insumo['pedido_insumo_id']]['insumo_medico_id'] !=  $insumo['id'] || $insumos_pedido[$insumo['pedido_insumo_id']]['cantidad'] !=  $insumo['cantidad'] || $insumos_pedido[$insumo['pedido_insumo_id']]['monto'] !=  $insumo['monto'] ){
+                        $insumos_editados[] = $insumo;
+                    }
+                    $insumos_pedido[$insumo['pedido_insumo_id']] = 0;
+                }
+            }
+
+            foreach ($insumos_pedido as $key => $value) {
+                if($value > 0){
+                    $insumos_eliminados[] = $key;
+                }
+            }
 
             $return_data = [
                 'id' => $id, 
-                'data' => Input::all()
+                'data' => Input::all(),
+                'lista_insumos' => $listado_insumos,
+                'lista_guardada' => $insumos_pedido,
+                'insumos_editados' => $insumos_editados,
+                'insumos_eliminados' => $insumos_eliminados,
+                'insumos_agregados' => $insumos_agregados,
             ];
 
             return response()->json($return_data,HttpResponse::HTTP_OK);

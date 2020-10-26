@@ -575,7 +575,7 @@ export class PedidoComponent implements OnInit {
       if(response){
 
         if(!this.controlInsumosAgregados[response.id]){
-          this.controlInsumosModificados[response.id] = 1;
+          this.controlInsumosModificados[response.id] = '(+)';
           this.listadoInsumosPedido.unshift(response);
           this.clavesTotalesPedido.insumos = this.listadoInsumosPedido.length;
           
@@ -610,7 +610,7 @@ export class PedidoComponent implements OnInit {
             }
 
             if(modificado && !this.controlInsumosModificados[response.id]){
-              this.controlInsumosModificados[response.id] = 2;
+              this.controlInsumosModificados[response.id] = '(*)';
             }
   
             if(index > 0){
@@ -631,7 +631,7 @@ export class PedidoComponent implements OnInit {
               insumo_pedido.cantidad += response.cantidad;
 
               if(!this.controlInsumosModificados[insumo_pedido.id]){
-                this.controlInsumosModificados[insumo_pedido.id] = 2;
+                this.controlInsumosModificados[insumo_pedido.id] = '(*)';
               }
             }
           }
