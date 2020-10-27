@@ -118,6 +118,8 @@ class PedidoOrdinarioController extends Controller
             $pedido->total_insumos = $total_insumos;
             $pedido->save();
 
+            $pedido->load('listaInsumosMedicos');
+
             $return_data = [
                 'data' => $pedido
             ];
@@ -138,46 +140,71 @@ class PedidoOrdinarioController extends Controller
     public function update(Request $request, $id)
     {
         try{
+            DB::beginTransaction();
+
             $parametros = Input::all();
 
-            $pedido = Pedido::find($id);
+            $pedido = Pedido::with(['listaInsumosMedicos'=>function($insumos){ $insumos->withTrashed(); }])->find($id);
 
             $datos_pedido = $parametros['pedido'];
             $datos_pedido['estatus'] = 'BOR';
             $datos_pedido['tipo_pedido'] = 'ORD';
-
-            $pedido->update($datos_pedido);
+            $diferencia_claves = 0;
+            $total_insumos = 0;
 
             $listado_insumos = $parametros['insumos_pedido'];
             $insumos_editados = [];
             $insumos_eliminados = [];
             $insumos_agregados = [];
             $insumos_pedido = [];
-            //$insumos_pedido = $pedido->listaInsumosMedicos->pluck('cantidad','id');
-            $insumos_pedido_raw = $pedido->listaInsumosMedicos->toArray();
+            
+            $insumos_pedido_raw = $pedido->listaInsumosMedicos;
             
             foreach ($insumos_pedido_raw as $insumo) {
-                $insumos_pedido[$insumo['id']] = $insumo;
+                $insumos_pedido[$insumo->id] = $insumo;
             }
-
+            
             foreach ($listado_insumos as $insumo) {
                 if(!isset($insumo['pedido_insumo_id'])){
-                    $insumos_agregados[] = $insumo;
+                    $insumos_agregados[] = ['insumo_medico_id' => $insumo['id'], 'tipo_insumo' => $insumo['tipo_insumo'], 'cantidad' => $insumo['cantidad'], 'monto' => $insumo['monto'] ];
+                    $total_insumos += $insumo['cantidad'];
                 }elseif(isset($insumos_pedido[$insumo['pedido_insumo_id']])){
-                    if($insumos_pedido[$insumo['pedido_insumo_id']]['insumo_medico_id'] !=  $insumo['id'] || $insumos_pedido[$insumo['pedido_insumo_id']]['cantidad'] !=  $insumo['cantidad'] || $insumos_pedido[$insumo['pedido_insumo_id']]['monto'] !=  $insumo['monto'] ){
-                        $insumos_editados[] = $insumo;
+                    $insumo_pedido = $insumos_pedido[$insumo['pedido_insumo_id']];
+                    if($insumo_pedido->insumo_medico_id !=  $insumo['id'] || $insumo_pedido->cantidad !=  $insumo['cantidad'] || $insumo_pedido->monto !=  $insumo['monto'] ){
+                        $insumo_pedido->insumo_medico_id = $insumo['id'];
+                        $insumo_pedido->tipo_insumo = $insumo['tipo_insumo'];
+                        $insumo_pedido->cantidad =  $insumo['cantidad'];
+                        $insumo_pedido->monto =  $insumo['monto'];
+                        //
+                        $insumos_editados[] = $insumo_pedido;
                     }
-                    $insumos_pedido[$insumo['pedido_insumo_id']] = 0;
+                    $total_insumos += $insumo['cantidad'];
+                    $insumos_pedido[$insumo['pedido_insumo_id']] = NULL;
                 }
             }
 
-            foreach ($insumos_pedido as $key => $value) {
-                if($value > 0){
-                    $insumos_eliminados[] = $key;
+            foreach ($insumos_pedido as $pedido_insumo_id => $pedido_insumo) {
+                if($pedido_insumo){
+                    if(count($insumos_agregados) > 0){
+                        $pedido_insumo->insumo_medico_id = $insumos_agregados[0]['insumo_medico_id'];
+                        $pedido_insumo->tipo_insumo = $insumos_agregados[0]['tipo_insumo'];
+                        $pedido_insumo->cantidad =  $insumos_agregados[0]['cantidad'];
+                        $pedido_insumo->monto =  $insumos_agregados[0]['monto'];
+                        $pedido_insumo->deleted_at = null;
+                        $insumos_editados[] = $pedido_insumo;
+                        array_splice($insumos_agregados,0,1);
+                    }else{
+                        $insumos_eliminados[] = $pedido_insumo_id;
+                    }
                 }
             }
 
-            $return_data = [
+            $diferencia_claves = (count($insumos_agregados) - count($insumos_eliminados));
+            $datos_pedido['total_claves'] = $pedido->total_claves + $diferencia_claves;
+            $datos_pedido['total_insumos'] = $total_insumos;
+
+            //Return temporal para pruebas...
+            /*urn_data = [
                 'id' => $id, 
                 'data' => Input::all(),
                 'lista_insumos' => $listado_insumos,
@@ -185,10 +212,31 @@ class PedidoOrdinarioController extends Controller
                 'insumos_editados' => $insumos_editados,
                 'insumos_eliminados' => $insumos_eliminados,
                 'insumos_agregados' => $insumos_agregados,
-            ];
+            ];*/
+            //DB::rollback();
+            //return response()->json($return_data,HttpResponse::HTTP_OK);
 
+            if(count($insumos_agregados)){
+                $pedido->listaInsumosMedicos()->createMany($insumos_agregados);
+            }
+            if(count($insumos_editados)){
+                $pedido->listaInsumosMedicos()->saveMany($insumos_editados);
+            }
+            if(count($insumos_eliminados)){
+                $pedido->listaInsumosMedicos()->whereIn('id',$insumos_eliminados)->delete();
+            }
+
+            $pedido->update($datos_pedido);
+
+            DB::commit();
+
+            $pedido->load('listaInsumosMedicos');
+            $return_data = [
+                'data' => $pedido
+            ];
             return response()->json($return_data,HttpResponse::HTTP_OK);
         }catch(\Exception $e){
+            DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }

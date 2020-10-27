@@ -744,14 +744,39 @@ export class PedidoComponent implements OnInit {
     if(datosPedido.pedido.id){
       this.pedidosOrdinarios.actualizarPedido(datosPedido,datosPedido.pedido.id).subscribe(
         response=>{
-          if(response.guardado){
-            this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+          this.formPedido.patchValue(response.data);
+          
+          for(let id in this.controlInsumosModificados){
+            if(this.controlInsumosModificados[id]){
+              let index_servidor = response.data.lista_insumos_medicos.findIndex(x => x.insumo_medico_id == id);
+              let pedido_insumo_id = response.data.lista_insumos_medicos[index_servidor].id;
+
+              let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
+              this.listadoInsumosPedido[index_local].pedido_insumo_id = pedido_insumo_id;
+            }
           }
+          this.controlInsumosModificados = {};
+          this.listadoInsumosEliminados = [];
+          
+          this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
         }
       );
     }else{
       this.pedidosOrdinarios.crearPedido(datosPedido).subscribe(
         response =>{
+          this.formPedido.patchValue(response.data);
+
+          for(let id in this.controlInsumosModificados){
+            if(this.controlInsumosModificados[id]){
+              let index_servidor = response.data.lista_insumos_medicos.findIndex(x => x.insumo_medico_id == id);
+              let pedido_insumo_id = response.data.lista_insumos_medicos[index_servidor].id;
+
+              let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
+              this.listadoInsumosPedido[index_local].pedido_insumo_id = pedido_insumo_id;
+            }
+          }
+          this.controlInsumosModificados = {};
+          this.listadoInsumosEliminados = [];
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
         }
       );
