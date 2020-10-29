@@ -165,6 +165,15 @@ export class PedidoComponent implements OnInit {
               insumo.monto = insumo_server.monto;
               insumo.pedido_insumo_id = insumo_server.id;
 
+              if(insumo_server.lista_insumos_unidades.length > 0){
+                insumo.cuadro_distribucion = [];
+                for(let j in insumo_server.lista_insumos_unidades){
+                  insumo.cuadro_distribucion.push(
+                    {id: insumo_server.lista_insumos_unidades[j].unidad_medica_id, cantidad: insumo_server.lista_insumos_unidades[j].cantidad}
+                  );
+                }
+              }
+
               this.listadoInsumosPedido.push(insumo);
               this.controlInsumosAgregados[insumo.id] = true;
 
@@ -174,6 +183,13 @@ export class PedidoComponent implements OnInit {
                 this.clavesTotalesPedido.mat_curacion += 1;
               }
             }
+
+            if(response.data.lista_unidades_medicas.length > 0){
+              for(let i in response.data.lista_unidades_medicas){
+                this.unidadesSeleccionadas.push(response.data.lista_unidades_medicas[i].unidad_medica);
+              }
+            }
+
             this.cargarPaginaInsumos();
           }
         );

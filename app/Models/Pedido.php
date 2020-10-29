@@ -20,6 +20,10 @@ class Pedido extends Model{
         return $this->hasMany('App\Models\PedidoListaInsumos','pedido_id');
     }
 
+    public function listaInsumosMedicosUnidades(){
+        return $this->hasMany('App\Models\PedidoListaInsumosUnidad','pedido_id');
+    }
+
     public function listaUnidadesMedicas(){
         return $this->hasMany('App\Models\PedidoListaUnidades','pedido_id');
     }
