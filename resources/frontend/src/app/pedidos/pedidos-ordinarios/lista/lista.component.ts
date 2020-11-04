@@ -33,9 +33,9 @@ export class ListaComponent implements OnInit {
   listadoPedidos: any[] = [];
 
   meses:any = {1:'Enero', 2:'Febrero', 3:'Marzo', 4:'Abril', 5:'Mayo', 6:'Junio', 7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'};
-  listaEstatusIconos: any = { 'BOR':'content_paste', 2:'description', 3:'verified', 4:'cancel', 5:'warning' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
-  listaEstatusClaves: any = { 'BOR':'borrador', 2:'concluido', 3:'validado', 4:'cancelado', 5:'expirado' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
-  listaEstatusLabels: any = { 'BOR':'Borrador', 2:'Concluido', 3:'Validado', 4:'Cancelado', 5:'Expirado' }; //Borrador, Concluido, Validado, Publicado, Cancelado, Expirado
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'VAL':'verified', 'PUB':'published_wit_changes', 'CAN':'cancel',    'EXP':'warning'  };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'VAL':'validado', 'PUB':'publicado',             'CAN':'cancelado', 'EXP':'expirado' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'VAL':'Validado', 'PUB':'Publicado',             'CAN':'Cancelado', 'EXP':'Expirado' };
 
   ngOnInit() {
     this.mediaObserver.media$.subscribe(

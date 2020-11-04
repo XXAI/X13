@@ -74,6 +74,13 @@ export class PedidoComponent implements OnInit {
 
   displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
 
+  verBoton:any;
+  isLoading:boolean;
+  estatusPedido:string;
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'VAL':'verified', 'PUB':'published_wit_changes', 'CAN':'cancel',    'EXP':'warning'  };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'VAL':'validado', 'PUB':'publicado',             'CAN':'cancelado', 'EXP':'expirado' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'VAL':'Validado', 'PUB':'Publicado',             'CAN':'Cancelado', 'EXP':'Expirado' };
+  
   ngOnInit() {
     let fecha_actual = new Date();
     
@@ -95,6 +102,9 @@ export class PedidoComponent implements OnInit {
     this.clavesTotales = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesPedido = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
+
+    this.verBoton = {'guardar':true, 'concluir':true, 'agregar_insumo':true, 'agregar_unidad':true};
+    this.estatusPedido = 'NVO';
     
     this.catalogos.meses = [
       {clave:1,  etiqueta:'Enero'},
@@ -151,10 +161,10 @@ export class PedidoComponent implements OnInit {
 
     this.route.paramMap.subscribe(params => {
       if(params.get('id')){
+        this.isLoading = true;
         let id = params.get('id');
         this.pedidosOrdinarios.verPedido(id).subscribe(
           response =>{
-            console.log(response);
             this.formPedido.patchValue(response.data);
             this.clavesTotalesPedido.insumos = response.data.lista_insumos_medicos.length;
             for(let i in response.data.lista_insumos_medicos){
@@ -171,6 +181,11 @@ export class PedidoComponent implements OnInit {
                   insumo.cuadro_distribucion.push(
                     {id: insumo_server.lista_insumos_unidades[j].unidad_medica_id, cantidad: insumo_server.lista_insumos_unidades[j].cantidad}
                   );
+                  if(!this.unidadesConInsumos[insumo_server.lista_insumos_unidades[j].unidad_medica_id]){
+                    this.unidadesConInsumos[insumo_server.lista_insumos_unidades[j].unidad_medica_id] = 1;
+                  }else{
+                    this.unidadesConInsumos[insumo_server.lista_insumos_unidades[j].unidad_medica_id] += 1;
+                  }
                 }
               }
 
@@ -191,6 +206,15 @@ export class PedidoComponent implements OnInit {
             }
 
             this.cargarPaginaInsumos();
+            this.isLoading = false;
+
+            this.estatusPedido = response.data.estatus;
+            if(response.data.estatus == 'CON'){
+              this.verBoton['concluir'] = false;
+              this.verBoton['guardar'] = false;
+              this.verBoton['agregar_insumo'] = false;
+              this.verBoton['agregar_unidad'] = false;
+            }
           }
         );
       }else{
@@ -749,6 +773,19 @@ export class PedidoComponent implements OnInit {
     this.cargarPaginaInsumos();
   }
 
+  concluirPedido(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'¿Desea concluir el pedido?', dialogMessage:'Al concluir el pedido no se podrán realizar mas cambios, escriba CONCLUIR para aceptar el proceso.', validationString:'CONCLUIR', btnColor:'primary', btnText:'Aceptar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.guardarPedido(true);
+      }
+    });
+  }
+
   guardarPedido(concluir:boolean = false){
     let datosPedido = {
       pedido: this.formPedido.value,
@@ -757,6 +794,7 @@ export class PedidoComponent implements OnInit {
       concluir: concluir
     };
 
+    this.isLoading = true;
     if(datosPedido.pedido.id){
       this.pedidosOrdinarios.actualizarPedido(datosPedido,datosPedido.pedido.id).subscribe(
         response=>{
@@ -775,6 +813,7 @@ export class PedidoComponent implements OnInit {
           this.listadoInsumosEliminados = [];
           
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+          this.isLoading = false;
         }
       );
     }else{
@@ -794,6 +833,7 @@ export class PedidoComponent implements OnInit {
           this.controlInsumosModificados = {};
           this.listadoInsumosEliminados = [];
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+          this.isLoading = false;
         }
       );
     }

@@ -68,11 +68,11 @@
         </mat-card>
     </mat-drawer>
     <mat-drawer-content>
-        
+        <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
         <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
             <section fxFlex="none" fxLayout="row">
                 <div fxFlex="none" *ngIf="!insumosDrawer.opened">
-                    <button mat-raised-button color="primary" (click)="guardarPedido(true)" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
+                    <button *ngIf="verBoton['concluir']" mat-raised-button color="primary" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">
@@ -86,13 +86,18 @@
                 <div fxFlex="none">
                     <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>Cancelar</button>
                     &nbsp;
-                    <button mat-raised-button color="success" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
+                    <button *ngIf="verBoton['guardar']" mat-raised-button color="success" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
                 </div>
             </section>
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
                 <section fxFlex="30" fxLayout="row" *ngIf="!insumosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
                         <div fxFlex fxLayout="column" *ngIf="!mostrarPedidosInternos"> <!-- Panel principal del pedido -->
+                            <div fxFlex="none" fxLayout="column">
+                                <div fxFlex class="estatus-pedido {{listaEstatusClaves[estatusPedido]}}-color">
+                                    {{listaEstatusLabels[estatusPedido]}}
+                                </div>
+                            </div>
                             <div fxFlex="none" fxLayout="column" *ngIf="unidadMedicaEntrega" style="padding: 5px 0px;">
                                 <div fxFlex class="label-unidad-entrega">
                                     Entregar en:
@@ -139,13 +144,13 @@
                                     <textarea matInput formControlName="observaciones" rows="2"></textarea>
                                 </mat-form-field>
 
-                                <button fxFlex="100" mat-flat-button color="accent" (click)="abrirBuscadorInsumos()"><mat-icon>chevron_right</mat-icon> Agregar Insumos</button>
+                                <button *ngIf="verBoton['agregar_insumo']" fxFlex="100" mat-flat-button color="accent" (click)="abrirBuscadorInsumos()"><mat-icon>chevron_right</mat-icon> Agregar Insumos</button>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" fxLayout="row">
                                 <div fxFlex></div>
                                 <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
-                                    <button mat-mini-fab color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
+                                    <button *ngIf="verBoton['agregar_unidad']" mat-mini-fab color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
                                         <mat-icon>house</mat-icon>
                                     </button>
                                 </div>
@@ -217,7 +222,7 @@
                                     <button mat-flat-button (click)="cerrarPedidosInternos()"><mat-icon>close</mat-icon> Cerrar</button>
                                 </div>
                                 <div fxFlex></div>
-                                <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
+                                <div fxFlex="none">
                                     <mat-hint>{{listaFiltroUnidadesSeleccionadas.length | number}} Unidades</mat-hint>
                                 </div>
                             </div>

@@ -50,6 +50,9 @@ class PedidoOrdinarioController extends Controller
                 });
             }
 
+            //para ordenar
+            $pedidos = $pedidos->orderBy('updated_at','desc');
+
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
                 $pedidos = $pedidos->paginate($resultadosPorPagina);
@@ -175,7 +178,7 @@ class PedidoOrdinarioController extends Controller
                 ])->find($id); 
 
             $datos_pedido = $parametros['pedido'];
-            $datos_pedido['estatus'] = 'BOR';
+            $datos_pedido['estatus'] = ($parametros['concluir'])?'CON':'BOR';
             $datos_pedido['tipo_pedido'] = 'ORD';
             $diferencia_claves = 0;
             $total_insumos = 0;
@@ -233,18 +236,6 @@ class PedidoOrdinarioController extends Controller
                 $pedido->listaUnidadesMedicas()->delete();
             }
 
-            //Return temporal para pruebas...
-            /*urn_data = [
-                'id' => $id, 
-                'data' => Input::all(),
-                'lista_insumos' => $listado_insumos,
-                'lista_guardada' => $insumos_pedido,
-                'insumos_editados' => $insumos_editados,
-                'insumos_eliminados' => $insumos_eliminados,
-                'insumos_agregados' => $insumos_agregados,
-            ];*/
-            //DB::rollback();
-            //return response()->json($return_data,HttpResponse::HTTP_OK);
             $pedido_insumos_unidades = [];
             $insumos_pedido_raw = $pedido->listaInsumosMedicos;
             foreach ($insumos_pedido_raw as $insumo) {
@@ -369,8 +360,6 @@ class PedidoOrdinarioController extends Controller
                     }
                 }
 
-                //DB::rollback();
-                //return response()->json($pedido_insumos_unidades_editados,HttpResponse::HTTP_OK);
                 if(count($pedido_insumos_unidades_guardar)){
                     $pedido->listaInsumosMedicosUnidades()->createMany($pedido_insumos_unidades_guardar);
                 }
