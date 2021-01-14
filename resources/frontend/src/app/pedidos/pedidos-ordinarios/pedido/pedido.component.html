@@ -73,6 +73,7 @@
             <section fxFlex="none" fxLayout="row">
                 <div fxFlex="none" *ngIf="!insumosDrawer.opened">
                     <button *ngIf="verBoton['concluir']" mat-raised-button color="primary" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
+                    <button *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" (click)="generarFolio()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Generar Folio</button>
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">
@@ -84,7 +85,7 @@
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>Cancelar</button>
+                    <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>{{(estatusPedido != 'CON')?'Cancelar':'Regresar'}}</button>
                     &nbsp;
                     <button *ngIf="verBoton['guardar']" mat-raised-button color="success" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
                 </div>
@@ -109,13 +110,14 @@
                             <div fxFlex="none" fxLayout="row raw" [formGroup]="formPedido">
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Descripcion del Pedido</mat-label>
-                                    <input matInput formControlName="descripcion" required>
+                                    <input matInput formControlName="descripcion" required [readonly]="!editable">
                                     <mat-error *ngIf="formPedido.get('descripcion').hasError('required')">Descripción es obligatorio</mat-error>
                                 </mat-form-field>
             
                                 <mat-form-field fxFlex="50">
                                     <mat-label>Mes</mat-label>
-                                    <mat-select  formControlName="mes" required>
+                                    <input matInput formControlName="mes_value" readonly *ngIf="!editable">
+                                    <mat-select  formControlName="mes" required *ngIf="editable">
                                         <mat-option *ngFor="let item of catalogos['meses']" [value]="item.clave">
                                             {{item.etiqueta}}
                                         </mat-option>
@@ -125,13 +127,14 @@
             
                                 <mat-form-field fxFlex="50">
                                     <mat-label>Año</mat-label>
-                                    <input matInput formControlName="anio" required>
+                                    <input matInput formControlName="anio" required [readonly]="!editable">
                                     <mat-error *ngIf="formPedido.get('anio').hasError('required')">Año es obligatorio</mat-error>
                                 </mat-form-field>
                                 
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Programa</mat-label>
-                                    <mat-select formControlName="programa_id">
+                                    <input matInput formControlName="programa_value" readonly *ngIf="!editable">
+                                    <mat-select formControlName="programa_id" *ngIf="editable">
                                         <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
                                         <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
                                             {{item.descripcion}}
@@ -141,7 +144,7 @@
                                 
                                 <mat-form-field  fxFlex="100">
                                     <mat-label>Observaciones</mat-label>
-                                    <textarea matInput formControlName="observaciones" rows="2"></textarea>
+                                    <textarea matInput formControlName="observaciones" rows="2" [readonly]="!editable"></textarea>
                                 </mat-form-field>
 
                                 <button *ngIf="verBoton['agregar_insumo']" fxFlex="100" mat-flat-button color="accent" (click)="abrirBuscadorInsumos()"><mat-icon>chevron_right</mat-icon> Agregar Insumos</button>
@@ -272,8 +275,8 @@
                                 <ng-container matColumnDef="actions">
                                     <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
                                     <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                                        <button mat-icon-button (click)="agregarInsumo(row)"><mat-icon>edit</mat-icon></button>
-                                        <button mat-icon-button (click)="quitarInsumo(row)" color="warn"><mat-icon>delete</mat-icon></button>
+                                        <button *ngIf="estatusPedido != 'CON'" mat-icon-button (click)="agregarInsumo(row)"><mat-icon>edit</mat-icon></button>
+                                        <button *ngIf="estatusPedido != 'CON'" mat-icon-button (click)="quitarInsumo(row)" color="warn"><mat-icon>delete</mat-icon></button>
                                     </td>
                                 </ng-container>
             

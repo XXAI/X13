@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { PedidosService } from '../../pedidos.service';
 import { PedidosOrdinariosService } from '../pedidos-ordinarios.service';
 import { SharedService } from '../../../shared/shared.service';
@@ -74,6 +74,8 @@ export class PedidoComponent implements OnInit {
 
   displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
 
+  editable:boolean;
+
   verBoton:any;
   isLoading:boolean;
   estatusPedido:string;
@@ -83,6 +85,8 @@ export class PedidoComponent implements OnInit {
   
   ngOnInit() {
     let fecha_actual = new Date();
+
+    this.editable = true;
     
     this.controlInsumosModificados = {};
     this.listadoInsumosEliminados = [];
@@ -103,7 +107,7 @@ export class PedidoComponent implements OnInit {
     this.clavesTotalesPedido = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
     this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
 
-    this.verBoton = {'guardar':true, 'concluir':true, 'agregar_insumo':true, 'agregar_unidad':true};
+    this.verBoton = {'guardar':true, 'concluir':true, 'generar_folio':false, 'agregar_insumo':true, 'agregar_unidad':true};
     this.estatusPedido = 'NVO';
     
     this.catalogos.meses = [
@@ -209,11 +213,22 @@ export class PedidoComponent implements OnInit {
             this.isLoading = false;
 
             this.estatusPedido = response.data.estatus;
-            if(response.data.estatus == 'CON'){
+            if(response.data.estatus == 'CON' || response.data.estatus == 'PUB'){
               this.verBoton['concluir'] = false;
+              this.verBoton['generar_folio'] = (response.data.estatus != 'PUB');
               this.verBoton['guardar'] = false;
               this.verBoton['agregar_insumo'] = false;
               this.verBoton['agregar_unidad'] = false;
+              this.editable = false;
+
+              let mes = this.catalogos.meses[response.data.mes-1];
+              this.formPedido.addControl('mes_value',new FormControl(mes.etiqueta));
+
+              let programa = 'Sin Programa';
+              if(response.data.programa){
+                programa = response.data.programa.descripcion;
+              }
+              this.formPedido.addControl('programa_value',new FormControl(programa));
             }
           }
         );
@@ -786,13 +801,30 @@ export class PedidoComponent implements OnInit {
     });
   }
 
-  guardarPedido(concluir:boolean = false){
-    let datosPedido = {
+  generarFolio(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'¿Desea generar el folio?', dialogMessage:'Al generar el folio de este pedido no se podrán realizar mas cambios, escriba GENERAR para continuar.', validationString:'GENERAR', btnColor:'primary', btnText:'Aceptar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.guardarPedido(true,true);
+      }
+    });
+  }
+
+  guardarPedido(concluir:boolean = false, generar_folio:boolean = false){
+    let datosPedido:any = {
       pedido: this.formPedido.value,
       insumos_pedido: this.listadoInsumosPedido,
       unidades_pedido: this.unidadesSeleccionadas,
       concluir: concluir
     };
+
+    if(generar_folio){
+      datosPedido.generar_folio = true;
+    }
 
     this.isLoading = true;
     if(datosPedido.pedido.id){

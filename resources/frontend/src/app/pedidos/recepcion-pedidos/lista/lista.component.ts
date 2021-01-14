@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MediaObserver } from '@angular/flex-layout';
 import { MatTableDataSource } from '@angular/material';
-import { PedidosOrdinariosService } from '../pedidos-ordinarios.service';
+import { PedidosOrdinariosService } from '../../pedidos-ordinarios/pedidos-ordinarios.service';
 import { SharedService } from '../../../shared/shared.service';
 
 @Component({
@@ -10,6 +10,7 @@ import { SharedService } from '../../../shared/shared.service';
   templateUrl: './lista.component.html',
   styleUrls: ['./lista.component.css']
 })
+
 export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
 

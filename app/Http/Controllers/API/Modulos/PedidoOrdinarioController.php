@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Input;
 use DB;
 
 use App\Models\Pedido;
+use App\Models\UnidadMedica;
 
 class PedidoOrdinarioController extends Controller
 {
@@ -371,6 +372,23 @@ class PedidoOrdinarioController extends Controller
                 }
             }
 
+            if(isset($parametros['generar_folio']) && $parametros['generar_folio']){
+                $max_consecutivo = Pedido::where('anio',$pedido->anio)->where('tipo_pedido',$pedido->tipo_pedido)->where('unidad_medica_id',$pedido->unidad_medica_id)->max('folio_consecutivo');
+
+                if(!$max_consecutivo){
+                    $max_consecutivo = 1;
+                }else{
+                    $max_consecutivo++;
+                }
+
+                $unidad_medica = UnidadMedica::find($pedido->unidad_medica_id);
+
+                $pedido->estatus = 'PUB';
+                $pedido->folio_consecutivo = $max_consecutivo;
+                $pedido->folio = $unidad_medica->clues . '-' . $pedido->tipo_pedido . '-' . $pedido->anio . '-' . (str_pad($max_consecutivo, 3, "0", STR_PAD_LEFT));
+                $pedido->save();
+            }
+
             DB::commit();
 
             $pedido->load('listaInsumosMedicos.listaInsumosUnidades');
@@ -383,8 +401,6 @@ class PedidoOrdinarioController extends Controller
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
-
-
 
     /**
      * Remove the specified resource from storage.

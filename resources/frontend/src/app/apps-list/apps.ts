@@ -26,6 +26,7 @@ export const APPS:App [] = [
     { name:'Pedidos',   route: "pedidos",       icon: "assets/icons/pedidos-hub.svg",
       apps:[
         { name:'Pedidos Ordinarios',        route: "pedidos/pedidos-ordinarios",        icon: "assets/icons/pedidos.svg" },
+        { name:'Recepción de Pedidos',      route: "pedidos/recepcion-pedidos",         icon: "assets/icons/recepcion-pedidos.svg" },
       ]
     },
     { name:'Catalogos',   route: "catalogos",       icon: "assets/icons/catalogos.svg",
