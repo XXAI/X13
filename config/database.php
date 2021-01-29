@@ -56,7 +56,7 @@ return [
             'collation' => 'utf8_general_ci',
             'prefix' => '',
             'prefix_indexes' => true,
-            'strict' => true,
+            'strict' => false,
             'engine' => 'InnoDB',
             'options' => array(PDO::MYSQL_ATTR_LOCAL_INFILE => true, PDO::ATTR_EMULATE_PREPARES => false),
             /*extension_loaded('pdo_mysql') ? array_filter([

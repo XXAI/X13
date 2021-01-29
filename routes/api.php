@@ -47,6 +47,7 @@ Route::group(['middleware'=>'auth'],function($router){
      */
     Route::get('datos-catalogo',                    'API\Modulos\PedidoOrdinarioController@datosCatalogo');
     Route::apiResource('pedido-ordinario',          'API\Modulos\PedidoOrdinarioController');
+    Route::apiResource('recepcion-pedidos',         'API\Modulos\RecepcionPedidosController')->except(['create','store']);
 
     /*
     *   Modulos generales

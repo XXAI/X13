@@ -3,15 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Almacen extends BaseModel{
+class Almacen extends Model{
     
     use SoftDeletes;
-    protected $generarID = true;
-    protected $guardarIDServidor = true;
-    protected $guardarIDUsuario = true;
-    protected $keyType = 'string';
-    protected $table = 'movimientos';  
-    protected $fillable = ['clues','nombre','tipo_almacen_id','externo','unidosis'];
+    protected $table = 'almacenes';  
+    protected $fillable = ['unidad_medica_id','nombre','tipo_almacen_id','externo','unidosis','responsable','user_id'];
 }

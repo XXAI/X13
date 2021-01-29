@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MediaObserver } from '@angular/flex-layout';
 import { MatTableDataSource } from '@angular/material';
-import { PedidosOrdinariosService } from '../../pedidos-ordinarios/pedidos-ordinarios.service';
+import { RecepcionPedidosService } from '../recepcion-pedidos.service';
 import { SharedService } from '../../../shared/shared.service';
 
 @Component({
@@ -14,7 +14,7 @@ import { SharedService } from '../../../shared/shared.service';
 export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
 
-  constructor(public mediaObserver: MediaObserver, private pedidosOrdinariosService: PedidosOrdinariosService, private sharedService: SharedService) { }
+  constructor(public mediaObserver: MediaObserver, private recepcionPedidosService: RecepcionPedidosService, private sharedService: SharedService) { }
 
   mostrarTarjetas:boolean = false;
 
@@ -110,7 +110,7 @@ export class ListaComponent implements OnInit {
     }
     this.resultsLength = 0;
     
-    this.pedidosOrdinariosService.obtenerListaPedidos(params).subscribe(
+    this.recepcionPedidosService.obtenerListaPedidos(params).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
