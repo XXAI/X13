@@ -14,9 +14,9 @@ class AlterPedidosAvanceRecepcion extends Migration
     public function up()
     {
         Schema::table('pedidos_avance_recepcion', function (Blueprint $table) {
-            $table->decimal('porcentaje_claves',5,2)->nullable()->change();
-            $table->decimal('porcentaje_insumos',5,2)->nullable()->change();
-            $table->decimal('porcentaje_total',5,2)->nullable()->change();
+            $table->decimal('porcentaje_claves',5,2)->default('0')->change();
+            $table->decimal('porcentaje_insumos',5,2)->default('0')->change();
+            $table->decimal('porcentaje_total',5,2)->default('0')->change();
         });
     }
 
@@ -28,9 +28,9 @@ class AlterPedidosAvanceRecepcion extends Migration
     public function down()
     {
         Schema::table('pedidos_avance_recepcion', function (Blueprint $table) {
-            $table->decimal('porcentaje_claves',3,2)->nullable()->change();
-            $table->decimal('porcentaje_insumos',3,2)->nullable()->change();
-            $table->decimal('porcentaje_total',3,2)->nullable()->change();
+            $table->decimal('porcentaje_claves',3,2)->default('0')->change();
+            $table->decimal('porcentaje_insumos',3,2)->default('0')->change();
+            $table->decimal('porcentaje_total',3,2)->default('0')->change();
         });
     }
 }
