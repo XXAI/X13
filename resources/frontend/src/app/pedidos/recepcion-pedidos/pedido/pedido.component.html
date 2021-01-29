@@ -204,7 +204,7 @@
                         <ng-container matColumnDef="actions">
                             <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
                             <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                                <button *ngIf="estatusPedido != 'CON'" mat-icon-button (click)="agregarLote(row)"><mat-icon>content_paste</mat-icon></button>
+                                <button mat-icon-button (click)="agregarLote(row)"><mat-icon>content_paste</mat-icon></button>
                             </td>
                         </ng-container>
     
