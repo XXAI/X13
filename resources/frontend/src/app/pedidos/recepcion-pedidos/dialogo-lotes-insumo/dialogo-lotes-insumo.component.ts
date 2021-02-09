@@ -5,6 +5,7 @@ import { CustomValidator } from '../../../utils/classes/custom-validator';
 
 export interface InsumoData {
   insumo: any;
+  editar: boolean;
 }
 
 @Component({
@@ -33,14 +34,18 @@ export class DialogoLotesInsumoComponent implements OnInit {
     iconoMatCuracion:string = 'assets/icons-ui/MTC.svg';
 
     loteEditIndex:number;
+    loteRecienteHash:string;
 
     listaLotes:any[];
+
+    modoEdicion:boolean;
 
     ngOnInit() {      
       this.insumo = JSON.parse(JSON.stringify(this.data.insumo));
       //this.insumo = this.data.insumoLotes;
       this.listaLotes = [];
       this.loteEditIndex = -1;
+      this.modoEdicion = this.data.editar;
 
       if(!this.insumo.total_piezas){
         this.insumo.total_piezas = 0;
@@ -105,6 +110,7 @@ export class DialogoLotesInsumoComponent implements OnInit {
 
         let loteData = this.formLote.value;
         loteData.estatusCaducidad = this.estatusCaducidad;
+        loteData.hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
 
         if(this.loteEditIndex >= 0){
           this.insumo.total_piezas -= this.listaLotes[this.loteEditIndex].cantidad;
@@ -112,10 +118,18 @@ export class DialogoLotesInsumoComponent implements OnInit {
           this.insumo.total_piezas += +loteData.cantidad;
           this.loteEditIndex = -1;
         }else{
-          this.listaLotes.push(loteData);
+          let loteIndex = this.listaLotes.findIndex(x => x.hash === loteData.hash);
+
+          if(loteIndex >= 0){
+            let lote = this.listaLotes[loteIndex];
+            lote.cantidad += loteData.cantidad;
+          }else{
+            this.listaLotes.push(loteData);
+          }
           this.insumo.total_piezas += +loteData.cantidad;
         }
-        
+
+        this.loteRecienteHash = loteData.hash;
         this.loteInput.nativeElement.focus();
         this.formLote.reset();
         this.estatusCaducidad = 1;
@@ -146,7 +160,7 @@ export class DialogoLotesInsumoComponent implements OnInit {
     }
 
     aceptarLotes(){
-      if(this.insumo.cantidad >= this.insumo.total_piezas){
+      if((this.insumo.cantidad_restante - this.insumo.total_piezas) >= 0){
         let insumo = this.insumo;
         insumo.lotes = this.listaLotes;
 

@@ -12,6 +12,10 @@ class Movimiento extends Model{
     protected $table = 'movimientos';  
     protected $fillable = ['almacen_id','direccion_movimiento','estatus','fecha_movimiento','programa_id','folio','descripcion','entrega','recibe','observaciones','cancelado','fecha_cancelacion','motivo_cancelacion','user_id'];
 
+    public function almacen(){
+        return $this->belongsTo('App\Models\Almacen','almacen_id');
+    }
+
     public function listaInsumosMedicos(){
         return $this->hasMany('App\Models\MovimientoInsumo','movimiento_id');
     }

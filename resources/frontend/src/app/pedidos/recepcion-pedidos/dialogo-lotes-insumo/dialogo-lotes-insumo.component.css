@@ -82,7 +82,15 @@
 .outer-grid-tile{
     /*border: solid thin lightblue;*/
     /*background: lightblue;*/
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
     background-color: whitesmoke;
+}
+
+.outer-grid-tile.recent{
+    background-color: lightgoldenrodyellow;
+    border: dashed thin green;
 }
 
 .outer-grid-tile:hover{    

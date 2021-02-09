@@ -15,4 +15,8 @@ class MovimientoInsumo extends Model{
     public function insumoMedico(){
         return $this->belongsTo('App\Models\InsumoMedico','insumo_medico_id');
     }
+
+    public function stock(){
+        return $this->belongsTo('App\Models\Stock','stock_id');
+    }
 }

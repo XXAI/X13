@@ -79,10 +79,30 @@ class RecepcionPedidosController extends Controller
     {
         try{
             $pedido = Pedido::with(['listaInsumosMedicos'=>function($insumos){
-                                        $insumos->with('insumoMedico.medicamento','insumoMedico.materialCuracion');
+                                        $insumos->with('insumoMedico.medicamento','insumoMedico.materialCuracion')
+                                                ->select('pedidos_lista_insumos.*',DB::raw('sum(movimientos_insumos.cantidad) as cantidad_recibida'))
+                                                ->leftjoin('rel_movimientos_pedidos','rel_movimientos_pedidos.pedido_id','=','pedidos_lista_insumos.pedido_id')
+                                                ->leftjoin('movimientos_insumos',function($join){
+                                                    $join->on('movimientos_insumos.movimiento_id','=','rel_movimientos_pedidos.movimiento_id')->whereNull('movimientos_insumos.deleted_at')
+                                                            ->on('movimientos_insumos.insumo_medico_id','=','pedidos_lista_insumos.insumo_medico_id');
+                                                })
+                                                ->groupBy('pedidos_lista_insumos.insumo_medico_id')
+                                                ->orderBy('pedidos_lista_insumos.id');
                                     },'unidadMedica.almacenes','programa','avanceRecepcion','recepcionesAnteriores','recepcionActual.listaInsumosBorrador'])->find($id);
 
             $return_data = ['data'=>$pedido];
+
+            return response()->json($return_data,HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function listaInsumosRecepcion($id){
+        try{
+            $recepcion = Movimiento::with(['listaInsumosMedicos.stock','almacen'])->find($id);
+
+            $return_data = ['data'=>$recepcion];
 
             return response()->json($return_data,HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -113,6 +133,8 @@ class RecepcionPedidosController extends Controller
                 $pedido->recepcionActual[0]->fecha_movimiento = $parametros['recepcion']['fecha_movimiento'];
                 $pedido->recepcionActual[0]->entrega = $parametros['recepcion']['entrega'];
                 $pedido->recepcionActual[0]->recibe = $parametros['recepcion']['recibe'];
+                $pedido->recepcionActual[0]->total_claves = $parametros['avance']['total_claves'];
+                $pedido->recepcionActual[0]->total_insumos = $parametros['avance']['total_insumos'];
                 $pedido->recepcionActual[0]->save();
 
                 $recepcion_actual = $pedido->recepcionActual[0];
@@ -127,6 +149,8 @@ class RecepcionPedidosController extends Controller
                     'recibe' => $parametros['recepcion']['recibe'],
                     'folio' => $pedido->folio,
                     'descripcion' => 'Recepción de pedido',
+                    'total_claves' => $parametros['avance']['total_claves'],
+                    'total_insumos' => $parametros['avance']['total_insumos'],
                     'user_id' => $loggedUser->id
                 ];
                 $recepcion_actual = Movimiento::create($movimiento_data);

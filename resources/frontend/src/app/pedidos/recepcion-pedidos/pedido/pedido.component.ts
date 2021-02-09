@@ -25,7 +25,6 @@ export class PedidoComponent implements OnInit {
   constructor(private formBuilder: FormBuilder, private recepcionPedidosService: RecepcionPedidosService, private sharedService: SharedService, private dialog: MatDialog, private route: ActivatedRoute) { }
 
   recepcionActiva:boolean;
-  listaRecepcionesAnteriores:any[];
   unidadMedicaEntrega:any;
   totalAvanceRecepcion:number;
   totalInsumosRecibidos:number;
@@ -35,11 +34,12 @@ export class PedidoComponent implements OnInit {
   listaUnidadesAsignadas:any[];
   unidadesConInsumos:any;
 
-  unidadesSeleccionadas:any[];
-  dataSourceUnidadesSeleccionadas:MatTableDataSource<any>;
-  listaFiltroUnidadesSeleccionadas:any[];
-  filtroUnidadesSeleccionadas:string;
-  pedidoInternoSeleccionado:number;
+  recepcionesAnteriores:any[];
+  insumosRecepcionesAnteriores:any;
+  dataSourceRecepcionesAnteriores:MatTableDataSource<any>;
+  listaFiltroRecepcionesAnteriores:any[];
+  filtroRecepcionesAnteriores:string;
+  recepcionSeleccionada:number;
 
   formRecepcion:FormGroup;
   dataPedido:any;
@@ -71,14 +71,14 @@ export class PedidoComponent implements OnInit {
   pageSize: number = 9;
   dataSourceInsumos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['clave','nombre','cantidad','total','actions']; //'monto',
+  displayedColumns: string[] = ['clave','nombre','cantidad','restante','actions']; //'monto',
 
   isLoading:boolean;
+  isLoadingListaInsumos:boolean;
   
   ngOnInit() {
     this.recepcionActiva = false;
     this.dataPedido = {};
-    this.listaRecepcionesAnteriores = [];
     this.totalAvanceRecepcion = 0;
     this.totalInsumosRecibidos = 0;
     this.totalClavesRecibidas = 0;
@@ -89,7 +89,9 @@ export class PedidoComponent implements OnInit {
     this.filtroInsumos = '';
     this.listadoInsumosPedido = [];
     
-    this.unidadesSeleccionadas = [];
+    this.recepcionesAnteriores = [];
+    this.insumosRecepcionesAnteriores = {};
+    this.listaFiltroRecepcionesAnteriores = [];
     
     this.catalogos = {almacenes:[]};
 
@@ -137,7 +139,7 @@ export class PedidoComponent implements OnInit {
           this.dataPedido.programa = (response.data.programa)?response.data.programa.descripcion:'Sin Programa';
 
           this.unidadMedicaEntrega = response.data.unidad_medica;
-          this.listaRecepcionesAnteriores = response.data.recepciones_anteriores;
+          this.recepcionesAnteriores = response.data.recepciones_anteriores;
 
           if(response.data.avance_recepcion){
             this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_insumos;
@@ -155,6 +157,8 @@ export class PedidoComponent implements OnInit {
             let insumo = JSON.parse(JSON.stringify(insumo_server.insumo_medico));
 
             insumo.cantidad = insumo_server.cantidad;
+            insumo.cantidad_recibida = +insumo_server.cantidad_recibida;
+            insumo.cantidad_restante = insumo_server.cantidad - insumo.cantidad_recibida;
             insumo.monto = insumo_server.monto;
             insumo.pedido_insumo_id = insumo_server.id;
 
@@ -180,6 +184,8 @@ export class PedidoComponent implements OnInit {
                   insumo.lotes = [];
                   insumo.total_piezas = 0;
                 }
+                insumo_borrador.hash = insumo_borrador.lote + insumo_borrador.fecha_caducidad + insumo_borrador.codigo_barras;
+
                 insumo.lotes.push(insumo_borrador);
                 insumo.total_piezas += insumo_borrador.cantidad;
                 this.totalInsumosRecibidos += insumo_borrador.cantidad;
@@ -188,6 +194,7 @@ export class PedidoComponent implements OnInit {
                   this.controlInsumosModificados[insumo.id] = '*';
                   this.listadoInsumosPedido.splice(index,1);
                   this.listadoInsumosPedido.unshift(insumo);
+                  this.totalClavesRecibidas++;
                 }
               }
             }
@@ -204,20 +211,20 @@ export class PedidoComponent implements OnInit {
     /*if(this.dataSourceInsumos){
       this.dataSourceInsumos.disconnect();
     }*/
-    let pedido_interno:any = {}
-    if(this.pedidoInternoSeleccionado){
-      pedido_interno = this.generarPedidoInterno();
+    let recepcion_anterior:any = {}
+    if(this.recepcionSeleccionada){
+      recepcion_anterior = this.insumosRecepcionesAnteriores[this.recepcionSeleccionada];
     }
 
-    if(pedido_interno.total_claves){
-      this.clavesTotales = pedido_interno.total_claves;
+    if(recepcion_anterior.total_claves){
+      this.clavesTotales = recepcion_anterior.total_claves;
     }else{
       this.clavesTotales = this.clavesTotalesPedido;
     }
 
     let listado_insumos_tabla:any[];
-    if(pedido_interno.listado_insumos){
-      listado_insumos_tabla = pedido_interno.listado_insumos;
+    if(recepcion_anterior.listado_insumos){
+      listado_insumos_tabla = recepcion_anterior.listado_insumos;
     }else{
       listado_insumos_tabla = this.listadoInsumosPedido;
     }
@@ -291,7 +298,15 @@ export class PedidoComponent implements OnInit {
     this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
   }
 
-  agregarLote(insumo){
+  verLotes(insumo){
+    this.mostrarDialogoLotes(insumo,false);
+  }
+
+  agregarLotes(insumo){
+    this.mostrarDialogoLotes(insumo,true);
+  }
+
+  mostrarDialogoLotes(insumo, editar){
     //console.log(insumo);
     //console.log('#################################################################################');
     this.idInsumoSeleccionado = insumo.id;
@@ -300,7 +315,7 @@ export class PedidoComponent implements OnInit {
       width: '99%',
       maxHeight: '90vh',
       height: '643px',
-      data:{insumo: insumo},
+      data:{insumo: insumo, editar: editar},
       panelClass: 'no-padding-dialog'
     };
 
@@ -337,17 +352,17 @@ export class PedidoComponent implements OnInit {
     });
   }
 
-  aplicarFiltroUnidadesSeleccionadas(){
-    this.dataSourceUnidadesSeleccionadas.filter = this.filtroUnidadesSeleccionadas;
-    this.listaFiltroUnidadesSeleccionadas = this.dataSourceUnidadesSeleccionadas.connect().value;
+  aplicarFiltroRecepcionesAnteriores(){
+    this.dataSourceRecepcionesAnteriores.filter = this.filtroRecepcionesAnteriores;
+    this.listaFiltroRecepcionesAnteriores = this.dataSourceRecepcionesAnteriores.connect().value;
   }
 
   generarPedidoInterno(){}
 
   verRecepcionesAnteriores(){
-    if(!this.dataSourceUnidadesSeleccionadas){
-      this.dataSourceUnidadesSeleccionadas = new MatTableDataSource<any>(this.unidadesSeleccionadas);
-      this.dataSourceUnidadesSeleccionadas.filterPredicate = (data:any, filter:string) => {
+    if(!this.dataSourceRecepcionesAnteriores){
+      this.dataSourceRecepcionesAnteriores = new MatTableDataSource<any>(this.recepcionesAnteriores);
+      this.dataSourceRecepcionesAnteriores.filterPredicate = (data:any, filter:string) => {
         let filtroTexto:boolean;
         let filtro = filter.trim();
 
@@ -361,31 +376,82 @@ export class PedidoComponent implements OnInit {
         return filtroTexto;
       };
     }else{
-      this.dataSourceUnidadesSeleccionadas.data = this.unidadesSeleccionadas;
+      this.dataSourceRecepcionesAnteriores.data = this.recepcionesAnteriores;
     }
-    this.listaFiltroUnidadesSeleccionadas = this.dataSourceUnidadesSeleccionadas.connect().value;
+    this.listaFiltroRecepcionesAnteriores = this.dataSourceRecepcionesAnteriores.connect().value;
     this.mostrarRecepcionesAnteriores = true;
   }
 
   cerrarRecepcionesAnteriores(){
     this.mostrarRecepcionesAnteriores = false;
-    this.filtroUnidadesSeleccionadas = '';
-    this.listaFiltroUnidadesSeleccionadas = [];
-    if(this.pedidoInternoSeleccionado){
-      this.pedidoInternoSeleccionado = 0;
+    this.filtroRecepcionesAnteriores = '';
+    this.listaFiltroRecepcionesAnteriores = [];
+    this.displayedColumns = ['clave','nombre','cantidad','restante','actions']; //'monto',
+    if(this.recepcionSeleccionada){
+      this.recepcionSeleccionada = 0;
       this.cargarPaginaInsumos();
     }
   }
 
-  mostrarInsumosPedidoInterno(unidad){
-    if(this.unidadesConInsumos[unidad.id]){
-      this.pedidoInternoSeleccionado = unidad.id;
-      this.cargarPaginaInsumos();
-    }    
+  mostrarInsumosRecepcionAnterior(recepcion){
+    this.displayedColumns = ['clave','nombre','recibido','actions']; //'monto',
+    if(this.recepcionSeleccionada != recepcion.id){
+      this.recepcionSeleccionada = recepcion.id;
+
+      if(!this.insumosRecepcionesAnteriores[recepcion.id]){
+        this.isLoadingListaInsumos = true;
+        this.insumosRecepcionesAnteriores[recepcion.id] = {total_claves: { insumos: 0, medicamentos: 0, mat_curacion: 0 }, listado_insumos: []};
+
+        this.recepcionPedidosService.obtenerListaInsumosRecepcion(recepcion.id).subscribe(
+          response =>{
+            let lista_insumos = [];
+            let control_insumos = {};
+
+            for(let i in response.data.lista_insumos_medicos){
+              let insumo_entrada = response.data.lista_insumos_medicos[i];
+              
+              if(!control_insumos[insumo_entrada.insumo_medico_id]){
+                control_insumos[insumo_entrada.insumo_medico_id] = lista_insumos.length+1;
+                let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo_entrada.insumo_medico_id);
+                let insumo = JSON.parse(JSON.stringify(this.listadoInsumosPedido[index]));
+
+                insumo.lotes = [];
+                insumo.total_recibido = 0;
+                lista_insumos.push(insumo);
+
+                this.insumosRecepcionesAnteriores[response.data.id].total_claves.insumos++;
+                if(insumo.tipo_insumo == 'MED'){
+                  this.insumosRecepcionesAnteriores[response.data.id].total_claves.medicamentos += 1;
+                }else{
+                  this.insumosRecepcionesAnteriores[response.data.id].total_claves.mat_curacion += 1;
+                }
+              }
+              let insumo = lista_insumos[control_insumos[insumo_entrada.insumo_medico_id]-1];
+              let lote = {
+                lote: insumo_entrada.stock.lote,
+                fecha_caducidad: insumo_entrada.stock.fecha_caducidad,
+                codigo_barras: insumo_entrada.stock.codigo_barras,
+                cantidad: insumo_entrada.cantidad
+              }
+              insumo.lotes.push(lote);
+              insumo.total_recibido += insumo_entrada.cantidad;
+            }
+
+            this.insumosRecepcionesAnteriores[response.data.id].listado_insumos = lista_insumos;
+            this.isLoadingListaInsumos = false;
+            this.cargarPaginaInsumos();
+          }
+        );
+      }else{
+        console.log('ya cargado');
+        this.cargarPaginaInsumos();
+      }
+    }
   }
 
-  ocultarInsumosPedidoInterno(){
-    this.pedidoInternoSeleccionado = 0;
+  ocultarInsumosRecepcionAnterior(){
+    this.recepcionSeleccionada = 0;
+    this.displayedColumns = ['clave','nombre','cantidad','restante','actions']; //'monto',
     this.cargarPaginaInsumos();
   }
 
@@ -441,14 +507,18 @@ export class PedidoComponent implements OnInit {
             this.listadoInsumosPedido[index_local].lotes = [];
           }
         }
-
-        if(response.data.recepcion_actual && response.data.recepcion_actual.length){
+        
+        if(response.data.recepcion_actual && response.data.recepcion_actual.length && !datosRecepcion.concluir){
           for(let i in response.data.recepcion_actual[0].lista_insumos_borrador){
             let insumo_borrador = response.data.recepcion_actual[0].lista_insumos_borrador[i];
 
             let index_insumo = this.listadoInsumosPedido.findIndex(x => x.id == insumo_borrador.insumo_medico_id);
             this.listadoInsumosPedido[index_insumo].lotes.push(insumo_borrador);
           }
+        }
+
+        if(response.data.avance_recepcion){
+          this.totalAvanceRecepcion = this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_insumos;
         }
 
         if(datosRecepcion.concluir){

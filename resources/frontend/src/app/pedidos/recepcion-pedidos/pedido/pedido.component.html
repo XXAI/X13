@@ -88,7 +88,7 @@
                     </div>
                     <div fxFlex></div>
                     <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
-                        <button fxFlex mat-stroked-button (click)="verRecepcionesAnteriores()" [disabled]="listaRecepcionesAnteriores.length == 0">
+                        <button fxFlex mat-stroked-button (click)="verRecepcionesAnteriores()" [disabled]="recepcionesAnteriores.length == 0">
                             <mat-icon>fact_check</mat-icon> Recepciones Anteriores
                         </button>
                     </div>
@@ -97,38 +97,38 @@
                     <div fxFlex="none">
                         <div class="small-search-input">
                             <mat-form-field appearance="outline">
-                                <input matInput [(ngModel)]="filtroUnidadesSeleccionadas" (keyup)="aplicarFiltroUnidadesSeleccionadas()" placeholder="Filtrar">
+                                <input matInput [(ngModel)]="filtroRecepcionesAnteriores" (keyup)="aplicarFiltroRecepcionesAnteriores()" placeholder="Filtrar">
                             </mat-form-field>
                         </div>
                         <mat-divider></mat-divider>
                     </div>
                     <div fxFlex>
                         <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
-                            <div *ngIf="listaFiltroUnidadesSeleccionadas.length == 0" class="no-items-found">
+                            <div *ngIf="listaFiltroRecepcionesAnteriores.length == 0" class="no-items-found">
                                 No se encontraron resultados
                             </div>
-                            <div *cdkVirtualFor="let unidad of listaFiltroUnidadesSeleccionadas;" [ngClass]="{'unidad-seleccionada':pedidoInternoSeleccionado == unidad.id, 'seleccionable':unidadesConInsumos[unidad.id]}" class="unidad-medica-item">
+                            <div *cdkVirtualFor="let recepcion of listaFiltroRecepcionesAnteriores;" [ngClass]="{'unidad-seleccionada':recepcionSeleccionada == recepcion.id}" class="unidad-medica-item seleccionable">
                                 <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
-                                    <div fxFlex fxLayout="column" class="datos-unidad" (click)="mostrarInsumosPedidoInterno(unidad)">
+                                    <div fxFlex fxLayout="column" class="datos-unidad" (click)="mostrarInsumosRecepcionAnterior(recepcion)">
                                         <div fxFlex="none" class="titulo">
-                                            Fecha Recepción: 2020-08-08
+                                            Fecha Recepción: {{recepcion.fecha_movimiento}}
                                         </div>
                                         <div fxFlex class="descripcion">
-                                            Nombre Recibe: Persona que recibe<br>
-                                            Nombre Entrega: Persona que entrega
+                                            Nombre Recibe: {{recepcion.recibe}}<br>
+                                            Nombre Entrega: {{recepcion.entrega}}
                                         </div>
                                         <div fxFlex="none" class="detalles">
-                                            Total Piezas: {{(100) | number:'1.0-0' }}
+                                            Total Piezas: {{recepcion.total_insumos | number:'1.0-0' }}
                                         </div>
                                     </div>
                                     <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
-                                        <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
-                                            <button mat-icon-button (click)="ocultarInsumosPedidoInterno()">
+                                        <div fxFlex="none" *ngIf="recepcionSeleccionada == recepcion.id">
+                                            <button mat-icon-button (click)="ocultarInsumosRecepcionAnterior()">
                                                 <mat-icon>close</mat-icon>
                                             </button>
                                         </div>
-                                        <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
-                                            <button mat-icon-button [matMenuTriggerFor]="menuPedidoInterno">
+                                        <div fxFlex="none" *ngIf="recepcionSeleccionada == recepcion.id">
+                                            <button mat-icon-button [matMenuTriggerFor]="menuRecepcionAnterior">
                                                 <mat-icon>more_vert</mat-icon>
                                             </button>
                                         </div>
@@ -138,7 +138,7 @@
                             </div>
                         </cdk-virtual-scroll-viewport>
                         <mat-divider></mat-divider>
-                        <mat-menu #menuPedidoInterno="matMenu">
+                        <mat-menu #menuRecepcionAnterior="matMenu">
                             <button mat-menu-item disabled>
                                 <mat-icon svgIcon="pdf-icon" ></mat-icon>
                                 <span>Descargar en PDF</span>
@@ -155,7 +155,7 @@
                         </div>
                         <div fxFlex></div>
                         <div fxFlex="none">
-                            <mat-hint>{{listaFiltroUnidadesSeleccionadas.length | number}} Recepciones</mat-hint>
+                            <mat-hint>{{listaFiltroRecepcionesAnteriores.length | number}} Recepciones</mat-hint>
                         </div>
                     </div>
                 </div>
@@ -179,6 +179,7 @@
                 </div>
                 <mat-divider [inset]="true"></mat-divider>
                 <div fxFlex style="overflow: auto;">
+                    <div class="data-loading-shade" *ngIf="isLoadingListaInsumos"><mat-spinner></mat-spinner></div>
                     <table #dataTable mat-table [dataSource]="filtroInsumosPedido" class="data-table" matSort>
                         
                         <ng-container matColumnDef="clave">
@@ -196,15 +197,21 @@
                             <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{((row.total_piezas)?row.total_piezas:0) | number:'1.0-0'}} </td>
                         </ng-container>
                         
-                        <ng-container matColumnDef="total" >
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="white-space: nowrap;"> Total </th>
-                            <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.cantidad | number:'1.0-0'}} </td>
+                        <ng-container matColumnDef="restante" >
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="white-space: nowrap;"> Restante </th>
+                            <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{(row.cantidad_restante - ((row.total_piezas)?row.total_piezas:0)) | number:'1.0-0'}} </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="recibido" >
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="white-space: nowrap;"> Recibido </th>
+                            <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_recibido | number:'1.0-0'}} </td>
                         </ng-container>
                         
                         <ng-container matColumnDef="actions">
                             <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
                             <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                                <button mat-icon-button (click)="agregarLote(row)"><mat-icon>content_paste</mat-icon></button>
+                                <button *ngIf="!recepcionSeleccionada" mat-icon-button (click)="agregarLotes(row)"><mat-icon>content_paste</mat-icon></button>
+                                <button *ngIf="recepcionSeleccionada" mat-icon-button (click)="verLotes(row)"><mat-icon>visibility</mat-icon></button>
                             </td>
                         </ng-container>
     
