@@ -845,6 +845,25 @@ export class PedidoComponent implements OnInit {
           this.listadoInsumosEliminados = [];
           
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+
+          this.estatusPedido = response.data.estatus;
+          if(response.data.estatus == 'CON' || response.data.estatus == 'PUB'){
+            this.verBoton['concluir'] = false;
+            this.verBoton['generar_folio'] = (response.data.estatus != 'PUB');
+            this.verBoton['guardar'] = false;
+            this.verBoton['agregar_insumo'] = false;
+            this.verBoton['agregar_unidad'] = false;
+            this.editable = false;
+
+            let mes = this.catalogos.meses[response.data.mes-1];
+            this.formPedido.addControl('mes_value',new FormControl(mes.etiqueta));
+
+            let programa = 'Sin Programa';
+            if(response.data.programa){
+              programa = response.data.programa.descripcion;
+            }
+            this.formPedido.addControl('programa_value',new FormControl(programa));
+          }
           this.isLoading = false;
         }
       );

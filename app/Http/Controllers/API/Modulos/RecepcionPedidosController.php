@@ -40,8 +40,7 @@ class RecepcionPedidosController extends Controller
     {
         try{
             $parametros = Input::all();
-            $almacen_id = '00011';
-
+            
             $pedidos = Pedido::getModel();
             
             //Filtros, busquedas, ordenamiento
@@ -295,12 +294,17 @@ class RecepcionPedidosController extends Controller
             DB::commit();
 
             //$pedido = Pedido::with(['listaInsumosMedicos','avanceRecepcion','recepcionActual.listaInsumosBorrador'])->find($id); 
+            $return_data = [];
+            if(!$parametros['concluir']){
+                $pedido->load('avanceRecepcion','recepcionActual.listaInsumosBorrador');
+                $return_data['data'] = $pedido;
+            }else{
+                $pedido->load('avanceRecepcion'); //Agregar Recepcion Anterior
+                $return_data['data'] = $pedido;
+                $return_data['recepcion_reciente'] = $recepcion_actual;
+            }
+            $return_data['prueba'] = $suma_recepciones;
 
-            $pedido->load('avanceRecepcion','recepcionActual.listaInsumosBorrador');
-            $return_data = [
-                'data' => $pedido,
-                'prueba' => $suma_recepciones
-            ];
             return response()->json($return_data,HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             DB::rollback();

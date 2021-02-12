@@ -493,36 +493,48 @@ export class PedidoComponent implements OnInit {
         
       }
     }
-    //TODO: Aumento en el avance de insumos, al guardar mas de una vez el borrador
-
+    
     this.isLoading = true;
     this.recepcionPedidosService.actualizarPedido(datosRecepcion,this.dataPedido.id).subscribe(
       response=>{
         //this.formPedido.patchValue(response.data);
         console.log(response);
 
-        for(let id in this.controlInsumosModificados){
-          if(this.controlInsumosModificados[id]){
-            let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
-            this.listadoInsumosPedido[index_local].lotes = [];
-          }
-        }
-        
-        if(response.data.recepcion_actual && response.data.recepcion_actual.length && !datosRecepcion.concluir){
-          for(let i in response.data.recepcion_actual[0].lista_insumos_borrador){
-            let insumo_borrador = response.data.recepcion_actual[0].lista_insumos_borrador[i];
-
-            let index_insumo = this.listadoInsumosPedido.findIndex(x => x.id == insumo_borrador.insumo_medico_id);
-            this.listadoInsumosPedido[index_insumo].lotes.push(insumo_borrador);
-          }
-        }
-
         if(response.data.avance_recepcion){
-          this.totalAvanceRecepcion = this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_insumos;
+          this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_insumos;
         }
 
         if(datosRecepcion.concluir){
+          for(let id in this.controlInsumosModificados){
+            if(this.controlInsumosModificados[id]){
+              let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
+              this.listadoInsumosPedido[index_local].lotes = [];
+              this.listadoInsumosPedido[index_local].cantidad_restante -= this.listadoInsumosPedido[index_local].total_piezas;
+              this.listadoInsumosPedido[index_local].total_piezas = 0;
+            }
+          }
+          delete response.recepcion_reciente.lista_insumos_borrador;
+          this.recepcionesAnteriores.push(response.recepcion_reciente);
           this.controlInsumosModificados = {};
+          this.formRecepcion.reset();
+          this.recepcionActiva = true;
+          this.idInsumoSeleccionado = 0;
+        }else{
+          for(let id in this.controlInsumosModificados){
+            if(this.controlInsumosModificados[id]){
+              let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
+              this.listadoInsumosPedido[index_local].lotes = [];
+            }
+          }
+          
+          if(response.data.recepcion_actual && response.data.recepcion_actual.length && !datosRecepcion.concluir){
+            for(let i in response.data.recepcion_actual[0].lista_insumos_borrador){
+              let insumo_borrador = response.data.recepcion_actual[0].lista_insumos_borrador[i];
+  
+              let index_insumo = this.listadoInsumosPedido.findIndex(x => x.id == insumo_borrador.insumo_medico_id);
+              this.listadoInsumosPedido[index_insumo].lotes.push(insumo_borrador);
+            }
+          }
         }
         //this.listadoInsumosEliminados = [];
         
