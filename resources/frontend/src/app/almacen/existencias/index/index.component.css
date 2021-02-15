@@ -1,0 +1,87 @@
+table {
+    
+   
+  width: 100%;
+  table-layout: fixed;
+}
+
+th,
+td {
+  overflow: hidden;
+  width: auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+  padding: 0 0.5em !important;
+}
+td {
+    font-family: "Roboto Mono" , "Roboto" !important;
+    font-size: 0.8em;
+    font-weight: 300;
+    
+    /*font-size: 0.7em;*/
+}
+
+tr.mat-row:hover {
+    background-color: #F5F5F5;
+}
+
+.mat-mini-fab:hover {
+    box-shadow: 0px 0px 0px 3px  rgba(0,0,0,0.15) !important;
+}
+
+.flex-spacer {
+    flex: 1 1 auto;
+}
+.body-container {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0px;
+}
+.sidenav-container {
+    /* When the sidenav is not fixed, stretch the sidenav container to fill the available space. This
+       causes `<mat-sidenav-content>` to act as our scrolling element for desktop layouts. */
+    flex: 1;
+}
+mat-sidenav {
+    width: 250px;
+    /*background-color: rgb(218, 220, 224);*/
+    background-color: #FFF;
+}
+mat-sidenav-content {
+    background-color: #f1f3f4;
+    
+}
+.toggle-sidenav-button{
+    margin:15px 5px !important;
+    position: fixed !important;
+    top:65px !important;
+    transition: none !important;
+    box-shadow: none !important;
+}
+.sidenav-title{
+    margin-bottom: 0px !important;
+}
+
+.mat-column-tipo_insumo {
+    width: 40px;
+}
+
+.mat-column-clave {
+    width:130px;
+}
+.mat-column-lote {
+    width:60px;
+}
+.mat-column-existencia {
+    width:50px;
+}
+
+.mat-column-fecha_caducidad {
+    width: 90px;
+}

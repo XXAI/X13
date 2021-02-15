@@ -7,6 +7,7 @@ import { EntradasModule } from './entradas/entradas.module';
 import { SalidasModule } from './salidas/salidas.module';
 import { AlmacenRoutingModule } from './almacen-routing.module';
 import { AlmacenAppsComponent } from './almacen-apps/almacen-apps.component';
+import { ExistenciasModule } from './existencias/existencias.module';
 
 
 @NgModule({
@@ -16,7 +17,8 @@ import { AlmacenAppsComponent } from './almacen-apps/almacen-apps.component';
     SharedModule,
     EntradasModule,
     SalidasModule,
-    AlmacenRoutingModule
+    AlmacenRoutingModule,
+    ExistenciasModule
   ]
 })
 export class AlmacenModule { }

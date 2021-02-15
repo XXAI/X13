@@ -29,6 +29,7 @@ import {
   MatButtonToggleModule,
   MatProgressBarModule,
   MatExpansionModule,
+  MatSortModule,
 } from '@angular/material';
 
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -65,6 +66,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatButtonToggleModule,
     MatProgressBarModule,
     MatExpansionModule,
+    MatSortModule
   ],
   exports: [
     MatButtonModule,
@@ -95,6 +97,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatButtonToggleModule,
     MatProgressBarModule,
     MatExpansionModule,
+    MatSortModule
   ],
 })
 export class MaterialModule { }
