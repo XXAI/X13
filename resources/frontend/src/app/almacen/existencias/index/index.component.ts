@@ -22,6 +22,8 @@ import { MovimientosDialogComponent } from '../movimientos-dialog/movimientos-di
 })
 export class IndexComponent implements OnInit, AfterViewInit {
 
+  selected:any;
+  loading:boolean;
 
   openedSidenav: boolean = false;
   mobileQuery: MediaQueryList;

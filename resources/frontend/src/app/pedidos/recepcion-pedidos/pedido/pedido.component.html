@@ -5,13 +5,6 @@
             <button mat-raised-button color="primary" (click)="concluirRecepcion()" [disabled]="!(formRecepcion.valid && recepcionActiva)">Finalizar Recepción</button>
         </div>
         <div fxFlex></div>
-        <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">
-            <mat-chip-list aria-label="Fish selection">
-                <mat-chip color="primary" selected [disableRipple]="true">
-                    Recepción Anterior
-                </mat-chip>
-            </mat-chip-list>
-        </div>
         <div fxFlex></div>
         <div fxFlex="none">
             <button [routerLink]="'/pedidos/recepcion-pedidos'" mat-button>Regresar</button>
