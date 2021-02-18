@@ -75,9 +75,16 @@
                     <button *ngIf="verBoton['concluir']" mat-raised-button color="primary" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
                     <button *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" (click)="generarFolio()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Generar Folio</button>
                 </div>
+                <div fxFlex="none" *ngIf="estatusPedido == 'PUB'">
+                    <mat-chip-list aria-label="Folio Pedido">
+                        <mat-chip color="primary" selected [disableRipple]="true">
+                            Folio: {{estatusFolio}}
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
                 <div fxFlex></div>
                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">
-                    <mat-chip-list aria-label="Fish selection">
+                    <mat-chip-list aria-label="Pedido Interno">
                         <mat-chip color="primary" selected [disableRipple]="true">
                             Pedido Interno
                         </mat-chip>

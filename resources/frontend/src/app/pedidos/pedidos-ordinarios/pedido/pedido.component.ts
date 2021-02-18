@@ -79,6 +79,7 @@ export class PedidoComponent implements OnInit {
   verBoton:any;
   isLoading:boolean;
   estatusPedido:string;
+  estatusFolio:string;
   listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'VAL':'verified', 'PUB':'published_wit_changes', 'CAN':'cancel',    'EXP':'warning'  };
   listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'VAL':'validado', 'PUB':'publicado',             'CAN':'cancelado', 'EXP':'expirado' };
   listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'VAL':'Validado', 'PUB':'Publicado',             'CAN':'Cancelado', 'EXP':'Expirado' };
@@ -220,6 +221,8 @@ export class PedidoComponent implements OnInit {
               this.verBoton['agregar_insumo'] = false;
               this.verBoton['agregar_unidad'] = false;
               this.editable = false;
+
+              this.estatusFolio = response.data.folio;
 
               let mes = this.catalogos.meses[response.data.mes-1];
               this.formPedido.addControl('mes_value',new FormControl(mes.etiqueta));
