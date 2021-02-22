@@ -8,7 +8,7 @@ export interface Stock {
     tipo_isumo?:string;
     descripcion?:string;
     
-    
+    caducado?:boolean;
        
     marca_id?:Number;
     lote?:string;
@@ -18,7 +18,7 @@ export interface Stock {
     existencia_unidosis?:Number;
     user_id?:string;
   }
-
+//No se si voy a usar este todavia
   export interface StockItem {
     id:Number;
     almacen_id?:Number;

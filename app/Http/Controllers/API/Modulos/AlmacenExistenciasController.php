@@ -60,7 +60,8 @@ class AlmacenExistenciasController extends Controller
                 "stocks.existencia_unidosis as existencia_unidosis",
                 "stocks.fecha_caducidad as fecha_caducidad",
                 "stocks.lote as lote",
-                "stocks.codigo_barras as codigo_barras")
+                "stocks.codigo_barras as codigo_barras",
+                DB::raw("(CASE WHEN stocks.fecha_caducidad  < NOW() THEN '1' ELSE '0' END) as caducado"))
             ->leftJoin("insumos_medicos", "insumos_medicos.id","=","stocks.insumo_medico_id");
             
 
@@ -76,8 +77,33 @@ class AlmacenExistenciasController extends Controller
                 $items = $items->orderBy('id','desc');
             }
 
-            if(isset($params['filter']) && trim($params['filter'])!= ""){
-                $items = $items->where("codigo_barras","LIKE", "%".$params['filter']."%")->orWhere("lote","LIKE", "%".$params['filter']."%")->orWhere("descripcion","LIKE", "%".$params['filter']."%");
+            if(isset($params['caducidad'])){
+                if($params['caducidad'] == "CAD"){
+                    $items = $items->whereDate("fecha_caducidad","<",date("Y-m-d"));
+                }
+
+                if($params['caducidad'] == "PROX"){
+                    $items = $items->whereDate("fecha_caducidad",">=",date("Y-m-d"))->whereDate("fecha_caducidad","<",DB::raw('DATE_ADD("'.date("Y-m-d").'", INTERVAL 3 MONTH)'));
+                }
+                
+            }
+            if(isset($params['tipo']) && trim($params['tipo'])!= ""){
+                $items = $items->where("tipo_insumo","=", $params['tipo']);
+            }
+
+            if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){
+                $items = $items->where("stocks.almacen_id","=", $params['almacen_id']);
+            } else {
+                $items = $items->where("stocks.almacen_id","=", "");
+            }
+
+            if(isset($params['search']) && trim($params['search'])!= ""){
+
+                $items = $items->where(function($query) use ($lastUpdate) {
+                    $query->where("codigo_barras","LIKE", "%".$params['filter']."%")
+                    ->orWhere("lote","LIKE", "%".$params['filter']."%")
+                    ->orWhere("descripcion","LIKE", "%".$params['filter']."%");
+                });
             }
             
             $items = $items->paginate($params['pageSize']);
@@ -102,6 +128,27 @@ class AlmacenExistenciasController extends Controller
             return response()->json(['message' => "Stock no encontrado"],404);
         }
         
+    }
+
+     /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function catalogoUnidadesAlmacenes(Request $request)
+    {     
+        $data = $this->getUserAccessData();
+        return response()->json($data);
+    }
+
+    private function getUserAccessData($loggedUser = null){
+        if(!$loggedUser){
+            $loggedUser = auth()->userOrFail();
+        }        
+        $loggedUser->load('grupos.unidadesMedicas','grupos.unidadesMedicas.almacenes');
+        $accessData = (object)[];
+        $accessData = $loggedUser->grupos[0];
+        return $accessData;
     }
 
     /**

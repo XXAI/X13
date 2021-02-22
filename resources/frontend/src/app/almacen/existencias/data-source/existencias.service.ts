@@ -23,15 +23,21 @@ export class ExistenciasService {
     this.resource = "usuarios";
    }*/
   
-  buscar(filter = '', sortOrder = 'asc', orderBy = '', pageNumber=0, pageSize = 3): Observable<any>{
-    
+  buscar(filter = {}, sortOrder = 'asc', orderBy = '', pageNumber=0, pageSize = 3): Observable<any>{
+    var params:HttpParams = new HttpParams()
+    .set('sortOrder',sortOrder)
+    .set('orderBy',orderBy)
+    .set('page', pageNumber.toString())
+    .set('pageSize', pageSize.toString());
+
+    Object.keys(filter).forEach( prop => {
+      params = params.set(prop,filter[prop]);
+    });
+
+
     return this.http.get(`${this.api}/${this.resource}`,{
-      params: new HttpParams()
-        .set('filter',filter)
-        .set('sortOrder',sortOrder)
-        .set('orderBy',orderBy)
-        .set('page', pageNumber.toString())
-        .set('pageSize', pageSize.toString())
+      params: params
+        
     });
   }
 
@@ -45,6 +51,9 @@ export class ExistenciasService {
         .set('page', pageNumber.toString())
         .set('pageSize', pageSize.toString())
     });
+  }
+  catalogos(): Observable<any>{        
+    return this.http.get(`${this.api}/${this.resource}/catalogos`);
   }
 
   /*

@@ -1,10 +1,10 @@
 import { MediaMatcher } from '@angular/cdk/layout';
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { Title } from '@angular/platform-browser';
-import { merge } from 'rxjs';
+import { merge, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { getEspPaginatorIntl } from 'src/app/esp-paginator-intl';
 import { ExistenciasDataSource } from '../data-source/existencias.data-source';
@@ -20,7 +20,7 @@ import { MovimientosDialogComponent } from '../movimientos-dialog/movimientos-di
     { provide: MatPaginatorIntl, useValue: getEspPaginatorIntl() }
   ]
 })
-export class IndexComponent implements OnInit, AfterViewInit {
+export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
 
   selected:any;
   loading:boolean;
@@ -29,14 +29,26 @@ export class IndexComponent implements OnInit, AfterViewInit {
   mobileQuery: MediaQueryList;
 
   inputSearchTxt:string = "";
-  filter: string = "";
+  filter: any  = {
+    search: "",
+    caducidad: "",
+    fecha_caducidad_hasta: "",
+    tipo: "",
+    almacen_id: "",
+    unidad_medica_id: ""
+  };
   private orderBy:string;
   displayedColumns: string[] = ['clave','descripcion','tipo_insumo', 'lote','fecha_caducidad', 'existencia'];
 
   dataSource: ExistenciasDataSource;
 
-  filtroFechaCaducidad:string = "";
-  filtroTipo:string = "";
+
+  filterCatalogos:any = {};
+  filterAlmacenes:any[];
+
+  loadingFilterCatalogos:boolean; 
+  
+
   //private _mobileQueryListener: () => void;
   
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
@@ -46,15 +58,54 @@ export class IndexComponent implements OnInit, AfterViewInit {
     this.mobileQuery = media.matchMedia('(max-width: 600px)');
   }
 
+  catalogosSubscription:Subscription;
+  ngOnDestroy(): void {
+    
+  }
+
+  
   ngOnInit(): void {
+
     this.openedSidenav = !this.mobileQuery.matches;
     //this.dataSource.paginator = this.paginator;
     this.titleService.setTitle("Existencias");
-
+    
     this.dataSource = new ExistenciasDataSource(this.apiService);    
         
-    this.dataSource.loadData('','asc','',0,20); 
+    //this.dataSource.loadData('','asc','',0,20); 
+
+    this.loadingFilterCatalogos = true;
+    this.catalogosSubscription = this.apiService.catalogos().subscribe(
+      response => {
+        this.filterCatalogos = response;
+        this.filter.unidad_medica_id = this.filterCatalogos.unidad_medica_principal_id;
+        this.updateAlmacenes();
+        this.loadingFilterCatalogos = false;
+        //Anti pattern :( lo siento tendre que echarme un buen clavado de buenas practicas
+        this.loadData();
+        console.log(response);
+      }, error => {
+        console.log(error);
+      }
+    );
+    console.log("porque no me ejecuto");
   }
+
+  updateAlmacenes(){
+    for(var i = 0; i< this.filterCatalogos.unidades_medicas.length; i++){
+      if(this.filterCatalogos.unidades_medicas[i].id == this.filter.unidad_medica_id){
+        this.filterAlmacenes = this.filterCatalogos.unidades_medicas[i].almacenes;
+        break;
+      }
+    }
+    if(this.filterAlmacenes.length > 0){
+      this.filter.almacen_id = this.filterAlmacenes[0].id;
+    } else {
+      this.filter.almacen_id = "";
+    }
+    
+  }
+
   ngAfterViewInit(){
     
     this.sort.sortChange.subscribe(() => { this.orderBy = this.sort.active; this.paginator.pageIndex = 0});
@@ -68,13 +119,15 @@ export class IndexComponent implements OnInit, AfterViewInit {
     this.inputSearchTxt = this.filter;
   }
   applyFilter(): void {
-    this.filter = this.inputSearchTxt.trim().toLowerCase();
+
+    
     this.paginator.pageIndex = 0;
     this.loadData();
   }
 
   loadData(){   
-    this.dataSource.loadData(this.filter.trim().toLowerCase(),this.sort.direction,this.orderBy,this.paginator.pageIndex, this.paginator.pageSize);
+    this.filter.search = this.filter.search.trim().toLowerCase();
+    this.dataSource.loadData(this.filter,this.sort.direction,this.orderBy,this.paginator.pageIndex, this.paginator.pageSize);
   }
 
   openDialog(item:Stock):void {

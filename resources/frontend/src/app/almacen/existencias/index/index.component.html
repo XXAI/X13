@@ -1,38 +1,34 @@
 <div style="height: 100%; background-color: white;" fxLayout="column">
     <mat-sidenav-container class="sidenav-container">
-        <mat-sidenav #snav [(opened)]="openedSidenav" [mode]="mobileQuery.matches ? 'over' : 'side'"
+        <mat-sidenav #snav [(opened)]="openedSidenav" [disableClose]="true" [mode]="mobileQuery.matches ? 'over' : 'side'"
             [fixedInViewport]="mobileQuery.matches" fixedTopGap="56">
             <div fxLayout="column" style="padding:10px">
                 <h3 class="mat-h3">Opciones de búsqueda</h3>
                 <mat-form-field appearance="fill" >
                     <mat-label>Unidad médica</mat-label>
-                    <mat-select [(value)]="selected">
-                        <mat-option>None</mat-option>
-                        <mat-option value="option1">Option 1</mat-option>
-                        <mat-option value="option2">Option 2</mat-option>
-                        <mat-option value="option3">Option 3</mat-option>
+                    <mat-select [(ngModel)]="filter.unidad_medica_id" (selectionChange)="updateAlmacenes()" [disabled]="loadingFilterCatalogos">
+                        <!--<mat-option>Cualquiera</mat-option>-->
+                        <mat-option *ngFor="let item of filterCatalogos.unidades_medicas" [value]="item.id">{{ item.clues }} {{ item.nombre }}</mat-option>                        
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="fill" >
                     <mat-label>Almacén</mat-label>
-                    <mat-select [(value)]="selected">
-                        <mat-option>None</mat-option>
-                        <mat-option value="option1">Option 1</mat-option>
-                        <mat-option value="option2">Option 2</mat-option>
-                        <mat-option value="option3">Option 3</mat-option>
+                    <mat-select [(ngModel)]="filter.almacen_id" [disabled]="loadingFilterCatalogos">
+                        <!--<mat-option>None</mat-option>-->
+                        <mat-option *ngFor="let item of filterAlmacenes" [value]="item.id">{{ item.nombre }}</mat-option>                        
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="fill" >
                     <mat-label>Fecha de caducidad</mat-label>
-                    <mat-select [(value)]="filtroFechaCaducidad">
+                    <mat-select [(ngModel)]="filter.caducidad" >
                         <mat-option value="">Cualquiera</mat-option>
                         <mat-option value="CAD">Caducados</mat-option>
-                        <mat-option value="RANGE">Rango de fechas</mat-option>                        
+                        <mat-option value="PROX">Proximos a vencer</mat-option>                        
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="fill" >
                     <mat-label>Tipo</mat-label>
-                    <mat-select [(value)]="filtroTipo">
+                    <mat-select [(ngModel)]="filter.tipo">
                         <mat-option value="">Cualquiera</mat-option>
                         <mat-option value="MED">Medicamentos</mat-option>
                         <mat-option value="MTC">Material de curación</mat-option>                        
@@ -49,7 +45,7 @@
                         style="width: auto; padding:10px; background-color: white;" fxLayoutGap="10px">
                         <mat-form-field appearance="fill" class="search-bar" fxFlex>
                             <mat-label>Buscar</mat-label>
-                            <input matInput placeholder="Nombre, clave, codigo de barras o lote" autocomplete="off" [(ngModel)]="inputSearchTxt" (keyup.enter)="applyFilter()">
+                            <input matInput placeholder="Nombre, clave, codigo de barras o lote" autocomplete="off" [disabled]="loadingCatalogos" [(ngModel)]="filter.search" (keyup.enter)="applyFilter()">
                             <mat-icon matSuffix>search</mat-icon>
                             <mat-hint>Presione la tecla "enter" para buscar.</mat-hint>
                         </mat-form-field>
@@ -84,13 +80,13 @@
                         <!-- Weight Column -->
                         <ng-container matColumnDef="fecha_caducidad">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> CAD </th>
-                            <td mat-cell *matCellDef="let element" fxHide.lt-sm>{{element.fecha_caducidad | date: 'dd/MM/yyyy'}}</td>
+                            <td mat-cell *matCellDef="let element" [ngClass]="{'caducado': element.caducado == true }" fxHide.lt-sm>{{element.fecha_caducidad | date: 'dd/MM/yyyy'}}</td>
                         </ng-container>
 
                         <!-- Symbol Column -->
                         <ng-container matColumnDef="existencia">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header  > CANT </th>
-                            <td mat-cell *matCellDef="let element" > {{element.existencia | number}} <span *ngIf="element.es_unidosis">({{element.existencia_unidosis | number}})</span></td>
+                            <td mat-cell *matCellDef="let element"  > {{element.existencia | number}} <span *ngIf="element.es_unidosis">({{element.existencia_unidosis | number}})</span></td>
                         </ng-container>
 
                         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>

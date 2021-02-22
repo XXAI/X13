@@ -85,3 +85,6 @@ mat-sidenav-content {
 .mat-column-fecha_caducidad {
     width: 90px;
 }
+.mat-column-fecha_caducidad.caducado {
+    color:red;
+}

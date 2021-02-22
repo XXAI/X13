@@ -22,7 +22,7 @@ export class ExistenciasDataSource implements DataSource<Stock> {
         this.loadingSubject.complete();
     }
 
-    loadData(filter = '', sortDirection = 'asc', orderBy ='', pageIndex = 0, pageSize = 3){
+    loadData(filter = {}, sortDirection = 'asc', orderBy ='', pageIndex = 0, pageSize = 3){
        
         this.loadingSubject.next(true);
         this.apiService.buscar(filter, sortDirection, orderBy, pageIndex + 1, pageSize)
