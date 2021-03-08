@@ -5,8 +5,6 @@ namespace App\Http\Controllers\API\Modulos;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 
-use Illuminate\Support\Facades\Input;
-
 use App\Http\Controllers\Controller;
 
 use App\Models\Clues;
@@ -28,10 +26,10 @@ use App\Models\TipoTrabajador;
 
 class CatalogosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try{
-            $params = Input::all();
+            $params = $request->all();
             //$clues = Clues::all();
             //$codigo = Codigo::orderBy("descripcion")->get();
             //$cr = Cr::orderBy("descripcion")->get();

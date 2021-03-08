@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Hash;
 
 use Validator;
@@ -22,14 +21,14 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $resquest)
     {
         if (\Gate::denies('has-permission', \Permissions::VER_ROL) && \Gate::denies('has-permission', \Permissions::SELECCIONAR_ROL)){
             return response()->json(['message'=>'No esta autorizado para ver este contenido'],HttpResponse::HTTP_FORBIDDEN);
         }
         
         try{
-            $parametros = Input::all();
+            $parametros = $request->all();
             $roles = Role::getModel();
             
             //Filtros, busquedas, ordenamiento
@@ -74,7 +73,7 @@ class RoleController extends Controller
                 'permission.min' => 'Se debe tener al menos un permiso asignado'
             ];
 
-            $parametros = Input::all(); 
+            $parametros = $request->all(); 
             
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
@@ -145,7 +144,7 @@ class RoleController extends Controller
             ];
 
             
-            $parametros = Input::all();
+            $parametros = $request->all();
 
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 

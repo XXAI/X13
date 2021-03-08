@@ -9,8 +9,6 @@ use App\Http\Controllers\Controller;
 
 use App\Http\Requests;
 
-use Illuminate\Support\Facades\Input;
-
 use DB;
 
 use App\Models\Pedido;
@@ -34,10 +32,10 @@ class PedidoOrdinarioController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         try{
-            $parametros = Input::all();
+            $parametros = $request->all();
             $almacen_id = '00011';
 
             $pedidos = Pedido::getModel();
@@ -99,7 +97,7 @@ class PedidoOrdinarioController extends Controller
     {
         try{
             DB::beginTransaction();
-            $parametros = Input::all();
+            $parametros = $request->all();
 
             $datos_pedido = $parametros['pedido'];
             $datos_pedido['estatus'] = 'BOR';
@@ -171,7 +169,7 @@ class PedidoOrdinarioController extends Controller
         try{
             DB::beginTransaction();
 
-            $parametros = Input::all();
+            $parametros = $request->all();
 
             $pedido = Pedido::with([
                     'listaInsumosMedicos'=>function($insumos){ $insumos->withTrashed(); },

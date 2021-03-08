@@ -9,8 +9,6 @@ use App\Http\Controllers\Controller;
 
 use App\Http\Requests;
 
-use Illuminate\Support\Facades\Input;
-
 use DB;
 
 use App\Models\Movimiento;
@@ -22,10 +20,10 @@ class AlmacenEntradaController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         try{
-            $parametros = Input::all();
+            $parametros = $request->all();
             $almacen_id = '00011';
 
             $entradas = Movimiento::where('direccion_movimiento','ENT')->where('almacen_id',$almacen_id);

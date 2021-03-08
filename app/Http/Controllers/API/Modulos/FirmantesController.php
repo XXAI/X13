@@ -6,8 +6,6 @@ use Illuminate\Http\Response as HttpResponse;
 
 use App\Http\Requests;
 
-use Illuminate\Support\Facades\Input;
-
 use App\Http\Controllers\Controller;
 use \Validator,\Hash, \Response, \DB;
 
@@ -59,7 +57,7 @@ class FirmantesController extends Controller
             'cargo'             => 'required',
         ];
 
-        $inputs = Input::all();
+        $inputs = $request->all();
         $v = Validator::make($inputs, $reglas, $mensajes);
 
         if ($v->fails()) {

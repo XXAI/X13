@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Hash;
 
 use Validator;
@@ -62,7 +61,7 @@ class ProfileController extends Controller
 
             $usuario = User::find($id);
 
-            $parametros = Input::all();
+            $parametros = $request->all();
 
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 

@@ -9,8 +9,6 @@ use App\Http\Controllers\Controller;
 
 use App\Http\Requests;
 
-use Illuminate\Support\Facades\Input;
-
 use DB;
 
 use App\Models\Pedido;
@@ -36,10 +34,10 @@ class RecepcionPedidosController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         try{
-            $parametros = Input::all();
+            $parametros = $request->all();
             
             $pedidos = Pedido::getModel();
             
@@ -123,7 +121,7 @@ class RecepcionPedidosController extends Controller
 
             $loggedUser = auth()->userOrFail();
 
-            $parametros = Input::all();
+            $parametros = $request->all();
 
             $pedido = Pedido::with(['listaInsumosMedicos','avanceRecepcion','recepcionActual.listaInsumosBorrador'])->find($id); 
 

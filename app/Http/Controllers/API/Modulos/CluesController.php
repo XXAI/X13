@@ -7,8 +7,6 @@ use Illuminate\Http\Response as HttpResponse;
 
 use App\Http\Requests;
 
-use Illuminate\Support\Facades\Input;
-
 use App\Http\Controllers\Controller;
 use \Validator,\Hash, \Response, \DB;
 
@@ -24,11 +22,11 @@ use App\Models\User;*/
 
 class CluesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try{
             $access = $this->getUserAccessData();
-            $parametros = Input::all();
+            $parametros = $request->all();
             $clues = Clues::whereNull("deleted_at");
 
             if(!$access->is_admin){
@@ -105,7 +103,7 @@ class CluesController extends Controller
             return response()->json(['error' => "No se encuentra el recurso que esta buscando."], HttpResponse::HTTP_NOT_FOUND);
         }
 
-        $inputs = Input::all();
+        $inputs = $request->all();
         $v = Validator::make($inputs, $reglas, $mensajes);
 
         if ($v->fails()) {

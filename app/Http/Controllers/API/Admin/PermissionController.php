@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Hash;
 
 use Validator;
@@ -22,7 +21,7 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         //$this->authorize('has-permission','G8aCoYYCgE8fAwegn0MvWjxMXhxIIrhy');
         //if (\Gate::denies('has-permission', 'G8aCoYYCgE8fAwegn0MvWjxMXhxIIrhy')){
@@ -31,7 +30,7 @@ class PermissionController extends Controller
         }
 
         try{
-            $parametros = Input::all();
+            $parametros = $request->all();
             $permisos = Permission::orderBy('group')->orderBy('Description');
 
             if(!isset($parametros['show_hidden'])){
@@ -83,7 +82,7 @@ class PermissionController extends Controller
                 'group.required' => 'El grupo es requerido'
             ];
 
-            $parametros = Input::all(); 
+            $parametros = $request->all(); 
 
             if(!isset($parametros['id'])){
                 $parametros['id'] = str_random(32);
@@ -142,7 +141,7 @@ class PermissionController extends Controller
                 'group.required' => 'El grupo es requerido'
             ];
 
-            $parametros = Input::all(); 
+            $parametros = $request->all(); 
 
             if(isset($parametros['id']) && $parametros['id'] != $id){
                 $validation_rules['id'] = 'required|unique:permissions';
