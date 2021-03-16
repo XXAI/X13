@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, NgZone } from '@angular/core';
 import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTable } from '@angular/material';
+import { MatTable } from '@angular/material/table';
 import { MediaObserver } from '@angular/flex-layout';
 import { EntradasService } from '../../entradas/entradas.service';
 //import { FormulariosService } from '../formularios.service';

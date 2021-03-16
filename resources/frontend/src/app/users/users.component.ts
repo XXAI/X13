@@ -5,7 +5,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { environment } from 'src/environments/environment';
 import { ConfirmActionDialogComponent } from '../utils/confirm-action-dialog/confirm-action-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTable } from '@angular/material';
+import { MatTable } from '@angular/material/table';
 
 @Component({
   selector: 'app-users',

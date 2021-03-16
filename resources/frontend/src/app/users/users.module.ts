@@ -6,7 +6,7 @@ import { FormComponent } from './form/form.component';
 import { UsersComponent } from './users.component';
 import { SharedModule } from '../shared/shared.module';
 import { ConfirmPasswordDialogComponent } from './confirm-password-dialog/confirm-password-dialog.component';
-import { MatPaginatorIntl } from '@angular/material';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import { getEspPaginatorIntl } from '../esp-paginator-intl';
 import { ConfirmActionDialogComponent } from '../utils/confirm-action-dialog/confirm-action-dialog.component';
 
