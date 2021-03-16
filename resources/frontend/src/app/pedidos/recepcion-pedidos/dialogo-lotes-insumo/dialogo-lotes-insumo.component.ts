@@ -14,7 +14,7 @@ export interface InsumoData {
   styleUrls: ['./dialogo-lotes-insumo.component.css']
 })
 export class DialogoLotesInsumoComponent implements OnInit {
-    @ViewChild('lote',{static:false}) loteInput: ElementRef;
+    @ViewChild('lote') loteInput: ElementRef;
 
     constructor(
       public dialogRef: MatDialogRef<DialogoLotesInsumoComponent>,

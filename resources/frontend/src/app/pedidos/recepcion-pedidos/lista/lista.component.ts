@@ -12,7 +12,7 @@ import { SharedService } from '../../../shared/shared.service';
 })
 
 export class ListaComponent implements OnInit {
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   constructor(public mediaObserver: MediaObserver, private recepcionPedidosService: RecepcionPedidosService, private sharedService: SharedService) { }
 

@@ -26,7 +26,7 @@ export class ListComponent implements OnInit {
 
   constructor(private sharedService: SharedService, private rolesService: RolesService, public dialog: MatDialog) { }
 
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   ngOnInit() {
     this.loadRolesData(null);

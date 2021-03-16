@@ -29,8 +29,8 @@ export class ListaComponent implements OnInit {
 
   constructor(private sharedService: SharedService, private entradasService: EntradasService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
 
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
-  @ViewChild(MatTable, {static:false}) usersTable: MatTable<any>;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatTable) usersTable: MatTable<any>;
 
   ngOnInit() {
     this.mediaObserver.media$.subscribe(

@@ -17,9 +17,9 @@ import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dial
   styleUrls: ['./pedido.component.css']
 })
 export class PedidoComponent implements OnInit {
-  @ViewChild(MatPaginator, {static: false}) insumosPaginator: MatPaginator;
-  @ViewChild(MatDrawer, {static: false}) insumosDrawer: MatDrawer;
-  @ViewChild(MatInput, {static: false}) busquedaInsumoQuery: MatInput;
+  @ViewChild(MatPaginator) insumosPaginator: MatPaginator;
+  @ViewChild(MatDrawer) insumosDrawer: MatDrawer;
+  @ViewChild(MatInput) busquedaInsumoQuery: MatInput;
 
   constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private pedidosOrdinarios: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog, private route: ActivatedRoute) { }
 

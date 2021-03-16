@@ -20,7 +20,7 @@ import { formatDate } from '@angular/common';
   styleUrls: ['./pedido.component.css']
 })
 export class PedidoComponent implements OnInit {
-  @ViewChild(MatPaginator, {static: false}) insumosPaginator: MatPaginator;
+  @ViewChild(MatPaginator) insumosPaginator: MatPaginator;
 
   constructor(private formBuilder: FormBuilder, private recepcionPedidosService: RecepcionPedidosService, private sharedService: SharedService, private dialog: MatDialog, private route: ActivatedRoute) { }
 

@@ -26,7 +26,7 @@ export class ListComponent implements OnInit {
 
   constructor(private sharedService: SharedService, private permissionsService: PermissionsService, public dialog: MatDialog) { }
 
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   ngOnInit() {
     this.loadPermissionsData(null);

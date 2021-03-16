@@ -11,7 +11,7 @@ import { SharedService } from '../../../shared/shared.service';
   styleUrls: ['./lista.component.css']
 })
 export class ListaComponent implements OnInit {
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   constructor(public mediaObserver: MediaObserver, private pedidosOrdinariosService: PedidosOrdinariosService, private sharedService: SharedService) { }
 

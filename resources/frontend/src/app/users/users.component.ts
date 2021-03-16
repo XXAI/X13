@@ -28,8 +28,8 @@ export class UsersComponent implements OnInit {
   
   constructor(private sharedService: SharedService, private usersService: UsersService, public dialog: MatDialog) { }
 
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
-  @ViewChild(MatTable,{static:false}) usersTable: MatTable<any>;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatTable) usersTable: MatTable<any>;
 
   ngOnInit() {
     this.loadUsersData(null);

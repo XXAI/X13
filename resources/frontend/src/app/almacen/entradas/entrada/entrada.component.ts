@@ -16,7 +16,7 @@ import { startWith, map } from 'rxjs/operators';
   styleUrls: ['./entrada.component.css']
 })
 export class EntradaComponent implements OnInit {
-  @ViewChild(MatPaginator, {static: false}) insumosPaginator: MatPaginator;
+  @ViewChild(MatPaginator) insumosPaginator: MatPaginator;
 
   constructor(private formBuilder: FormBuilder, private dialog: MatDialog, private entradasService: EntradasService, private sharedService: SharedService) { }
 

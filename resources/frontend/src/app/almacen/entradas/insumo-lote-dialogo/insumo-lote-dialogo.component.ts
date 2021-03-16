@@ -13,7 +13,7 @@ export interface InsumoData {
   styleUrls: ['./insumo-lote-dialogo.component.css']
 })
 export class InsumoLoteDialogoComponent implements OnInit {
-    @ViewChild('lote',{static:false}) loteInput: ElementRef;
+    @ViewChild('lote') loteInput: ElementRef;
 
     constructor(
       public dialogRef: MatDialogRef<InsumoLoteDialogoComponent>,
