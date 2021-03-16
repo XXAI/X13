@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { MysqlReporterComponent } from './mysql-reporter.component';
 
@@ -6,7 +6,7 @@ describe('MysqlReporterComponent', () => {
   let component: MysqlReporterComponent;
   let fixture: ComponentFixture<MysqlReporterComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ MysqlReporterComponent ]
     })
