@@ -24,6 +24,7 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
 
   selected:any;
   loading:boolean;
+  loadingCatalogos:boolean;
 
   openedSidenav: boolean = false;
   mobileQuery: MediaQueryList;
