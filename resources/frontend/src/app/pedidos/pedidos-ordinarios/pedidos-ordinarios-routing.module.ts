@@ -7,7 +7,7 @@ import { PedidoComponent } from './pedido/pedido.component';
 
 const routes: Routes = [
   { path: 'pedidos/pedidos-ordinarios',               component: ListaComponent, canActivate: [AuthGuard] },
-  { path: 'pedidos/pedidos-ordinarios/nuevo',         component: PedidoComponent, canActivate: [AuthGuard] },
+  { path: 'pedidos/pedidos-ordinarios/nuevo/:tipo',   component: PedidoComponent, canActivate: [AuthGuard] },
   { path: 'pedidos/pedidos-ordinarios/editar/:id',    component: PedidoComponent, canActivate: [AuthGuard] },
 ];
 

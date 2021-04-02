@@ -13,16 +13,16 @@
                                     <mat-icon>close</mat-icon>
                                 </button>
                                 <mat-hint>
-                                    <mat-radio-group [(ngModel)]="busquedaTipoInsumo" aria-label="Select an option">
+                                    <!--mat-radio-group [(ngModel)]="busquedaTipoInsumo" aria-label="Select an option">
                                         <mat-radio-button color="primary" value="*">Todos</mat-radio-button>
                                         <mat-radio-button value="MED">Meds</mat-radio-button>
                                         <mat-radio-button value="MTC">Mat Curación</mat-radio-button>
-                                    </mat-radio-group>
+                                    </mat-radio-group-->
                                 </mat-hint>
                             </mat-form-field>
                         </div>
                         <button fxFlex mat-raised-button color="accent" (click)="applySearch()" [disabled]="isLoadingInsumos">
-                            <mat-icon>search</mat-icon> Buscar
+                            <mat-icon>search</mat-icon> Buscar {{(tipoDeElementoPedido)?tipoDeElementoPedido.descripcion:''}}
                         </button>
                     </div>
                 </section>
@@ -70,40 +70,29 @@
     <mat-drawer-content>
         <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
         <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
-            <section fxFlex="none" fxLayout="row">
-                <div fxFlex="none" *ngIf="!insumosDrawer.opened">
-                    <button *ngIf="verBoton['concluir']" mat-raised-button color="primary" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Concluir</button>
-                    <button *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" (click)="generarFolio()" [disabled]="!formPedido.valid"><mat-icon>send</mat-icon> Generar Folio</button>
-                </div>
-                <div fxFlex="none" *ngIf="estatusPedido == 'PUB'">
-                    <mat-chip-list aria-label="Folio Pedido">
-                        <mat-chip color="primary" selected [disableRipple]="true">
-                            Folio: {{estatusFolio}}
-                        </mat-chip>
-                    </mat-chip-list>
-                </div>
-                <div fxFlex></div>
-                <div fxFlex="none" *ngIf="pedidoInternoSeleccionado">
-                    <mat-chip-list aria-label="Pedido Interno">
-                        <mat-chip color="primary" selected [disableRipple]="true">
-                            Pedido Interno
-                        </mat-chip>
-                    </mat-chip-list>
-                </div>
-                <div fxFlex></div>
-                <div fxFlex="none">
-                    <button [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button>{{(estatusPedido != 'CON')?'Cancelar':'Regresar'}}</button>
-                    &nbsp;
-                    <button *ngIf="verBoton['guardar']" mat-raised-button color="success" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon> Guardar</button>
-                </div>
-            </section>
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
                 <section fxFlex="30" fxLayout="row" *ngIf="!insumosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
                         <div fxFlex fxLayout="column" *ngIf="!mostrarPedidosInternos"> <!-- Panel principal del pedido -->
+                            <div fxFlex="none" fxLayout="row">
+                                <button fxFlex="none" [routerLink]="'/pedidos/pedidos-ordinarios'" mat-button><mat-icon>backspace</mat-icon></button>
+                                <div fxFlex></div>
+                                <button fxFlex="none" *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" matTooltip="Generar Folio" (click)="generarFolio()" [disabled]="!formPedido.valid"><mat-icon>source</mat-icon></button>
+                                <button fxFlex="none" *ngIf="verBoton['concluir']" mat-raised-button color="primary" matTooltip="Concluir Captura" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>all_inbox</mat-icon></button>
+                                &nbsp;
+                                <button fxFlex="none" *ngIf="verBoton['guardar']" mat-raised-button color="success" matTooltip="Guardar" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon></button>
+                            </div>
                             <div fxFlex="none" fxLayout="column">
                                 <div fxFlex class="estatus-pedido {{listaEstatusClaves[estatusPedido]}}-color">
-                                    {{listaEstatusLabels[estatusPedido]}}
+                                    {{(estatusFolio)?estatusFolio:listaEstatusLabels[estatusPedido]}}
+                                </div>
+                            </div>
+                            <div fxFlex="none" fxLayout="column">
+                                <div fxFlex class="label-unidad-entrega">
+                                    Tipo de Pedido:
+                                </div>
+                                <div fxFlex class="unidad-entrega">
+                                    {{(tipoDeElementoPedido)?tipoDeElementoPedido.descripcion:'Sin Tipo'}}
                                 </div>
                             </div>
                             <div fxFlex="none" fxLayout="column" *ngIf="unidadMedicaEntrega" style="padding: 5px 0px;">
@@ -153,22 +142,16 @@
                                     <mat-label>Observaciones</mat-label>
                                     <textarea matInput formControlName="observaciones" rows="2" [readonly]="!editable"></textarea>
                                 </mat-form-field>
-
-                                <button *ngIf="verBoton['agregar_insumo']" fxFlex="100" mat-flat-button color="accent" (click)="abrirBuscadorInsumos()"><mat-icon>chevron_right</mat-icon> Agregar Insumos</button>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" fxLayout="row">
-                                <div fxFlex></div>
-                                <div fxFlex="none" *ngIf="mostrarBotonAgregarUnidades">
-                                    <button *ngIf="verBoton['agregar_unidad']" mat-mini-fab color="info" matTooltip="Unidades en el Pedido" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
-                                        <mat-icon>house</mat-icon>
-                                    </button>
-                                </div>
-                                <div fxFlex></div>
+                                <button fxFlex *ngIf="verBoton['agregar_unidad']" mat-flat-button color="info" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
+                                    <mat-icon>house</mat-icon> Unidades en el Pedido
+                                </button>
                             </div>
                             <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
                                 <button fxFlex mat-stroked-button (click)="verPedidosInternos()" [disabled]="unidadesSeleccionadas.length == 0">
-                                    <mat-icon>home_work</mat-icon> Pedidos Internos
+                                    <mat-icon>home_work</mat-icon> Cuadro de Distribución
                                 </button>
                             </div>
                         </div>
@@ -239,20 +222,39 @@
                         </div>
                     </mat-card>
                 </section>
-                <section fxFlex fxLayout="row">
+                <section fxFlex fxLayout="column">
                     <mat-card fxFlex="100" fxLayout="column">
                         <div fxFlex="none" fxLayout="row">
+                            <div fxFlex="none">
+                                <button *ngIf="verBoton['agregar_insumo']" mat-flat-button color="accent" (click)="abrirBuscadorInsumos()" [disabled]="insumosDrawer.opened"><mat-icon>add</mat-icon> Agregar Elemento</button>
+                            </div>
+                            <div fxFlex></div>
+                            <div fxFlex="none">
+                                <mat-chip-list aria-label="Pedido Interno">
+                                    <mat-chip color="primary" selected [disableRipple]="true">
+                                        Total: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.insumos | number)+'/':'' }}{{clavesTotales.insumos | number}} Claves
+                                    </mat-chip>
+                                </mat-chip-list>
+                            </div>
+                        </div>
+                        <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
                             <div fxFlex class="small-search-input">
-                                <mat-form-field appearance="outline">
+                                <mat-form-field fxFlex appearance="outline">
                                     <input matInput [(ngModel)]="filtroInsumos" (keyup.enter)="aplicarFiltroInsumos()" placeholder="Filtrar">
+                                    <button *ngIf="filtroAplicado" mat-icon-button matSuffix (click)="limpiarFiltroInsumos()" [attr.aria-label]="'Limpiar Filtro'" [attr.aria-pressed]="filtroAplicado">
+                                        <mat-icon>clear</mat-icon>
+                                    </button>
                                 </mat-form-field>
                             </div>
                             <div fxFlex="none">
-                                <mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="aplicarFiltroInsumos()">
+                                <button mat-flat-button color="info" (click)="aplicarFiltroInsumos()">
+                                    <mat-icon>filter_alt</mat-icon> Filtrar
+                                </button>
+                                <!--mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="aplicarFiltroInsumos()">
                                     <mat-button-toggle [checked]="true" value="*">Insumos: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.insumos | number)+'/':'' }}{{clavesTotales.insumos | number}}</mat-button-toggle>
                                     <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.medicamentos | number)+'/':'' }}{{clavesTotales.medicamentos | number}}</mat-button-toggle>
                                     <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.mat_curacion | number)+'/':'' }}{{clavesTotales.mat_curacion | number}}</mat-button-toggle>
-                                </mat-button-toggle-group>
+                                </mat-button-toggle-group-->
                             </div>
                         </div>
                         <mat-divider [inset]="true"></mat-divider>
@@ -325,7 +327,6 @@
                         </div>
                         <div fxFlex="none" fxLayout="row">
                             <div fxFlex="none" style="padding-top: 10px;">
-                                <button mat-raised-button (click)="limpiarFiltroInsumos()" *ngIf="filtroAplicado"><mat-icon>clear</mat-icon> Limpiar Filtro</button>
                             </div>
                             <!-- Puede haber algo -->
                             <div fxFlex>

@@ -20,6 +20,10 @@ class Pedido extends Model{
         return $this->belongsTo('App\Models\Programa','programa_id');
     }
 
+    public function tipoElementoPedido(){
+        return $this->belongsTo('App\Models\TipoElementoPedido','tipo_elemento_pedido_id');
+    }
+
     public function listaInsumosMedicos(){
         return $this->hasMany('App\Models\PedidoListaInsumos','pedido_id');
     }

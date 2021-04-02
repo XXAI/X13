@@ -29,7 +29,8 @@
                 <div fxFlex="none"><mat-slide-toggle [(ngModel)]="mostrarTarjetas" color="primary"><mat-icon>table_view</mat-icon></mat-slide-toggle></div>
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <button mat-raised-button color="info" [routerLink]="'/pedidos/pedidos-ordinarios/nuevo'"  ><mat-icon>add_circle</mat-icon> Nuevo Pedido</button>
+                    <!--button mat-raised-button color="info" [routerLink]="'/pedidos/pedidos-ordinarios/nuevo'"  ><mat-icon>add_circle</mat-icon> Nuevo Pedido</button-->
+                    <button mat-raised-button color="info" (click)="nuevoPedido()"  ><mat-icon>add_circle</mat-icon> Nuevo Pedido</button>
                 </div>
             </div>
             <div fxFlex style="overflow: auto;" *ngIf="!mostrarTarjetas">

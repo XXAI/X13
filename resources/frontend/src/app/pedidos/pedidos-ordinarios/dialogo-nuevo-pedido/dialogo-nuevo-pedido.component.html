@@ -1,0 +1,16 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Selecciona el tipo de pedido a capturar:
+    </section>
+    <section fxFlex fxLayout="row">
+        <mat-form-field fxFlex>
+            <mat-label>Tipos de Pedidos</mat-label>
+            <mat-select [(ngModel)]="tipoSeleccionado">
+              <mat-option *ngFor="let tipo of tiposPedidos" [value]="tipo">
+                {{tipo.descripcion}}
+              </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <button fxFlex="20" mat-raised-button color="primary" (click)="crearNuevoPedido()" [disabled]="!tipoSeleccionado">Crear</button>
+    </section>
+</section>

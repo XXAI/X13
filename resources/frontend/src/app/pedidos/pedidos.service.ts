@@ -8,21 +8,21 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class PedidosService {
-  url_insumos = `${environment.base_url}/insumos-medicos`;
+  url_elementos = `${environment.base_url}/busqueda-elementos`;
   url_datos_cat = `${environment.base_url}/datos-catalogo`;
 
   constructor(private http: HttpClient) { }
 
-  buscarInsumos(payload):Observable<any> {
-    return this.http.get<any>(this.url_insumos,{params:payload}).pipe(
+  buscarElementos(payload):Observable<any> {
+    return this.http.get<any>(this.url_elementos,{params:payload}).pipe(
       map( response => {
         return response;
       })
     );
   }
 
-  obtenerDatosCatalogo():Observable<any> {
-    return this.http.get<any>(this.url_datos_cat).pipe(
+  obtenerDatosCatalogo(payload):Observable<any> {
+    return this.http.get<any>(this.url_datos_cat,{params:payload}).pipe(
       map( response => {
         return response;
       })

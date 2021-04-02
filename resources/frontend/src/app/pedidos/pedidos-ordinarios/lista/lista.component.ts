@@ -4,6 +4,8 @@ import { MediaObserver } from '@angular/flex-layout';
 import { MatTableDataSource } from '@angular/material/table';
 import { PedidosOrdinariosService } from '../pedidos-ordinarios.service';
 import { SharedService } from '../../../shared/shared.service';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogoNuevoPedidoComponent } from '../dialogo-nuevo-pedido/dialogo-nuevo-pedido.component';
 
 @Component({
   selector: 'app-lista',
@@ -13,7 +15,7 @@ import { SharedService } from '../../../shared/shared.service';
 export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  constructor(public mediaObserver: MediaObserver, private pedidosOrdinariosService: PedidosOrdinariosService, private sharedService: SharedService) { }
+  constructor(public mediaObserver: MediaObserver, private pedidosOrdinariosService: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog) { }
 
   mostrarTarjetas:boolean = false;
 
@@ -87,6 +89,22 @@ export class ListaComponent implements OnInit {
 
   cleanSearch(){
     this.searchQuery = '';
+  }
+
+  nuevoPedido(){
+    let configDialog = {
+      width: '50%',
+      maxHeight: '90vh',
+      //height: '643px',
+      data:{},
+      panelClass: 'no-padding-dialog'
+    };
+
+    const dialogRef = this.dialog.open(DialogoNuevoPedidoComponent, configDialog);
+
+    /*dialogRef.afterClosed().subscribe(response => {
+      //console.log(response);
+    });*/
   }
 
   loadListadoPedidos(event?){

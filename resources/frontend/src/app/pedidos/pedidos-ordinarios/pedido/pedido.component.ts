@@ -36,6 +36,7 @@ export class PedidoComponent implements OnInit {
   pedidoInternoSeleccionado:number;
 
   unidadMedicaEntrega:any;
+  tipoDeElementoPedido:any;
 
   formPedido:FormGroup;
   catalogos:any;
@@ -138,7 +139,7 @@ export class PedidoComponent implements OnInit {
       id:['']
     });
 
-    this.pedidosService.obtenerDatosCatalogo().subscribe(
+    this.pedidosService.obtenerDatosCatalogo({grupo_pedidos:true}).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
@@ -173,6 +174,10 @@ export class PedidoComponent implements OnInit {
         this.pedidosOrdinarios.verPedido(id).subscribe(
           response =>{
             this.formPedido.patchValue(response.data);
+            if(response.data.tipo_elemento_pedido){
+              this.tipoDeElementoPedido = response.data.tipo_elemento_pedido;
+            }
+
             this.clavesTotalesPedido.insumos = response.data.lista_insumos_medicos.length;
             for(let i in response.data.lista_insumos_medicos){
               let insumo_server = response.data.lista_insumos_medicos[i];
@@ -238,6 +243,32 @@ export class PedidoComponent implements OnInit {
           }
         );
       }else{
+        let tipo_pedido = 'MED';
+        if(params.get('tipo')){
+          tipo_pedido = params.get('tipo');
+        }
+
+        this.pedidosService.obtenerDatosCatalogo({tipos_pedido:true}).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            } else {
+              if(response.data.catalogos && response.data.catalogos['tipos_pedido']){
+                let index = response.data.catalogos['tipos_pedido'].findIndex(x => x.clave === tipo_pedido);
+                this.tipoDeElementoPedido = response.data.catalogos['tipos_pedido'][index];
+              }
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          }
+        );
+
         this.formPedido.get('anio').patchValue(fecha_actual.getFullYear());
         this.formPedido.get('mes').patchValue(fecha_actual.getMonth()+1);
       }
@@ -249,10 +280,10 @@ export class PedidoComponent implements OnInit {
     this.isLoadingInsumos = true;
     let params = {
       query: this.insumoQuery,
-      tipo_insumo: this.busquedaTipoInsumo
+      tipo_elemento: this.tipoDeElementoPedido.clave
     }
 
-    this.pedidosService.buscarInsumos(params).subscribe(
+    this.pedidosService.buscarElementos(params).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
@@ -364,8 +395,10 @@ export class PedidoComponent implements OnInit {
     }
 
     this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
-    this.dataSourceInsumos.filter = filter_value;
-    this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
+    if(this.dataSourceInsumos){
+      this.dataSourceInsumos.filter = filter_value;
+      this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
+    }
   }
 
   cerrarBuscadorInsumos(){
@@ -796,7 +829,7 @@ export class PedidoComponent implements OnInit {
   concluirPedido(){
     const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
       width: '500px',
-      data:{dialogTitle:'¿Desea concluir el pedido?', dialogMessage:'Al concluir el pedido no se podrán realizar mas cambios, escriba CONCLUIR para aceptar el proceso.', validationString:'CONCLUIR', btnColor:'primary', btnText:'Aceptar'}
+      data:{dialogTitle:'¿Desea concluir la captura del pedido?', dialogMessage:'Al concluir la captura del pedido no se podrán realizar mas cambios, escriba CONCLUIR para aceptar el proceso.', validationString:'CONCLUIR', btnColor:'primary', btnText:'Aceptar'}
     });
 
     dialogRef.afterClosed().subscribe(valid => {

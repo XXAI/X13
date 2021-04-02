@@ -13,20 +13,79 @@ use DB;
 
 use App\Models\Pedido;
 use App\Models\UnidadMedica;
+use App\Models\TipoElementoPedido;
 
 class PedidoOrdinarioController extends Controller
 {
 
-    public function datosCatalogo(){
+    public function datosCatalogo(Request $request){
         try{
             $data = [];
-            $data = $this->getUserAccessData();
+            $parametros = $request->all();
+
+            if(isset($parametros['grupo_pedidos']) && $parametros['grupo_pedidos']){
+                $user_access_data = $this->getUserAccessData();
+                $data['grupo_pedidos'] = $user_access_data->grupo_pedidos;
+            }
+            
+            $data['catalogos'] = [];
+            if(isset($parametros['tipos_pedido']) && $parametros['tipos_pedido']){
+                $data['catalogos']['tipos_pedido'] = TipoElementoPedido::all();
+            }
 
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
+
+    public function busquedaElementos(Request $request)
+    {
+        try{
+            $parametros = $request->all();
+            $elementos = [];
+            $tipo_elemento;
+
+            if(isset($parametros['tipo_elemento']) && $parametros['tipo_elemento']){
+                $tipo_elemento = TipoElementoPedido::where('clave',$parametros['tipo_elemento'])->first();
+
+                if($tipo_elemento->llave_tabla_detalles == 'insumos_medicos'){
+                    $filtro = json_decode($tipo_elemento->filtro_detalles, true);
+                    //
+                }
+            }
+            
+            //$insumos = InsumoMedico::with('medicamento','materialCuracion');
+            
+            //Filtros, busquedas, ordenamiento
+            /*if(isset($parametros['query']) && $parametros['query']){
+                $insumos = $insumos->where(function($query)use($parametros){
+                    return $query->where('descripcion','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('nombre_generico','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('clave','LIKE','%'.$parametros['query'].'%');
+                                //->whereRaw('CONCAT_WS(" ",personas.apellido_paterno, personas.apellido_materno, personas.nombre) like "%'.$parametros['query'].'%"' )
+                                //->orWhere('formularios.descripcion','LIKE','%'.$parametros['query'].'%');
+                });
+            }*/
+
+            /*if(isset($parametros['tipo_insumo']) && $parametros['tipo_insumo'] && $parametros['tipo_insumo'] != '*'){
+                $insumos = $insumos->where('tipo_insumo',$parametros['tipo_insumo']);
+            }
+
+            if(isset($parametros['page'])){
+                $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
+                $insumos = $insumos->paginate($resultadosPorPagina);
+
+            } else {
+                $insumos = $insumos->get();
+            }*/
+
+            return response()->json(['data'=>$elementos],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -75,7 +134,8 @@ class PedidoOrdinarioController extends Controller
     public function show($id)
     {
         try{
-            $pedido = Pedido::with(['listaInsumosMedicos'=>function($insumos){
+            $pedido = Pedido::with(['tipoElementoPedido',
+                                    'listaInsumosMedicos'=>function($insumos){
                                         $insumos->with('insumoMedico.medicamento','insumoMedico.materialCuracion','listaInsumosUnidades');
                                     },'listaUnidadesMedicas.unidadMedica'])->find($id);
 
