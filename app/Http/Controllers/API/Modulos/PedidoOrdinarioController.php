@@ -14,6 +14,9 @@ use DB;
 use App\Models\Pedido;
 use App\Models\UnidadMedica;
 use App\Models\TipoElementoPedido;
+use App\Models\InsumoMedico;
+
+use Illuminate\Database\Eloquent\Builder;
 
 class PedidoOrdinarioController extends Controller
 {
@@ -48,37 +51,39 @@ class PedidoOrdinarioController extends Controller
 
             if(isset($parametros['tipo_elemento']) && $parametros['tipo_elemento']){
                 $tipo_elemento = TipoElementoPedido::where('clave',$parametros['tipo_elemento'])->first();
+                $filtro = json_decode($tipo_elemento->filtro_detalles, true);
 
-                if($tipo_elemento->llave_tabla_detalles == 'insumos_medicos'){
-                    $filtro = json_decode($tipo_elemento->filtro_detalles, true);
-                    //
+                if($tipo_elemento->llave_tabla_detalles == 'medicamentos'){
+                    $elementos = InsumoMedico::whereHas('medicamento',function(Builder $medicamento)use($filtro){
+                        foreach($filtro as $field => $data){
+                            $medicamento = $medicamento->where($field,$data);
+                        }
+                    });
+                }else if ($tipo_elemento->llave_tabla_detalles == 'materiales_curacion'){
+                    $elementos = InsumoMedico::has('materialCuracion');
                 }
             }
             
+            //$elementos = $elementos->get();
             //$insumos = InsumoMedico::with('medicamento','materialCuracion');
             
             //Filtros, busquedas, ordenamiento
-            /*if(isset($parametros['query']) && $parametros['query']){
-                $insumos = $insumos->where(function($query)use($parametros){
+            if(isset($parametros['query']) && $parametros['query']){
+                $elementos = $elementos->where(function($query)use($parametros){
                     return $query->where('descripcion','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('nombre_generico','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('clave','LIKE','%'.$parametros['query'].'%');
                                 //->whereRaw('CONCAT_WS(" ",personas.apellido_paterno, personas.apellido_materno, personas.nombre) like "%'.$parametros['query'].'%"' )
                                 //->orWhere('formularios.descripcion','LIKE','%'.$parametros['query'].'%');
                 });
-            }*/
-
-            /*if(isset($parametros['tipo_insumo']) && $parametros['tipo_insumo'] && $parametros['tipo_insumo'] != '*'){
-                $insumos = $insumos->where('tipo_insumo',$parametros['tipo_insumo']);
             }
 
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
-                $insumos = $insumos->paginate($resultadosPorPagina);
-
+                $elementos = $elementos->paginate($resultadosPorPagina);
             } else {
-                $insumos = $insumos->get();
-            }*/
+                $elementos = $elementos->get();
+            }
 
             return response()->json(['data'=>$elementos],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
