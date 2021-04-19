@@ -78,6 +78,7 @@ export class PedidoComponent implements OnInit {
   displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
 
   editable:boolean;
+  puedeEditarElementos:boolean;
 
   verBoton:any;
   isLoading:boolean;
@@ -91,6 +92,7 @@ export class PedidoComponent implements OnInit {
     let fecha_actual = new Date();
 
     this.editable = true;
+    this.puedeEditarElementos = true;
     
     this.controlInsumosModificados = {};
     this.listadoInsumosEliminados = [];
@@ -136,10 +138,11 @@ export class PedidoComponent implements OnInit {
       anio:['',Validators.required],
       programa_id:[''],
       observaciones:[''],
+      tipo_elemento_pedido_id:[''],
       id:['']
     });
 
-    this.pedidosService.obtenerDatosCatalogo({grupo_pedidos:true}).subscribe(
+    this.pedidosService.obtenerDatosCatalogo({grupo_pedidos:true, programas:true}).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
@@ -155,6 +158,12 @@ export class PedidoComponent implements OnInit {
             this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
           }else{
             this.mostrarBotonAgregarUnidades = false;
+          }
+          
+          if(response.data.catalogos){
+            if(response.data.catalogos.programas && response.data.catalogos.programas.length){
+              this.catalogos.programas = response.data.catalogos.programas;
+            }
           }
         }
       },
@@ -228,6 +237,7 @@ export class PedidoComponent implements OnInit {
               this.verBoton['agregar_insumo'] = false;
               this.verBoton['agregar_unidad'] = false;
               this.editable = false;
+              this.puedeEditarElementos = false;
 
               this.estatusFolio = response.data.folio;
 
@@ -248,6 +258,7 @@ export class PedidoComponent implements OnInit {
           tipo_pedido = params.get('tipo');
         }
 
+        //mover arriba
         this.pedidosService.obtenerDatosCatalogo({tipos_pedido:true}).subscribe(
           response =>{
             if(response.error) {
@@ -257,6 +268,7 @@ export class PedidoComponent implements OnInit {
               if(response.data.catalogos && response.data.catalogos['tipos_pedido']){
                 let index = response.data.catalogos['tipos_pedido'].findIndex(x => x.clave === tipo_pedido);
                 this.tipoDeElementoPedido = response.data.catalogos['tipos_pedido'][index];
+                this.formPedido.get('tipo_elemento_pedido_id').patchValue(this.tipoDeElementoPedido.id);
               }
             }
           },
@@ -410,6 +422,7 @@ export class PedidoComponent implements OnInit {
   }
 
   abrirBuscadorInsumos(){
+    this.insumoQuery = '';
     this.insumosDrawer.open().finally(() => this.busquedaInsumoQuery.focus() );
   }
 
@@ -892,6 +905,7 @@ export class PedidoComponent implements OnInit {
             this.verBoton['agregar_insumo'] = false;
             this.verBoton['agregar_unidad'] = false;
             this.editable = false;
+            this.puedeEditarElementos = false;
 
             let mes = this.catalogos.meses[response.data.mes-1];
             this.formPedido.addControl('mes_value',new FormControl(mes.etiqueta));

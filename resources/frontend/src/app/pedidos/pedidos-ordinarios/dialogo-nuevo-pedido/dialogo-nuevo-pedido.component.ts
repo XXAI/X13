@@ -3,7 +3,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { PedidosService }  from '../../pedidos.service';
 import { SharedService } from '../../../shared/shared.service';
 import { Router } from '@angular/router';
-
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-dialogo-nuevo-pedido',
@@ -16,6 +16,8 @@ export class DialogoNuevoPedidoComponent implements OnInit {
 
   tiposPedidos:any[];
   tipoSeleccionado:any;
+
+  rutaIconosPedido:string = environment.images_url;
 
   ngOnInit(): void {
     this.pedidosService.obtenerDatosCatalogo({tipos_pedido:true}).subscribe(
@@ -38,6 +40,10 @@ export class DialogoNuevoPedidoComponent implements OnInit {
         this.sharedService.showSnackBar(errorMessage, null, 3000);
       }
     );
+  }
+
+  seleccionarTipoNuevoPedido(tipo){
+    this.tipoSeleccionado = tipo;
   }
 
   crearNuevoPedido(){

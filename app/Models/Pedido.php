@@ -10,7 +10,7 @@ class Pedido extends Model{
     
     use SoftDeletes;
     protected $table = 'pedidos';  
-    protected $fillable = ['folio','descripcion','mes','anio','observaciones','total_claves','total_insumos','total_monto','tipo_pedido','estatus','unidad_medica_id','programa_id','fecha_concluido','fecha_validado','fecha_publicado','fecha_cancelado','generado_por','concluido_por','validado_por','publicado_por','cancelado_por'];
+    protected $fillable = ['folio','descripcion','mes','anio','observaciones','total_claves','total_insumos','total_monto','tipo_pedido','tipo_elemento_pedido_id','estatus','unidad_medica_id','programa_id','fecha_concluido','fecha_validado','fecha_publicado','fecha_cancelado','generado_por','concluido_por','validado_por','publicado_por','cancelado_por'];
 
     public function unidadMedica(){
         return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_id');

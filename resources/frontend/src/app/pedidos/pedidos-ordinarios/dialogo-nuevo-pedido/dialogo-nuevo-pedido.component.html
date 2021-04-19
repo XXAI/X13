@@ -2,15 +2,18 @@
     <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
         Selecciona el tipo de pedido a capturar:
     </section>
-    <section fxFlex fxLayout="row">
-        <mat-form-field fxFlex>
-            <mat-label>Tipos de Pedidos</mat-label>
-            <mat-select [(ngModel)]="tipoSeleccionado">
-              <mat-option *ngFor="let tipo of tiposPedidos" [value]="tipo">
-                {{tipo.descripcion}}
-              </mat-option>
-            </mat-select>
-        </mat-form-field>
+    <div fxFlex style="overflow: auto;">
+      <mat-grid-list cols="4" rowHeight="1:1.5" gutterSize="5" style="padding:5px;">
+        <mat-grid-tile *ngFor="let tipo of tiposPedidos" [ngClass]="{'boton-seleccionado':((tipoSeleccionado)?tipoSeleccionado.id == tipo.id:false)}" class="boton-nuevo-pedido mat-elevation-z4" fxLayout="row" (click)="seleccionarTipoNuevoPedido(tipo)" matRipple>
+          <img style="width: 90%;" src="{{rutaIconosPedido+tipo.icon_image}}" />
+          <mat-grid-tile-footer style="text-align: center;">
+            {{tipo.descripcion}}
+          </mat-grid-tile-footer>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </div>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
         <button fxFlex="20" mat-raised-button color="primary" (click)="crearNuevoPedido()" [disabled]="!tipoSeleccionado">Crear</button>
     </section>
 </section>

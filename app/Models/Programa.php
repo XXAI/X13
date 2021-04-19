@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Programa extends Model{
     use SoftDeletes;
-    protected $table = 'catalogo_programas';  
+    protected $table = 'programas';  
     protected $fillable = ['clave','descripcion','activo'];
 }

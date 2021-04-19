@@ -11,11 +11,29 @@ use Validator;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Grupo;
 
 use DB;
 
 class UserController extends Controller
 {
+
+    public function getCatalogs(Request $request){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+            $return_data = [];
+
+            //if(isset($parametros['grupos']) && $parametros['grupos']){
+            $return_data['grupos'] = Grupo::all();
+            //}
+
+            return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *

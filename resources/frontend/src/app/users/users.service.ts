@@ -11,6 +11,7 @@ export class UsersService {
 
   url = `${environment.base_url}/user`;
   url_role = `${environment.base_url}/role`;
+  url_catalogs = `${environment.base_url}/user-catalogs`;
   url_permission = `${environment.base_url}/permission`;
   url_avatars = `${environment.base_url}/avatar-images`;
 
@@ -18,6 +19,14 @@ export class UsersService {
 
   getAvatars():Observable<any> {
     return this.http.get<any>(this.url_avatars,{}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  getCatalogs():Observable<any> {
+    return this.http.get<any>(this.url_catalogs,{}).pipe(
       map( response => {
         return response;
       })

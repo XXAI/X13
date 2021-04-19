@@ -176,6 +176,52 @@
                                     </div>
                                 </div>
                             </mat-tab>
+                            <mat-tab [disabled]="(usuarioForm.get('is_superuser').value == true)">
+                                <ng-template mat-tab-label>
+                                        <span matBadge="{{selectedGroups.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedGroups.length <= 0">Grupos</span>
+                                </ng-template>
+                                <div fxLayout="row" class="edit-container">
+                                    <div fxFlex="49" fxFlex.xs="100">
+                                        <div fxLayout="row">
+                                            <mat-form-field fxFlex>
+                                                <input matInput placeholder="Filtrar Grupos" aria-label="filtrar" [formControl]="filterInputGroups">
+                                                <mat-icon *ngIf="!filterInputGroups.value" matSuffix>filter_list</mat-icon>
+                                                <button mat-icon-button matSuffix *ngIf="filterInputGroups.value"  (click)="clearGroupsFilter()">
+                                                    <mat-icon>clear</mat-icon>
+                                                </button>
+                                            </mat-form-field>
+                                        </div>
+                                        <div fxLayout="row">
+                                            <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
+                                                <button mat-list-item *ngFor="let group of filteredGroups$ | async" (click)="selectGroup(group)" [disabled]="assignedGroups[group.id] && assignedGroups[group.id].inRoles.length > 0">
+                                                    <p matLine>
+                                                        <span fxHide.xs="true">[{{group.id}}]</span> <span> {{group.descripcion}} </span>
+                                                    </p>
+                                                    <button mat-icon-button  *ngIf="assignedGroups[group.id] && assignedGroups[group.id].inRoles.length > 0">
+                                                            <mat-icon>{{(assignedGroups[group.id].active)?'supervised_user_circle':'block'}}</mat-icon>
+                                                    </button>
+                                                    <button mat-icon-button  *ngIf="!assignedGroups[group.id] || assignedGroups[group.id].inRoles.length <= 0" >
+                                                        <mat-icon>{{(assignedGroups[group.id] && assignedGroups[group.id].active)?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                    </button>
+                                                    <mat-divider></mat-divider>
+                                                </button>
+                                            </mat-action-list>
+                                        </div>
+                                    </div>
+                                    <div fxFlex fxHide.xs="true"></div>
+                                    <div fxFlex="49" fxHide.xs="true">
+                                        <mat-form-field fxFlex>
+                                            <mat-chip-list #chipList aria-label="Grupos Seleccionados">
+                                                <mat-chip [color]="'accent'" *ngFor="let group of selectedGroups; let i = index" [removable]="true" (removed)="removeGroup(i)">
+                                                    {{group.descripcion}}
+                                                    <mat-icon matChipRemove>cancel</mat-icon>
+                                                </mat-chip>
+                                            </mat-chip-list>
+                                            <mat-hint align="end">{{selectedGroups.length}}</mat-hint>
+                                        </mat-form-field>
+                                    </div>
+                                </div>
+                            </mat-tab>
                         </mat-tab-group>
                     </div>
                 </mat-card-content>

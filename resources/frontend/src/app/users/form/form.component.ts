@@ -71,6 +71,15 @@ export class FormComponent implements OnInit {
   filteredPermissions$: Observable<any[]>;
   selectedPermissions: any[] = [];
 
+  //Para el filtro de Permisos
+  assignedGroups: any[] = [];
+  catalogGroups: any[] = [];
+  listOfGroups$: Observable<any[]>;
+  filterInputGroups: FormControl = new FormControl('');
+  filterInputGroups$: Observable<string> = this.filterInputGroups.valueChanges.pipe(startWith(''));
+  filteredGroups$: Observable<any[]>;
+  selectedGroups: any[] = [];
+
 
   ngOnInit() {
     this.authUser = this.authService.getUserData();
@@ -79,8 +88,9 @@ export class FormComponent implements OnInit {
 
     let callRolesCatalog = this.usersService.getAllRoles();
     let callPermissionsCatalog = this.usersService.getAllPermissions();
-    
-    let httpCalls = [callRolesCatalog, callPermissionsCatalog];
+    let callGroupsCatalog = this.usersService.getCatalogs();
+
+    let httpCalls = [callRolesCatalog, callPermissionsCatalog, callGroupsCatalog];
 
     this.route.paramMap.subscribe(params => {
       if(params.get('id')){
@@ -125,9 +135,21 @@ export class FormComponent implements OnInit {
           );
           //Ends: Permissions
 
+          //Starts: Groups
+          this.catalogGroups = results[2].data;
+          this.listOfGroups$ = of(this.catalogGroups);
+          this.filteredGroups$ = combineLatest([this.listOfGroups$,this.filterInputGroups$]).pipe(
+            map(
+              ([groups,filterString]) => groups.filter(
+                group => (group.descripcion.toLowerCase().indexOf(filterString.toLowerCase()) !== -1)
+              )
+            )
+          );
+          //Ends: Groups
+
           //Starts: User
-          if(results[2]){
-            this.usuario = results[2];
+          if(results[3]){
+            this.usuario = results[3];
             this.usuarioForm.patchValue(this.usuario);
 
             this.selectedAvatar = this.usuario.avatar;
@@ -275,6 +297,18 @@ export class FormComponent implements OnInit {
       };
     }
     //console.log(this.assignedPermissions);
+  }
+
+  clearGroupsFilter(){
+    //
+  }
+
+  selectGroup(group){
+    //
+  }
+
+  removeGroup(index){
+    //
   }
 
   accionGuardar(){

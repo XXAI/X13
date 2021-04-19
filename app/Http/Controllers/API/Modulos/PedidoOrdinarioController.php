@@ -14,6 +14,7 @@ use DB;
 use App\Models\Pedido;
 use App\Models\UnidadMedica;
 use App\Models\TipoElementoPedido;
+use App\Models\Programa;
 use App\Models\InsumoMedico;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +35,10 @@ class PedidoOrdinarioController extends Controller
             $data['catalogos'] = [];
             if(isset($parametros['tipos_pedido']) && $parametros['tipos_pedido']){
                 $data['catalogos']['tipos_pedido'] = TipoElementoPedido::all();
+            }
+
+            if(isset($parametros['programas']) && $parametros['programas']){
+                $data['catalogos']['programas'] = Programa::all();
             }
 
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
