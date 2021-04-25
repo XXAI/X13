@@ -51,18 +51,23 @@ class AlmacenExistenciasController extends Controller
            
             $items = Stock::select(
                 "stocks.id as id", 
-                "stocks.insumo_medico_id as insumo_medico_id", 
-                "insumos_medicos.clave as clave", 
-                "insumos_medicos.descripcion as descripcion",
-                "insumos_medicos.tipo_insumo as tipo_insumo",
-                "insumos_medicos.es_unidosis as es_unidosis",
+                "stocks.bienes_servicios_id as bienes_servicios_id", 
+               // "insumos_medicos.clave as clave", 
+                "bienes_servicios.articulo as articulo",
+                "bienes_servicios.especificaciones as especificaciones",
+                "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
+                "cog_partidas_especificas.clave as clave_partida_especifica",
+                "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
+               // "insumos_medicos.tipo_insumo as tipo_insumo",
+                //"insumos_medicos.es_unidosis as es_unidosis",
                 "stocks.existencia as existencia",
                 "stocks.existencia_unidosis as existencia_unidosis",
                 "stocks.fecha_caducidad as fecha_caducidad",
                 "stocks.lote as lote",
                 "stocks.codigo_barras as codigo_barras",
                 DB::raw("(CASE WHEN stocks.fecha_caducidad  < NOW() THEN '1' ELSE '0' END) as caducado"))
-            ->leftJoin("insumos_medicos", "insumos_medicos.id","=","stocks.insumo_medico_id");
+            ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bienes_servicios_id")
+            ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica");
             
 
 
@@ -87,8 +92,13 @@ class AlmacenExistenciasController extends Controller
                 }
                 
             }
-            if(isset($params['tipo']) && trim($params['tipo'])!= ""){
-                $items = $items->where("tipo_insumo","=", $params['tipo']);
+            
+            if(isset($params['familia_id']) && trim($params['familia_id'])!= ""){
+                $items = $items->where("bienes_servicios.familia_id","=", $params['familia_id']);
+            }
+
+            if(isset($params['clave_partida_especifica']) && trim($params['clave_partida_especifica'])!= ""){
+                $items = $items->where("bienes_servicios.clave_partida_especifica","=", $params['clave_partida_especifica']);
             }
 
             if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){
@@ -99,10 +109,11 @@ class AlmacenExistenciasController extends Controller
 
             if(isset($params['search']) && trim($params['search'])!= ""){
 
-                $items = $items->where(function($query) use ($lastUpdate) {
-                    $query->where("codigo_barras","LIKE", "%".$params['filter']."%")
-                    ->orWhere("lote","LIKE", "%".$params['filter']."%")
-                    ->orWhere("descripcion","LIKE", "%".$params['filter']."%");
+                $items = $items->where(function($query) use ($params) {
+                    $query->where("codigo_barras","LIKE", "%".$params['search']."%")
+                    ->orWhere("lote","LIKE", "%".$params['search']."%")
+                    ->orWhere("articulo","LIKE", "%".$params['search']."%")
+                    ->orWhere("especificaciones","LIKE", "%".$params['search']."%");
                 });
             }
             

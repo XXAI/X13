@@ -1,43 +1,47 @@
 
-<div fxLayout="column" fxLayoutAlign="start" fxFlexFill style="padding: 10px;" >
+<div fxLayout="column" fxLayoutAlign="start" fxFlexFill  >
     <h1 mat-dialog-title>Historial de movimientos</h1>
-    
-    <div mat-dialog-content style="background-color: #F0F0F0;  border-radius: 10px;">
-        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutFill
-            style="font-weight: 300; width:100%; text-align: center; margin:10px 0; " fxLayoutGap="10px">
-            <div fxLayout="row" fxFlex fxLayoutGap="10px">
-                <div fxFlex>
-                    <small><strong>Clave</strong></small><br>
-                    {{ data.clave }}
+    <!--<div mat-dialog-content style="background-color: #F0F0F0;  border-radius: 10px;">-->
+    <div mat-dialog-content style="padding-top: 5px; padding-bottom: 5px;">
+        <mat-accordion  >
+            <mat-expansion-panel  [expanded]="true" style="background-color: #F7F7F7;">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>Artículo</mat-panel-title>
+                    <mat-panel-description>
+                        {{data.articulo}}
+                    </mat-panel-description>
+                </mat-expansion-panel-header>
+                <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
+                <p><small><strong>Especificaciones</strong></small><br>{{data.especificaciones}}</p>
                 </div>
-                <div fxFlex>
-                    <small><strong>Tipo</strong></small><br>
-                    {{ data.tipo_insumo }}
+                <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
+                    <p><small><strong>Partida</strong></small><br>{{ data.clave_partida_generica }}{{ data.clave_partida_especifica }} {{ data.partida_especifica_descripcion }}</p>
                 </div>
+                <mat-divider></mat-divider>
+                <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutFill
+                    style="font-weight: 300; width:100%; text-align: center; margin:10px 0; " fxLayoutGap="10px">
+                    <div fxLayout="row" fxFlex fxLayoutGap="10px">
+                        <div fxFlex>
+                            <small><strong>Lote</strong></small><br>
+                            {{ data.lote }}
+                        </div>
+                        <div fxFlex>
+                            <small><strong>CAD</strong></small><br>
+                            {{data.fecha_caducidad | date: 'dd/MM/yyyy'}}
+                        </div>
 
-
-                <div fxFlex>
-                    <small><strong>Lote</strong></small><br>
-                    {{ data.lote }}
+                        <div fxFlex>
+                            <small><strong>Cantidad actual</strong></small><br>
+                            {{ data.existencia }} <span *ngIf="data.es_unidosis" matTooltip="Cantidad en unidosis"> ({{
+                                data.existencia_unidosis}})</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div fxLayout="row" fxFlex fxLayoutGap="10px">
-                <div fxFlex>
-                    <small><strong>CAD</strong></small><br>
-                    {{data.fecha_caducidad | date: 'dd/MM/yyyy'}}
-                </div>
-
-                <div fxFlex>
-                    <small><strong>Cantidad actual</strong></small><br>
-                    {{ data.existencia }} <span *ngIf="data.es_unidosis" matTooltip="Cantidad en unidosis"> ({{
-                        data.existencia_unidosis}})</span>
-                </div>
-            </div>
-        </div>
-        <mat-divider></mat-divider>
-        <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
-            <p><small><strong>Descripción</strong></small><br>{{data.descripcion}}</p>
-        </div>
+                <mat-action-row>
+                    <button mat-button color="primary" (click)="showFichaTecnica()">Ver ficha técnica</button>
+                  </mat-action-row>
+            </mat-expansion-panel>
+        </mat-accordion>
     </div>
 
     <table mat-table [dataSource]="dataSource" matSort >
