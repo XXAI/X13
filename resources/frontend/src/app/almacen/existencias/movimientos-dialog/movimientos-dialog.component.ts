@@ -24,6 +24,7 @@ export class MovimientosDialogComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['folio','estatus','direccion_movimiento','fecha_movimiento', 'cantidad','user'];
 
   dataSource: MovimientosStockDataSource;
+  panelOpenState:boolean = true;
 
   mobileQuery: MediaQueryList;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
@@ -65,7 +66,9 @@ export class MovimientosDialogComponent implements OnInit, AfterViewInit {
     this.paginator.pageIndex = 0;
     this.loadData();
   }
-
+  showFichaTecnica():void {
+    alert("Funcion no disponible por el momento.")
+  }
   loadData(){   
     this.dataSource.loadData(this.data.id,this.filter.trim().toLowerCase(),this.sort.direction,this.orderBy,this.paginator.pageIndex, this.paginator.pageSize);
   }

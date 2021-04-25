@@ -19,6 +19,22 @@
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="fill" >
+                    <mat-label>Partida</mat-label>
+                    <mat-select [(ngModel)]="filter.clave_partida_especifica" (selectionChange)="loadFamilias()" [disabled]="loadingFilterPartidas">
+                        <mat-option value="">Cualquiera</mat-option>
+                        <!--<mat-option>None</mat-option>-->
+                        <mat-option *ngFor="let item of filterPartidas" matTooltip="{{ item.descripcion }}" [value]="item.clave">{{ item.clave }} {{ item.descripcion }}</mat-option>                        
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="fill" >
+                    <mat-label>Familia</mat-label>
+                    <mat-select [(ngModel)]="filter.familia_id" [disabled]="loadingFilterFamilias">
+                        <mat-option value="">Cualquiera</mat-option>
+                        <!--<mat-option>None</mat-option>-->
+                        <mat-option *ngFor="let item of filterFamilias"  [value]="item.id">{{ item.nombre }}</mat-option>                        
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="fill" >
                     <mat-label>Fecha de caducidad</mat-label>
                     <mat-select [(ngModel)]="filter.caducidad" >
                         <mat-option value="">Cualquiera</mat-option>
@@ -26,6 +42,7 @@
                         <mat-option value="PROX">Proximos a vencer</mat-option>                        
                     </mat-select>
                 </mat-form-field>
+                <!--
                 <mat-form-field appearance="fill" >
                     <mat-label>Tipo</mat-label>
                     <mat-select [(ngModel)]="filter.tipo">
@@ -34,6 +51,7 @@
                         <mat-option value="MTC">Material de curación</mat-option>                        
                     </mat-select>
                 </mat-form-field>
+                -->
             </div>
         </mat-sidenav>
         <mat-sidenav-content>
@@ -45,7 +63,7 @@
                         style="width: auto; padding:10px; background-color: white;" fxLayoutGap="10px">
                         <mat-form-field appearance="fill" class="search-bar" fxFlex>
                             <mat-label>Buscar</mat-label>
-                            <input matInput placeholder="Nombre, clave, codigo de barras o lote" autocomplete="off" [disabled]="loadingCatalogos" [(ngModel)]="filter.search" (keyup.enter)="applyFilter()">
+                            <input matInput placeholder="Nombre, codigo de barras o lote" autocomplete="off" [disabled]="loadingFilterCatalogos || loadingFilterPartidas || loadingFilterFamilias" [(ngModel)]="filter.search" (keyup.enter)="applyFilter()">
                             <mat-icon matSuffix>search</mat-icon>
                             <mat-hint>Presione la tecla "enter" para buscar.</mat-hint>
                         </mat-form-field>
@@ -53,23 +71,17 @@
                     <div class="spinner-container" *ngIf="dataSource.loading$ | async">
                         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
                     </div>
-                    <table mat-table [dataSource]="dataSource" matSort >
+                    <table mat-table [dataSource]="dataSource" matSort >                       
 
                         <!-- Name Column -->
-                        <ng-container matColumnDef="clave">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-sm> CLAVE </th>
-                            <td mat-cell *matCellDef="let element" fxHide.lt-sm > {{element.clave}} </td>
-                        </ng-container>
-
-                        <!-- Name Column -->
-                        <ng-container matColumnDef="descripcion">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> DESCRIPCIÓN </th>
-                            <td mat-cell *matCellDef="let element" > {{element.descripcion}} </td>
+                        <ng-container matColumnDef="articulo">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> ARTICULO </th>
+                            <td mat-cell *matCellDef="let element" matTooltip="{{ element.especificaciones }}" > {{element.articulo}} </td>
                         </ng-container>
                         <!-- Name Column -->
-                        <ng-container matColumnDef="tipo_insumo">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header > TIPO </th>
-                            <td mat-cell *matCellDef="let element" > {{element.tipo_insumo}} </td>
+                        <ng-container matColumnDef="partida">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header   fxHide.lt-md > Partida </th>
+                            <td mat-cell *matCellDef="let element"  fxHide.lt-md matTooltip="{{ element.partida_especifica_descripcion }}" > {{element.clave_partida_generica}}{{element.clave_partida_especifica}} </td>
                         </ng-container>
                         <!-- Name Column -->
                         <ng-container matColumnDef="lote">
@@ -92,9 +104,10 @@
                         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDialog(row)">
                         </tr>
-                    </table>
+                    </table>                    
+                    <div *ngIf="dataSource.length == 0" class="no-resultados">Sin resultados.</div>
                     <div class="flex-spacer"></div>
-                    <mat-paginator [length]="dataSource.length" [pageSizeOptions]="[20, 50, 100]"
+                    <mat-paginator  [length]="dataSource.length" [pageSizeOptions]="[20, 50, 100]"
                         showFirstLastButtons></mat-paginator>
                 </mat-card>
             </div>

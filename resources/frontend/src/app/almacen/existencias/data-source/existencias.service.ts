@@ -56,6 +56,23 @@ export class ExistenciasService {
     return this.http.get(`${this.api}/${this.resource}/catalogos`);
   }
 
+  partidas(): Observable<any>{        
+    return this.http.get(`${this.api}/partidas-bienes-servicios/`);
+  }
+
+  familias(clave_partida_especifica:any = null): Observable<any>{        
+    if(clave_partida_especifica != null){
+      return this.http.get(`${this.api}/familias-bienes-servicios/`,{
+        params: new HttpParams()
+          .set('clave_partida_especifica',clave_partida_especifica)
+      });
+    } else {
+      return this.http.get(`${this.api}/familias-bienes-servicios/`);
+    }
+    
+  }
+
+
   /*
 
   ver(id:Number):Observable<any>{

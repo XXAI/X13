@@ -34,12 +34,14 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
     search: "",
     caducidad: "",
     fecha_caducidad_hasta: "",
-    tipo: "",
     almacen_id: "",
-    unidad_medica_id: ""
+    unidad_medica_id: "",
+
+    clave_partida_especifica: "",
+    familia_id: "",
   };
   private orderBy:string;
-  displayedColumns: string[] = ['clave','descripcion','tipo_insumo', 'lote','fecha_caducidad', 'existencia'];
+  displayedColumns: string[] = ['articulo','partida', 'lote','fecha_caducidad', 'existencia'];
 
   dataSource: ExistenciasDataSource;
 
@@ -47,7 +49,12 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
   filterCatalogos:any = {};
   filterAlmacenes:any[];
 
+  filterPartidas:any[];
+  filterFamilias:any[];
+
   loadingFilterCatalogos:boolean; 
+  loadingFilterFamilias:boolean; 
+  loadingFilterPartidas:boolean; 
   
 
   //private _mobileQueryListener: () => void;
@@ -60,8 +67,16 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
   }
 
   catalogosSubscription:Subscription;
+  partidasSubscription:Subscription;
+
   ngOnDestroy(): void {
-    
+    if(this.catalogosSubscription != null){
+      this.catalogosSubscription.unsubscribe();
+    }
+
+    if(this.partidasSubscription != null){
+      this.partidasSubscription.unsubscribe();
+    }
   }
 
   
@@ -83,15 +98,52 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
         this.updateAlmacenes();
         this.loadingFilterCatalogos = false;
         //Anti pattern :( lo siento tendre que echarme un buen clavado de buenas practicas
-        this.loadData();
-        console.log(response);
+        this.loadData();        
       }, error => {
+        this.loadingFilterCatalogos = false;
         console.log(error);
       }
     );
-    console.log("porque no me ejecuto");
+    this.loadPartidas();
   }
 
+
+  loadPartidas(){
+    this.loadingFilterPartidas = true;
+    this.partidasSubscription = this.apiService.partidas().subscribe(
+      response => {
+        this.loadingFilterPartidas = false;
+        console.log(response.data);
+        this.filterPartidas = response.data;
+        this.filter.clave_partida_especifica = "";
+       //Anti pattern :( lo siento tendre que echarme un buen clavado de buenas practicas
+        this.loadFamilias();
+      }, error => {
+        this.loadingFilterPartidas = false;
+        console.log(error);
+      }
+    );
+  }
+
+  loadFamilias(){
+    this.loadingFilterFamilias = true;
+    var clave = null;
+    if(this.filter.clave_partida_especifica != ""){
+
+      clave = this.filter.clave_partida_especifica;
+    }
+    this.partidasSubscription = this.apiService.familias(clave).subscribe(
+      response => {
+        this.loadingFilterFamilias = false;
+        console.log(response.data);
+        this.filterFamilias = response.data;
+        this.filter.familia_id = "";
+      }, error => {
+        this.loadingFilterFamilias = false;
+        console.log(error);
+      }
+    );
+  }
   updateAlmacenes(){
     for(var i = 0; i< this.filterCatalogos.unidades_medicas.length; i++){
       if(this.filterCatalogos.unidades_medicas[i].id == this.filter.unidad_medica_id){

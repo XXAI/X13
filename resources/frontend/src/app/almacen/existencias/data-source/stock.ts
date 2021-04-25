@@ -3,10 +3,10 @@ export interface Stock {
     almacen_id?:Number; 
     programa_id?:Number;
 
-    insumo_medico_id?:Number;  
+    bienes_servicios_id?:Number;  
     clave?:string;
     tipo_isumo?:string;
-    descripcion?:string;
+    articulo?:string;
     
     caducado?:boolean;
        
@@ -22,7 +22,7 @@ export interface Stock {
   export interface StockItem {
     id:Number;
     almacen_id?:Number;
-    insumo_medico_id?:Number;
+    bienes_servicios_id?:Number;
     programa_id?:Number;
     marca_id?:Number;
     lote?:string;
