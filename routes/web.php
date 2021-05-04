@@ -21,3 +21,7 @@ Route::get('images/tipo-elementos-pedido/{filename}', function ($filename)
     $file = \Illuminate\Support\Facades\Storage::disk('public')->get('tipo-elementos-pedido\\'.$filename);
     return response($file, 200)->header('Content-Type', 'image/svg+xml');
 });
+
+Route::get('/mailable', function () {
+    return new App\Mail\RecoverPassword;
+});

@@ -24,6 +24,11 @@ Route::group([
 Route::post('signin',   'API\Auth\AuthController@login');
 Route::post('refresh',  'API\Auth\AuthController@refresh');
 
+/**
+ *  Para envio de correos
+ */
+Route::get('enviar-recuperar-pass',             'API\Admin\MailerController@enviarRecuperarContrasena');
+
 Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('user',          'API\Admin\UserController');
     Route::get('user-catalogs', 'API\Admin\UserController@getCatalogs');
@@ -31,7 +36,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('permission',    'API\Admin\PermissionController');
     Route::apiResource('role',          'API\Admin\RoleController');
     Route::apiResource('profile',       'API\ProfileController')->only([ 'show', 'update']);
-    
+
     //Modulos del Sistema
     /**
      *  Modulo de Reportes

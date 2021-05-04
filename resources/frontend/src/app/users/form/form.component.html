@@ -193,15 +193,12 @@
                                         </div>
                                         <div fxLayout="row">
                                             <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
-                                                <button mat-list-item *ngFor="let group of filteredGroups$ | async" (click)="selectGroup(group)" [disabled]="assignedGroups[group.id] && assignedGroups[group.id].inRoles.length > 0">
+                                                <button mat-list-item *ngFor="let group of filteredGroups$ | async" (click)="selectGroup(group)">
                                                     <p matLine>
-                                                        <span fxHide.xs="true">[{{group.id}}]</span> <span> {{group.descripcion}} </span>
+                                                        <span> {{group.descripcion}} </span>
                                                     </p>
-                                                    <button mat-icon-button  *ngIf="assignedGroups[group.id] && assignedGroups[group.id].inRoles.length > 0">
-                                                            <mat-icon>{{(assignedGroups[group.id].active)?'supervised_user_circle':'block'}}</mat-icon>
-                                                    </button>
-                                                    <button mat-icon-button  *ngIf="!assignedGroups[group.id] || assignedGroups[group.id].inRoles.length <= 0" >
-                                                        <mat-icon>{{(assignedGroups[group.id] && assignedGroups[group.id].active)?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                    <button mat-icon-button  >
+                                                        <mat-icon>{{(assignedGroups[group.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
                                                     </button>
                                                     <mat-divider></mat-divider>
                                                 </button>

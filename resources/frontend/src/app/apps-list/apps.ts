@@ -32,6 +32,7 @@ export const APPS:App [] = [
     { name:'Catalogos',   route: "catalogos",       icon: "assets/icons/catalogos.svg",
       apps:[
         { name:'Almacenes',        route: "catalogos/almacenes",        icon: "assets/icons/catalogo-almacenes.svg" },
+        { name:'Grupos',           route: "catalogos/grupos",           icon: "assets/icons/catalogo-grupos.svg" },
       ]
     },
     { name:'Herramientas Dev', route: "dev-tools",  icon: "assets/icons/toolbox.svg", isHub:true, hideHome:true, 

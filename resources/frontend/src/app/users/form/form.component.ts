@@ -136,7 +136,7 @@ export class FormComponent implements OnInit {
           //Ends: Permissions
 
           //Starts: Groups
-          this.catalogGroups = results[2].data;
+          this.catalogGroups = results[2].data.grupos;
           this.listOfGroups$ = of(this.catalogGroups);
           this.filteredGroups$ = combineLatest([this.listOfGroups$,this.filterInputGroups$]).pipe(
             map(
@@ -300,15 +300,29 @@ export class FormComponent implements OnInit {
   }
 
   clearGroupsFilter(){
-    //
+    this.filterInputGroups.setValue('');
   }
 
   selectGroup(group){
-    //
+    if(this.assignedGroups[group.id]){
+      let groupIndex = this.selectedGroups.findIndex(item => item.id == group.id);
+      this.removeGroup(groupIndex);
+    }else{
+      this.selectedGroups.push(group);
+      this.assignedGroups[group.id] = {
+        active: true,
+        description: group.descripcion
+      };
+    }
   }
 
   removeGroup(index){
-    //
+    let group = this.selectedGroups[index];
+
+    if(this.assignedGroups[group.id]){
+      this.selectedGroups.splice(index,1);
+      this.assignedGroups[group.id] = null;
+    }
   }
 
   accionGuardar(){
