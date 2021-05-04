@@ -33,6 +33,8 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('user',          'API\Admin\UserController');
     Route::get('user-catalogs', 'API\Admin\UserController@getCatalogs');
 
+    Route::apiResource('catalogos/grupos',    'API\Catalogos\GruposController');
+
     Route::apiResource('permission',    'API\Admin\PermissionController');
     Route::apiResource('role',          'API\Admin\RoleController');
     Route::apiResource('profile',       'API\ProfileController')->only([ 'show', 'update']);

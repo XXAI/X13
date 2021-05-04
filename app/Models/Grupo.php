@@ -10,7 +10,7 @@ class Grupo extends Model{
     
     use SoftDeletes;
     protected $table = 'grupos';
-    protected $fillable = ['descripcion','clave_tipo_grupo','unidad_medica_principal_id'];
+    protected $fillable = ['descripcion','clave_tipo_grupo','unidad_medica_principal_id','total_unidades'];
 
     public function unidadesMedicas(){
         return $this->belongsToMany('App\Models\UnidadMedica','grupos_unidades_medicas','grupo_id','unidad_medica_id');
