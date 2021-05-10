@@ -28,8 +28,7 @@ class GruposController extends Controller
         
         try{
             $parametros = $request->all();
-            $grupos = Grupo::with('unidadMedicaPrincipal')->getModel();
-            
+            $grupos = Grupo::with('unidadMedicaPrincipal');
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
                 $grupos = $grupos->where(function($query)use($parametros){
@@ -62,13 +61,13 @@ class GruposController extends Controller
         try{
             $validation_rules = [
                 'descripcion' => 'required',
-                'unidades_medicas' => 'required|min:1'
+                //'unidades_medicas' => 'required|min:1'
             ];
         
             $validation_eror_messages = [
                 'descripcion.required' => 'El nombre es requerido',
-                'unidades_medicas.required' => 'Es requerido tener unidades asignadas',
-                'unidades_medicas.min' => 'Se debe tener al menos una unidad asignada'
+                //'unidades_medicas.required' => 'Es requerido tener unidades asignadas',
+                //'unidades_medicas.min' => 'Se debe tener al menos una unidad asignada'
             ];
 
             $parametros = $request->all(); 
@@ -77,6 +76,8 @@ class GruposController extends Controller
 
             if($resultado->passes()){
                 DB::beginTransaction();
+
+                $parametros['clave_tipo_grupo'] = 'PORD';
 
                 $grupo = Grupo::create($parametros);
 
@@ -129,15 +130,14 @@ class GruposController extends Controller
         try{
             $validation_rules = [
                 'descripcion' => 'required',
-                'unidades_medicas' => 'required|min:1'
+                //'unidades_medicas' => 'required|min:1'
             ];
         
             $validation_eror_messages = [
                 'descripcion.required' => 'El nombre es requerido',
-                'unidades_medicas.required' => 'Es requerido tener unidades asignadas',
-                'unidades_medicas.min' => 'Se debe tener al menos una unidad asignada'
+                //'unidades_medicas.required' => 'Es requerido tener unidades asignadas',
+                //'unidades_medicas.min' => 'Se debe tener al menos una unidad asignada'
             ];
-
             
             $parametros = $request->all();
 

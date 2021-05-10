@@ -3,6 +3,8 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MediaObserver } from '@angular/flex-layout';
 import { SharedService } from '../../../shared/shared.service';
 import { GruposService } from '../grupos.service';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogoFormularioGrupoComponent } from '../dialogo-formulario-grupo/dialogo-formulario-grupo.component';
 
 @Component({
   selector: 'app-lista',
@@ -11,7 +13,7 @@ import { GruposService } from '../grupos.service';
 })
 export class ListaComponent implements OnInit {
 
-  constructor(public mediaObserver: MediaObserver, private sharedService: SharedService, private gruposService: GruposService ) { }
+  constructor(public mediaObserver: MediaObserver, private sharedService: SharedService, private gruposService: GruposService, public dialog: MatDialog ) { }
 
   isLoading: boolean = false;
   mediaSize: string;
@@ -34,11 +36,38 @@ export class ListaComponent implements OnInit {
         //this.mediaSize = response.;
     });
 
-    this.loadListadoAlmacenes(null);
+    this.loadListadoGrupos(null);
   }
 
-  mostrarFormGrupo(){
-    //
+  mostrarFormGrupo(id = null){
+    let configDialog:any;
+    if(this.mediaSize == 'xs'){
+      configDialog = {
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+        height: '100%',
+        width: '100%',
+        data:{scSize:this.mediaSize}
+      };
+    }else{
+      configDialog = {
+        width: '95%',
+        data:{}
+      }
+    }
+
+    if(id){
+      configDialog.data.id = id;
+    }
+
+    const dialogRef = this.dialog.open(DialogoFormularioGrupoComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.loadListadoGrupos(null);
+        //this.loadGruposData(this.pageEvent);
+      }
+    });
   }
 
   applyFilter(){
@@ -49,7 +78,7 @@ export class ListaComponent implements OnInit {
     //
   }
 
-  loadListadoAlmacenes(event?:PageEvent){
+  loadListadoGrupos(event?:PageEvent){
     this.isLoading = true;
     let params:any;
     if(!event){

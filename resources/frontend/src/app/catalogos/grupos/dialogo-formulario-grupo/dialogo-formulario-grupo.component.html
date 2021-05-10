@@ -1,0 +1,39 @@
+<h1 mat-dialog-title>{{tituloDialogo}} Grupo </h1>
+<div mat-dialog-content>
+    <div class="form-container" [formGroup]="grupoForm">
+        <div class="loading-shade" *ngIf="isLoading">
+            <mat-spinner *ngIf="isLoading"></mat-spinner>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column">
+            <mat-form-field  fxFlex>
+                <input matInput placeholder="Descrición" formControlName="descripcion" [type]="'text'" (keyup.enter)="guardar()" cdkFocusInitial required autocomplete="off">
+                <mat-error *ngIf="grupoForm.get('descripcion').invalid && (grupoForm.get('descripcion').dirty || grupoForm.get('descripcion').touched)">
+                    <span *ngIf="grupoForm.get('descripcion').errors.required">La descripción es obligatoria</span>
+                </mat-error>
+            </mat-form-field>
+        </div>
+        <div fxLayout="row">
+            <div fxFlex="none">
+                <mat-form-field  fxFlex>
+                    <input matInput placeholder="Total Unidades" formControlName="total_unidades" [type]="'number'" readonly>
+                </mat-form-field>
+            </div>
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-raised-button color="info"><mat-icon>add</mat-icon> Agregar Unidad</button>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" style="min-height: 80px; max-height: 300px; overflow: hidden; overflow-y: auto;">
+            <mat-chip-list aria-label="Fish selection">
+                <mat-chip *ngFor="let item of listaCRs" [removable]="false" matTooltip="{{item.descripcion}}">
+                    {{item.cr}}
+                </mat-chip>
+            </mat-chip-list>
+        </div>
+    </div>
+</div>
+<div mat-dialog-actions>
+    <span fxFlex></span>
+    <button mat-button (click)='cancel()'>Cancelar</button>
+    <button mat-raised-button (click)='guardar()' [class.button-spinner]="isSaving" [disabled]="!grupoForm.valid" color="primary">Guardar</button>
+</div>

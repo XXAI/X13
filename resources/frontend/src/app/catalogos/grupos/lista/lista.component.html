@@ -33,30 +33,26 @@
             </div>
 
             <div fxFlex fxLayout="row raw" style="overflow: auto;">
-               <div *ngFor="let grupo of dataSource" fxFlex="20" style="padding:3px;">
+               <div *ngFor="let grupo of dataSource" fxFlex="25" style="padding:3px;">
                     <mat-card class="grupo" fxLayout="column">
-                        <div fxFlex="none" fxLayout="row">
-                            <span class="folio-label" fxFlex="none">Folio:</span><span class="folio-value" fxFlex>{{grupo.folio}}</span>
-                        </div>
                         <div fxFlex class="grupo-body">
                             {{grupo.descripcion}}
                         </div>
+                        <div fxFlex="none" fxLayout="row">
+                            <span *ngIf="grupo.unidad_medica_principal" class="folio-value" fxFlex>{{grupo.unidad_medica_principal.nombre}}</span>
+                        </div>
                         <div fxFlex="none" class="grupo-action" fxLayout="row">
                             <mat-chip-list aria-label="Group Users" fxFlex="none" style="padding-top: 5px;">
-                                <mat-chip [selected]="grupo.no_usuarios > 0"><mat-icon>person</mat-icon> | {{grupo.no_usuarios | number:'1.0-0'}}</mat-chip>
+                                <mat-chip [selected]="grupo.total_unidades > 0" matTooltip="Total de Unidades Asignadas" [matTooltipPosition]="'below'"><mat-icon>business</mat-icon> - {{grupo.total_unidades | number:'1.0-0'}}</mat-chip>
                             </mat-chip-list>
                             <div fxFlex></div>
                             <div fxFlex="none">
-                                <button mat-icon-button [matMenuTriggerFor]="appMenu">
-                                    <mat-icon>more_vert</mat-icon>
+                                <button mat-icon-button (click)="mostrarFormGrupo(grupo.id)">
+                                    <mat-icon color="primary">edit</mat-icon>
                                 </button>
-
-                                <mat-menu #appMenu="matMenu">
-                                    <button mat-menu-item><mat-icon color="accent">add_circle</mat-icon> Asignar Usuarios</button>
-                                    <button mat-menu-item><mat-icon color="primary">edit</mat-icon> Editar</button>
-                                    <mat-divider></mat-divider>
-                                    <button mat-menu-item><mat-icon color="warn">delete</mat-icon> Eliminar</button>
-                                </mat-menu>
+                                <button mat-icon-button>
+                                    <mat-icon color="warn">delete</mat-icon>
+                                </button>
                             </div>
                         </div>
                     </mat-card>
@@ -64,7 +60,7 @@
             </div>
 
             <div fxFlex="none">
-                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoAlmacenes($event)"></mat-paginator>
+                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoGrupos($event)"></mat-paginator>
             </div>
         </mat-card>
     </section>
