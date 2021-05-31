@@ -1,39 +1,63 @@
-<h1 mat-dialog-title>{{tituloDialogo}} Grupo </h1>
-<div mat-dialog-content>
-    <div class="form-container" [formGroup]="grupoForm">
-        <div class="loading-shade" *ngIf="isLoading">
-            <mat-spinner *ngIf="isLoading"></mat-spinner>
-        </div>
-        <div fxLayout="row" fxLayout.xs="column">
+<h1 mat-dialog-title>Formulario Grupo</h1>
+<div mat-dialog-content fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="height: 100%; overflow: auto; flex: 1 1 0%;">
+    <div fxFlex fxLayout="column">
+        <div fxFlex="none" fxLayout="row" [formGroup]="grupoForm">
             <mat-form-field  fxFlex>
                 <input matInput placeholder="Descrición" formControlName="descripcion" [type]="'text'" (keyup.enter)="guardar()" cdkFocusInitial required autocomplete="off">
                 <mat-error *ngIf="grupoForm.get('descripcion').invalid && (grupoForm.get('descripcion').dirty || grupoForm.get('descripcion').touched)">
                     <span *ngIf="grupoForm.get('descripcion').errors.required">La descripción es obligatoria</span>
                 </mat-error>
             </mat-form-field>
+            <mat-form-field fxFlex="none">
+                <input matInput placeholder="Total Unidades" formControlName="total_unidades" readonly>
+            </mat-form-field>
         </div>
-        <div fxLayout="row">
-            <div fxFlex="none">
-                <mat-form-field  fxFlex>
-                    <input matInput placeholder="Total Unidades" formControlName="total_unidades" [type]="'number'" readonly>
-                </mat-form-field>
+        <div fxFlex fxLayout="row">
+            <mat-card fxFlex fxLayout="column">
+                <div fxFlex="none" class="small-search-input">
+                    <mat-form-field appearance="outline">
+                        <input matInput placeholder="Filtro">
+                    </mat-form-field>
+                </div>
+                <div fxFlex>
+                    Lista unidades medicas
+                </div>
+                <div fxFlex="none">
+                    total
+                </div>
+            </mat-card>
+            <div fxFlex="none" fxLayout="column" fxLayoutGap="10px" style="padding-left: 5px; padding-right: 5px;">
+                <button mat-raised-button fxFlex="none" color="info">
+                    >
+                </button>
+                <button mat-raised-button fxFlex="none" color="info">
+                    <
+                </button>
+                <button mat-raised-button fxFlex="none" color="success">
+                    >>
+                </button>
+                <button mat-raised-button fxFlex="none" color="success">
+                    <<
+                </button>
             </div>
-            <div fxFlex></div>
-            <div fxFlex="none">
-                <button mat-raised-button color="info"><mat-icon>add</mat-icon> Agregar Unidad</button>
-            </div>
-        </div>
-        <div fxLayout="row" fxLayout.xs="column" style="min-height: 80px; max-height: 300px; overflow: hidden; overflow-y: auto;">
-            <mat-chip-list aria-label="Fish selection">
-                <mat-chip *ngFor="let item of listaCRs" [removable]="false" matTooltip="{{item.descripcion}}">
-                    {{item.cr}}
-                </mat-chip>
-            </mat-chip-list>
+            <mat-card fxFlex fxLayout="column">
+                <div fxFlex="none" class="small-search-input">
+                    <mat-form-field appearance="outline">
+                        <input matInput placeholder="Filtro">
+                    </mat-form-field>
+                </div>
+                <div fxFlex>
+                    Lista unidades medicas seleccionadas
+                </div>
+                <div fxFlex="none">
+                    total
+                </div>
+            </mat-card>
         </div>
     </div>
-</div>
-<div mat-dialog-actions>
-    <span fxFlex></span>
-    <button mat-button (click)='cancel()'>Cancelar</button>
-    <button mat-raised-button (click)='guardar()' [class.button-spinner]="isSaving" [disabled]="!grupoForm.valid" color="primary">Guardar</button>
+    <div fxFlex="none" fxLayout="row">
+        <span fxFlex></span>
+        <button fxFlex="none" mat-button (click)='cancel()'>Cancelar</button>
+        <button fxFlex="none" mat-raised-button (click)='guardar()' [class.button-spinner]="isSaving" [disabled]="!grupoForm.valid" color="primary">Guardar</button>
+    </div>
 </div>
