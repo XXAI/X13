@@ -43,7 +43,8 @@ export class FormComponent implements OnInit {
     'is_superuser': [false],
     'avatar': [''],
     'roles': [[]],
-    'permissions': [[]]
+    'permissions': [[]],
+    'groups': [[]]
   });
 
   avatarList: any[] = [];
@@ -174,6 +175,16 @@ export class FormComponent implements OnInit {
                 }
                 this.selectedPermissions.push(permission);
               }
+            }
+
+            //Load Groups
+            for(let i in this.usuario.grupos){
+              let group = this.usuario.grupos[i];
+              this.selectedGroups.push(group);
+              this.assignedGroups[group.id] = {
+                active: true,
+                description: group.descripcion
+              };
             }
           }
           //Ends: User
@@ -370,8 +381,16 @@ export class FormComponent implements OnInit {
       }
     }
 
+    let groups = [];
+    for(let i in this.assignedGroups){
+      if(this.assignedGroups[i]){
+        groups.push(+i);
+      }
+    }
+
     this.usuarioForm.get('permissions').patchValue(permissions);
     this.usuarioForm.get('roles').patchValue(roles);
+    this.usuarioForm.get('groups').patchValue(groups);
 
     this.usuarioForm.get('avatar').patchValue(this.selectedAvatar);
 

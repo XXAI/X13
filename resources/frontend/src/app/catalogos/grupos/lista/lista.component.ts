@@ -51,7 +51,7 @@ export class ListaComponent implements OnInit {
       };
     }else{
       configDialog = {
-        width: '50%',
+        width: '60%',
         height: '80%',
         data:{}
       }

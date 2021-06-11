@@ -1,56 +1,127 @@
-<h1 mat-dialog-title>Formulario Grupo</h1>
-<div mat-dialog-content fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="height: 100%; overflow: auto; flex: 1 1 0%;">
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
     <div fxFlex fxLayout="column">
-        <div fxFlex="none" fxLayout="row" [formGroup]="grupoForm">
-            <mat-form-field  fxFlex>
-                <input matInput placeholder="Descrición" formControlName="descripcion" [type]="'text'" (keyup.enter)="guardar()" cdkFocusInitial required autocomplete="off">
-                <mat-error *ngIf="grupoForm.get('descripcion').invalid && (grupoForm.get('descripcion').dirty || grupoForm.get('descripcion').touched)">
-                    <span *ngIf="grupoForm.get('descripcion').errors.required">La descripción es obligatoria</span>
-                </mat-error>
-            </mat-form-field>
-            <mat-form-field fxFlex="none">
-                <input matInput placeholder="Total Unidades" formControlName="total_unidades" readonly>
-            </mat-form-field>
+        <div fxFlex="none" fxLayout="column" [formGroup]="grupoForm">
+            <div fxFlex="none" fxLayout="row">
+                <mat-form-field  fxFlex>
+                    <input matInput placeholder="Descrición" formControlName="descripcion" [type]="'text'" (keyup.enter)="guardar()" cdkFocusInitial required autocomplete="off">
+                    <mat-error *ngIf="grupoForm.get('descripcion').invalid && (grupoForm.get('descripcion').dirty || grupoForm.get('descripcion').touched)">
+                        <span *ngIf="grupoForm.get('descripcion').errors.required">La descripción es obligatoria</span>
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field fxFlex="none">
+                    <input matInput placeholder="Total Unidades" formControlName="total_unidades" readonly>
+                </mat-form-field>
+            </div>
+            <div fxFlex="none" fxLayout="row">
+                <mat-form-field fxFlex>
+                    <input matInput placeholder="Unidad Medica Principal" value="{{(grupoForm.get('unidad_medica_principal').value)?grupoForm.get('unidad_medica_principal').value.nombre:''}}" readonly>
+                    <mat-hint align="end">{{(grupoForm.get('unidad_medica_principal').value)?'['+grupoForm.get('unidad_medica_principal').value.clues+']':''}}</mat-hint>
+                </mat-form-field>
+            </div>
         </div>
         <div fxFlex fxLayout="row">
             <mat-card fxFlex fxLayout="column">
                 <div fxFlex="none" class="small-search-input">
                     <mat-form-field appearance="outline">
-                        <input matInput placeholder="Filtro">
+                        <input matInput [(ngModel)]="filtroUnidades" (keyup)="aplicarFiltroUnidades()" placeholder="Filtrar">
                     </mat-form-field>
                 </div>
                 <div fxFlex>
-                    Lista unidades medicas
+                    <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                        <div *ngIf="listaUnidades.length == 0" class="no-items-found">
+                            No se encontraron resultados
+                        </div>
+                        <div *cdkVirtualFor="let unidad of listaUnidades;" class="unidad-medica-item">
+                            <div fxLayout="row" (click)="toggleSeleccionarUnidadMedica(unidad)">
+                                <div fxFlex fxLayout="column" class="datos-unidad">
+                                    <div fxFlex="none" class="titulo">
+                                        {{unidad.clues}}
+                                    </div>
+                                    <div fxFlex class="descripcion">
+                                        {{unidad.nombre}}
+                                    </div>
+                                </div>
+                                <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
+                                    <div fxFlex>
+                                        <button mat-icon-button *ngIf="!controlUnidadesSeleccionadas[unidad.id]">
+                                            <mat-icon>check_box_outline_blank</mat-icon>
+                                        </button>
+                                        <button mat-icon-button *ngIf="controlUnidadesSeleccionadas[unidad.id]">
+                                            <mat-icon>check_box</mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
                 </div>
                 <div fxFlex="none">
-                    total
+                    Total: {{listaUnidades.length | number:'1.0-0'}}
                 </div>
             </mat-card>
             <div fxFlex="none" fxLayout="column" fxLayoutGap="10px" style="padding-left: 5px; padding-right: 5px;">
-                <button mat-raised-button fxFlex="none" color="info">
+                <button mat-raised-button fxFlex="none" color="accent" matTooltip="Establecer como Unidad Principal" (click)="establecerUnidadPrincipal()" [disabled]="totalUnidadesGrupoSeleccionadas != 1">
+                    <mat-icon>home</mat-icon>
+                </button>
+                <div fxFlex></div>
+                <div fxFlex="none" style="text-align: center;">
+                    {{totalUnidadesSeleccionadas | number:'1.0-0'}}
+                </div>
+                <button mat-raised-button fxFlex="none" color="info" (click)="agregarUnidades()" [disabled]="totalUnidadesSeleccionadas == 0">
                     >
                 </button>
-                <button mat-raised-button fxFlex="none" color="info">
-                    <
-                </button>
-                <button mat-raised-button fxFlex="none" color="success">
+                <button mat-raised-button fxFlex="none" color="success" (click)="agregarUnidades(true)" [disabled]="listaUnidades.length == 0">
                     >>
                 </button>
-                <button mat-raised-button fxFlex="none" color="success">
+                <div fxFlex></div>
+                <div fxFlex="none" style="text-align: center;">
+                    {{totalUnidadesGrupoSeleccionadas | number:'1.0-0'}}
+                </div>
+                <button mat-raised-button fxFlex="none" color="info" (click)="quitarUnidades()" [disabled]="totalUnidadesGrupoSeleccionadas == 0">
+                    <
+                </button>
+                <button mat-raised-button fxFlex="none" color="success" (click)="quitarUnidades(true)" [disabled]="listaUnidadesGrupo.length == 0">
                     <<
                 </button>
+                <div fxFlex></div>
             </div>
             <mat-card fxFlex fxLayout="column">
                 <div fxFlex="none" class="small-search-input">
                     <mat-form-field appearance="outline">
-                        <input matInput placeholder="Filtro">
+                        <input matInput [(ngModel)]="filtroUnidadesGrupo" (keyup)="aplicarFiltroUnidadesGrupo()" placeholder="Filtrar">
                     </mat-form-field>
                 </div>
                 <div fxFlex>
-                    Lista unidades medicas seleccionadas
+                    <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                        <div *ngIf="listaUnidadesGrupo.length == 0" class="no-items-found">
+                            No se encontraron resultados
+                        </div>
+                        <div *cdkVirtualFor="let unidad of listaUnidadesGrupo;" class="unidad-medica-item" [ngClass]="{'unidad-principal':unidadMedicaPrincipalId == unidad.id}">
+                            <div fxLayout="row" (click)="toggleSeleccionarUnidadMedicaGrupo(unidad)">
+                                <div fxFlex fxLayout="column" class="datos-unidad">
+                                    <div fxFlex="none" class="titulo">
+                                        {{unidad.clues}}
+                                    </div>
+                                    <div fxFlex class="descripcion">
+                                        {{unidad.nombre}}
+                                    </div>
+                                </div>
+                                <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
+                                    <div fxFlex>
+                                        <button mat-icon-button *ngIf="!controlUnidadesGrupoSeleccionadas[unidad.id]">
+                                            <mat-icon>check_box_outline_blank</mat-icon>
+                                        </button>
+                                        <button mat-icon-button *ngIf="controlUnidadesGrupoSeleccionadas[unidad.id]">
+                                            <mat-icon>check_box</mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
                 </div>
                 <div fxFlex="none">
-                    total
+                    Total: {{listaUnidadesGrupo.length | number:'1.0-0'}}
                 </div>
             </mat-card>
         </div>
@@ -60,4 +131,4 @@
         <button fxFlex="none" mat-button (click)='cancel()'>Cancelar</button>
         <button fxFlex="none" mat-raised-button (click)='guardar()' [class.button-spinner]="isSaving" [disabled]="!grupoForm.valid" color="primary">Guardar</button>
     </div>
-</div>
+</section>

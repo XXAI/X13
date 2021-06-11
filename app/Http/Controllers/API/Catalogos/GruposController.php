@@ -78,6 +78,7 @@ class GruposController extends Controller
                 DB::beginTransaction();
 
                 $parametros['clave_tipo_grupo'] = 'PORD';
+                $parametros['total_unidades'] = count($parametros['unidades_medicas']);
 
                 $grupo = Grupo::create($parametros);
 
@@ -110,9 +111,13 @@ class GruposController extends Controller
     public function show($id){
         //$this->authorize('has-permission',\Permissions::VER_ROL);
         try{
-            $grupo = Grupo::with('unidadesMedicas')->find($id);
+            $grupo = Grupo::with('unidadesMedicas','unidadMedicaPrincipal')->find($id);
             $grupo->unidadesMedicas->makeHidden('pivot');
-            return response()->json(['data'=>$grupo],HttpResponse::HTTP_OK);
+
+            $unidades_ids = $grupo->unidadesMedicas->pluck('id');
+            $unidades_medicas = UnidadMedica::whereNotIn('id',$unidades_ids)->get();
+
+            return response()->json(['data'=>$grupo,'catalogos'=>['unidades_medicas'=>$unidades_medicas]],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
@@ -149,7 +154,9 @@ class GruposController extends Controller
                 $grupo = Grupo::with('unidadesMedicas')->find($id);
 
                 $grupo->descripcion = $parametros['descripcion'];
-                
+                $grupo->unidad_medica_principal_id = $parametros['unidad_medica_principal_id'];
+                $grupo->total_unidades = count($parametros['unidades_medicas']);
+
                 $unidades_medicas = array_map(function($n){ return $n['id']; },$parametros['unidades_medicas']);
 
                 if($grupo){

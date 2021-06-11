@@ -10,8 +10,17 @@ import { map } from 'rxjs/operators';
 export class GruposService {
 
   url = `${environment.base_url}/catalogos/grupos`;
+  url_catalogos = `${environment.base_url}/cargar-catalogos`;
 
   constructor(private http: HttpClient) { }
+
+  getCatalogos(payload):Observable<any> {
+    return this.http.get<any>(this.url_catalogos,{params: payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
 
   getGruposList(payload):Observable<any> {
     return this.http.get<any>(this.url,{params: payload}).pipe(

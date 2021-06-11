@@ -3,15 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Usuario extends BaseModel{
+class Usuario extends Model{
     
     use SoftDeletes;
-    protected $generarID = true;
-    protected $guardarIDServidor = true;
-    protected $guardarIDUsuario = false;
-    protected $keyType = 'string';
     protected $table = 'users';  
     protected $fillable = ['username', 'password', 'name', 'email', 'is_superuser', 'avatar' ];
     
@@ -21,5 +18,9 @@ class Usuario extends BaseModel{
 
     public function permissions(){
         return $this->belongsToMany('App\Models\Permission')->withPivot('status');
+    }
+
+    public function grupos(){
+        return $this->belongsToMany('App\Models\Grupo','grupos_usuarios','usuario_id','grupo_id');
     }
 }

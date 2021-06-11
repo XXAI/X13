@@ -11,7 +11,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable implements JWTSubject{
     use Notifiable;
     use SoftDeletes;
-    protected $keyType = 'string';
 
     /**
      * The attributes that are mass assignable.

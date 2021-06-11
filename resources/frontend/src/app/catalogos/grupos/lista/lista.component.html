@@ -43,7 +43,7 @@
                         </div>
                         <div fxFlex="none" class="grupo-action" fxLayout="row">
                             <mat-chip-list aria-label="Group Users" fxFlex="none" style="padding-top: 5px;">
-                                <mat-chip [selected]="grupo.total_unidades > 0" matTooltip="Total de Unidades Asignadas" [matTooltipPosition]="'below'"><mat-icon>business</mat-icon> - {{grupo.total_unidades | number:'1.0-0'}}</mat-chip>
+                                <mat-chip [selected]="grupo.total_unidades > 0" matTooltip="Total de Unidades Asignadas" [matTooltipPosition]="'below'"><mat-icon>business</mat-icon> {{grupo.total_unidades | number:'1.0-0'}}</mat-chip>
                             </mat-chip-list>
                             <div fxFlex></div>
                             <div fxFlex="none">

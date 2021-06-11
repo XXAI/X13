@@ -69,6 +69,7 @@ Route::group(['middleware'=>'auth'],function($router){
     *   Modulos generales
     */
     Route::apiResource('insumos-medicos',          'API\Modulos\InsumosMedicosController');
+    Route::get('cargar-catalogos',                 'API\Modulos\CatalogosController@getCatalogos');
 });
 
 Route::middleware('auth')->get('/avatar-images', function (Request $request) {
