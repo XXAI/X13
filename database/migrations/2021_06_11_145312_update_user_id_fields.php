@@ -69,8 +69,8 @@ class UpdateUserIdFields extends Migration
     {
         Schema::table('users', function(Blueprint $table){
             $table->string('id')->change();
-            $table->string('servidor_id',4)->change();
-            $table->bigInteger('incremento')->change();
+            $table->string('servidor_id',4)->after('id');
+            $table->bigInteger('incremento')->after('servidor_id');
         });
 
         Schema::table('almacenes', function(Blueprint $table){

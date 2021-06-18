@@ -9,7 +9,7 @@ import { MatDrawer } from '@angular/material/sidenav';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
-import { DialogoInsumoPedidoComponent } from '../dialogo-insumo-pedido/dialogo-insumo-pedido.component';
+import { DialogoArticuloPedidoComponent } from '../dialogo-articulo-pedido/dialogo-articulo-pedido.component';
 import { DialogoSeleccionarUnidadesMedicasComponent } from '../dialogo-seleccionar-unidades-medicas/dialogo-seleccionar-unidades-medicas.component';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 
@@ -19,15 +19,15 @@ import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dial
   styleUrls: ['./pedido.component.css']
 })
 export class PedidoComponent implements OnInit {
-  @ViewChild(MatPaginator) insumosPaginator: MatPaginator;
-  @ViewChild(MatDrawer) insumosDrawer: MatDrawer;
-  @ViewChild(MatInput) busquedaInsumoQuery: MatInput;
+  @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
+  @ViewChild(MatDrawer) articulosDrawer: MatDrawer;
+  @ViewChild(MatInput) busquedaArticuloQuery: MatInput;
 
   constructor(private formBuilder: FormBuilder, private pedidosService: PedidosService, private pedidosOrdinarios: PedidosOrdinariosService, private sharedService: SharedService, private dialog: MatDialog, private route: ActivatedRoute) { }
 
   mostrarBotonAgregarUnidades:boolean;
   listaUnidadesAsignadas:any[];
-  unidadesConInsumos:any;
+  unidadesConArticulos:any;
 
   unidadesSeleccionadas:any[];
   dataSourceUnidadesSeleccionadas:MatTableDataSource<any>;
@@ -45,35 +45,35 @@ export class PedidoComponent implements OnInit {
   clavesTotalesFiltro: any;
   clavesTotalesPedido: any;
   
-  isLoadingInsumos:boolean;
-  insumoQuery:string;
-  listadoInsumos:any[];
-  busquedaTipoInsumo:string;
-  idInsumoSeleccionado:number;
+  isLoadingArticulos:boolean;
+  articuloQuery:string;
+  listadoArticulos:any[];
+  //busquedaTipoArticulo:string;
+  idArticuloSeleccionado:number;
 
-  controlInsumosModificados:any;
-  listadoInsumosEliminados:any[];
+  controlArticulosModificados:any;
+  listadoArticulosEliminados:any[];
 
-  listadoInsumosPedido:any[];
-  filtroInsumosPedido:any[];
-  controlInsumosAgregados:any;
+  listadoArticulosPedido:any[];
+  filtroArticulosPedido:any[];
+  controlArticulosAgregados:any;
   selectedItemIndex:number;
 
   iconoMedicamento:string = 'assets/icons-ui/MED.svg';
   iconoMatCuracion:string = 'assets/icons-ui/MTC.svg';
 
-  filtroInsumos:string;
-  filtroTipoInsumos:string;
+  filtroArticulos:string;
+  filtroTipoArticulo:string;
   filtroAplicado:boolean;
 
-  mostrarTarjetas:boolean = false;
+  //mostrarTarjetas:boolean = false;
   mostrarPedidosInternos:boolean = false;
 
   pageEvent: PageEvent;
   resultsLength: number = 0;
   currentPage: number = 0;
   pageSize: number = 9;
-  dataSourceInsumos: MatTableDataSource<any>;
+  dataSourceArticulos: MatTableDataSource<any>;
 
   displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
 
@@ -94,26 +94,26 @@ export class PedidoComponent implements OnInit {
     this.editable = true;
     this.puedeEditarElementos = true;
     
-    this.controlInsumosModificados = {};
-    this.listadoInsumosEliminados = [];
+    this.controlArticulosModificados = {};
+    this.listadoArticulosEliminados = [];
 
-    this.filtroTipoInsumos = '*';
-    this.filtroInsumos = '';
-    this.listadoInsumosPedido = [];
-    this.controlInsumosAgregados = {};
+    this.filtroTipoArticulo = '*';
+    this.filtroArticulos = '';
+    this.listadoArticulosPedido = [];
+    this.controlArticulosAgregados = {};
 
     this.unidadesSeleccionadas = [];
-    this.unidadesConInsumos = {};
+    this.unidadesConArticulos = {};
     
-    this.listadoInsumos = [];
-    this.busquedaTipoInsumo = '*';
+    this.listadoArticulos = [];
+    //this.busquedaTipoArticulo = '*';
     this.catalogos = {programas:[]};
 
-    this.clavesTotales = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
-    this.clavesTotalesPedido = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
-    this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
+    this.clavesTotales = { articulos: 0 };
+    this.clavesTotalesPedido = { articulos: 0 };
+    this.clavesTotalesFiltro = { articulos: 0 };
 
-    this.verBoton = {'guardar':true, 'concluir':true, 'generar_folio':false, 'agregar_insumo':true, 'agregar_unidad':true};
+    this.verBoton = {'guardar':true, 'concluir':true, 'generar_folio':false, 'agregar_articulos':true, 'agregar_unidad':true};
     this.estatusPedido = 'NVO';
     
     this.catalogos.meses = [
@@ -153,7 +153,7 @@ export class PedidoComponent implements OnInit {
             this.formPedido.get('unidad_medica_id').patchValue(this.unidadMedicaEntrega.id);
           }
 
-          if(response.data.grupo_pedidos.unidades_medicas.length > 0){
+          if(response.data.grupo_pedidos.unidades_medicas.length > 1){
             this.mostrarBotonAgregarUnidades = true;
             this.listaUnidadesAsignadas = response.data.grupo_pedidos.unidades_medicas;
           }else{
@@ -187,37 +187,31 @@ export class PedidoComponent implements OnInit {
               this.tipoDeElementoPedido = response.data.tipo_elemento_pedido;
             }
 
-            this.clavesTotalesPedido.insumos = response.data.lista_insumos_medicos.length;
+            this.clavesTotalesPedido.articulos = response.data.lista_insumos_medicos.length;
             for(let i in response.data.lista_insumos_medicos){
-              let insumo_server = response.data.lista_insumos_medicos[i];
-              let insumo = JSON.parse(JSON.stringify(insumo_server.insumo_medico));
+              let articulo_server = response.data.lista_insumos_medicos[i];
+              let articulo = JSON.parse(JSON.stringify(articulo_server.insumo_medico));
 
-              insumo.cantidad = insumo_server.cantidad;
-              insumo.monto = insumo_server.monto;
-              insumo.pedido_insumo_id = insumo_server.id;
+              articulo.cantidad = articulo_server.cantidad;
+              articulo.monto = articulo_server.monto;
+              articulo.pedido_articulo_id = articulo_server.id;
 
-              if(insumo_server.lista_insumos_unidades.length > 0){
-                insumo.cuadro_distribucion = [];
-                for(let j in insumo_server.lista_insumos_unidades){
-                  insumo.cuadro_distribucion.push(
-                    {id: insumo_server.lista_insumos_unidades[j].unidad_medica_id, cantidad: insumo_server.lista_insumos_unidades[j].cantidad}
+              if(articulo_server.lista_insumos_unidades.length > 0){
+                articulo.cuadro_distribucion = [];
+                for(let j in articulo_server.lista_insumos_unidades){
+                  articulo.cuadro_distribucion.push(
+                    {id: articulo_server.lista_insumos_unidades[j].unidad_medica_id, cantidad: articulo_server.lista_insumos_unidades[j].cantidad}
                   );
-                  if(!this.unidadesConInsumos[insumo_server.lista_insumos_unidades[j].unidad_medica_id]){
-                    this.unidadesConInsumos[insumo_server.lista_insumos_unidades[j].unidad_medica_id] = 1;
+                  if(!this.unidadesConArticulos[articulo_server.lista_insumos_unidades[j].unidad_medica_id]){
+                    this.unidadesConArticulos[articulo_server.lista_insumos_unidades[j].unidad_medica_id] = 1;
                   }else{
-                    this.unidadesConInsumos[insumo_server.lista_insumos_unidades[j].unidad_medica_id] += 1;
+                    this.unidadesConArticulos[articulo_server.lista_insumos_unidades[j].unidad_medica_id] += 1;
                   }
                 }
               }
 
-              this.listadoInsumosPedido.push(insumo);
-              this.controlInsumosAgregados[insumo.id] = true;
-
-              if(insumo.tipo_insumo == 'MED'){
-                this.clavesTotalesPedido.medicamentos += 1;
-              }else{
-                this.clavesTotalesPedido.mat_curacion += 1;
-              }
+              this.listadoArticulosPedido.push(articulo);
+              this.controlArticulosAgregados[articulo.id] = true;
             }
 
             if(response.data.lista_unidades_medicas.length > 0){
@@ -226,7 +220,7 @@ export class PedidoComponent implements OnInit {
               }
             }
 
-            this.cargarPaginaInsumos();
+            this.cargarPaginaArticulos();
             this.isLoading = false;
 
             this.estatusPedido = response.data.estatus;
@@ -234,7 +228,7 @@ export class PedidoComponent implements OnInit {
               this.verBoton['concluir'] = false;
               this.verBoton['generar_folio'] = (response.data.estatus != 'PUB');
               this.verBoton['guardar'] = false;
-              this.verBoton['agregar_insumo'] = false;
+              this.verBoton['agregar_articulos'] = false;
               this.verBoton['agregar_unidad'] = false;
               this.editable = false;
               this.puedeEditarElementos = false;
@@ -287,11 +281,11 @@ export class PedidoComponent implements OnInit {
     });
   }
 
-  applySearch(){
-    this.listadoInsumos = [];
-    this.isLoadingInsumos = true;
+  buscarArticulos(){
+    this.listadoArticulos = [];
+    this.isLoadingArticulos = true;
     let params = {
-      query: this.insumoQuery,
+      query: this.articuloQuery,
       tipo_elemento: this.tipoDeElementoPedido.clave
     }
 
@@ -301,9 +295,39 @@ export class PedidoComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          this.listadoInsumos = response.data;
+          //this.listadoArticulos = response.data;
+          let articulos_temp = [];
+          for(let i in response.data){
+            let articulo:any = {
+              id: response.data[i].id,
+              clave_cubs: response.data[i].clave_cubs,
+              clave: response.data[i].clave_local,
+              nombre: response.data[i].articulo,
+              descripcion: response.data[i].especificaciones,
+              descontinuado: (response.data[i].descontinuado)?true:false,
+              icono: '',
+              clase_color: '',
+              tipo_articulo: '',
+            };
+            if(response.data[i].insumo_medico){
+              articulo.controlado = response.data[i].insumo_medico.es_controlado;
+              articulo.unidosis = response.data[i].insumo_medico.es_unidosis;
+
+              if(response.data[i].insumo_medico.tipo_insumo == 'MTC'){
+                articulo.tipo_articulo = 'MTC';
+                articulo.icono = this.iconoMatCuracion;
+                articulo.clase_color = 'mat-curacion-bg-color';
+              }else{
+                articulo.tipo_articulo = 'MED';
+                articulo.icono = this.iconoMedicamento;
+                articulo.clase_color = 'medicamento-bg-color';
+              }
+            }
+            articulos_temp.push(articulo);
+          }
+          this.listadoArticulos = articulos_temp;
         }
-        this.isLoadingInsumos = false;
+        this.isLoadingArticulos = false;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -311,19 +335,16 @@ export class PedidoComponent implements OnInit {
           errorMessage = errorResponse.error.error.message;
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
-        this.isLoadingInsumos = false;
+        this.isLoadingArticulos = false;
       }
     );
   }
 
   cleanSearch(){
-    this.insumoQuery = '';
+    this.articuloQuery = '';
   }
 
-  cargarPaginaInsumos(event = null){
-    /*if(this.dataSourceInsumos){
-      this.dataSourceInsumos.disconnect();
-    }*/
+  cargarPaginaArticulos(event = null){
     let pedido_interno:any = {}
     if(this.pedidoInternoSeleccionado){
       pedido_interno = this.generarPedidoInterno();
@@ -335,69 +356,55 @@ export class PedidoComponent implements OnInit {
       this.clavesTotales = this.clavesTotalesPedido;
     }
 
-    let listado_insumos_tabla:any[];
-    if(pedido_interno.listado_insumos){
-      listado_insumos_tabla = pedido_interno.listado_insumos;
+    let listado_articulos_tabla:any[];
+    if(pedido_interno.listado_articulos){
+      listado_articulos_tabla = pedido_interno.listado_articulos;
     }else{
-      listado_insumos_tabla = this.listadoInsumosPedido;
+      listado_articulos_tabla = this.listadoArticulosPedido;
     }
     
-    if(!this.dataSourceInsumos){
-      this.dataSourceInsumos = new MatTableDataSource<any>(listado_insumos_tabla);
+    if(!this.dataSourceArticulos){
+      this.dataSourceArticulos = new MatTableDataSource<any>(listado_articulos_tabla);
       
-      this.dataSourceInsumos.filterPredicate = (data:any, filter:string) => {
+      this.dataSourceArticulos.filterPredicate = (data:any, filter:string) => {
         let filtroTexto:boolean;
-        let filtroTipo:boolean;
         let filtros = filter.split('|');
 
-        //index:0 = tipo insumo
-        if(filtros[0] != '*'){
-          filtroTipo = data.tipo_insumo == filtros[0];
-        }else{
-          filtroTipo = true;
-        }
-        
-        //index:1 = texto a buscar
-        if(filtros[1]){
-          filtros[1] = filtros[1].toLowerCase()
-          filtroTexto = data.clave.toLowerCase().includes(filtros[1]) || data.nombre_generico.toLowerCase().includes(filtros[1]) || data.descripcion.toLowerCase().includes(filtros[1]);
+        //index:0 = texto a buscar
+        if(filtros[0]){
+          let filtro_query = filtros[0].toLowerCase()
+          filtroTexto = data.clave.toLowerCase().includes(filtro_query) || data.nombre_generico.toLowerCase().includes(filtro_query) || data.descripcion.toLowerCase().includes(filtro_query);
         }else{
           filtroTexto = true;
         }
 
         if(filtroTexto){
-          this.clavesTotalesFiltro.insumos += 1
-          if(data.tipo_insumo == 'MED'){
-            this.clavesTotalesFiltro.medicamentos += 1;
-          }else{
-            this.clavesTotalesFiltro.mat_curacion += 1;
-          }
+          this.clavesTotalesFiltro.articulos += 1
         }
 
-        return filtroTexto && filtroTipo;
+        return filtroTexto;
       };
     }else{
-      this.dataSourceInsumos.data = listado_insumos_tabla;
+      this.dataSourceArticulos.data = listado_articulos_tabla;
     }
-    this.dataSourceInsumos.paginator = this.insumosPaginator;
-    this.aplicarFiltroInsumos();
+    this.dataSourceArticulos.paginator = this.articulosPaginator;
+    this.aplicarFiltroArticulos();
 
-    this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
+    this.filtroArticulosPedido = this.dataSourceArticulos.connect().value;
 
     return event;
   }
 
-  limpiarFiltroInsumos(){
-    this.filtroInsumos = '';
-    this.filtroTipoInsumos = '*';
-    this.aplicarFiltroInsumos();
+  limpiarFiltroArticulos(){
+    this.filtroArticulos = '';
+    this.aplicarFiltroArticulos();
   }
 
-  aplicarFiltroInsumos(){
+  aplicarFiltroArticulos(){
     let filter_value;
 
-    if(this.filtroInsumos || this.filtroTipoInsumos != '*'){
-      filter_value = this.filtroTipoInsumos + '|' + this.filtroInsumos;
+    if(this.filtroArticulos){
+      filter_value = this.filtroArticulos;
     }
     
     if(filter_value){
@@ -406,38 +413,37 @@ export class PedidoComponent implements OnInit {
       this.filtroAplicado = false;
     }
 
-    this.clavesTotalesFiltro = { insumos: 0, medicamentos: 0, mat_curacion: 0 };
-    if(this.dataSourceInsumos){
-      this.dataSourceInsumos.filter = filter_value;
-      this.filtroInsumosPedido = this.dataSourceInsumos.connect().value;
+    this.clavesTotalesFiltro = { articulos: 0 };
+    if(this.dataSourceArticulos){
+      this.dataSourceArticulos.filter = filter_value;
+      this.filtroArticulosPedido = this.dataSourceArticulos.connect().value;
     }
   }
 
-  cerrarBuscadorInsumos(){
-    this.insumosDrawer.close();
+  cerrarBuscadorArticulos(){
+    this.articulosDrawer.close();
     this.cleanSearch();
-    this.listadoInsumos = [];
-    this.busquedaTipoInsumo = '*';
-    this.idInsumoSeleccionado = 0;
+    this.listadoArticulos = [];
+    this.idArticuloSeleccionado = 0;
   }
 
-  abrirBuscadorInsumos(){
-    this.insumoQuery = '';
-    this.insumosDrawer.open().finally(() => this.busquedaInsumoQuery.focus() );
+  abrirBuscadorArticulos(){
+    this.articuloQuery = '';
+    this.articulosDrawer.open().finally(() => this.busquedaArticuloQuery.focus() );
   }
 
   seleccionarUnidades(){
-    let hayInsumosCapturados:boolean = false;
+    let hayArticulosCapturados:boolean = false;
 
-    if(this.clavesTotalesPedido.insumos > 0){
-      hayInsumosCapturados = true;
+    if(this.clavesTotalesPedido.articulos > 0){
+      hayArticulosCapturados = true;
     }
 
     let configDialog = {
       width: '99%',
       maxHeight: '90vh',
       height: '643px',
-      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas, unidadesConInsumos: this.unidadesConInsumos, hayInsumosCapturados: hayInsumosCapturados},
+      data:{listaUnidades: this.listaUnidadesAsignadas, listaSeleccionadas: this.unidadesSeleccionadas, unidadesConArticulos: this.unidadesConArticulos, hayArticulosCapturados: hayArticulosCapturados},
       panelClass: 'no-padding-dialog'
     };
 
@@ -447,49 +453,49 @@ export class PedidoComponent implements OnInit {
       if(response){
         this.unidadesSeleccionadas = response.unidadesSeleccionadas;
 
-        //Al agregar unidades medicas con insumos capturados anteriormente.
+        //Al agregar unidades medicas con articulos capturados anteriormente.
         if(response.accion){
           if(response.accion.tipo_accion == 'DIV' || response.accion.tipo_accion == 'MUL'){
-            for(let i in this.listadoInsumosPedido){
-              let insumo = this.listadoInsumosPedido[i];
+            for(let i in this.listadoArticulosPedido){
+              let articulo = this.listadoArticulosPedido[i];
 
               let cantidad_unidades = 0;
               let residuo = 0;
 
               //((x - (x % y)) / y)
               if(response.accion.tipo_accion == 'DIV'){
-                cantidad_unidades = ((insumo.cantidad - (insumo.cantidad % this.unidadesSeleccionadas.length)) / this.unidadesSeleccionadas.length);
-                residuo = (insumo.cantidad % this.unidadesSeleccionadas.length);
+                cantidad_unidades = ((articulo.cantidad - (articulo.cantidad % this.unidadesSeleccionadas.length)) / this.unidadesSeleccionadas.length);
+                residuo = (articulo.cantidad % this.unidadesSeleccionadas.length);
               }else if(response.accion.tipo_accion == 'MUL'){
-                cantidad_unidades = insumo.cantidad;
-                insumo.cantidad = insumo.cantidad * this.unidadesSeleccionadas.length;
+                cantidad_unidades = articulo.cantidad;
+                articulo.cantidad = articulo.cantidad * this.unidadesSeleccionadas.length;
               }
 
-              if(insumo.cuadro_distribucion && insumo.cuadro_distribucion.length){
-                for(let j in insumo.cuadro_distribucion){
-                  let unidad = insumo.cuadro_distribucion[j];
+              if(articulo.cuadro_distribucion && articulo.cuadro_distribucion.length){
+                for(let j in articulo.cuadro_distribucion){
+                  let unidad = articulo.cuadro_distribucion[j];
                   unidad.cantidad = 0;
-                  this.unidadesConInsumos[unidad.id] -= 1;
+                  this.unidadesConArticulos[unidad.id] -= 1;
                 }
               }else{
-                insumo.cuadro_distribucion = [];
+                articulo.cuadro_distribucion = [];
               }
 
               for(let j in this.unidadesSeleccionadas){
                 let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[j]));
                 unidad.cantidad = cantidad_unidades;
-                insumo.cuadro_distribucion.push(unidad);
+                articulo.cuadro_distribucion.push(unidad);
 
-                if(!this.unidadesConInsumos[unidad.id]){
-                  this.unidadesConInsumos[unidad.id] = 1;
+                if(!this.unidadesConArticulos[unidad.id]){
+                  this.unidadesConArticulos[unidad.id] = 1;
                 }else{
-                  this.unidadesConInsumos[unidad.id] += 1;
+                  this.unidadesConArticulos[unidad.id] += 1;
                 }
               }
               
               if(residuo > 0){
                 for (let index = 0; index < residuo; index++) {
-                  insumo.cuadro_distribucion[index].cantidad += 1;
+                  articulo.cuadro_distribucion[index].cantidad += 1;
                 }
               }
             }
@@ -499,36 +505,36 @@ export class PedidoComponent implements OnInit {
             if(this.unidadesSeleccionadas.length > 0){
               let index = this.unidadesSeleccionadas.findIndex(x => x.id === unidad_seleccionada.id);
 
-              for(let i in this.listadoInsumosPedido){
-                let insumo = this.listadoInsumosPedido[i];
+              for(let i in this.listadoArticulosPedido){
+                let articulo = this.listadoArticulosPedido[i];
 
-                insumo.cuadro_distribucion = [];
+                articulo.cuadro_distribucion = [];
                 let unidad = JSON.parse(JSON.stringify(this.unidadesSeleccionadas[index]));
-                unidad.cantidad = insumo.cantidad;
-                insumo.cuadro_distribucion.push(unidad);
+                unidad.cantidad = articulo.cantidad;
+                articulo.cuadro_distribucion.push(unidad);
 
-                if(!this.unidadesConInsumos[unidad.id]){
-                  this.unidadesConInsumos[unidad.id] = 1;
+                if(!this.unidadesConArticulos[unidad.id]){
+                  this.unidadesConArticulos[unidad.id] = 1;
                 }else{
-                  this.unidadesConInsumos[unidad.id] += 1;
+                  this.unidadesConArticulos[unidad.id] += 1;
                 }
               }
             }
           }
         }
 
-        if(response.unidadesEliminarInsumos.length){
-          let insumos_en_cero:number[] = [];
+        if(response.unidadesEliminarArticulos.length){
+          let articulos_en_cero:number[] = [];
 
-          for(let i in this.listadoInsumosPedido){
-            let insumo = this.listadoInsumosPedido[i];
+          for(let i in this.listadoArticulosPedido){
+            let articulo = this.listadoArticulosPedido[i];
             let cantidad = 0;
             let ids_a_borrar = [];
 
             if(this.unidadesSeleccionadas.length > 0){
-              for(let j in insumo.cuadro_distribucion){
-                let unidad = insumo.cuadro_distribucion[j];
-                let index = response.unidadesEliminarInsumos.indexOf(unidad.id);
+              for(let j in articulo.cuadro_distribucion){
+                let unidad = articulo.cuadro_distribucion[j];
+                let index = response.unidadesEliminarArticulos.indexOf(unidad.id);
                 if(index >= 0){
                   cantidad += unidad.cantidad;
                   ids_a_borrar.push(unidad.id);
@@ -536,45 +542,44 @@ export class PedidoComponent implements OnInit {
               }
   
               if(cantidad > 0){
-                insumo.cantidad -= cantidad;
-                //this.listadoInsumosPedido[i] = insumo;
+                articulo.cantidad -= cantidad;
                 for(let j in ids_a_borrar){
-                  let index = insumo.cuadro_distribucion.findIndex(x => x.id === ids_a_borrar[j]);
-                  insumo.cuadro_distribucion.splice(index,1);
+                  let index = articulo.cuadro_distribucion.findIndex(x => x.id === ids_a_borrar[j]);
+                  articulo.cuadro_distribucion.splice(index,1);
                 }
               }
             }else{
               if(response.accion.tipo_accion == 'SEL'){
-                let index = insumo.cuadro_distribucion.findIndex(x => x.id === response.accion.unidad_seleccionada.id);
+                let index = articulo.cuadro_distribucion.findIndex(x => x.id === response.accion.unidad_seleccionada.id);
                 if(index >= 0){
-                  cantidad = insumo.cuadro_distribucion[index].cantidad;
+                  cantidad = articulo.cuadro_distribucion[index].cantidad;
                 }
                 
-                insumo.cuadro_distribucion = [];
-                insumo.cantidad = cantidad;
+                articulo.cuadro_distribucion = [];
+                articulo.cantidad = cantidad;
               }else if(response.accion.tipo_accion == 'MAN'){
-                insumo.cuadro_distribucion = [];
+                articulo.cuadro_distribucion = [];
               }
             }
 
-            if(insumo.cantidad == 0){
-              insumos_en_cero.push(insumo.id);
+            if(articulo.cantidad == 0){
+              articulos_en_cero.push(articulo.id);
             }
           }
 
-          for(let i in insumos_en_cero){
-            let insumo_index = this.listadoInsumosPedido.findIndex(x => x.id === insumos_en_cero[i]);
+          for(let i in articulos_en_cero){
+            let articulo_index = this.listadoArticulosPedido.findIndex(x => x.id === articulos_en_cero[i]);
 
-            let insumo_cero = JSON.parse(JSON.stringify(this.listadoInsumosPedido[insumo_index]));
-            this.listadoInsumosPedido.splice(insumo_index,1);
-            this.listadoInsumosPedido.unshift(insumo_cero);
+            let articulo_cero = JSON.parse(JSON.stringify(this.listadoArticulosPedido[articulo_index]));
+            this.listadoArticulosPedido.splice(articulo_index,1);
+            this.listadoArticulosPedido.unshift(articulo_cero);
 
-            this.cargarPaginaInsumos();
+            this.cargarPaginaArticulos();
           }
 
-          for(let i in response.unidadesEliminarInsumos){
-            let unidad_id = response.unidadesEliminarInsumos[i];
-            this.unidadesConInsumos[unidad_id] = 0;
+          for(let i in response.unidadesEliminarArticulos){
+            let unidad_id = response.unidadesEliminarArticulos[i];
+            this.unidadesConArticulos[unidad_id] = 0;
           }
         }
       }else{
@@ -583,74 +588,64 @@ export class PedidoComponent implements OnInit {
     });
   }
 
-  quitarInsumo(insumo){
+  quitarArticulo(articulo){
     const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
       width: '500px',
-      data:{dialogTitle:'Eliminar Insumo',dialogMessage:'Esta seguro de eliminar este insumo?',btnColor:'warn',btnText:'Eliminar'}
+      data:{dialogTitle:'Eliminar Articulo?',dialogMessage:'Esta seguro de eliminar este articulo?',btnColor:'warn',btnText:'Eliminar'}
     });
 
     dialogRef.afterClosed().subscribe(valid => {
       if(valid){
         if(this.pedidoInternoSeleccionado){
-          let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
-          let insumo_pedido = this.listadoInsumosPedido[index];
+          let index = this.listadoArticulosPedido.findIndex(x => x.id === articulo.id);
+          let articulo_pedido = this.listadoArticulosPedido[index];
 
-          let index_unidad = insumo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
-          insumo_pedido.cuadro_distribucion.splice(index_unidad,1);
-          insumo_pedido.cantidad -= insumo.cantidad;
-          this.unidadesConInsumos[this.pedidoInternoSeleccionado] -= 1;
+          let index_unidad = articulo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+          articulo_pedido.cuadro_distribucion.splice(index_unidad,1);
+          articulo_pedido.cantidad -= articulo.cantidad;
+          this.unidadesConArticulos[this.pedidoInternoSeleccionado] -= 1;
           
-          if(insumo_pedido.cantidad == 0){
-            this.controlInsumosAgregados[insumo_pedido.id] = false;
+          if(articulo_pedido.cantidad == 0){
+            this.controlArticulosAgregados[articulo_pedido.id] = false;
 
-            this.clavesTotalesPedido.insumos -= 1;
-            if(insumo_pedido.tipo_insumo == 'MED'){
-              this.clavesTotalesPedido.medicamentos -= 1;
-            }else{
-              this.clavesTotalesPedido.mat_curacion -= 1;
-            }
-
-            //Guardar para papelera
-            let insumo_copia = JSON.parse(JSON.stringify(this.listadoInsumosPedido[index]));
-            this.listadoInsumosEliminados.push(insumo_copia);
+            this.clavesTotalesPedido.articulos -= 1;
             
-            this.listadoInsumosPedido.splice(index,1);
+            //Guardar para papelera
+            let insumo_copia = JSON.parse(JSON.stringify(this.listadoArticulosPedido[index]));
+            this.listadoArticulosEliminados.push(insumo_copia);
+            
+            this.listadoArticulosPedido.splice(index,1);
           }
         }else{
-          this.controlInsumosAgregados[insumo.id] = false;
+          this.controlArticulosAgregados[articulo.id] = false;
 
-          this.clavesTotalesPedido.insumos -= 1;
-          if(insumo.tipo_insumo == 'MED'){
-            this.clavesTotalesPedido.medicamentos -= 1;
-          }else{
-            this.clavesTotalesPedido.mat_curacion -= 1;
-          }
-
-          if(this.unidadesSeleccionadas.length > 0 && insumo.cuadro_distribucion.length > 0){
-            for(let i in insumo.cuadro_distribucion){
-              let unidad = insumo.cuadro_distribucion[i];
-              if(this.unidadesConInsumos[unidad.id]){
-                this.unidadesConInsumos[unidad.id] -= 1;
+          this.clavesTotalesPedido.articulos -= 1;
+          
+          if(this.unidadesSeleccionadas.length > 0 && articulo.cuadro_distribucion.length > 0){
+            for(let i in articulo.cuadro_distribucion){
+              let unidad = articulo.cuadro_distribucion[i];
+              if(this.unidadesConArticulos[unidad.id]){
+                this.unidadesConArticulos[unidad.id] -= 1;
               }
             }
           }
 
-          let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
+          let index = this.listadoArticulosPedido.findIndex(x => x.id === articulo.id);
 
           //Guardar para papelera
-          let insumo_copia = JSON.parse(JSON.stringify(this.listadoInsumosPedido[index]));
-          this.listadoInsumosEliminados.push(insumo_copia);
+          let insumo_copia = JSON.parse(JSON.stringify(this.listadoArticulosPedido[index]));
+          this.listadoArticulosEliminados.push(insumo_copia);
 
-          this.listadoInsumosPedido.splice(index,1);
+          this.listadoArticulosPedido.splice(index,1);
         }
         
-        this.cargarPaginaInsumos();
+        this.cargarPaginaArticulos();
       }
     });
   }
 
-  agregarInsumo(insumo){
-    this.idInsumoSeleccionado = insumo.id;
+  agregarArticulo(articulo){
+    this.idArticuloSeleccionado = articulo.id;
 
     let configDialog:any = {
       width: '99%',
@@ -661,83 +656,77 @@ export class PedidoComponent implements OnInit {
 
     if(this.pedidoInternoSeleccionado){
       let index = this.unidadesSeleccionadas.findIndex(x => x.id === this.pedidoInternoSeleccionado);
-      configDialog.data = {insumoInfo: insumo, listaUnidades: [], unidadEntrega: this.unidadesSeleccionadas[index]};
+      configDialog.data = {articuloInfo: articulo, listaUnidades: [], unidadEntrega: this.unidadesSeleccionadas[index]};
     }else{
-      if(this.controlInsumosAgregados[insumo.id]){
-        let index = this.listadoInsumosPedido.findIndex(x => x.id === insumo.id);
-        insumo = this.listadoInsumosPedido[index];
+      if(this.controlArticulosAgregados[articulo.id]){
+        let index = this.listadoArticulosPedido.findIndex(x => x.id === articulo.id);
+        articulo = this.listadoArticulosPedido[index];
       }
       
       if(this.unidadesSeleccionadas.length > 0){
         configDialog.height = '643px';
       }
-      configDialog.data = {insumoInfo: insumo, listaUnidades: this.unidadesSeleccionadas, unidadEntrega: this.unidadMedicaEntrega};
+      configDialog.data = {articuloInfo: articulo, listaUnidades: this.unidadesSeleccionadas, unidadEntrega: this.unidadMedicaEntrega};
     }
     
-
-    const dialogRef = this.dialog.open(DialogoInsumoPedidoComponent, configDialog);
+    const dialogRef = this.dialog.open(DialogoArticuloPedidoComponent, configDialog);
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
 
-        if(!this.controlInsumosAgregados[response.id]){
-          this.controlInsumosModificados[response.id] = '(+)';
-          this.listadoInsumosPedido.unshift(response);
-          this.clavesTotalesPedido.insumos = this.listadoInsumosPedido.length;
+        if(!this.controlArticulosAgregados[response.id]){
+          this.controlArticulosModificados[response.id] = '(+)';
+          this.listadoArticulosPedido.unshift(response);
+          this.clavesTotalesPedido.articulos = this.listadoArticulosPedido.length;
           
-          if(response.tipo_insumo == 'MED'){
-            this.clavesTotalesPedido.medicamentos += 1;
-          }else{
-            this.clavesTotalesPedido.mat_curacion += 1;
-          }
-          this.controlInsumosAgregados[response.id] = true;
+          this.controlArticulosAgregados[response.id] = true;
         }else{
-          let index = this.listadoInsumosPedido.findIndex(x => x.id === response.id);
+          let index = this.listadoArticulosPedido.findIndex(x => x.id === response.id);
           
           if(!this.pedidoInternoSeleccionado){
             let modificado:boolean = false;
-            let insumo_anterior = this.listadoInsumosPedido[index];
+            let articulo_anterior = this.listadoArticulosPedido[index];
 
-            if(insumo_anterior.cantidad != response.cantidad ){
+            if(articulo_anterior.cantidad != response.cantidad ){
               modificado = true;
-            }else if(insumo_anterior.cuadro_distribucion && response.cuadro_distribucion){
-              if(JSON.stringify(insumo_anterior.cuadro_distribucion) != JSON.stringify(response.cuadro_distribucion)){
+            }else if(articulo_anterior.cuadro_distribucion && response.cuadro_distribucion){
+              if(JSON.stringify(articulo_anterior.cuadro_distribucion) != JSON.stringify(response.cuadro_distribucion)){
                 modificado = true;
               }
             }
             
-            if(insumo_anterior.cuadro_distribucion && insumo_anterior.cuadro_distribucion.length > 0){
-              for(let i in insumo_anterior.cuadro_distribucion){
-                let unidad = insumo_anterior.cuadro_distribucion[i];
-                if(this.unidadesConInsumos[unidad.id]){
-                  this.unidadesConInsumos[unidad.id] -= 1;
+            if(articulo_anterior.cuadro_distribucion && articulo_anterior.cuadro_distribucion.length > 0){
+              for(let i in articulo_anterior.cuadro_distribucion){
+                let unidad = articulo_anterior.cuadro_distribucion[i];
+                if(this.unidadesConArticulos[unidad.id]){
+                  this.unidadesConArticulos[unidad.id] -= 1;
                 }
               }
             }
 
-            if(modificado && !this.controlInsumosModificados[response.id]){
-              this.controlInsumosModificados[response.id] = '(*)';
+            if(modificado && !this.controlArticulosModificados[response.id]){
+              this.controlArticulosModificados[response.id] = '(*)';
             }
   
             if(index > 0){
-              this.listadoInsumosPedido.splice(index,1);
-              this.listadoInsumosPedido.unshift(response);
+              this.listadoArticulosPedido.splice(index,1);
+              this.listadoArticulosPedido.unshift(response);
             }else{
-              this.listadoInsumosPedido[index] = response;
+              this.listadoArticulosPedido[index] = response;
             }
           }else{
-            let insumo_pedido = this.listadoInsumosPedido[index];
+            let articulo_pedido = this.listadoArticulosPedido[index];
 
-            let unidad_index = insumo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
-            let cantidad_anterior = insumo_pedido.cuadro_distribucion[unidad_index].cantidad;
+            let unidad_index = articulo_pedido.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+            let cantidad_anterior = articulo_pedido.cuadro_distribucion[unidad_index].cantidad;
 
             if(cantidad_anterior != response.cantidad){
-              insumo_pedido.cuadro_distribucion[unidad_index].cantidad = response.cantidad;
-              insumo_pedido.cantidad -= cantidad_anterior;
-              insumo_pedido.cantidad += response.cantidad;
+              articulo_pedido.cuadro_distribucion[unidad_index].cantidad = response.cantidad;
+              articulo_pedido.cantidad -= cantidad_anterior;
+              articulo_pedido.cantidad += response.cantidad;
 
-              if(!this.controlInsumosModificados[insumo_pedido.id]){
-                this.controlInsumosModificados[insumo_pedido.id] = '(*)';
+              if(!this.controlArticulosModificados[articulo_pedido.id]){
+                this.controlArticulosModificados[articulo_pedido.id] = '(*)';
               }
             }
           }
@@ -746,14 +735,14 @@ export class PedidoComponent implements OnInit {
         if(this.unidadesSeleccionadas.length > 0 && response.cuadro_distribucion.length > 0){
           for(let i in response.cuadro_distribucion){
             let unidad = response.cuadro_distribucion[i];
-            if(!this.unidadesConInsumos[unidad.id]){
-              this.unidadesConInsumos[unidad.id] = 0;
+            if(!this.unidadesConArticulos[unidad.id]){
+              this.unidadesConArticulos[unidad.id] = 0;
             }
-            this.unidadesConInsumos[unidad.id] += 1;
+            this.unidadesConArticulos[unidad.id] += 1;
           }
         }
 
-        this.cargarPaginaInsumos();
+        this.cargarPaginaArticulos();
       }else{
         console.log('Cancelar');
       }
@@ -767,27 +756,21 @@ export class PedidoComponent implements OnInit {
 
   generarPedidoInterno(){
     let pedido_interno:any = {
-      listado_insumos: [],
-      total_claves: {insumos:0, medicamentos:0, mat_curacion:0}
+      listado_articulos: [],
+      total_claves: { articulos:0 }
     }
 
     if(this.pedidoInternoSeleccionado){
-      for(let i in this.listadoInsumosPedido){
-        let insumo = JSON.parse(JSON.stringify(this.listadoInsumosPedido[i]));
-        let unidad_index = insumo.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
+      for(let i in this.listadoArticulosPedido){
+        let articulo = JSON.parse(JSON.stringify(this.listadoArticulosPedido[i]));
+        let unidad_index = articulo.cuadro_distribucion.findIndex(x => x.id === this.pedidoInternoSeleccionado);
         if(unidad_index >= 0){
-          let cantidad = insumo.cuadro_distribucion[unidad_index].cantidad;
-          insumo.cuadro_distribucion = [];
-          insumo.cantidad = cantidad;
+          let cantidad = articulo.cuadro_distribucion[unidad_index].cantidad;
+          articulo.cuadro_distribucion = [];
+          articulo.cantidad = cantidad;
           
-          pedido_interno.listado_insumos.unshift(insumo);
-
-          pedido_interno.total_claves.insumos += 1;
-          if(insumo.tipo_insumo == 'MED'){
-            pedido_interno.total_claves.medicamentos += 1;
-          }else{
-            pedido_interno.total_claves.mat_curacion += 1;
-          }
+          pedido_interno.listado_articulos.unshift(articulo);
+          pedido_interno.total_claves.articulos += 1;
         }
       }
     }
@@ -823,20 +806,20 @@ export class PedidoComponent implements OnInit {
     this.listaFiltroUnidadesSeleccionadas = [];
     if(this.pedidoInternoSeleccionado){
       this.pedidoInternoSeleccionado = 0;
-      this.cargarPaginaInsumos();
+      this.cargarPaginaArticulos();
     }
   }
 
-  mostrarInsumosPedidoInterno(unidad){
-    if(this.unidadesConInsumos[unidad.id]){
+  mostrarArticulosPedidoInterno(unidad){
+    if(this.unidadesConArticulos[unidad.id]){
       this.pedidoInternoSeleccionado = unidad.id;
-      this.cargarPaginaInsumos();
+      this.cargarPaginaArticulos();
     }    
   }
 
-  ocultarInsumosPedidoInterno(){
+  ocultarArticulosPedidoInterno(){
     this.pedidoInternoSeleccionado = 0;
-    this.cargarPaginaInsumos();
+    this.cargarPaginaArticulos();
   }
 
   concluirPedido(){
@@ -868,7 +851,7 @@ export class PedidoComponent implements OnInit {
   guardarPedido(concluir:boolean = false, generar_folio:boolean = false){
     let datosPedido:any = {
       pedido: this.formPedido.value,
-      insumos_pedido: this.listadoInsumosPedido,
+      insumos_pedido: this.listadoArticulosPedido,
       unidades_pedido: this.unidadesSeleccionadas,
       concluir: concluir
     };
@@ -883,17 +866,17 @@ export class PedidoComponent implements OnInit {
         response=>{
           this.formPedido.patchValue(response.data);
           
-          for(let id in this.controlInsumosModificados){
-            if(this.controlInsumosModificados[id]){
+          for(let id in this.controlArticulosModificados){
+            if(this.controlArticulosModificados[id]){
               let index_servidor = response.data.lista_insumos_medicos.findIndex(x => x.insumo_medico_id == id);
-              let pedido_insumo_id = response.data.lista_insumos_medicos[index_servidor].id;
+              let pedido_articulo_id = response.data.lista_insumos_medicos[index_servidor].id;
 
-              let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
-              this.listadoInsumosPedido[index_local].pedido_insumo_id = pedido_insumo_id;
+              let index_local = this.listadoArticulosPedido.findIndex(x => x.id == id);
+              this.listadoArticulosPedido[index_local].pedido_articulo_id = pedido_articulo_id;
             }
           }
-          this.controlInsumosModificados = {};
-          this.listadoInsumosEliminados = [];
+          this.controlArticulosModificados = {};
+          this.listadoArticulosEliminados = [];
           
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
 
@@ -902,7 +885,7 @@ export class PedidoComponent implements OnInit {
             this.verBoton['concluir'] = false;
             this.verBoton['generar_folio'] = (response.data.estatus != 'PUB');
             this.verBoton['guardar'] = false;
-            this.verBoton['agregar_insumo'] = false;
+            this.verBoton['agregar_articulos'] = false;
             this.verBoton['agregar_unidad'] = false;
             this.editable = false;
             this.puedeEditarElementos = false;
@@ -924,17 +907,17 @@ export class PedidoComponent implements OnInit {
         response =>{
           this.formPedido.patchValue(response.data);
 
-          for(let id in this.controlInsumosModificados){
-            if(this.controlInsumosModificados[id]){
+          for(let id in this.controlArticulosModificados){
+            if(this.controlArticulosModificados[id]){
               let index_servidor = response.data.lista_insumos_medicos.findIndex(x => x.insumo_medico_id == id);
-              let pedido_insumo_id = response.data.lista_insumos_medicos[index_servidor].id;
+              let pedido_articulo_id = response.data.lista_insumos_medicos[index_servidor].id;
 
-              let index_local = this.listadoInsumosPedido.findIndex(x => x.id == id);
-              this.listadoInsumosPedido[index_local].pedido_insumo_id = pedido_insumo_id;
+              let index_local = this.listadoArticulosPedido.findIndex(x => x.id == id);
+              this.listadoArticulosPedido[index_local].pedido_articulo_id = pedido_articulo_id;
             }
           }
-          this.controlInsumosModificados = {};
-          this.listadoInsumosEliminados = [];
+          this.controlArticulosModificados = {};
+          this.listadoArticulosEliminados = [];
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
           this.isLoading = false;
         }
@@ -942,36 +925,3 @@ export class PedidoComponent implements OnInit {
     }
   }
 }
-
-
-/* Creando insumos fixticios, solo para fines de pruebas */
-/*
-    let total_resultados = Math.floor(Math.random() * (150 - 1 + 1) + 1);
-    for (let index = 0; index < total_resultados; index++) {
-      let tipo_insumo = 0;
-
-      if(this.busquedaTipoInsumo == 'MED'){
-        tipo_insumo = 10;
-      }else if(this.busquedaTipoInsumo == 'MTC'){
-        tipo_insumo = 1;
-      }else{
-        tipo_insumo = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
-      }
-
-      let id = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
-
-      let clave = id+"";
-      while (clave.length < 4) clave = "0" + clave;
-
-      this.listadoInsumos.push({
-        id:id,
-        icono:(tipo_insumo < 5)?this.iconoMatCuracion:this.iconoMedicamento,
-        tipo_insumo:(tipo_insumo < 5)?'MTC':'MED',
-        clave:'0052.0136.0025.'+clave,
-        //color:(tipo_insumo < 5)?'coral':'cornflowerblue',
-        nombre:'REACTIVOS Y JUEGOS DE REACTIVOS',
-        info:'informacion del medicamento',
-        descripcion:'The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan. A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally bred for hunting.'
-      });
-    }
-    */

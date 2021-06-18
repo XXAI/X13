@@ -1,27 +1,20 @@
 <mat-drawer-container class="example-container" style="height: 100%; overflow: auto; flex: 1 1 0%;">
-    <mat-drawer #insumosDrawer [mode]="'side'" style="min-width: 390px;">
+    <mat-drawer #articulosDrawer [mode]="'side'" style="min-width: 390px;">
         <mat-card fxFlex="100" fxLayout="column">
-            <div class="data-loading-shade" *ngIf="isLoadingInsumos"><mat-spinner></mat-spinner></div>
+            <div class="data-loading-shade" *ngIf="isLoadingArticulos"><mat-spinner></mat-spinner></div>
             <div fxFlex fxLayout="column">
                 <section fxFlex="none">
                     <div fxLayout="column">
                         <div fxFlex fxLayout="row wrap">
                             <mat-form-field fxFill appearance="outline">
                                 <mat-label>Buscar</mat-label>
-                                <input #busquedaInsumoQuery matInput [(ngModel)]="insumoQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Buscar">
-                                <button matSuffix *ngIf="insumoQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                                <input #busquedaInsumoQuery matInput [(ngModel)]="articuloQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="buscarArticulos()" placeholder="Buscar">
+                                <button matSuffix *ngIf="articuloQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
                                     <mat-icon>close</mat-icon>
                                 </button>
-                                <mat-hint>
-                                    <!--mat-radio-group [(ngModel)]="busquedaTipoInsumo" aria-label="Select an option">
-                                        <mat-radio-button color="primary" value="*">Todos</mat-radio-button>
-                                        <mat-radio-button value="MED">Meds</mat-radio-button>
-                                        <mat-radio-button value="MTC">Mat Curación</mat-radio-button>
-                                    </mat-radio-group-->
-                                </mat-hint>
                             </mat-form-field>
                         </div>
-                        <button fxFlex mat-raised-button color="accent" (click)="applySearch()" [disabled]="isLoadingInsumos">
+                        <button fxFlex mat-raised-button color="accent" (click)="buscarArticulos()" [disabled]="isLoadingArticulos">
                             <mat-icon>search</mat-icon> Buscar {{(tipoDeElementoPedido)?tipoDeElementoPedido.descripcion:''}}
                         </button>
                     </div>
@@ -29,24 +22,24 @@
                 <mat-divider [inset]="true"></mat-divider>
                 <section fxFlex style="overflow: hidden;">
                     <cdk-virtual-scroll-viewport itemSize="222" style="overflow: auto; height: 100%;">
-                        <div *cdkVirtualFor="let insumo of listadoInsumos;">
-                            <div class="lista-insumos-item" [ngClass]="{'selected': insumo.id==idInsumoSeleccionado}">
-                                <div class="lista-insumos-item-etiqueta" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
-                                    <div class="lista-insumos-item-etiqueta-icono"><img src="{{(insumo.tipo_insumo=='MED')?iconoMedicamento:iconoMatCuracion}}" alt="Icon"></div>
-                                    <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
+                        <div *cdkVirtualFor="let articulo of listadoArticulos;">
+                            <div class="lista-articulos-item" [ngClass]="{'selected': articulo.id==idArticuloSeleccionado}">
+                                <div class="lista-articulos-item-etiqueta {{articulo.clase_color}}">
+                                    <div class="lista-articulos-item-etiqueta-icono"><img src="{{articulo.icono}}" alt="Icon"></div>
+                                    <div class="lista-articulos-item-etiqueta-texto">{{articulo.clave}}</div>
                                 </div>
-                                <div class="lista-insumos-item-contenido">
-                                    <div class="lista-insumos-item-cabecera">
-                                        <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre_generico}}</div>
-                                        <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.descripcion}}</div>
+                                <div class="lista-articulos-item-contenido">
+                                    <div class="lista-articulos-item-cabecera">
+                                        <div class="lista-articulos-item-cabecera-titulo">{{articulo.nombre}}</div>
+                                        <div class="lista-articulos-item-cabecera-subtitulo">{{articulo.descripcion}}</div>
                                     </div>
                                 </div>
-                                <div class="lista-insumo-item-acciones" fxLayout="row">
+                                <div class="lista-articulo-item-acciones" fxLayout="row">
                                     <div fxFlex style="padding: 8px 0px;">
                                         Existencias: 0
                                     </div>
-                                    <button fxFlex="none" mat-flat-button (click)="agregarInsumo(insumo)">
-                                        <mat-icon>{{(controlInsumosAgregados[insumo.id])?'edit':'add'}}</mat-icon>
+                                    <button fxFlex="none" mat-flat-button (click)="agregarArticulo(articulo)">
+                                        <mat-icon>{{(controlArticulosAgregados[articulo.id])?'edit':'add'}}</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -58,11 +51,11 @@
             <mat-divider [inset]="true"></mat-divider>
             <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
                 <div fxFlex="none">
-                    <button mat-raised-button (click)="cerrarBuscadorInsumos()"><mat-icon>chevron_left</mat-icon> Cerrar</button>
+                    <button mat-raised-button (click)="cerrarBuscadorArticulos()"><mat-icon>chevron_left</mat-icon> Cerrar</button>
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <mat-hint>Resultados: {{listadoInsumos.length | number}}</mat-hint>
+                    <mat-hint>Resultados: {{listadoArticulos.length | number}}</mat-hint>
                 </div>
             </div>
         </mat-card>
@@ -71,7 +64,7 @@
         <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
         <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
-                <section fxFlex="30" fxLayout="row" *ngIf="!insumosDrawer.opened">
+                <section fxFlex="30" fxLayout="row" *ngIf="!articulosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
                         <div fxFlex fxLayout="column" *ngIf="!mostrarPedidosInternos"> <!-- Panel principal del pedido -->
                             <div fxFlex="none" fxLayout="row">
@@ -146,12 +139,12 @@
                                 </mat-form-field>
                             </div>
                             <div fxFlex></div>
-                            <div fxFlex="none" fxLayout="row">
+                            <div fxFlex="none" fxLayout="row" *ngIf="mostrarBotonAgregarUnidades">
                                 <button fxFlex *ngIf="verBoton['agregar_unidad']" mat-flat-button color="info" (click)="seleccionarUnidades()" [matBadge]="unidadesSeleccionadas.length" [matBadgeHidden]="unidadesSeleccionadas.length == 0" matBadgeColor="accent">
                                     <mat-icon>house</mat-icon> Unidades en el Pedido
                                 </button>
                             </div>
-                            <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
+                            <div fxFlex="none" fxLayout="row" style="padding-top:5px;" *ngIf="mostrarBotonAgregarUnidades">
                                 <button fxFlex mat-stroked-button (click)="verPedidosInternos()" [disabled]="unidadesSeleccionadas.length == 0">
                                     <mat-icon>home_work</mat-icon> Cuadro de Distribución
                                 </button>
@@ -171,9 +164,9 @@
                                     <div *ngIf="listaFiltroUnidadesSeleccionadas.length == 0" class="no-items-found">
                                         No se encontraron resultados
                                     </div>
-                                    <div *cdkVirtualFor="let unidad of listaFiltroUnidadesSeleccionadas;" [ngClass]="{'unidad-seleccionada':pedidoInternoSeleccionado == unidad.id, 'seleccionable':unidadesConInsumos[unidad.id]}" class="unidad-medica-item">
+                                    <div *cdkVirtualFor="let unidad of listaFiltroUnidadesSeleccionadas;" [ngClass]="{'unidad-seleccionada':pedidoInternoSeleccionado == unidad.id, 'seleccionable':unidadesConArticulos[unidad.id]}" class="unidad-medica-item">
                                         <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
-                                            <div fxFlex fxLayout="column" class="datos-unidad" (click)="mostrarInsumosPedidoInterno(unidad)">
+                                            <div fxFlex fxLayout="column" class="datos-unidad" (click)="mostrarArticulosPedidoInterno(unidad)">
                                                 <div fxFlex="none" class="titulo">
                                                     CLUES: {{unidad.clues}}
                                                 </div>
@@ -181,12 +174,12 @@
                                                     {{unidad.nombre}}
                                                 </div>
                                                 <div fxFlex="none" class="detalles">
-                                                    Total Claves: {{((unidadesConInsumos[unidad.id])?unidadesConInsumos[unidad.id]:0) | number:'1.0-0' }}
+                                                    Total Claves: {{((unidadesConArticulos[unidad.id])?unidadesConArticulos[unidad.id]:0) | number:'1.0-0' }}
                                                 </div>
                                             </div>
                                             <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
                                                 <div fxFlex="none" *ngIf="pedidoInternoSeleccionado == unidad.id">
-                                                    <button mat-icon-button (click)="ocultarInsumosPedidoInterno()">
+                                                    <button mat-icon-button (click)="ocultarArticulosPedidoInterno()">
                                                         <mat-icon>close</mat-icon>
                                                     </button>
                                                 </div>
@@ -228,13 +221,13 @@
                     <mat-card fxFlex="100" fxLayout="column">
                         <div fxFlex="none" fxLayout="row">
                             <div fxFlex="none">
-                                <button *ngIf="verBoton['agregar_insumo']" mat-flat-button color="accent" (click)="abrirBuscadorInsumos()" [disabled]="insumosDrawer.opened"><mat-icon>add</mat-icon> Agregar Elemento</button>
+                                <button *ngIf="verBoton['agregar_articulos']" mat-flat-button color="accent" (click)="abrirBuscadorArticulos()" [disabled]="articulosDrawer.opened"><mat-icon>add</mat-icon> Agregar Articulo</button>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none">
                                 <mat-chip-list aria-label="Pedido Interno">
                                     <mat-chip color="primary" selected [disableRipple]="true">
-                                        Total: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.insumos | number)+'/':'' }}{{clavesTotales.insumos | number}} Claves
+                                        Total: {{ (filtroAplicado && filtroArticulos)?(clavesTotalesFiltro.articulos | number)+'/':'' }}{{clavesTotales.articulos | number}} Claves
                                     </mat-chip>
                                 </mat-chip-list>
                             </div>
@@ -242,35 +235,30 @@
                         <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
                             <div fxFlex class="small-search-input">
                                 <mat-form-field fxFlex appearance="outline">
-                                    <input matInput [(ngModel)]="filtroInsumos" (keyup.enter)="aplicarFiltroInsumos()" placeholder="Filtrar">
-                                    <button *ngIf="filtroAplicado" mat-icon-button matSuffix (click)="limpiarFiltroInsumos()" [attr.aria-label]="'Limpiar Filtro'" [attr.aria-pressed]="filtroAplicado">
+                                    <input matInput [(ngModel)]="filtroArticulos" (keyup.enter)="aplicarFiltroArticulos()" placeholder="Filtrar">
+                                    <button *ngIf="filtroAplicado" mat-icon-button matSuffix (click)="limpiarFiltroArticulos()" [attr.aria-label]="'Limpiar Filtro'" [attr.aria-pressed]="filtroAplicado">
                                         <mat-icon>clear</mat-icon>
                                     </button>
                                 </mat-form-field>
                             </div>
                             <div fxFlex="none">
-                                <button mat-flat-button color="info" (click)="aplicarFiltroInsumos()">
+                                <button mat-flat-button color="info" (click)="aplicarFiltroArticulos()">
                                     <mat-icon>filter_alt</mat-icon> Filtrar
                                 </button>
-                                <!--mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="aplicarFiltroInsumos()">
-                                    <mat-button-toggle [checked]="true" value="*">Insumos: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.insumos | number)+'/':'' }}{{clavesTotales.insumos | number}}</mat-button-toggle>
-                                    <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.medicamentos | number)+'/':'' }}{{clavesTotales.medicamentos | number}}</mat-button-toggle>
-                                    <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{ (filtroAplicado && filtroInsumos)?(clavesTotalesFiltro.mat_curacion | number)+'/':'' }}{{clavesTotales.mat_curacion | number}}</mat-button-toggle>
-                                </mat-button-toggle-group-->
                             </div>
                         </div>
                         <mat-divider [inset]="true"></mat-divider>
-                        <div fxFlex style="overflow: auto;" *ngIf="!mostrarTarjetas">
-                            <table #dataTable mat-table [dataSource]="filtroInsumosPedido" class="data-table" matSort>
+                        <div fxFlex style="overflow: auto;">
+                            <table #dataTable mat-table [dataSource]="filtroArticulosPedido" class="data-table" matSort>
                                 
                                 <ng-container matColumnDef="clave">
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
-                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">{{(controlInsumosModificados[row.id])?controlInsumosModificados[row.id]:''}} {{row.clave}} </td>
+                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">{{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{row.clave}} </td>
                                 </ng-container>
                                 
                                 <ng-container matColumnDef="nombre" >
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Nombre </th>
-                                    <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre_generico}} </td>
+                                    <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre}} </td>
                                 </ng-container>
                                 
                                 <ng-container matColumnDef="cantidad" >
@@ -286,59 +274,34 @@
                                 <ng-container matColumnDef="actions">
                                     <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
                                     <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                                        <button *ngIf="puedeEditarElementos" mat-icon-button (click)="agregarInsumo(row)"><mat-icon>edit</mat-icon></button>
-                                        <button *ngIf="puedeEditarElementos" mat-icon-button (click)="quitarInsumo(row)" color="warn"><mat-icon>delete</mat-icon></button>
+                                        <button *ngIf="puedeEditarElementos" mat-icon-button (click)="agregarArticulo(row)"><mat-icon>edit</mat-icon></button>
+                                        <button *ngIf="puedeEditarElementos" mat-icon-button (click)="quitarArticulo(row)" color="warn"><mat-icon>delete</mat-icon></button>
                                     </td>
                                 </ng-container>
             
                                 <ng-container matColumnDef="noResultsFound">
                                     <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length">
-                                        No se encontraron insumos 
+                                        No se encontraron articulos 
                                     </td>
                                 </ng-container>
                                 
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                                <tr mat-row [ngClass]="{'selected-item': row.id==idInsumoSeleccionado }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                                <tr mat-row [ngClass]="{'selected-item': row.id==idArticuloSeleccionado }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
-                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroInsumosPedido!=null && filtroInsumosPedido.length==0)}"></tr>
+                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroArticulosPedido!=null && filtroArticulosPedido.length==0)}"></tr>
                             </table>
-                        </div>
-                        <div fxFlex style="overflow: auto; background-color: whitesmoke;" *ngIf="mostrarTarjetas">
-                            <mat-grid-list cols="3" rowHeight="165">
-                                <mat-grid-tile class="insumo-lotes-tile" *ngFor="let insumo of filtroInsumosPedido; index as i;" [ngClass]="{'medicamento-bg-color':insumo.tipo_insumo=='MED','mat-curacion-bg-color':insumo.tipo_insumo=='MTC'}">
-                                    <div fxFill fxLayout="column">
-                                        <div fxFlex="none" style="padding:8px; color:whitesmoke; text-align: center;">
-                                            {{insumo.clave}}
-                                        </div>
-                                        <div fxFlex style="margin: 0px 8px ; background-color:whitesmoke;"><p>{{insumo.nombre_generico}}</p></div>
-                                        <div fxFlex="none" fxLayout="row" style="padding: 5px;">
-                                            <!--div fxFlex="none">
-                                                <button mat-raised-button (click)="eliminarInsumo(i)" color="warn" style="padding: 0px 8px; min-width: 0px;"><mat-icon>delete</mat-icon></button>
-                                            </div-->
-                                            <div fxFlex style="text-align: center; color:whitesmoke;">Cantidad:<br> {{ insumo.cantidad | number:'1.0-0' }}</div>
-                                            <div fxFlex style="text-align: center; color:whitesmoke;">Monto:<br> ${{ insumo.monto | number:'1.2-2' }}</div>
-                                            <div fxFlex="none">
-                                                <button mat-icon-button (click)="agregarInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;">
-                                                    <mat-icon>edit</mat-icon>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </mat-grid-tile>
-                            </mat-grid-list>
                         </div>
                         <div fxFlex="none" fxLayout="row">
                             <div fxFlex="none" style="padding-top: 10px;">
                             </div>
                             <!-- Puede haber algo -->
                             <div fxFlex>
-                                <mat-paginator #insumosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaInsumos($event)"></mat-paginator>
+                                <mat-paginator #articulosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaArticulos($event)"></mat-paginator>
                             </div>
                         </div>
                     </mat-card>
                 </section>
             </section>
         </section>
-
     </mat-drawer-content>
 </mat-drawer-container>

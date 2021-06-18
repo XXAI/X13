@@ -3,16 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Medicamento extends BaseModel{
+class Medicamento extends Model{
     
     use SoftDeletes;
-    protected $generarID = false;
-    protected $guardarIDServidor = false;
-    protected $guardarIDUsuario = false;
     protected $table = 'medicamentos';  
-    protected $fillable = ['insumo_medico_id','presentacion_id','forma_farmaceutica_id','es_controlado','concentracion','contenido','cantidad_x_envase','unidad_medida_id','via_administracion_id','indicaciones'];
-
+    protected $fillable = ['insumo_medico_id','presentacion_id','forma_farmaceutica_id','concentracion','contenido','via_administracion_id','indicaciones'];
     //
 }

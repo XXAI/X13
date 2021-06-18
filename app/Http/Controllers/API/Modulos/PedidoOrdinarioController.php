@@ -16,6 +16,8 @@ use App\Models\UnidadMedica;
 use App\Models\TipoElementoPedido;
 use App\Models\Programa;
 use App\Models\InsumoMedico;
+use App\Models\BienServicio;
+
 
 use Illuminate\Database\Eloquent\Builder;
 
@@ -57,15 +59,19 @@ class PedidoOrdinarioController extends Controller
             if(isset($parametros['tipo_elemento']) && $parametros['tipo_elemento']){
                 $tipo_elemento = TipoElementoPedido::where('clave',$parametros['tipo_elemento'])->first();
                 $filtro = json_decode($tipo_elemento->filtro_detalles, true);
-
-                if($tipo_elemento->llave_tabla_detalles == 'medicamentos'){
-                    $elementos = InsumoMedico::whereHas('medicamento',function(Builder $medicamento)use($filtro){
+                
+                if($tipo_elemento->llave_tabla_detalles == 'Insumo-Medico'){
+                    $elementos = BienServicio::whereHas('insumoMedico',function(Builder $medicamento)use($filtro){
+                        foreach($filtro as $field => $data){
+                            $medicamento = $medicamento->where($field,$data);
+                        }
+                    })->with('insumoMedico');
+                }else if ($tipo_elemento->llave_tabla_detalles == 'Activo-Fijo'){
+                    $elementos = BienServicio::whereHas('insumoMedico',function(Builder $medicamento)use($filtro){
                         foreach($filtro as $field => $data){
                             $medicamento = $medicamento->where($field,$data);
                         }
                     });
-                }else if ($tipo_elemento->llave_tabla_detalles == 'materiales_curacion'){
-                    $elementos = InsumoMedico::has('materialCuracion');
                 }
             }
             
@@ -105,9 +111,13 @@ class PedidoOrdinarioController extends Controller
     {
         try{
             $parametros = $request->all();
-            $almacen_id = '00011';
+            $access_data = $this->getUserAccessData();
 
             $pedidos = Pedido::getModel();
+
+            if(!$access_data->is_superuser){
+                $pedidos = $pedidos->whereIn('unidad_medica_id',$access_data->lista_unidades_ids);
+            }
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -491,16 +501,18 @@ class PedidoOrdinarioController extends Controller
         //$loggedUser->load('perfilCr');
         $loggedUser->load('grupos.unidadesMedicas','grupos.unidadMedicaPrincipal');
         
-        //$lista_clues = [];
-        /*foreach ($loggedUser->grupos as $grupo) {
-            $lista_unidades = $grupo->unidadesMedicas->toArray();
+        $lista_unidades_id = [];
+        foreach ($loggedUser->grupos as $grupo) {
+            $lista_unidades = $grupo->unidadesMedicas->pluck('id')->all();
             
-            $lista_clues += $lista_clues + $lista_unidades;
-        }*/
+            $lista_unidades_id = array_merge($lista_unidades_id,$lista_unidades);
+        }
         //$accessData->lista_clues = $lista_clues;
 
         $accessData = (object)[];
         $accessData->grupo_pedidos = $loggedUser->grupos[0];
+        $accessData->lista_unidades_ids = $lista_unidades_id;
+        $accessData->is_superuser = $loggedUser->is_superuser;
 
         /*if (\Gate::allows('has-permission', \Permissions::ADMIN_PERSONAL_ACTIVO)){
             $accessData->is_admin = true;
