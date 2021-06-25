@@ -29,15 +29,26 @@ export const APPS:App [] = [
         { name:'Recepción de Pedidos',      route: "pedidos/recepcion-pedidos",         icon: "assets/icons/recepcion-pedidos.svg" },
       ]
     },
-    { name:'Catalogos',   route: "catalogos",       icon: "assets/icons/catalogos.svg",
+    { name:'Catalogos',       route: "catalogos",             icon: "assets/icons/catalogos.svg",
       apps:[
-        { name:'Almacenes',        route: "catalogos/almacenes",        icon: "assets/icons/catalogo-almacenes.svg" },
-        { name:'Grupos',           route: "catalogos/grupos",           icon: "assets/icons/catalogo-grupos.svg" },
+        { name:'Almacenes',   route: "catalogos/almacenes",   icon: "assets/icons/catalogo-almacenes.svg" },
+      ]
+    },
+    { name:'Configuración Sistema',   route: "configuracion",           icon: "assets/icons/configuracion-sistema.svg",
+      apps:[
+        { name:'Grupos de Unidades',   route: "configuracion/grupos",           icon: "assets/icons/catalogo-grupos.svg" },
+        { name:'Tipos de Pedidos',     route: "configuracion/tipos-pedidos",    icon: "assets/icons/tipos-pedidos.svg" },
+      ]
+    },
+    { name:'Configuración Unidad',   route: "configuracion-unidad",     icon: "assets/icons/configuracion-unidad.svg",
+      apps:[
+        { name:'Grupos',           route: "configuracion/grupos",       icon: "assets/icons/catalogo-grupos.svg" },
       ]
     },
     { name:'Herramientas Dev', route: "dev-tools",  icon: "assets/icons/toolbox.svg", isHub:true, hideHome:true, 
       children:[
-        {name:'Reportes MySQL',route:'dev-tools/mysql-reportes', icon:'insert_drive_file', permission:"6ARHQGj1N8YPkr02DY04K1Zy7HjIdDcj"}
+        {name:'Reportes MySQL', route:'dev-tools/mysql-reportes', icon:'insert_drive_file', permission:"6ARHQGj1N8YPkr02DY04K1Zy7HjIdDcj"},
+        {name:'JSON a Excel',   route:'dev-tools/json-excel',     icon:'text_snippet',      permission:"6ARHQGj1N8YPkr02DY04K1Zy7HjIdDcj"}
       ],
     },
     /*

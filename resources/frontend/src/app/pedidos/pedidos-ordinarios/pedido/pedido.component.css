@@ -186,6 +186,7 @@ table td {
     display: block;
     font-weight: 450;
     font-size: 20px;
+    overflow: hidden;
     text-overflow: ellipsis;
     text-align: justify;
     text-justify: inter-word;
@@ -196,6 +197,9 @@ table td {
     display: block;
     font-size: 14px;
     color: rgba(0,0,0,.54);
+    text-overflow: ellipsis;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .lista-articulos-item-texto{

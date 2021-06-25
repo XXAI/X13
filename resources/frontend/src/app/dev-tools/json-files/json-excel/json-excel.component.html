@@ -1,0 +1,33 @@
+<section class="profile" style="overflow: auto;">
+    <div fxLayout="row" style="padding:10px;">
+        <section fxFlex fxLayout="column" fxLayoutAlign="center">
+            <mat-card fxFlex>
+                <div fxLayout="column">
+                    <div fxFlex fxLayout="row">
+                        <section fxFlex="80">
+                            <mat-form-field>
+                                <div>
+                                  <mat-toolbar>
+                                    <!-- Display files names -->
+                                    <input matInput [(ngModel)]="fileAttr" readonly name="name" />
+                              
+                                    <!-- Browse Button -->
+                                    <button mat-flat-button color="accent">
+                                        Buscar Archivo
+                                    </button>
+                                  </mat-toolbar>
+                              
+                                  <!-- Fetch selected filed on change -->
+                                  <input type="file" #fileInput id="uploadFile" (change)="uploadFileEvt($event)" name="uploadFile" accept=".txt,.json" />
+                                </div>
+                            </mat-form-field>
+                        </section>
+                        <button fxFlex="20" mat-raised-button color="primary" [class.button-spinner]="isLoadingExcel" (click)="downloadReport()" [disabled]="isLoadingExcel">
+                            <mat-icon *ngIf="!isLoadingExcel">archive</mat-icon> {{(isLoadingExcel)?'Generando...':'Generar CSV'}}
+                        </button>
+                    </div>
+                </div>
+            </mat-card>
+        </section>
+    </div>
+</section>

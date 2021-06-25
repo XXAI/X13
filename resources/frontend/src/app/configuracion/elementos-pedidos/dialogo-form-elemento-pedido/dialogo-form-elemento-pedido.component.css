@@ -1,0 +1,20 @@
+.loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+  
+.loading-shade mat-spinner{
+    margin:0 auto;
+}
+
+.loading-shade span{
+    margin:0 auto;
+}

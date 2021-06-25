@@ -40,11 +40,15 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('profile',       'API\ProfileController')->only([ 'show', 'update']);
 
     //Modulos del Sistema
+    Route::apiResource('configuracion/tipos-elementos-pedidos', 'API\Configuracion\TiposPedidosController');
+
     /**
      *  Modulo de Reportes
      */
     Route::get('ejecutar-query',                    'API\Admin\DevReporterController@executeQuery');
     Route::get('exportar-query',                    'API\Admin\DevReporterController@exportExcel');
+
+    Route::post('json-csv',                          'API\Admin\DevJsonFilesController@exportCSV');
 
     /**
      * Modulos Almacen

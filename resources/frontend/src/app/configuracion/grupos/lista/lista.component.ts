@@ -72,11 +72,11 @@ export class ListaComponent implements OnInit {
   }
 
   applyFilter(){
-    //
+    this.loadListadoGrupos();
   }
 
   cleanSearch(){
-    //
+    this.searchQuery = '';
   }
 
   loadListadoGrupos(event?:PageEvent){

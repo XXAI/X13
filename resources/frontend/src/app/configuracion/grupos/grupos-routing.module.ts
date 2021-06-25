@@ -5,7 +5,7 @@ import { AuthGuard } from '../../auth/auth.guard';
 import { ListaComponent } from './lista/lista.component';
 
 const routes: Routes = [
-  { path: 'catalogos/grupos',            component: ListaComponent, canActivate: [AuthGuard] },
+  { path: 'configuracion/grupos',            component: ListaComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

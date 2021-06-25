@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { DevToolsRoutingModule } from './dev-tools-routing.module';
 import { ReporterModule } from './reporter/reporter.module';
+import { JsonFilesModule } from './json-files/json-files.module';
 
 
 @NgModule({
@@ -12,7 +13,8 @@ import { ReporterModule } from './reporter/reporter.module';
     DevToolsRoutingModule
   ],
   exports:[
-    ReporterModule
+    ReporterModule,
+    JsonFilesModule
   ]
 })
 export class DevToolsModule { }

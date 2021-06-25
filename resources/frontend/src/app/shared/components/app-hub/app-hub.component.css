@@ -101,7 +101,7 @@ body {
 .ellipsis {
     text-overflow: ellipsis;  
     /* Required for text-overflow to do anything */
-    white-space: nowrap;
+    /*white-space: nowrap;*/
     overflow: hidden;
   }
 
