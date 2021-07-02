@@ -11,12 +11,12 @@ import { map } from 'rxjs/operators';
 export class ElementosPedidosService {
 
   url = `${environment.base_url}/configuracion/tipos-elementos-pedidos`;
-  url_catalogos = `${environment.base_url}/cargar-catalogos`;
+  url_catalogos = `${environment.base_url}/configuracion/tipos-elementos-pedidos-catalogos`;
 
   constructor(private http: HttpClient) { }
 
-  getCatalogos(payload):Observable<any> {
-    return this.http.get<any>(this.url_catalogos,{params: payload}).pipe(
+  getCatalogos():Observable<any> {
+    return this.http.get<any>(this.url_catalogos).pipe(
       map( response => {
         return response;
       })

@@ -28,7 +28,7 @@
             <div fxFlex="none" fxLayout="row">
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <button mat-raised-button color="info" (click)="nuevoTipoPedido()"><mat-icon>add_circle</mat-icon> Nuevo Tipo de Pedido</button>
+                    <button mat-raised-button color="info" (click)="abrirModalTipoPedido()"><mat-icon>add_circle</mat-icon> Nuevo Tipo de Pedido</button>
                 </div>
             </div>
 
@@ -44,7 +44,7 @@
                         </div>
                         <div fxFlex="none" class="grupo-action" fxLayout="row">
                             <div fxFlex="none">
-                                <button mat-flat-button (click)="editarTipoPedido(tipoPedido.id)">
+                                <button mat-flat-button (click)="abrirModalTipoPedido(tipoPedido.id)">
                                     <mat-icon color="primary">edit</mat-icon> Editar
                                 </button>
                             </div>

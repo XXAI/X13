@@ -12,7 +12,11 @@ class BienServicio extends Model{
     protected $table = 'bienes_servicios';  
     protected $fillable = ['clave_partida_especifica','familia_id','clave_cubs','clave_local','articulo','especificaciones','descontinuado'];
 
-    public function insumoMedico(){
-        return $this->hasOne('App\Models\InsumoMedico','bienes_servicios_id');
+    public function partidaEspecifica(){
+        return $this->belongsTo('App\Models\PartidaEspecifica','clave_partida_especifica','clave');
+    }
+
+    public function familia(){
+        return $this->belongsTo('App\Models\Familia','familia_id');
     }
 }

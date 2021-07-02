@@ -12,10 +12,40 @@ use Validator;
 use App\Http\Controllers\Controller;
 
 use App\Models\TipoElementoPedido;
+use App\Models\BienServicio;
 use DB;
 
 class TiposPedidosController extends Controller
 {
+    public function getCatalogos(Request $request){
+        try{
+            $cubs = BienServicio::select('cog_partidas_especificas.clave','cog_partidas_especificas.descripcion as partida_especifica','familias.nombre as familia','familias.id as familia_id')
+                                    ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
+                                    ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                    ->groupBy('bienes_servicios.clave_partida_especifica')
+                                    ->groupBy('bienes_servicios.familia_id')
+                                    ->get();
+            //
+            /*$agrupado = $cubs->mapToGroups(function ($item, $key) {
+                return [$item['clave'] => $item];
+            });*/
+            $agrupado = [];
+            foreach ($cubs as $item) {
+                if(!isset($agrupado[$item->clave])){
+                    $agrupado[$item->clave] = [
+                        'clave' => $item->clave,
+                        'descripcion' => $item->partida_especifica,
+                        'familias' => []
+                    ];
+                }
+                $agrupado[$item->clave]['familias'][] = ['clave'=>$item->clave,'id'=>$item->familia_id, 'nombre'=>$item->familia];
+            }
+
+            return response()->json(['data'=>array_values($agrupado)],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
     /**
      * Display a listing of the resource.
      *
@@ -111,13 +141,9 @@ class TiposPedidosController extends Controller
     public function show($id){
         //$this->authorize('has-permission',\Permissions::VER_ROL);
         try{
-            $grupo = Grupo::with('unidadesMedicas','unidadMedicaPrincipal')->find($id);
-            $grupo->unidadesMedicas->makeHidden('pivot');
-
-            $unidades_ids = $grupo->unidadesMedicas->pluck('id');
-            $unidades_medicas = UnidadMedica::whereNotIn('id',$unidades_ids)->get();
-
-            return response()->json(['data'=>$grupo,'catalogos'=>['unidades_medicas'=>$unidades_medicas]],HttpResponse::HTTP_OK);
+            $tipo_pedido = TipoElementoPedido::find($id);
+            
+            return response()->json(['data'=>$tipo_pedido],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }

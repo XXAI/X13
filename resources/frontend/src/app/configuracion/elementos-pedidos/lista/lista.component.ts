@@ -36,11 +36,7 @@ export class ListaComponent implements OnInit {
     this.loadListadoTiposPedidos();
   }
 
-  nuevoTipoPedido(){
-    //
-  }
-
-  editarTipoPedido(id){
+  abrirModalTipoPedido(id?){
     let configDialog:any;
     if(this.mediaSize == 'xs'){
       configDialog = {

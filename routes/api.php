@@ -40,7 +40,11 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('profile',       'API\ProfileController')->only([ 'show', 'update']);
 
     //Modulos del Sistema
-    Route::apiResource('configuracion/tipos-elementos-pedidos', 'API\Configuracion\TiposPedidosController');
+    /**
+     *  Modulo de Configuración
+     */
+    Route::apiResource('configuracion/tipos-elementos-pedidos',   'API\Configuracion\TiposPedidosController');
+    Route::get('configuracion/tipos-elementos-pedidos-catalogos', 'API\Configuracion\TiposPedidosController@getCatalogos');
 
     /**
      *  Modulo de Reportes
