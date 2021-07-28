@@ -9,7 +9,7 @@
                     <div fxFlex>
                         <img [src]="imagePreview" *ngIf="imagePreview" style="width: 100%;height: 130px;">
                     </div>
-                    <input matInput #fileSelect formControlName="archivo" [type]="'file'" (change)="onFileChange($event)" accept="image/*" style="visibility: hidden; height: 0px;">
+                    <input matInput #fileSelect [type]="'file'" (change)="onFileChange($event)" accept="image/svg+xml" style="visibility: hidden; height: 0px;">
                 </mat-card>
                 <div fxFlex fxLayout="column">
                     <div fxFlex="none" fxLayout="row">
@@ -26,6 +26,9 @@
                             <span *ngIf="tipoPedidoForm.get('descripcion').errors.required">La descripción es obligatoria</span>
                         </mat-error>
                     </mat-form-field>
+                    <div fxFlex="none">
+                        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+                    </div>
                 </div>
             </div>
         </div>

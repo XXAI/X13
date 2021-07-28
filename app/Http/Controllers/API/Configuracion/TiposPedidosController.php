@@ -8,6 +8,7 @@ use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Hash;
 
 use Validator;
+use Illuminate\Validation\Rule;
 
 use App\Http\Controllers\Controller;
 
@@ -90,38 +91,43 @@ class TiposPedidosController extends Controller
         //$this->authorize('has-permission',\Permissions::CREAR_ROL);
         try{
             $validation_rules = [
-                'descripcion' => 'required',
-                //'unidades_medicas' => 'required|min:1'
+                'clave'             => 'required|unique:App\Models\TipoElementoPedido,clave,NULL,id,deleted_at,NULL',
+                'descripcion'       => 'required|unique:App\Models\TipoElementoPedido,descripcion,NULL,id,deleted_at,NULL',
+                'archivo_fuente'    => 'required',
+                'filtro_familias'   => 'required',
             ];
         
             $validation_eror_messages = [
-                'descripcion.required' => 'El nombre es requerido',
-                //'unidades_medicas.required' => 'Es requerido tener unidades asignadas',
-                //'unidades_medicas.min' => 'Se debe tener al menos una unidad asignada'
+                'required'  => 'Este campo es requerido',
+                'unique'    => 'Este campo debe ser único'
             ];
 
-            $parametros = $request->all(); 
-            
+            $parametros = $request->all();
+
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
             if($resultado->passes()){
                 DB::beginTransaction();
 
-                $parametros['clave_tipo_grupo'] = 'PORD';
-                $parametros['total_unidades'] = count($parametros['unidades_medicas']);
+                //Creando la imagen
+                $image = $parametros['archivo_fuente'];  // your base64 encoded
+                $image = str_replace('data:image/svg+xml;base64,', '', $image);
+                $image = str_replace(' ', '+', $image);
+                $image_name = $parametros['clave'].'-ICON.svg';
+                \File::put(storage_path(). '/app/public/tipo-elementos-pedido/' . $image_name, base64_decode($image));
 
-                $grupo = Grupo::create($parametros);
+                $parametros['icon_image'] = 'tipo-elementos-pedido/'.$image_name;
+                $parametros['llave_tabla_detalles'] = 'sin-detalles';
+                $parametros['filtro_detalles'] = json_encode(array_values($parametros['filtro_familias']));
 
-                $unidades_medicas = array_map(function($n){ return $n['id']; },$parametros['unidades_medicas']);
+                $tipo_pedido = TipoElementoPedido::create($parametros);
 
-                if($grupo){
-                    $grupo->unidadesMedicas()->sync($unidades_medicas);
-                    $grupo->save();
+                if($tipo_pedido->save()){
                     DB::commit();
-                    return response()->json(['data'=>$grupo], HttpResponse::HTTP_OK);
+                    return response()->json(['data'=>$tipo_pedido], HttpResponse::HTTP_OK);
                 }else{
                     DB::rollback();
-                    return response()->json(['error'=>'No se pudo crear el Grupo'], HttpResponse::HTTP_CONFLICT);
+                    return response()->json(['error'=>'No se pudo crear el Tipo de Pedido'], HttpResponse::HTTP_CONFLICT);
                 }
             }else{
                 return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
@@ -159,15 +165,18 @@ class TiposPedidosController extends Controller
     public function update(Request $request, $id){
         //$this->authorize('has-permission',\Permissions::EDITAR_ROL);
         try{
+            $tipo_elementos = TipoElementoPedido::find($id);
+
             $validation_rules = [
-                'descripcion' => 'required',
-                //'unidades_medicas' => 'required|min:1'
+                'clave'             => ['required',Rule::unique('tipos_elementos_pedidos','clave')->ignore($tipo_elementos->id)->where(function($query){ return $query->whereNull('deleted_at'); })],
+                'descripcion'       => ['required',Rule::unique('tipos_elementos_pedidos','descripcion')->ignore($tipo_elementos->id)->where(function($query){ return $query->whereNull('deleted_at'); })],
+                //'archivo_fuente'    => 'required',
+                'filtro_familias'   => 'required',
             ];
         
             $validation_eror_messages = [
-                'descripcion.required' => 'El nombre es requerido',
-                //'unidades_medicas.required' => 'Es requerido tener unidades asignadas',
-                //'unidades_medicas.min' => 'Se debe tener al menos una unidad asignada'
+                'required'  => 'Este campo es requerido',
+                'unique'    => 'Este campo debe ser único',
             ];
             
             $parametros = $request->all();
@@ -177,22 +186,30 @@ class TiposPedidosController extends Controller
             if($resultado->passes()){
                 DB::beginTransaction();
 
-                $grupo = Grupo::with('unidadesMedicas')->find($id);
+                if($parametros['archivo_fuente']){
+                    $image = $parametros['archivo_fuente'];  // your base64 encoded
+                    $image = str_replace('data:image/svg+xml;base64,', '', $image);
+                    $image = str_replace(' ', '+', $image);
+                    $image_name = $parametros['clave'].'-ICON.svg';
+                    \File::put(storage_path(). '/app/public/tipo-elementos-pedido/' . $image_name, base64_decode($image));
 
-                $grupo->descripcion = $parametros['descripcion'];
-                $grupo->unidad_medica_principal_id = $parametros['unidad_medica_principal_id'];
-                $grupo->total_unidades = count($parametros['unidades_medicas']);
+                    $parametros['icon_image'] = 'tipo-elementos-pedido/'.$image_name;
+                }
 
-                $unidades_medicas = array_map(function($n){ return $n['id']; },$parametros['unidades_medicas']);
+                $parametros['llave_tabla_detalles'] = 'sin-detalles';
+                $parametros['filtro_detalles'] = json_encode(array_values($parametros['filtro_familias']));
+                
+                if($tipo_elementos->icon_image != $parametros['icon_image']){
+                    //Delete old image
+                    \File::delete(storage_path(). '/app/public/' . $tipo_elementos->icon_image);
+                }
 
-                if($grupo){
-                    $grupo->unidadesMedicas()->sync($unidades_medicas);
-                    $grupo->save();
+                if($tipo_elementos->update($parametros)){
                     DB::commit();
-                    return response()->json(['data'=>$grupo], HttpResponse::HTTP_OK);
+                    return response()->json(['data'=>$tipo_elementos], HttpResponse::HTTP_OK);
                 }else{
                     DB::rollback();
-                    return response()->json(['error'=>'No se pudo crear el Grupo'], HttpResponse::HTTP_CONFLICT);
+                    return response()->json(['error'=>'No se pudo guardar el Tipo de Pedido'], HttpResponse::HTTP_CONFLICT);
                 }
             }else{
                 return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
@@ -212,11 +229,10 @@ class TiposPedidosController extends Controller
     public function destroy($id){
         //$this->authorize('has-permission',\Permissions::ELIMINAR_ROL);
         try{
-            $grupo = Grupo::find($id);
-            $grupo->unidadesMedicas()->detach();
-            $grupo->delete();
+            $tipo_elementos = TipoElementoPedido::find($id);
+            $tipo_elementos->delete();
 
-            return response()->json(['data'=>'Grupo eliminado'], HttpResponse::HTTP_OK);
+            return response()->json(['data'=>'Tipo de Pedido eliminado'], HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }

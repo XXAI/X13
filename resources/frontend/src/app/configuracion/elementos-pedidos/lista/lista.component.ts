@@ -5,6 +5,7 @@ import { SharedService } from '../../../shared/shared.service';
 import { ElementosPedidosService } from '../elementos-pedidos.service';
 import { DialogoFormElementoPedidoComponent } from '../dialogo-form-elemento-pedido/dialogo-form-elemento-pedido.component';
 import { MatDialog } from '@angular/material/dialog';
+import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 
 @Component({
   selector: 'app-lista',
@@ -69,7 +70,20 @@ export class ListaComponent implements OnInit {
   }
 
   eliminarTipoPedido(id){
-    //
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Elemento',dialogMessage:'Esta seguro de eliminar este elemento?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.elementosPedidosService.deleteTipoPedido(id).subscribe(
+          response =>{
+            this.loadListadoTiposPedidos(this.pageEvent);
+          }
+        );
+      }
+    });
   }
 
   applyFilter(){

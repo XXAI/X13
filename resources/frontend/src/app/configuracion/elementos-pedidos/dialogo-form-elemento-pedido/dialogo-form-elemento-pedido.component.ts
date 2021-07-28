@@ -32,7 +32,7 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
   tipoPedido:any;
   
   imagePreview:string;
-  srcData:SafeResourceUrl;
+  imageFile:any;
   tipoPedidoForm:FormGroup;
 
   filtroPartidasEspecificas:string;
@@ -47,12 +47,13 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
     this.isLoading = true;
     
     this.tipoPedidoForm = this.fb.group({
-      'clave': ['',[Validators.required,Validators.maxLength(4)]],
-      'descripcion': ['',Validators.required],
-      'archivo': [''],
-      'archivo_fuente': [''],      
-      'icon_image':[''],
-      'id':['']
+      'clave':        ['',[Validators.required,Validators.maxLength(4)]],
+      'descripcion':  ['',Validators.required],
+      'archivo':      ['',Validators.required],
+      'archivo_fuente': [''],
+      'activo':       [''],
+      'icon_image':   [''],
+      'id':           ['']
     });
 
     if(this.data.id){
@@ -105,9 +106,27 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
                   let errorMessage = response.error.message;
                   this.sharedService.showSnackBar(errorMessage, null, 3000);
                 } else {
-                  console.log(response);
                   this.imagePreview = environment.images_url + response.data.icon_image;
+                  response.data.archivo = response.data.icon_image;
                   this.tipoPedidoForm.patchValue(response.data);
+
+                  let filtro_detalles = JSON.parse(response.data.filtro_detalles);
+                  for(let i in filtro_detalles){
+                    let partida = filtro_detalles[i];
+                    this.controlPartidasEspecificasSeleccionadas[partida.clave] = true;
+                    let partida_index = this.partidasEspecificasDataSource.data.findIndex(item => item.clave == partida.clave);
+                    let familias = this.partidasEspecificasDataSource.data[partida_index].familias;
+
+                    let nuevas = this.familiasDataSource.data.concat(familias);
+                    this.familiasDataSource.data = nuevas;
+                    if(familias.length != partida.familia_id.length){
+                      let omitidas = familias.filter(item => partida.familia_id.indexOf(item.id) < 0);
+                      console.log(omitidas);
+                      for(let i in omitidas){
+                        this.controlFamiliasOmitidas[omitidas[i].clave+'_'+omitidas[i].id] = true;
+                      }
+                    }
+                  }
                 }
                 this.isLoading = false;
               },
@@ -141,19 +160,17 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
     
     if(event.target.files && event.target.files.length) {
       const [file] = event.target.files;
-      
+      this.tipoPedidoForm.get('archivo').patchValue(file.name);
+
       reader.readAsDataURL(file);
       reader.onload = () => {
-        //this.imagePreview = reader.result as string;
-        this.srcData = this.sanitizer.bypassSecurityTrustResourceUrl(reader.result as string);
-        this.imagePreview = this.srcData as string;
+        let srcData = this.sanitizer.bypassSecurityTrustResourceUrl(reader.result as string);
+        this.imagePreview = srcData as string;
         
         this.tipoPedidoForm.patchValue({
           archivo_fuente: reader.result
         });
-   
       };
-   
     }
   }
 
@@ -162,34 +179,39 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
   }
 
   guardar(){
-    /*let familias = JSON.parse(JSON.stringify(this.familiasDataSource.data));
+    if(this.tipoPedidoForm.valid){
+      let filtro_familias = {};
 
-    for (let key in this.controlFamiliasOmitidas) {
-      let index = familias.findIndex(item => item.id == key);
-      if(index >= 0){
-        familias.splice(index,1);
-      }
-    }*/
-
-    let filtro_familias = {};
-
-    for(let index in this.familiasDataSource.data){
-      let item = this.familiasDataSource.data[index];
-      if(!this.controlFamiliasOmitidas[item.clave+'_'+item.id]){
-        if(!filtro_familias[item.clave]){
-          filtro_familias[item.clave] = {
-            clave: item.clave,
-            familia_id: []
-          };
+      for(let index in this.familiasDataSource.data){
+        let item = this.familiasDataSource.data[index];
+        if(!this.controlFamiliasOmitidas[item.clave+'_'+item.id]){
+          if(!filtro_familias[item.clave]){
+            filtro_familias[item.clave] = {
+              clave: item.clave,
+              familia_id: []
+            };
+          }
+          filtro_familias[item.clave].familia_id.push(item.id);
         }
-        filtro_familias[item.clave].familia_id.push(item.id);
+      }
+
+      let formData = JSON.parse(JSON.stringify(this.tipoPedidoForm.value));
+      formData.filtro_familias = filtro_familias;
+      
+      if(formData.id){
+        this.elementosPedidosService.updateTipoPedido(formData.id,formData).subscribe(
+          response =>{
+            console.log(response);
+          }
+        );
+      }else{
+        this.elementosPedidosService.createTipoPedido(formData).subscribe(
+          response =>{
+            console.log(response);
+          }
+        );
       }
     }
-
-    let formData = JSON.parse(JSON.stringify(this.tipoPedidoForm.value));
-    formData.filtro_familias = filtro_familias;
-
-    console.log(formData);
   }
 
   aplicarFiltroPartidasEspecificas(){
