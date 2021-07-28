@@ -114,16 +114,19 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
                   for(let i in filtro_detalles){
                     let partida = filtro_detalles[i];
                     this.controlPartidasEspecificasSeleccionadas[partida.clave] = true;
-                    let partida_index = this.partidasEspecificasDataSource.data.findIndex(item => item.clave == partida.clave);
-                    let familias = this.partidasEspecificasDataSource.data[partida_index].familias;
 
-                    let nuevas = this.familiasDataSource.data.concat(familias);
-                    this.familiasDataSource.data = nuevas;
-                    if(familias.length != partida.familia_id.length){
-                      let omitidas = familias.filter(item => partida.familia_id.indexOf(item.id) < 0);
-                      console.log(omitidas);
-                      for(let i in omitidas){
-                        this.controlFamiliasOmitidas[omitidas[i].clave+'_'+omitidas[i].id] = true;
+                    let partida_index = this.partidasEspecificasDataSource.data.findIndex(item => item.clave == partida.clave);
+                    if(partida_index >= 0){
+                      let familias = this.partidasEspecificasDataSource.data[partida_index].familias;
+
+                      let nuevas = this.familiasDataSource.data.concat(familias);
+                      this.familiasDataSource.data = nuevas;
+                      if(familias.length != partida.familia_id.length){
+                        let omitidas = familias.filter(item => partida.familia_id.indexOf(item.id) < 0);
+                        console.log(omitidas);
+                        for(let i in omitidas){
+                          this.controlFamiliasOmitidas[omitidas[i].clave+'_'+omitidas[i].id] = true;
+                        }
                       }
                     }
                   }
@@ -181,6 +184,7 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
   guardar(){
     if(this.tipoPedidoForm.valid){
       let filtro_familias = {};
+      this.isSaving = true;
 
       for(let index in this.familiasDataSource.data){
         let item = this.familiasDataSource.data[index];
@@ -201,13 +205,33 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
       if(formData.id){
         this.elementosPedidosService.updateTipoPedido(formData.id,formData).subscribe(
           response =>{
+            this.isSaving = false;
+            this.sharedService.showSnackBar('Datos Almacenados Correctamente', null, 3000);
             console.log(response);
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isSaving = false;
           }
         );
       }else{
         this.elementosPedidosService.createTipoPedido(formData).subscribe(
           response =>{
+            this.isSaving = false;
+            this.sharedService.showSnackBar('Datos Almacenados Correctamente', null, 3000);
             console.log(response);
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isSaving = false;
           }
         );
       }

@@ -1,6 +1,7 @@
 
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
-    <div class="loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>    
+    <div class="loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+    <div class="loading-shade" *ngIf="isSaving"></div>
     <section fxFlex="none" *ngIf="!isLoading">
         <div fxLayout="column" [formGroup]="tipoPedidoForm">
             <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
