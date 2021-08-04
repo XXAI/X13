@@ -59,18 +59,12 @@ class PedidoOrdinarioController extends Controller
             if(isset($parametros['tipo_elemento']) && $parametros['tipo_elemento']){
                 $tipo_elemento = TipoElementoPedido::where('clave',$parametros['tipo_elemento'])->first();
                 $filtro = json_decode($tipo_elemento->filtro_detalles, true);
-                
-                if($tipo_elemento->llave_tabla_detalles == 'Insumo-Medico'){
-                    $elementos = BienServicio::whereHas('insumoMedico',function(Builder $medicamento)use($filtro){
-                        foreach($filtro as $field => $data){
-                            $medicamento = $medicamento->where($field,$data);
-                        }
-                    })->with('insumoMedico');
-                }else if ($tipo_elemento->llave_tabla_detalles == 'Activo-Fijo'){
-                    $elementos = BienServicio::whereHas('insumoMedico',function(Builder $medicamento)use($filtro){
-                        foreach($filtro as $field => $data){
-                            $medicamento = $medicamento->where($field,$data);
-                        }
+
+                $elementos = BienServicio::getModel();
+                foreach ($filtro as $item) {
+                    $elementos->where(function($query)use($item){
+                        $query->where('clave_partida_especifica',$item['clave'])
+                                ->whereIn('familia_id',$item['familia_id']);
                     });
                 }
             }

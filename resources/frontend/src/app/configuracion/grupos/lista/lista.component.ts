@@ -5,6 +5,7 @@ import { SharedService } from '../../../shared/shared.service';
 import { GruposService } from '../grupos.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoFormularioGrupoComponent } from '../dialogo-formulario-grupo/dialogo-formulario-grupo.component';
+import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 
 @Component({
   selector: 'app-lista',
@@ -77,6 +78,23 @@ export class ListaComponent implements OnInit {
 
   cleanSearch(){
     this.searchQuery = '';
+  }
+
+  eliminarGrupo(id){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Grupo',dialogMessage:'Esta seguro de eliminar este grupo?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.gruposService.deleteGrupo(id).subscribe(
+          response =>{
+            this.loadListadoGrupos(this.pageEvent);
+          }
+        );
+      }
+    });
   }
 
   loadListadoGrupos(event?:PageEvent){

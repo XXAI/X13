@@ -16,6 +16,10 @@ class Grupo extends Model{
         return $this->belongsToMany('App\Models\UnidadMedica','grupos_unidades_medicas','grupo_id','unidad_medica_id');
     }
 
+    public function usuarios(){
+        return $this->belongsToMany('App\Models\User','grupos_usuarios','grupo_id','usuario_id');
+    }
+
     public function unidadMedicaPrincipal(){
         return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_principal_id');
     }

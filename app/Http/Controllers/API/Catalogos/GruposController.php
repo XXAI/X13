@@ -188,6 +188,7 @@ class GruposController extends Controller
         try{
             $grupo = Grupo::find($id);
             $grupo->unidadesMedicas()->detach();
+            $grupo->usuarios()->detach();
             $grupo->delete();
 
             return response()->json(['data'=>'Grupo eliminado'], HttpResponse::HTTP_OK);
