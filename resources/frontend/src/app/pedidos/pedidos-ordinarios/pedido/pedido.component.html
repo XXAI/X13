@@ -24,13 +24,18 @@
                     <cdk-virtual-scroll-viewport itemSize="222" style="overflow: auto; height: 100%;">
                         <div *cdkVirtualFor="let articulo of listadoArticulos;">
                             <div class="lista-articulos-item" [ngClass]="{'selected': articulo.id==idArticuloSeleccionado}">
-                                <div class="lista-articulos-item-etiqueta {{articulo.clase_color}}">
-                                    <div class="lista-articulos-item-etiqueta-icono"><img src="{{articulo.icono}}" alt="Icon"></div>
-                                    <div class="lista-articulos-item-etiqueta-texto">{{articulo.clave}}</div>
+                                <div class="lista-articulos-item-etiqueta articulo-bg-color">
+                                    <div class="lista-articulos-item-etiqueta-icono">
+                                        <span style="font-weight: bold;">Partida</span><br>
+                                        <span>{{articulo.partida_clave}}</span>
+                                    </div>
+                                    <div class="lista-articulos-item-etiqueta-texto">
+                                        {{articulo.familia}}
+                                    </div>
                                 </div>
                                 <div class="lista-articulos-item-contenido">
                                     <div class="lista-articulos-item-cabecera">
-                                        <div class="lista-articulos-item-cabecera-titulo">{{articulo.nombre}}</div>
+                                        <div class="lista-articulos-item-cabecera-titulo">Clave: {{(tipoDeElementoPedido.origen_articulo == 2)?articulo.clave_local:articulo.clave_cubs}}</div>
                                         <div class="lista-articulos-item-cabecera-subtitulo">{{articulo.descripcion}}</div>
                                     </div>
                                 </div>
@@ -253,7 +258,9 @@
                                 
                                 <ng-container matColumnDef="clave">
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
-                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">{{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{row.clave}} </td>
+                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                                        {{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{(tipoDeElementoPedido.origen_articulo == 2)?row.clave_local:row.clave_cubs}}
+                                    </td>
                                 </ng-container>
                                 
                                 <ng-container matColumnDef="nombre" >

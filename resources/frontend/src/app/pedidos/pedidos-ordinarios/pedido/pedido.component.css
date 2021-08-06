@@ -46,28 +46,16 @@ table td {
     display: none;
 }
 
-.medicamento-row-color{
-    background-color: #d9e6ff !important;
-}
-
-.mat-curacion-row-color{
-    background-color: #ffeae2 !important;
-}
-
-.medicamento-bg-color{
+.articulo-bg-color{
     background-color: cornflowerblue !important;
 }
 
-.mat-curacion-bg-color{
-    background-color: coral !important;
-}
-
-.medicamento-color{
+.articulo-color{
     color: cornflowerblue !important;
 }
 
-.mat-curacion-color{
-    color: coral !important;
+.articulo-row-color{
+    background-color: #d9e6ff !important;
 }
 
 .icono-tipo-insumo{
@@ -161,6 +149,7 @@ table td {
 .lista-articulos-item .lista-articulos-item-etiqueta-icono{
     height: 35px;
     width: 35px;
+    text-align: center;
     border-radius: 25%;
     flex-shrink: 0;
     object-fit: cover;
@@ -171,7 +160,7 @@ table td {
 .lista-articulos-item .lista-articulos-item-etiqueta-texto{
     padding:5px;
     display: table-cell;
-    vertical-align: middle;
+    vertical-align: top;
     text-align: right;
     height: 18px;
 }
@@ -182,7 +171,7 @@ table td {
 }
 
 .lista-articulos-item-cabecera-titulo{
-    height: 48px;
+    height: 24px;
     display: block;
     font-weight: 450;
     font-size: 20px;
@@ -193,7 +182,7 @@ table td {
 }
 
 .lista-articulos-item-cabecera-subtitulo{
-    height: 70px;
+    height: 94px;
     display: block;
     font-size: 14px;
     color: rgba(0,0,0,.54);

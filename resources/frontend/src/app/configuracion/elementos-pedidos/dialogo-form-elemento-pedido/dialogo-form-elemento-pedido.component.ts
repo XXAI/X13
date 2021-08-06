@@ -30,6 +30,8 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
   isLoading:boolean;
   isSaving:boolean;
   tipoPedido:any;
+
+  origenArticulosCatalogo:any[];
   
   imagePreview:string;
   imageFile:any;
@@ -47,14 +49,21 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
     this.isLoading = true;
     
     this.tipoPedidoForm = this.fb.group({
-      'clave':        ['',[Validators.required,Validators.maxLength(4)]],
-      'descripcion':  ['',Validators.required],
-      'archivo':      ['',Validators.required],
-      'archivo_fuente': [''],
-      'activo':       [''],
-      'icon_image':   [''],
-      'id':           ['']
+      'clave':           ['',[Validators.required,Validators.maxLength(4)]],
+      'descripcion':     ['',Validators.required],
+      'archivo':         ['',Validators.required],
+      'origen_articulo': ['0',Validators.required],
+      'archivo_fuente':  [''],
+      'activo':          [''],
+      'icon_image':      [''],
+      'id':              ['']
     });
+
+    this.origenArticulosCatalogo = [
+      {clave:0, descripcion:'Todos'},
+      {clave:1, descripcion:'Claves del CUBS'},
+      {clave:2, descripcion:'Claves Locales'},
+    ];
 
     if(this.data.id){
       this.tipoPedido = {descripcion:'Editar'};
@@ -108,6 +117,7 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
                 } else {
                   this.imagePreview = environment.images_url + response.data.icon_image;
                   response.data.archivo = response.data.icon_image;
+                  response.data.origen_articulo = response.data.origen_articulo.toString();
                   this.tipoPedidoForm.patchValue(response.data);
 
                   let filtro_detalles = JSON.parse(response.data.filtro_detalles);
@@ -207,7 +217,7 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
           response =>{
             this.isSaving = false;
             this.sharedService.showSnackBar('Datos Almacenados Correctamente', null, 3000);
-            console.log(response);
+            this.dialogRef.close(response);
           },
           errorResponse =>{
             var errorMessage = "Ocurrió un error.";
@@ -223,7 +233,7 @@ export class DialogoFormElementoPedidoComponent implements OnInit {
           response =>{
             this.isSaving = false;
             this.sharedService.showSnackBar('Datos Almacenados Correctamente', null, 3000);
-            console.log(response);
+            this.dialogRef.close(response);
           },
           errorResponse =>{
             var errorMessage = "Ocurrió un error.";

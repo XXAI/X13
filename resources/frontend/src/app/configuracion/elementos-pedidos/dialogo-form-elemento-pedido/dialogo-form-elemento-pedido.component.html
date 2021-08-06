@@ -27,8 +27,18 @@
                             <span *ngIf="tipoPedidoForm.get('descripcion').errors.required">La descripción es obligatoria</span>
                         </mat-error>
                     </mat-form-field>
-                    <div fxFlex="none">
-                        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+                    <div fxFlex="none" fxLayout="row">
+                        <div fxFlex="none">
+                            <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+                        </div> 
+                        <div fxFlex></div>
+                        <div fxFlex="none">
+                            <mat-radio-group formControlName="origen_articulo" aria-label="Origen Articulos">
+                                <mat-radio-button color="primary" value="0">Todos&nbsp;</mat-radio-button>
+                                <mat-radio-button value="1">CUBS&nbsp;</mat-radio-button>
+                                <mat-radio-button value="2">Locales&nbsp;</mat-radio-button>
+                            </mat-radio-group>
+                        </div>
                     </div>
                 </div>
             </div>

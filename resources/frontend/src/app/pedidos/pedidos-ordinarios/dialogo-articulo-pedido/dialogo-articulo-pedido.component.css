@@ -2,12 +2,8 @@
     padding:0px;
 }
 
-.medicamento-bg-color{
+.articulo-bg-color{
     background-color: cornflowerblue;
-}
-
-.mat-curacion-bg-color{
-    background-color: coral;
 }
 
 .lista-insumos-item{
@@ -48,7 +44,7 @@
 }
 
 .lista-insumos-item-cabecera-titulo{
-    height: 48px;
+    height: 24px;
     display: block;
     font-weight: 450;
     font-size: 20px;
@@ -58,10 +54,9 @@
 }
 
 .lista-insumos-item-cabecera-subtitulo{
-    height: 17px;
+    height: auto;
     display: block;
-    font-size: 14px;
-    color: rgba(0,0,0,.54);
+    font-size: 18px;
 }
 
 .lista-insumos-item-texto{

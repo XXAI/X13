@@ -60,26 +60,32 @@ class PedidoOrdinarioController extends Controller
                 $tipo_elemento = TipoElementoPedido::where('clave',$parametros['tipo_elemento'])->first();
                 $filtro = json_decode($tipo_elemento->filtro_detalles, true);
 
-                $elementos = BienServicio::getModel();
+                $elementos = BienServicio::with('partidaEspecifica')
+                                        ->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                        ->select('bienes_servicios.*','familias.nombre as nombre_familia');
+
                 foreach ($filtro as $item) {
-                    $elementos->where(function($query)use($item){
+                    $elementos = $elementos->orWhere(function($query)use($item){
                         $query->where('clave_partida_especifica',$item['clave'])
                                 ->whereIn('familia_id',$item['familia_id']);
                     });
                 }
+
+                if($tipo_elemento->origen_articulo == 1){
+                    $elementos = $elementos->whereNotNull('clave_cubs');
+                }else if($tipo_elemento->origen_articulo == 2){
+                    $elementos = $elementos->whereNotNull('clave_local');
+                }
             }
-            
-            //$elementos = $elementos->get();
-            //$insumos = InsumoMedico::with('medicamento','materialCuracion');
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
                 $elementos = $elementos->where(function($query)use($parametros){
-                    return $query->where('descripcion','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('nombre_generico','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('clave','LIKE','%'.$parametros['query'].'%');
-                                //->whereRaw('CONCAT_WS(" ",personas.apellido_paterno, personas.apellido_materno, personas.nombre) like "%'.$parametros['query'].'%"' )
-                                //->orWhere('formularios.descripcion','LIKE','%'.$parametros['query'].'%');
+                    return $query->where('clave_cubs','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('clave_local','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('articulo','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('especificaciones','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('familias.nombre','LIKE','%'.$parametros['query'].'%');
                 });
             }
 
@@ -149,8 +155,11 @@ class PedidoOrdinarioController extends Controller
     {
         try{
             $pedido = Pedido::with(['tipoElementoPedido',
-                                    'listaInsumosMedicos'=>function($insumos){
-                                        $insumos->with('insumoMedico.medicamento','insumoMedico.materialCuracion','listaInsumosUnidades');
+                                    'listaArticulos'=>function($articulos){ //Agrega la Familia
+                                        $articulos->with(['articulo'=>function($articulo){
+                                            $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                                    ->select('bienes_servicios.*','familias.nombre as nombre_familia');
+                                        },'articulo.partidaEspecifica','listaArticulosUnidades']);
                                     },'listaUnidadesMedicas.unidadMedica'])->find($id);
 
             $return_data = ['data'=>$pedido];
@@ -187,38 +196,38 @@ class PedidoOrdinarioController extends Controller
                 $pedido->listaUnidadesMedicas()->createMany($unidades_medicas);
             }
 
-            $listado_insumos = [];
-            $total_insumos = 0;
-            foreach ($parametros['insumos_pedido'] as $insumo) {
-                $listado_insumos[] = [
-                    'insumo_medico_id'=>$insumo['id'],
-                    'tipo_insumo'=>$insumo['tipo_insumo'],
-                    'cantidad'=>$insumo['cantidad']
+            $listado_articulos = [];
+            $total_articulos = 0;
+            foreach ($parametros['articulos_pedido'] as $articulo) {
+                $listado_articulos[] = [
+                    'bien_servicio_id'=>$articulo['id'],
+                    'cantidad_original'=>$articulo['cantidad'],
+                    'cantidad'=>$articulo['cantidad']
                 ];
-                $total_insumos += $insumo['cantidad'];
+                $total_articulos += $articulo['cantidad'];
             }
-            $pedido->listaInsumosMedicos()->createMany($listado_insumos);
+            $pedido->listaArticulos()->createMany($listado_articulos);
 
             if(isset($parametros['unidades_pedido']) && count($parametros['unidades_pedido'])){
-                $insumos_pedido = $pedido->listaInsumosMedicos()->pluck('id','insumo_medico_id');
-                $listado_insumos_unidades = [];
-                foreach ($parametros['insumos_pedido'] as $insumo) {
-                    if(isset($insumo['cuadro_distribucion']) && count($insumo['cuadro_distribucion'])){
-                        foreach ($insumo['cuadro_distribucion'] as $unidad) {
-                            $listado_insumos_unidades[] = ['unidad_medica_id'=>$unidad['id'], 'cantidad'=>$unidad['cantidad'], 'pedido_insumo_id'=>$insumos_pedido[$insumo['id']]];
+                $articulos_pedido = $pedido->listaArticulos()->pluck('id','bien_servicio_id');
+                $listado_articulos_unidades = [];
+                foreach ($parametros['articulos_pedido'] as $articulo) {
+                    if(isset($articulo['cuadro_distribucion']) && count($articulo['cuadro_distribucion'])){
+                        foreach ($articulo['cuadro_distribucion'] as $unidad) {
+                            $listado_articulos_unidades[] = ['unidad_medica_id'=>$unidad['id'], 'cantidad_original'=>$unidad['cantidad'], 'cantidad'=>$unidad['cantidad'], 'pedido_articulo_id'=>$articulos_pedido[$articulo['id']]];
                         }
                     }
                 }
-                $pedido->listaInsumosMedicosUnidades()->createMany($listado_insumos_unidades);
+                $pedido->listaArticulosUnidades()->createMany($listado_articulos_unidades);
             }
 
-            $pedido->total_claves = count($listado_insumos);
-            $pedido->total_insumos = $total_insumos;
+            $pedido->total_claves = count($listado_articulos);
+            $pedido->total_articulos = $total_articulos;
             $pedido->save();
 
             DB::commit();
 
-            $pedido->load('listaInsumosMedicos');
+            $pedido->load('listaArticulos');
 
             $return_data = [
                 'data' => $pedido
@@ -246,7 +255,7 @@ class PedidoOrdinarioController extends Controller
             $parametros = $request->all();
 
             $pedido = Pedido::with([
-                    'listaInsumosMedicos'=>function($insumos){ $insumos->withTrashed(); },
+                    'listaArticulos'=>function($articulos){ $articulos->withTrashed(); },
                     'listaUnidadesMedicas'=>function($unidades){ $unidades->withTrashed(); },
                 ])->find($id); 
 
@@ -254,13 +263,13 @@ class PedidoOrdinarioController extends Controller
             $datos_pedido['estatus'] = ($parametros['concluir'])?'CON':'BOR';
             $datos_pedido['tipo_pedido'] = 'ORD';
             $diferencia_claves = 0;
-            $total_insumos = 0;
+            $total_articulos = 0;
 
-            $listado_insumos = $parametros['insumos_pedido'];
-            $insumos_editados = [];
-            $insumos_eliminados = [];
-            $insumos_agregados = [];
-            $insumos_pedido = [];
+            $listado_articulos = $parametros['articulos_pedido'];
+            $articulos_editados = [];
+            $articulos_eliminados = [];
+            $articulos_agregados = [];
+            $articulos_pedido = [];
 
             $unidades_pedido_raw = $pedido->listaUnidadesMedicas;
             $unidades_pedido = [];
@@ -309,144 +318,152 @@ class PedidoOrdinarioController extends Controller
                 $pedido->listaUnidadesMedicas()->delete();
             }
 
-            $pedido_insumos_unidades = [];
-            $insumos_pedido_raw = $pedido->listaInsumosMedicos;
-            foreach ($insumos_pedido_raw as $insumo) {
-                $insumos_pedido[$insumo->id] = $insumo;
+            $pedido_articulos_unidades = [];
+            $articulos_pedido_raw = $pedido->listaArticulos;
+            foreach ($articulos_pedido_raw as $articulo) {
+                $articulos_pedido[$articulo->id] = $articulo;
             }
-            foreach ($listado_insumos as $insumo) {
-                if(!isset($insumo['pedido_insumo_id'])){
-                    $insumos_agregados[] = ['insumo_medico_id' => $insumo['id'], 'tipo_insumo' => $insumo['tipo_insumo'], 'cantidad' => $insumo['cantidad'], 'monto' => $insumo['monto'] ];
-                    $total_insumos += $insumo['cantidad'];
-                }elseif(isset($insumos_pedido[$insumo['pedido_insumo_id']])){
-                    $insumo_pedido = $insumos_pedido[$insumo['pedido_insumo_id']];
-                    if($insumo_pedido->insumo_medico_id !=  $insumo['id'] || $insumo_pedido->cantidad !=  $insumo['cantidad'] || $insumo_pedido->monto !=  $insumo['monto'] ){
-                        $insumo_pedido->insumo_medico_id = $insumo['id'];
-                        $insumo_pedido->tipo_insumo = $insumo['tipo_insumo'];
-                        $insumo_pedido->cantidad =  $insumo['cantidad'];
-                        $insumo_pedido->monto =  $insumo['monto'];
+
+            foreach ($listado_articulos as $articulo) {
+                if(!isset($articulo['pedido_articulo_id'])){
+                    $articulos_agregados[] = ['bien_servicio_id' => $articulo['id'], 'cantidad_original' => $articulo['cantidad'], 'cantidad' => $articulo['cantidad'], 'monto' => $articulo['monto'] ];
+                    $total_articulos += $articulo['cantidad'];
+                }elseif(isset($articulos_pedido[$articulo['pedido_articulo_id']])){
+                    $articulo_pedido = $articulos_pedido[$articulo['pedido_articulo_id']];
+                    if($articulo_pedido->bien_servicio_id !=  $articulo['id'] || $articulo_pedido->cantidad !=  $articulo['cantidad'] || $articulo_pedido->monto !=  $articulo['monto'] ){
+                        $articulo_pedido->bien_servicio_id = $articulo['id'];
+                        $articulo_pedido->cantidad_original =  $articulo['cantidad'];
+                        $articulo_pedido->cantidad =  $articulo['cantidad'];
+                        $articulo_pedido->monto =  $articulo['monto'];
                         //
-                        $insumos_editados[] = $insumo_pedido;
+                        $articulos_editados[] = $articulo_pedido;
                     }
-                    $total_insumos += $insumo['cantidad'];
-                    $insumos_pedido[$insumo['pedido_insumo_id']] = NULL;
+                    $total_articulos += $articulo['cantidad'];
+                    $articulos_pedido[$articulo['pedido_articulo_id']] = NULL;
                 }
                 
-                if(isset($insumo['cuadro_distribucion']) && count($insumo['cuadro_distribucion']) > 0){
-                    foreach ($insumo['cuadro_distribucion'] as $unidad) {
-                        $pedido_insumos_unidades[] = ['insumo_id'=>$insumo['id'], 'cantidad'=>$unidad['cantidad'], 'unidad_medica_id'=>$unidad['id']];
+                if(isset($articulo['cuadro_distribucion']) && count($articulo['cuadro_distribucion']) > 0){
+                    foreach ($articulo['cuadro_distribucion'] as $unidad) {
+                        $pedido_articulos_unidades[] = ['bien_servicio_id'=>$articulo['id'], 'cantidad'=>$unidad['cantidad'], 'unidad_medica_id'=>$unidad['id']];
                     }
                 }
             }
 
-            foreach ($insumos_pedido as $pedido_insumo_id => $pedido_insumo) {
-                if($pedido_insumo){
-                    if(count($insumos_agregados) > 0){
-                        $pedido_insumo->insumo_medico_id = $insumos_agregados[0]['insumo_medico_id'];
-                        $pedido_insumo->tipo_insumo = $insumos_agregados[0]['tipo_insumo'];
-                        $pedido_insumo->cantidad =  $insumos_agregados[0]['cantidad'];
-                        $pedido_insumo->monto =  $insumos_agregados[0]['monto'];
-                        $pedido_insumo->deleted_at = null;
-                        $insumos_editados[] = $pedido_insumo;
-                        array_splice($insumos_agregados,0,1);
+            foreach ($articulos_pedido as $pedido_articulo_id => $pedido_articulo) {
+                if($pedido_articulo){
+                    if(count($articulos_agregados) > 0){
+                        $pedido_articulo->bien_servicio_id = $articulos_agregados[0]['bien_servicio_id'];
+                        $pedido_articulo->cantidad_original =  $articulos_agregados[0]['cantidad'];
+                        $pedido_articulo->cantidad =  $articulos_agregados[0]['cantidad'];
+                        $pedido_articulo->monto =  $articulos_agregados[0]['monto'];
+                        $pedido_articulo->deleted_at = null;
+                        $insumos_editados[] = $pedido_articulo;
+                        array_splice($articulos_agregados,0,1);
                     }else{
-                        $insumos_eliminados[] = $pedido_insumo_id;
+                        $insumos_eliminados[] = $pedido_articulo_id;
                     }
                 }
             }
 
-            $diferencia_claves = (count($insumos_agregados) - count($insumos_eliminados));
+            $diferencia_claves = (count($articulos_agregados) - count($articulos_eliminados));
             $datos_pedido['total_claves'] = $pedido->total_claves + $diferencia_claves;
-            $datos_pedido['total_insumos'] = $total_insumos;
+            $datos_pedido['total_articulos'] = $total_articulos;
 
-            if(count($insumos_agregados)){
-                $pedido->listaInsumosMedicos()->createMany($insumos_agregados);
+            if(count($articulos_agregados)){
+                $pedido->listaArticulos()->createMany($articulos_agregados);
             }
-            if(count($insumos_editados)){
-                $pedido->listaInsumosMedicos()->saveMany($insumos_editados);
+            if(count($articulos_editados)){
+                $pedido->listaArticulos()->saveMany($articulos_editados);
             }
-            if(count($insumos_eliminados)){
-                $pedido->listaInsumosMedicos()->whereIn('id',$insumos_eliminados)->delete();
-                $pedido->listaInsumosMedicosUnidades()->whereIn('pedido_insumo_id',$insumos_eliminados)->delete();
+            if(count($articulos_eliminados)){
+                $pedido->listaArticulos()->whereIn('id',$articulos_eliminados)->delete();
+                $pedido->listaArticulosUnidades()->whereIn('pedido_articulo_id',$articulos_eliminados)->delete();
             }
 
             $pedido->update($datos_pedido);
 
-            if(count($pedido_insumos_unidades) > 0){
-                $pedido->load(['listaInsumosMedicos'=>function($insumos){
-                    $insumos->with(['listaInsumosUnidades'=>function($unidades){
+            if(count($pedido_articulos_unidades) > 0){
+                $pedido->load(['listaArticulos'=>function($articulos){
+                    $articulos->with(['listaArticulosUnidades'=>function($unidades){
                         $unidades->withTrashed();
                     }])->withTrashed();
                 }])->withTrashed();
 
-                $pedido_insumos_unidades_guardar = [];
-                $pedido_insumos_unidades_editados = [];
-                $pedido_insumos_unidades_eliminados = [];
+                $pedido_articulos_unidades_guardar = [];
+                $pedido_articulos_unidades_editados = [];
+                $pedido_articulos_unidades_eliminados = [];
 
-                $insumos_unidades_raw = $pedido->listaInsumosMedicos;
-                $insumos_unidades = [];
+                $articulos_unidades_raw = $pedido->listaArticulos;
+                $articulos_unidades = [];
 
-                foreach ($insumos_unidades_raw as $insumo_unidad) {
-                    $insumos_unidades[$insumo_unidad->insumo_medico_id] = [
-                        'pedido_insumo_id' => $insumo_unidad->id,
+                foreach ($articulos_unidades_raw as $articulo_unidad) {
+                    $articulos_unidades[$articulo_unidad->bien_servicio_id] = [
+                        'pedido_articulo_id' => $articulo_unidad->id,
                         'lista_unidades' => []
                     ];
-                    foreach ($insumo_unidad->listaInsumosUnidades as $unidad) {
-                        $insumos_unidades[$insumo_unidad->insumo_medico_id]['lista_unidades'][$unidad->unidad_medica_id] = $unidad;
+                    foreach ($articulo_unidad->listaArticulosUnidades as $unidad) {
+                        $articulos_unidades[$articulo_unidad->bien_servicio_id]['lista_unidades'][$unidad->unidad_medica_id] = $unidad;
                     }
                 }
 
-                foreach ($pedido_insumos_unidades as $insumo_unidad) {
-                    $pedido_insumo = $insumos_unidades[$insumo_unidad['insumo_id']];
-                    if(isset($pedido_insumo['lista_unidades'][$insumo_unidad['unidad_medica_id']])){
-                        $pedido_insumo_unidad = $pedido_insumo['lista_unidades'][$insumo_unidad['unidad_medica_id']];
-                        if($pedido_insumo_unidad->cantidad != $insumo_unidad['cantidad']){
-                            $pedido_insumo_unidad->cantidad = $insumo_unidad['cantidad'];
-                            $pedido_insumo_unidad->deleted_at = NULL;
-                            $pedido_insumos_unidades_editados[] = $pedido_insumo_unidad;
+                foreach ($pedido_articulos_unidades as $articulo_unidad) {
+                    $pedido_articulo = $articulos_unidades[$articulo_unidad['insumo_id']];
+                    if(isset($pedido_articulo['lista_unidades'][$articulo_unidad['unidad_medica_id']])){
+                        $pedido_articulo_unidad = $pedido_articulo['lista_unidades'][$articulo_unidad['unidad_medica_id']];
+                        if($pedido_articulo_unidad->cantidad != $articulo_unidad['cantidad']){
+                            $pedido_articulo_unidad->cantidad_original = $articulo_unidad['cantidad'];
+                            $pedido_articulo_unidad->cantidad = $articulo_unidad['cantidad'];
+                            $pedido_articulo_unidad->deleted_at = NULL;
+                            $pedido_articulos_unidades_editados[] = $pedido_articulo_unidad;
                         }
-                        $insumos_unidades[$insumo_unidad['insumo_id']]['lista_unidades'][$insumo_unidad['unidad_medica_id']] = NULL;
+                        $articulos_unidades[$articulo_unidad['bien_servicio_id']]['lista_unidades'][$articulo_unidad['unidad_medica_id']] = NULL;
                     }else{
-                        $pedido_insumo_unidad = [
-                            'pedido_insumo_id' => $pedido_insumo['pedido_insumo_id'],
-                            'unidad_medica_id' => $insumo_unidad['unidad_medica_id'],
-                            'cantidad' => $insumo_unidad['cantidad']
+                        $pedido_articulo_unidad = [
+                            'pedido_articulo_id' => $pedido_articulo['pedido_articulo_id'],
+                            'unidad_medica_id' => $articulo_unidad['unidad_medica_id'],
+                            'cantidad_original' => $articulo_unidad['cantidad'],
+                            'cantidad' => $articulo_unidad['cantidad']
                         ];
-                        $pedido_insumos_unidades_guardar[] = $pedido_insumo_unidad;
+                        $pedido_articulos_unidades_guardar[] = $pedido_articulo_unidad;
                     }
                 }
 
-                foreach ($insumos_unidades as $insumo_pedido) {
-                    foreach ($insumo_pedido['lista_unidades'] as $insumo_unidad) {
-                        if($insumo_unidad){
-                            if(count($pedido_insumos_unidades_guardar) > 0){
-                                $insumo_unidad->pedido_insumo_id = $pedido_insumos_unidades_guardar[0]['pedido_insumo_id'];
-                                $insumo_unidad->unidad_medica_id = $pedido_insumos_unidades_guardar[0]['unidad_medica_id'];
-                                $insumo_unidad->cantidad = $pedido_insumos_unidades_guardar[0]['cantidad'];
-                                $insumo_unidad->deleted_at = NULL;
-                                $pedido_insumos_unidades_editados[] = $insumo_unidad;
-                                array_splice($pedido_insumos_unidades_guardar,0,1);
+                foreach ($articulos_unidades as $articulo_pedido) {
+                    foreach ($articulo_pedido['lista_unidades'] as $articulo_unidad) {
+                        if($articulo_unidad){
+                            if(count($pedido_articulos_unidades_guardar) > 0){
+                                $articulo_unidad->pedido_articulo_id = $pedido_articulos_unidades_guardar[0]['pedido_articulo_id'];
+                                $articulo_unidad->unidad_medica_id = $pedido_articulos_unidades_guardar[0]['unidad_medica_id'];
+                                $articulo_unidad->cantidad_original = $pedido_articulos_unidades_guardar[0]['cantidad'];
+                                $articulo_unidad->cantidad = $pedido_articulos_unidades_guardar[0]['cantidad'];
+                                $articulo_unidad->deleted_at = NULL;
+                                $pedido_articulos_unidades_editados[] = $articulo_unidad;
+                                array_splice($pedido_articulos_unidades_guardar,0,1);
                             }else{
-                                $pedido_insumos_unidades_eliminados[] = $insumo_unidad->id;
+                                $pedido_articulos_unidades_eliminados[] = $articulo_unidad->id;
                             }
                         }
                     }
                 }
 
-                if(count($pedido_insumos_unidades_guardar)){
-                    $pedido->listaInsumosMedicosUnidades()->createMany($pedido_insumos_unidades_guardar);
+                if(count($pedido_articulos_unidades_guardar)){
+                    $pedido->listaArticulosUnidades()->createMany($pedido_articulos_unidades_guardar);
                 }
-                if(count($pedido_insumos_unidades_editados)){
-                    $pedido->listaInsumosMedicosUnidades()->saveMany($pedido_insumos_unidades_editados);
+                if(count($pedido_articulos_unidades_editados)){
+                    $pedido->listaArticulosUnidades()->saveMany($pedido_articulos_unidades_editados);
                 }
-                if(count($pedido_insumos_unidades_eliminados)){
-                    $pedido->listaInsumosMedicosUnidades()->whereIn('id',$pedido_insumos_unidades_eliminados)->delete();
+                if(count($pedido_articulos_unidades_eliminados)){
+                    $pedido->listaArticulosUnidades()->whereIn('id',$pedido_articulos_unidades_eliminados)->delete();
                 }
             }
 
             if(isset($parametros['generar_folio']) && $parametros['generar_folio']){
                 if(!$pedido->folio){
-                    $max_consecutivo = Pedido::where('anio',$pedido->anio)->where('tipo_pedido',$pedido->tipo_pedido)->where('unidad_medica_id',$pedido->unidad_medica_id)->max('folio_consecutivo');
+                    $max_consecutivo = Pedido::where('anio',$pedido->anio)
+                                            ->where('tipo_pedido',$pedido->tipo_pedido)
+                                            ->where('unidad_medica_id',$pedido->unidad_medica_id)
+                                            ->where('tipo_elemento_pedido_id',$pedido->tipo_elemento_pedido_id)
+                                            ->max('folio_consecutivo');
 
                     if(!$max_consecutivo){
                         $max_consecutivo = 1;
@@ -455,9 +472,10 @@ class PedidoOrdinarioController extends Controller
                     }
 
                     $unidad_medica = UnidadMedica::find($pedido->unidad_medica_id);
+                    $tipo_elemento = TipoElementoPedido::find($pedido->tipo_elemento_pedido_id);
 
                     $pedido->folio_consecutivo = $max_consecutivo;
-                    $pedido->folio = $unidad_medica->clues . '-' . $pedido->tipo_pedido . '-' . $pedido->anio . '-' . (str_pad($max_consecutivo, 3, "0", STR_PAD_LEFT));
+                    $pedido->folio = $unidad_medica->clues . '-' . $tipo_elemento->clave . '-' . $pedido->tipo_pedido . '-' . $pedido->anio . '-' . (str_pad($max_consecutivo, 3, "0", STR_PAD_LEFT));
                 }
                 $pedido->estatus = 'PUB';
                 $pedido->save();
@@ -465,7 +483,7 @@ class PedidoOrdinarioController extends Controller
 
             DB::commit();
 
-            $pedido->load('listaInsumosMedicos.listaInsumosUnidades');
+            $pedido->load('listaArticulos.listaArticulosUnidades');
             $return_data = [
                 'data' => $pedido
             ];

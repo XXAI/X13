@@ -117,7 +117,7 @@ class TiposPedidosController extends Controller
                 \File::put(storage_path(). '/app/public/tipo-elementos-pedido/' . $image_name, base64_decode($image));
 
                 $parametros['icon_image'] = 'tipo-elementos-pedido/'.$image_name;
-                $parametros['llave_tabla_detalles'] = 'sin-detalles';
+                $parametros['origen_articulo'] = ($parametros['origen_articulo'])?$parametros['origen_articulo']:null;
                 $parametros['filtro_detalles'] = json_encode(array_values($parametros['filtro_familias']));
 
                 $tipo_pedido = TipoElementoPedido::create($parametros);
@@ -196,7 +196,7 @@ class TiposPedidosController extends Controller
                     $parametros['icon_image'] = 'tipo-elementos-pedido/'.$image_name;
                 }
 
-                $parametros['llave_tabla_detalles'] = 'sin-detalles';
+                $parametros['origen_articulo'] = $parametros['origen_articulo'];
                 $parametros['filtro_detalles'] = json_encode(array_values($parametros['filtro_familias']));
                 
                 if($tipo_elementos->icon_image != $parametros['icon_image']){

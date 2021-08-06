@@ -35,12 +35,14 @@
             <div fxFlex fxLayout="row raw" style="overflow: auto;">
                <div *ngFor="let tipoPedido of dataSource" fxFlex="20" style="padding:3px;">
                     <mat-card class="grupo" fxLayout="column">
+                        <mat-toolbar style="height: auto;">
+                            <mat-icon color="primary">{{(tipoPedido.activo)?'check_circle':'radio_button_unchecked'}}</mat-icon>
+                            <div style="flex: 1 1 auto;"></div>
+                            <span>{{origenArticulos[tipoPedido.origen_articulo]}}</span>
+                        </mat-toolbar>
                         <img style="width: 90%;" src="{{rutaIconosPedido+tipoPedido.icon_image}}" />
                         <div fxFlex class="grupo-body">
                             {{tipoPedido.descripcion}}
-                        </div>
-                        <div fxFlex="none" fxLayout="row">
-                            <span *ngIf="tipoPedido.unidad_medica_principal" class="folio-value" fxFlex>{{tipoPedido.unidad_medica_principal.nombre}}</span>
                         </div>
                         <div fxFlex="none" class="grupo-action" fxLayout="row">
                             <div fxFlex="none">

@@ -1,17 +1,20 @@
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;" (document:keydown.control.enter)="aceptarInsumo()">
     <section fxFlex="none">
         <div>
-            <div class="lista-insumos-item {{articulo.clase_color}}">
+            <div class="lista-insumos-item articulo-bg-color">
                 <div class="lista-insumos-item-etiqueta">
                     <div class="lista-insumos-item-etiqueta-icono">
-                        <img src="{{articulo.icono}}" alt="Icon">
+                        <span style="font-weight: bold;">Partida</span><br>
+                        <span>{{articulo.partida_clave}}</span>
                     </div>
-                    <div class="lista-insumos-item-etiqueta-texto">{{articulo.clave}}</div>
+                    <div class="lista-insumos-item-etiqueta-texto">
+                        {{articulo.familia}}
+                    </div>
                 </div>
                 <div class="lista-insumos-item-contenido">
                     <div class="lista-insumos-item-cabecera">
-                        <div class="lista-insumos-item-cabecera-titulo">{{articulo.nombre}}</div>
-                        <div class="lista-insumos-item-cabecera-subtitulo">{{articulo.info}}</div>
+                        <div class="lista-insumos-item-cabecera-titulo">Clave: {{(articulo.clave_cubs)?articulo.clave_cubs:articulo.clave_local}}</div>
+                        <div class="lista-insumos-item-cabecera-subtitulo">{{articulo.nombre}}</div>
                     </div>
                     <div class="lista-insumos-item-texto">
                         {{articulo.descripcion}}

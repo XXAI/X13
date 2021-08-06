@@ -10,5 +10,5 @@ class TipoElementoPedido extends Model{
     
     use SoftDeletes;
     protected $table = 'tipos_elementos_pedidos';
-    protected $fillable = ['clave','descripcion','icon_image','llave_tabla_detalles','filtro_detalles','activo'];
+    protected $fillable = ['clave','descripcion','icon_image','origen_articulo','filtro_detalles','activo'];
 }

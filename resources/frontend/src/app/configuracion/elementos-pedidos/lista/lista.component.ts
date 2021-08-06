@@ -24,6 +24,8 @@ export class ListaComponent implements OnInit {
 
   searchQuery: string = '';
 
+  origenArticulos:any;
+
   pageEvent: PageEvent;
   resultsLength: number = 0;
   currentPage: number = 0;
@@ -34,6 +36,7 @@ export class ListaComponent implements OnInit {
   dataSource: any = [];
 
   ngOnInit(): void {
+    this.origenArticulos = {0:'Todos', 1:'CUBS', 2:'Locales'};
     this.loadListadoTiposPedidos();
   }
 

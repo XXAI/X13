@@ -187,25 +187,37 @@ export class PedidoComponent implements OnInit {
               this.tipoDeElementoPedido = response.data.tipo_elemento_pedido;
             }
 
-            this.clavesTotalesPedido.articulos = response.data.lista_insumos_medicos.length;
-            for(let i in response.data.lista_insumos_medicos){
-              let articulo_server = response.data.lista_insumos_medicos[i];
-              let articulo = JSON.parse(JSON.stringify(articulo_server.insumo_medico));
+            this.clavesTotalesPedido.articulos = response.data.lista_articulos.length;
+            for(let i in response.data.lista_articulos){
+              let articulo_server = response.data.lista_articulos[i];
+              let articulo_raw = JSON.parse(JSON.stringify(articulo_server.articulo));
+
+              let articulo:any = {
+                id: articulo_raw.id,
+                clave_cubs: articulo_raw.clave_cubs,
+                clave_local: articulo_raw.clave_local,
+                nombre: articulo_raw.articulo,
+                descripcion: articulo_raw.especificaciones,
+                descontinuado: (articulo_raw.descontinuado)?true:false,
+                partida_clave: articulo_raw.partida_especifica.clave,
+                partida_descripcion: articulo_raw.partida_especifica.descripcion,
+                familia: articulo_raw.nombre_familia,
+              };
 
               articulo.cantidad = articulo_server.cantidad;
               articulo.monto = articulo_server.monto;
               articulo.pedido_articulo_id = articulo_server.id;
 
-              if(articulo_server.lista_insumos_unidades.length > 0){
+              if(articulo_server.lista_articulos_unidades.length > 0){
                 articulo.cuadro_distribucion = [];
-                for(let j in articulo_server.lista_insumos_unidades){
+                for(let j in articulo_server.lista_articulos_unidades){
                   articulo.cuadro_distribucion.push(
-                    {id: articulo_server.lista_insumos_unidades[j].unidad_medica_id, cantidad: articulo_server.lista_insumos_unidades[j].cantidad}
+                    {id: articulo_server.lista_articulos_unidades[j].unidad_medica_id, cantidad: articulo_server.lista_articulos_unidades[j].cantidad}
                   );
-                  if(!this.unidadesConArticulos[articulo_server.lista_insumos_unidades[j].unidad_medica_id]){
-                    this.unidadesConArticulos[articulo_server.lista_insumos_unidades[j].unidad_medica_id] = 1;
+                  if(!this.unidadesConArticulos[articulo_server.lista_articulos_unidades[j].unidad_medica_id]){
+                    this.unidadesConArticulos[articulo_server.lista_articulos_unidades[j].unidad_medica_id] = 1;
                   }else{
-                    this.unidadesConArticulos[articulo_server.lista_insumos_unidades[j].unidad_medica_id] += 1;
+                    this.unidadesConArticulos[articulo_server.lista_articulos_unidades[j].unidad_medica_id] += 1;
                   }
                 }
               }
@@ -301,28 +313,14 @@ export class PedidoComponent implements OnInit {
             let articulo:any = {
               id: response.data[i].id,
               clave_cubs: response.data[i].clave_cubs,
-              clave: response.data[i].clave_local,
+              clave_local: response.data[i].clave_local,
               nombre: response.data[i].articulo,
               descripcion: response.data[i].especificaciones,
               descontinuado: (response.data[i].descontinuado)?true:false,
-              icono: '',
-              clase_color: '',
-              tipo_articulo: '',
+              partida_clave: response.data[i].partida_especifica.clave,
+              partida_descripcion: response.data[i].partida_especifica.descripcion,
+              familia: response.data[i].nombre_familia,
             };
-            if(response.data[i].insumo_medico){
-              articulo.controlado = response.data[i].insumo_medico.es_controlado;
-              articulo.unidosis = response.data[i].insumo_medico.es_unidosis;
-
-              if(response.data[i].insumo_medico.tipo_insumo == 'MTC'){
-                articulo.tipo_articulo = 'MTC';
-                articulo.icono = this.iconoMatCuracion;
-                articulo.clase_color = 'mat-curacion-bg-color';
-              }else{
-                articulo.tipo_articulo = 'MED';
-                articulo.icono = this.iconoMedicamento;
-                articulo.clase_color = 'medicamento-bg-color';
-              }
-            }
             articulos_temp.push(articulo);
           }
           this.listadoArticulos = articulos_temp;
@@ -372,8 +370,9 @@ export class PedidoComponent implements OnInit {
 
         //index:0 = texto a buscar
         if(filtros[0]){
-          let filtro_query = filtros[0].toLowerCase()
-          filtroTexto = data.clave.toLowerCase().includes(filtro_query) || data.nombre_generico.toLowerCase().includes(filtro_query) || data.descripcion.toLowerCase().includes(filtro_query);
+          let filtro_query = filtros[0].toLowerCase();
+          let clave = (this.tipoDeElementoPedido.origen_articulo == 2)?data.clave_local:data.clave_cubs;
+          filtroTexto = clave.toLowerCase().includes(filtro_query) || data.nombre.toLowerCase().includes(filtro_query) || data.descripcion.toLowerCase().includes(filtro_query);
         }else{
           filtroTexto = true;
         }
@@ -851,7 +850,7 @@ export class PedidoComponent implements OnInit {
   guardarPedido(concluir:boolean = false, generar_folio:boolean = false){
     let datosPedido:any = {
       pedido: this.formPedido.value,
-      insumos_pedido: this.listadoArticulosPedido,
+      articulos_pedido: this.listadoArticulosPedido,
       unidades_pedido: this.unidadesSeleccionadas,
       concluir: concluir
     };
@@ -868,8 +867,8 @@ export class PedidoComponent implements OnInit {
           
           for(let id in this.controlArticulosModificados){
             if(this.controlArticulosModificados[id]){
-              let index_servidor = response.data.lista_insumos_medicos.findIndex(x => x.insumo_medico_id == id);
-              let pedido_articulo_id = response.data.lista_insumos_medicos[index_servidor].id;
+              let index_servidor = response.data.lista_articulos.findIndex(x => x.bien_servicio_id == id);
+              let pedido_articulo_id = response.data.lista_articulos[index_servidor].id;
 
               let index_local = this.listadoArticulosPedido.findIndex(x => x.id == id);
               this.listadoArticulosPedido[index_local].pedido_articulo_id = pedido_articulo_id;
@@ -909,8 +908,8 @@ export class PedidoComponent implements OnInit {
 
           for(let id in this.controlArticulosModificados){
             if(this.controlArticulosModificados[id]){
-              let index_servidor = response.data.lista_insumos_medicos.findIndex(x => x.insumo_medico_id == id);
-              let pedido_articulo_id = response.data.lista_insumos_medicos[index_servidor].id;
+              let index_servidor = response.data.lista_articulos.findIndex(x => x.bien_servicio_id == id);
+              let pedido_articulo_id = response.data.lista_articulos[index_servidor].id;
 
               let index_local = this.listadoArticulosPedido.findIndex(x => x.id == id);
               this.listadoArticulosPedido[index_local].pedido_articulo_id = pedido_articulo_id;
