@@ -12,14 +12,14 @@ export interface UnidadesData {
 }
 
 @Component({
-  selector: 'app-dialogo-selec-accion-insumos-unidades',
-  templateUrl: './dialogo-selec-accion-insumos-unidades.component.html',
-  styleUrls: ['./dialogo-selec-accion-insumos-unidades.component.css']
+  selector: 'app-dialogo-selec-accion-articulos-unidades',
+  templateUrl: './dialogo-selec-accion-articulos-unidades.component.html',
+  styleUrls: ['./dialogo-selec-accion-articulos-unidades.component.css']
 })
-export class DialogoSelecAccionInsumosUnidadesComponent implements OnInit {
+export class DialogoSelecAccionArticulosUnidadesComponent implements OnInit {
 
   constructor(
-    public dialogRef: MatDialogRef<DialogoSelecAccionInsumosUnidadesComponent>,
+    public dialogRef: MatDialogRef<DialogoSelecAccionArticulosUnidadesComponent>,
     @Inject(MAT_DIALOG_DATA) public data: UnidadesData,
     private formBuilder: FormBuilder
   ) { }
@@ -34,14 +34,14 @@ export class DialogoSelecAccionInsumosUnidadesComponent implements OnInit {
   ngOnInit() {
     if(this.data.tipo_accion == 'ICSU' || this.data.tipo_accion == 'EUCU'){
       this.listaAcciones = [
-        {codigo:'DIV',descripcion:'Dividir la cantidad de cada insumo entre las unidades seleccionadas'},
-        {codigo:'MUL',descripcion:'Multiplicar la cantidad de cada insumo entre las unidades seleccionadas'},
-        {codigo:'SEL',descripcion:'Asignar la cantidad del insumo a una unidad seleccionada'}
+        {codigo:'DIV',descripcion:'Dividir la cantidad de cada articulo entre las unidades seleccionadas'},
+        {codigo:'MUL',descripcion:'Multiplicar la cantidad de cada articulo entre las unidades seleccionadas'},
+        {codigo:'SEL',descripcion:'Asignar la cantidad del articulo a una unidad seleccionada'}
       ];
     }else if(this.data.tipo_accion == 'EUSU'){
       this.listaAcciones = [
-        {codigo:'MAN',descripcion:'Mantener la cantidad total asignada a cada insumo'},
-        {codigo:'SEL',descripcion:'Asignar la cantidad de una unidad seleccionada al insumo'}
+        {codigo:'MAN',descripcion:'Mantener la cantidad total asignada a cada articulo'},
+        {codigo:'SEL',descripcion:'Asignar la cantidad de una unidad seleccionada al articulo'}
       ];
     }
 
@@ -85,4 +85,5 @@ export class DialogoSelecAccionInsumosUnidadesComponent implements OnInit {
   close(): void {
     this.dialogRef.close();
   }
+
 }

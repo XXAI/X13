@@ -15,7 +15,6 @@ use App\Models\Pedido;
 use App\Models\UnidadMedica;
 use App\Models\TipoElementoPedido;
 use App\Models\Programa;
-use App\Models\InsumoMedico;
 use App\Models\BienServicio;
 
 
@@ -357,10 +356,10 @@ class PedidoOrdinarioController extends Controller
                         $pedido_articulo->cantidad =  $articulos_agregados[0]['cantidad'];
                         $pedido_articulo->monto =  $articulos_agregados[0]['monto'];
                         $pedido_articulo->deleted_at = null;
-                        $insumos_editados[] = $pedido_articulo;
+                        $articulos_editados[] = $pedido_articulo;
                         array_splice($articulos_agregados,0,1);
                     }else{
-                        $insumos_eliminados[] = $pedido_articulo_id;
+                        $articulos_eliminados[] = $pedido_articulo_id;
                     }
                 }
             }
@@ -407,7 +406,7 @@ class PedidoOrdinarioController extends Controller
                 }
 
                 foreach ($pedido_articulos_unidades as $articulo_unidad) {
-                    $pedido_articulo = $articulos_unidades[$articulo_unidad['insumo_id']];
+                    $pedido_articulo = $articulos_unidades[$articulo_unidad['articulo_id']];
                     if(isset($pedido_articulo['lista_unidades'][$articulo_unidad['unidad_medica_id']])){
                         $pedido_articulo_unidad = $pedido_articulo['lista_unidades'][$articulo_unidad['unidad_medica_id']];
                         if($pedido_articulo_unidad->cantidad != $articulo_unidad['cantidad']){

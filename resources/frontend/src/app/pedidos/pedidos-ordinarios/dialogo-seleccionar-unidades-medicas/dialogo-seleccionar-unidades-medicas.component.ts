@@ -1,14 +1,14 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
-import { DialogoSelecAccionInsumosUnidadesComponent } from '../dialogo-selec-accion-insumos-unidades/dialogo-selec-accion-insumos-unidades.component';
+import { DialogoSelecAccionArticulosUnidadesComponent } from '../dialogo-selec-accion-articulos-unidades/dialogo-selec-accion-articulos-unidades.component';
 
 export interface GrupoData {
   listaUnidades: any;
   listaSeleccionadas: any[];
-  unidadesConInsumos: any;
-  hayInsumosCapturados: boolean;
+  unidadesConArticulos: any;
+  hayArticulosCapturados: boolean;
 }
 
 @Component({
@@ -26,7 +26,7 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   ) { }
 
   grupo:any;
-  hayInsumosCapturados:boolean;
+  hayArticulosCapturados:boolean;
 
   filtroUnidadesGrupo:string;
   filtroUnidadesPedido:string;
@@ -35,8 +35,8 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   listaUnidadesGrupo:any[];
   listaUnidadesPedido:any[];
 
-  unidadesConInsumos:any;
-  unidadesEliminarInsumos:any;
+  unidadesConArticulos:any;
+  unidadesEliminarArticulos:any;
 
   controlUnidadesSeleccionadas:any;
 
@@ -45,13 +45,13 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     this.listaUnidadesGrupo = [];
     this.listaUnidadesPedido = [];
     this.controlUnidadesSeleccionadas = {};
-    this.unidadesConInsumos = {};
-    this.unidadesEliminarInsumos = {};
+    this.unidadesConArticulos = {};
+    this.unidadesEliminarArticulos = {};
 
-    if(grupo.hayInsumosCapturados){
-      this.hayInsumosCapturados = true;
+    if(grupo.hayArticulosCapturados){
+      this.hayArticulosCapturados = true;
     }else{
-      this.hayInsumosCapturados = false;
+      this.hayArticulosCapturados = false;
     }
 
     if(grupo.listaUnidades){
@@ -83,10 +83,9 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
       }
       
       //Unidades con insumos asignados
-      if(grupo.unidadesConInsumos){
-        this.unidadesConInsumos = grupo.unidadesConInsumos;
+      if(grupo.unidadesConArticulos){
+        this.unidadesConArticulos = grupo.unidadesConArticulos;
       }
-      //console.log(this.unidadesConInsumos);
       
       this.unidadesPedidoDataSource = new MatTableDataSource<any>(unidadesSeleccionadas);
 
@@ -119,15 +118,15 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
   }
 
   toggleRemoverUnidadMedica(unidad){
-    if(this.unidadesConInsumos[unidad.id]){
-      this.marcarEliminarInsumos(unidad);
+    if(this.unidadesConArticulos[unidad.id]){
+      this.marcarEliminarArticulos(unidad);
     }else{
       this.quitarUnidadMedica(unidad);
     }
   }
 
   toggleSeleccionarUnidadMedica(unidad){
-    if(this.unidadesConInsumos[unidad.id]){
+    if(this.unidadesConArticulos[unidad.id]){
       return false;
     }
 
@@ -153,11 +152,11 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     }
   }
 
-  marcarEliminarInsumos(unidad){
-    if(this.unidadesEliminarInsumos[unidad.id]){
-      this.unidadesEliminarInsumos[unidad.id] = false;
+  marcarEliminarArticulos(unidad){
+    if(this.unidadesEliminarArticulos[unidad.id]){
+      this.unidadesEliminarArticulos[unidad.id] = false;
     }else{
-      this.unidadesEliminarInsumos[unidad.id] = true;
+      this.unidadesEliminarArticulos[unidad.id] = true;
     }
   }
 
@@ -167,8 +166,8 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
     let unidades_eliminadas:any[] = [];
 
     let lista_unidades_eliminar:number[] = [];
-    for(let i in this.unidadesEliminarInsumos){
-      if(this.unidadesEliminarInsumos[i]){
+    for(let i in this.unidadesEliminarArticulos){
+      if(this.unidadesEliminarArticulos[i]){
         let unidad_id = +i;
         lista_unidades_eliminar.push(unidad_id);
       }
@@ -182,31 +181,30 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
       }
     }
 
-    let unidades_con_insumos = 0;
-    for(let i in this.unidadesConInsumos){
-      if(this.unidadesConInsumos[i]){
-        unidades_con_insumos++;
+    let unidades_con_articulos = 0;
+    for(let i in this.unidadesConArticulos){
+      if(this.unidadesConArticulos[i]){
+        unidades_con_articulos++;
       }
     }
 
-    if(unidades_con_insumos == 0 && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length > 0){
+    if(unidades_con_articulos == 0 && this.hayArticulosCapturados && this.unidadesPedidoDataSource.data.length > 0){
       aplicar_accion = true;
       data_accion = {tipo_accion:'ICSU', lista_unidades: this.unidadesPedidoDataSource.data};
     }
 
-    /*if(unidades_con_insumos > 0 && this.hayInsumosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
-      console.log('######### Acción requerida: ya hay insumos capturados con unidades seleccionadas anteriormente con insumos asignados');
+    /*if(unidades_con_articulos > 0 && this.hayArticulosCapturados &&  this.unidadesPedidoDataSource.data.length > 0){
       aplicar_accion = false;
-      data_accion = {tipo_accion:'ICUS', lista_unidades: this.unidadesPedidoDataSource.data, unidades_con_insumos: this.unidadesConInsumos};
+      data_accion = {tipo_accion:'ICUS', lista_unidades: this.unidadesPedidoDataSource.data, unidades_con_articulos: this.unidadesConArticulos};
     }*/
 
-    //eliminar unidades con insumos asignados, dejando unidades sin asignar
-    if(unidades_con_insumos > 0 && unidades_eliminadas.length == unidades_con_insumos && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length == unidades_eliminadas.length){
+    //eliminar unidades con aritculos asignados, dejando unidades sin asignar
+    if(unidades_con_articulos > 0 && unidades_eliminadas.length == unidades_con_articulos && this.hayArticulosCapturados && this.unidadesPedidoDataSource.data.length == unidades_eliminadas.length){
       aplicar_accion = true;
       data_accion = {tipo_accion:'EUSU', lista_unidades: unidades_eliminadas};
     }
 
-    if(unidades_con_insumos > 0 && unidades_eliminadas.length == unidades_con_insumos && this.hayInsumosCapturados && this.unidadesPedidoDataSource.data.length > unidades_eliminadas.length){
+    if(unidades_con_articulos > 0 && unidades_eliminadas.length == unidades_con_articulos && this.hayArticulosCapturados && this.unidadesPedidoDataSource.data.length > unidades_eliminadas.length){
       aplicar_accion = true;
       let unidades_restantes:any[] = [];
       for(let i in this.unidadesPedidoDataSource.data){
@@ -227,15 +225,15 @@ export class DialogoSeleccionarUnidadesMedicasComponent implements OnInit {
         panelClass: 'no-padding-dialog'
       };
   
-      const dialogRef = this.dialog.open(DialogoSelecAccionInsumosUnidadesComponent, configDialog);
+      const dialogRef = this.dialog.open(DialogoSelecAccionArticulosUnidadesComponent, configDialog);
   
       dialogRef.afterClosed().subscribe(response => {
         if(response){
-          this._aplicarCerrar({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:lista_unidades_eliminar, accion:response},lista_unidades_eliminar);
+          this._aplicarCerrar({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarArticulos:lista_unidades_eliminar, accion:response},lista_unidades_eliminar);
         }
       });
     }else{
-      this._aplicarCerrar({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarInsumos:lista_unidades_eliminar},lista_unidades_eliminar);
+      this._aplicarCerrar({unidadesSeleccionadas:this.unidadesPedidoDataSource.data, unidadesEliminarArticulos:lista_unidades_eliminar},lista_unidades_eliminar);
     }
   }
 

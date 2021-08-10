@@ -610,8 +610,8 @@ export class PedidoComponent implements OnInit {
             this.clavesTotalesPedido.articulos -= 1;
             
             //Guardar para papelera
-            let insumo_copia = JSON.parse(JSON.stringify(this.listadoArticulosPedido[index]));
-            this.listadoArticulosEliminados.push(insumo_copia);
+            let articulo_copia = JSON.parse(JSON.stringify(this.listadoArticulosPedido[index]));
+            this.listadoArticulosEliminados.push(articulo_copia);
             
             this.listadoArticulosPedido.splice(index,1);
           }
@@ -632,8 +632,8 @@ export class PedidoComponent implements OnInit {
           let index = this.listadoArticulosPedido.findIndex(x => x.id === articulo.id);
 
           //Guardar para papelera
-          let insumo_copia = JSON.parse(JSON.stringify(this.listadoArticulosPedido[index]));
-          this.listadoArticulosEliminados.push(insumo_copia);
+          let articulo_copia = JSON.parse(JSON.stringify(this.listadoArticulosPedido[index]));
+          this.listadoArticulosEliminados.push(articulo_copia);
 
           this.listadoArticulosPedido.splice(index,1);
         }
