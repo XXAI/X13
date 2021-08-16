@@ -10,7 +10,7 @@ class MovimientoInsumo extends Model{
     
     use SoftDeletes;
     protected $table = 'movimientos_insumos';  
-    protected $fillable = ['id','movimiento_id','stock_id','insumo_medico_id','direccion_movimiento','modo_movimiento','cantidad','user_id'];
+    protected $fillable = ['id','movimiento_id','stock_id','insumo_medico_id','direccion_movimiento','modo_movimiento','cantidad','user_id','bienes_servicios_id','cantidad_anterior'];
 
     public function insumoMedico(){
         return $this->belongsTo('App\Models\InsumoMedico','insumo_medico_id');
