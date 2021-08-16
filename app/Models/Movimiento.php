@@ -10,7 +10,7 @@ class Movimiento extends Model{
     
     use SoftDeletes;
     protected $table = 'movimientos';  
-    protected $fillable = ['almacen_id','direccion_movimiento','estatus','fecha_movimiento','programa_id','folio','descripcion','entrega','recibe','observaciones','cancelado','fecha_cancelacion','motivo_cancelacion','user_id'];
+    protected $fillable = ['almacen_id','direccion_movimiento','estatus','fecha_movimiento','programa_id','folio','descripcion','entrega','recibe','observaciones','cancelado','fecha_cancelacion','motivo_cancelacion','user_id','proveedor_id','clues'];
 
     public function almacen(){
         return $this->belongsTo('App\Models\Almacen','almacen_id');

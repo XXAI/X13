@@ -78,6 +78,14 @@ Route::group(['middleware'=>'auth'],function($router){
     */
     Route::apiResource('insumos-medicos',          'API\Modulos\InsumosMedicosController');
     Route::get('cargar-catalogos',                 'API\Modulos\CatalogosController@getCatalogos');
+
+    /*
+    * Módulos de importacion de insumos a existencias
+    */
+    Route::post('importar-entradas-excel',                 'API\Modulos\ExcelImportInsumosController@importarEntradasLayout');
+    Route::post('importar-salidas-excel',                 'API\Modulos\ExcelImportInsumosController@importarSalidasLayout');
+    Route::post('importar-existencias-excel',                 'API\Modulos\ExcelImportInsumosController@importarExistenciasLayout');
+    
 });
 
 Route::middleware('auth')->get('/avatar-images', function (Request $request) {
