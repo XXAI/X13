@@ -21,6 +21,7 @@ export const APPS:App [] = [
         { name:'Existencias',     route: "almacen/existencias",     icon: "assets/icons/existencias.svg",   permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         { name:'Transferencias',  route: "almacen/transferencias",  icon: "assets/icons/transferencia.svg",   permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         { name:'Inventario',      route: "almacen/inventario",      icon: "assets/icons/inventario.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
+        { name:'Importar datos',      route: "almacen/importar",      icon: "assets/icons/subir.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
       ]
     },
     { name:'Pedidos',   route: "pedidos",       icon: "assets/icons/pedidos-hub.svg",         permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",

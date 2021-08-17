@@ -1,0 +1,50 @@
+<div style="height: 100%; padding:20px" fxLayout="column">
+
+    <mat-card>
+        
+        <mat-card-header>
+            <mat-card-title>Importación de datos</mat-card-title>
+            <mat-card-subtitle>Por favor verifique los layouts antes de hacer cualquier acción</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+           
+            <div fxLayout="column">
+                <mat-form-field appearance="outline">
+                    <mat-label>Seleccione una acción</mat-label>
+                    <mat-select [(ngModel)]="accion">
+                        <mat-option *ngFor="let accion of acciones" [value]="accion.value">
+                            {{accion.name}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" >
+                    <mat-label>Seleccione unidad médica</mat-label>
+                    <mat-select [(ngModel)]="unidadMedicaId" id="unidadmedica" (selectionChange)="updateAlmacenes()" [disabled]="loadingCatalogos">
+                        <!--<mat-option>Cualquiera</mat-option>-->
+                        <mat-option *ngFor="let item of catalogos.unidades_medicas" [value]="item.id">{{ item.clues }} {{ item.nombre }}</mat-option>                        
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                    <mat-label>Seleccione un almacen</mat-label>
+                    <mat-select  [(ngModel)]="data.almacen_id">
+                        <mat-option *ngFor="let item of almacenes" [value]="item.id">{{ item.nombre }}</mat-option>  
+                    </mat-select>
+                </mat-form-field>
+                <div fxFlex fxLayout="row">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="layout" name="layout" (change)="onFileSelect($event)" multiple="multiple" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" #UploadFileInput>
+                    </div>
+                </div>
+            </div>    
+            <br>
+            <div style="overflow: auto; background-color: #F5F5F5; padding: 10px;" *ngIf="errorDetails!=null">
+                <pre>{{errorDetails |json}}</pre>
+            </div>
+           
+            <mat-progress-bar *ngIf="importing" mode="indeterminate"></mat-progress-bar>
+        </mat-card-content>
+        <mat-card-actions>
+            <button mat-flat-button color="primary" [disabled]="file == null || data.almacen_id == -1 || accion == null|| importing || loadingCatalogos"  (click)="subir()" >Importar</button>
+        </mat-card-actions>
+    </mat-card>
+</div>

@@ -8,6 +8,7 @@ import { SalidasModule } from './salidas/salidas.module';
 import { AlmacenRoutingModule } from './almacen-routing.module';
 import { AlmacenAppsComponent } from './almacen-apps/almacen-apps.component';
 import { ExistenciasModule } from './existencias/existencias.module';
+import { ImportarModule } from "./importar/importar.module";
 
 
 @NgModule({
@@ -18,7 +19,8 @@ import { ExistenciasModule } from './existencias/existencias.module';
     EntradasModule,
     SalidasModule,
     AlmacenRoutingModule,
-    ExistenciasModule
+    ExistenciasModule,
+    ImportarModule
   ]
 })
 export class AlmacenModule { }
