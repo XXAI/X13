@@ -23,4 +23,8 @@ class Movimiento extends Model{
     public function listaInsumosBorrador(){
         return $this->hasMany('App\Models\MovimientoInsumoBorrador','movimiento_id');
     }
+
+    public function pedido(){
+        return $this->belongsToMany('App\Models\Pedido', 'rel_movimientos_pedidos', 'movimiento_id', 'pedido_id');
+    }
 }

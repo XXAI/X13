@@ -1,0 +1,30 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Subir Layout de Entrada:
+    </section>
+    <div fxFlex>
+        <div fxFlex fxLayout="row" [formGroup]="entradaForm">
+            <mat-form-field fxFlex>
+                <mat-label>Almacen</mat-label>
+                <mat-select  formControlName="almacen_id" required>
+                    <mat-option *ngFor="let item of almacenes" [value]="item.id">
+                        {{item.nombre}}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="entradaForm.get('almacen_id').hasError('required')">El almacen es obligatorio</mat-error>
+            </mat-form-field>
+            
+            <div fxFlex fxLayout="row">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="customFile" name="myfile" (change)="onFileSelect($event)" multiple="multiple" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" #UploadFileInput>
+                </div>
+            </div>
+        </div>
+    </div>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        <button fxFlex="20" mat-raised-button color="primary" (click)="subirArchivo()" [disabled]="!entradaForm.valid"><mat-icon>upload_file</mat-icon>Subir</button>
+        <div fxFlex="none">&nbsp;</div>
+        <button fxFlex="20" mat-stroked-button (click)="cancelar()" >Cancelar</button>
+    </section>
+</section>

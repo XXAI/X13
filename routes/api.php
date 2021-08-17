@@ -71,7 +71,9 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('busqueda-elementos',                'API\Modulos\PedidoOrdinarioController@busquedaElementos');
     Route::apiResource('pedido-ordinario',          'API\Modulos\PedidoOrdinarioController');
     Route::apiResource('recepcion-pedidos',         'API\Modulos\RecepcionPedidosController')->except(['create','store']);
-    Route::get('lista-insumos-recepcion/{id}',           'API\Modulos\RecepcionPedidosController@listaInsumosRecepcion');
+    Route::get('lista-insumos-recepcion/{id}',      'API\Modulos\RecepcionPedidosController@listaInsumosRecepcion');
+    Route::apiResource('estatus-avance-recepcion',  'API\Modulos\EstatusAvanceRecepcionPedidoController')->except(['create','store','update','destroy']);
+    Route::get('estatus-avance-recepcion-catalogos','API\Modulos\EstatusAvanceRecepcionPedidoController@datosCatalogo');
 
     /*
     *   Modulos generales

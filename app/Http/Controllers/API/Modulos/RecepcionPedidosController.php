@@ -86,7 +86,7 @@ class RecepcionPedidosController extends Controller
                                                 ->groupBy('pedidos_lista_insumos.insumo_medico_id')
                                                 ->orderBy('pedidos_lista_insumos.id');
                                     },'unidadMedica.almacenes','programa','avanceRecepcion','recepcionesAnteriores','recepcionActual.listaInsumosBorrador'])->find($id);
-
+                                    
             $return_data = ['data'=>$pedido];
 
             return response()->json($return_data,HttpResponse::HTTP_OK);

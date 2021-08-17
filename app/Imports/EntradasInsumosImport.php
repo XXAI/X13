@@ -11,6 +11,7 @@ use DB;
 
 //use App\Models\User;
 use App\Models\Proveedor;
+use App\Models\Pedido;
 use App\Models\BienServicio;
 use App\Models\Movimiento;
 use App\Models\MovimientoInsumo;
@@ -31,10 +32,16 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
     private $proveedores;
     private $rowErrors;
     private $almacen_id;
+    private $pedido_id; //Harima:: Temporal para guardado con recepciones de pedidos
 
-    public function __construct($almacen_id) 
+    public function __construct($almacen_id, $pedido_id = null) //Harima:: Se agrego parametro opcional pedido_id
     {
         $this->almacen_id = $almacen_id;
+
+        if($pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
+            $this->pedido_id = $pedido_id;
+        }
+
         $this->proveedores = Proveedor::all();
         $this->rowErrors = [];
         
@@ -91,7 +98,11 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
         // ----
 
         try
-        {
+        {   
+            if($this->pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
+                $pedido = Pedido::find($this->pedido_id);
+            }
+
             foreach($movimientosBatch as $batch)
             {
     
@@ -103,6 +114,11 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                     "proveedor_id" => $batch["proveedor_id"],
                     "descripcion" => "Importación de entradas por proveedor con layout xlsx"
                 ]);
+
+                if($this->pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
+                    $pedido->recepcionActual()->attach($movimiento);
+                }
+                
                 // Debug 
                 $movimientosCreated[] = $movimiento;
                 // ----

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 use Validator;
 
@@ -85,7 +86,7 @@ class PermissionController extends Controller
             $parametros = $request->all(); 
 
             if(!isset($parametros['id'])){
-                $parametros['id'] = str_random(32);
+                $parametros['id'] = Str::random(32);
             }
             
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messajes);

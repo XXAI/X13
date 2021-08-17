@@ -1,0 +1,136 @@
+::ng-deep .mat-card{
+    padding:10px !important;
+}
+
+.data-container {
+    position: relative;
+    min-height: 200px;
+}
+
+.data-table-container {
+    position: relative;
+    max-height: 400px;
+    min-height:200px;
+    overflow: auto;
+}
+
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grupo:hover{
+    border:dashed thin black !important;
+}
+
+.grupo .folio-label, .grupo .folio-value{
+    padding:2px;
+}
+
+.folio-label{
+    font-weight: bold;
+}
+
+.folio-value{
+    text-align: right;
+    background-color: lightgray;
+}
+
+.grupo-body{
+    padding:5px 0px;
+    font-style: italic;
+    text-align: center;
+    border-top: solid thin grey;
+    border-bottom: solid thin grey;
+}
+
+.grupo-action{
+    padding-top:3px;
+}
+
+table {
+  width: 100%;
+}
+
+table th {
+    padding:0 5px;
+    text-align: center;
+}
+
+table td {
+    padding:0 5px;
+}
+  
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+/* Column Widths */
+.mat-column-actions{
+  max-width: 75px;
+  min-width: 60px;
+}
+
+.selected-item{
+  background-color: lightskyblue;
+}
+
+.not-results-found{
+  text-align: center;
+  font-style: italic;
+}
+
+.loading-results{
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  text-align: center;
+  font-style: italic;
+}
+
+.loading-results mat-spinner{
+  margin:0 auto;
+}
+
+.hide{
+  display: none;
+}
+
+.search-button {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+  margin: 0 10px;
+}
+
+.borrador-color{
+  color:#b6b6b6;
+}
+
+.concluido-color{
+  color:#07a8ff;
+}
+
+.validado-color{
+  color:#03fc5e;
+}
+
+.cancelado-color{
+  color:#ff2a2a;
+}
+
+.expirado-color{
+  color:#fdcd2f;
+}

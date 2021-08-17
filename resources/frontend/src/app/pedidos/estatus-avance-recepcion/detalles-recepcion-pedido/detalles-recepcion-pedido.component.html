@@ -1,0 +1,136 @@
+<div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex fxLayout="row" fxLayoutGap="10px">
+        <section fxFlex="30" fxLayout="row">
+            <mat-card fxFlex="100" fxLayout="column">
+                <div fxFlex fxLayout="column" *ngIf="!mostrarRecepciones"> <!-- Panel principal del pedido -->
+                    <div fxFlex="none" fxLayout="row">
+                        <button fxFlex="none" [routerLink]="'/pedidos/estatus-avance'" mat-button><mat-icon>backspace</mat-icon></button>
+                        <div fxFlex></div>
+                        <button fxFlex="none" mat-icon-button color="primary" matTooltip="Imprimir" (click)="imprimirPedido()"><mat-icon>print</mat-icon></button>
+                    </div>
+                    <div fxFlex="none" fxLayout="column">
+                        <div fxFlex>
+                            <mat-progress-bar mode="determinate" [value]="totalAvanceRecepcion" style="height: 20px;" color="accent"></mat-progress-bar>
+                            <mat-hint>Avance Total: {{totalAvanceRecepcion | number:'1.0-2'}}%</mat-hint>
+                        </div>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" fxLayout="column">
+                        <div fxFlex class="label-unidad-entrega">
+                            Tipo de Pedido:
+                        </div>
+                        <div fxFlex class="unidad-entrega">
+                            {{(dataPedido.tipo_elemento_pedido)?dataPedido.tipo_elemento_pedido.descripcion:'Sin Tipo Asignado'}}
+                        </div>
+                    </div>
+                    <div fxFlex="none" fxLayout="column" style="padding: 5px 0px;">
+                        <div fxFlex class="label-unidad-entrega">
+                            Entregado:
+                        </div>
+                        <div fxFlex class="unidad-entrega">
+                            {{(dataPedido.unidad_medica)?dataPedido.unidad_medica.nombre:'Sin Unidad Asignada'}}
+                        </div>
+                    </div>
+                    <div fxFlex="none">
+                        <mat-list>
+                            <mat-list-item style="height: auto;">
+                                <div mat-line style="font-weight: bold;">Descripción Pedido</div>
+                                <div mat-line> {{ dataPedido.descripcion }} </div>
+                            </mat-list-item>
+                            <mat-list-item style="height: auto;">
+                                <div mat-line style="font-weight: bold;">Fecha</div>
+                                <div mat-line> {{ dataPedido.mes }} - {{ dataPedido.anio }} </div>
+                            </mat-list-item>
+                            <mat-list-item style="height: auto;">
+                                <div mat-line style="font-weight: bold;">Programa</div>
+                                <div mat-line> {{ (dataPedido.programa)?dataPedido.programa.descripcion:'Sin Programa' }} </div>
+                            </mat-list-item>
+                            <mat-list-item style="height: auto;">
+                                <div mat-line style="font-weight: bold;">Observaciones</div>
+                                <div mat-line> {{ dataPedido.observaciones }} </div>
+                            </mat-list-item>
+                        </mat-list>
+                    </div>
+                    <div fxFlex></div>
+                    <div fxFlex="none" fxLayout="row">
+                        <button fxFlex mat-flat-button color="info" (click)="verDialogoArchivo()">
+                            <mat-icon>file_upload</mat-icon> Subir Recepciones
+                        </button>
+                    </div>
+                    <div fxFlex="none" fxLayout="row">
+                        <button fxFlex mat-flat-button color="info" (click)="verRecepciones()" [matBadge]="0" [matBadgeHidden]="true" matBadgeColor="accent" [disabled]="true">
+                            <mat-icon>list_alt</mat-icon> Recepciones Capturadas
+                        </button>
+                    </div>
+                </div>
+                <div fxFlex fxLayout="column" *ngIf="mostrarRecepciones"></div>
+            </mat-card>
+        </section>
+        <section fxFlex fxLayout="column">
+            <mat-card fxFlex="100" fxLayout="column">
+                <div fxFlex="none" fxLayout="row">
+                    <div fxFlex="none">
+                    </div>
+                    <div fxFlex></div>
+                    <div fxFlex="none">
+                        <mat-chip-list aria-label="Pedido Interno">
+                            <mat-chip color="primary" selected [disableRipple]="true">
+                                Total: {{ (filtroAplicado && filtroArticulos)?(clavesTotalesFiltro.articulos | number)+'/':'' }}{{clavesTotales.articulos | number}} Claves
+                            </mat-chip>
+                        </mat-chip-list>
+                    </div>
+                </div>
+                <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
+                    <div fxFlex class="small-search-input">
+                        <mat-form-field fxFlex appearance="outline">
+                            <input matInput [(ngModel)]="filtroArticulos" (keyup.enter)="cargarFiltroArticulos()" placeholder="Filtrar">
+                            <button *ngIf="filtroAplicado" mat-icon-button matSuffix (click)="limpiarFiltroArticulos()" [attr.aria-label]="'Limpiar Filtro'" [attr.aria-pressed]="filtroAplicado">
+                                <mat-icon>clear</mat-icon>
+                            </button>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none">
+                        <button mat-flat-button color="info" (click)="cargarFiltroArticulos()">
+                            <mat-icon>filter_alt</mat-icon> Filtrar
+                        </button>
+                    </div>
+                </div>
+                <mat-divider [inset]="true"></mat-divider>
+                <div fxFlex style="overflow: auto;">
+                    <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                        <div *ngIf="listaFiltroArticulos.length == 0" class="no-items-found">
+                            No se encontraron articulos
+                        </div>
+                        <div *cdkVirtualFor="let articulo of listaFiltroArticulos;" style="height: 80px;">
+                            <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
+                                <div fxFlex fxLayout="column" class="datos-articulo">
+                                    <div fxFlex="none" class="titulo">
+                                        <span class="label">Clave:</span> {{articulo.clave}}
+                                    </div>
+                                    <div fxFlex="none" class="descripcion">
+                                        <span class="label">Nombre:</span> {{articulo.nombre}}
+                                    </div>
+                                    <div fxFlex="none">
+                                        <mat-progress-bar mode="determinate" [value]="articulo.porcentaje" style="height: 15px;" color="primary"></mat-progress-bar>
+                                    </div>
+                                    <div fxFlex="none" class="detalles">
+                                        <span class="label">Total Piezas:</span> {{articulo.recibido}}/{{articulo.cantidad}}
+                                        <mat-divider></mat-divider>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
+                </div>
+                <div fxFlex="none" fxLayout="row">
+                    <div fxFlex="none" style="padding-top: 10px;">
+                    </div>
+                    <!-- Puede haber algo -->
+                    <div fxFlex>
+                    </div>
+                </div>
+            </mat-card>
+        </section>
+    </section>
+</section>

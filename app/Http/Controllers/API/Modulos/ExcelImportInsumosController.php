@@ -46,8 +46,6 @@ class ExcelImportInsumosController extends Controller
             ],409);
         }
         
-       
-
         if($request->hasFile('layout'))
         {
             if($request->file('layout')->isValid())
@@ -56,7 +54,11 @@ class ExcelImportInsumosController extends Controller
             $path = $file->store('entradas');
             try
             {
-                Excel::import(new EntradasInsumosImport($input["almacen_id"]), $path);
+                $pedido_id = null; //Harima:: Se agrego parametro opcional pedido_id
+                if(isset($input['pedido_id']) && $input['pedido_id']){
+                    $pedido_id = $input['pedido_id'];
+                }
+                Excel::import(new EntradasInsumosImport($input["almacen_id"],$pedido_id), $path);
                 return response()->json([
                     'message' => "Importación de entradas realizada correctamente"
                 ],200);
