@@ -7,7 +7,6 @@ import { PedidosRoutingModule } from './pedidos-routing.module';
 import { PedidosAppsComponent } from './pedidos-apps/pedidos-apps.component';
 import { PedidosOrdinariosModule } from './pedidos-ordinarios/pedidos-ordinarios.module';
 import { RecepcionPedidosModule } from './recepcion-pedidos/recepcion-pedidos.module';
-import { EstatusAvanceRecepcionModule } from './estatus-avance-recepcion/estatus-avance-recepcion.module';
 
 
 @NgModule({
@@ -18,7 +17,6 @@ import { EstatusAvanceRecepcionModule } from './estatus-avance-recepcion/estatus
     PedidosOrdinariosModule,
     RecepcionPedidosModule,
     PedidosRoutingModule,
-    EstatusAvanceRecepcionModule,
   ]
 })
 export class PedidosModule { }

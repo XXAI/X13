@@ -3,7 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { SharedService } from '../../../shared/shared.service';
-import { EstatusAvanceRecepcionService } from '../estatus-avance-recepcion.service';
+import { RecepcionPedidosService } from '../recepcion-pedidos.service';
 import { SubirArchivoService } from '../subir-archivo.service';
 
 export interface EntradaData {
@@ -20,7 +20,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<DialogoSubirArchivoComponent>, 
     @Inject(MAT_DIALOG_DATA) public data: EntradaData, 
-    private estatusAvanceService: EstatusAvanceRecepcionService,
+    private recepcionPedidosService: RecepcionPedidosService,
     private subirArchivoService: SubirArchivoService,
     private sharedService: SharedService,
     private fb: FormBuilder,
@@ -42,7 +42,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
   ngOnInit(): void {
     this.almacenes = [];
 
-    this.estatusAvanceService.obtenerDatosCatalogo({pedido_id:this.data.pedidoId}).subscribe(
+    this.recepcionPedidosService.obtenerDatosCatalogo({pedido_id:this.data.pedidoId}).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;

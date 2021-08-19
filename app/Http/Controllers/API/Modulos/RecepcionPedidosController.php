@@ -19,16 +19,24 @@ use App\Models\Stock;
 class RecepcionPedidosController extends Controller
 {
 
-    public function datosCatalogo(){
+    public function datosCatalogo(Request $request){
         try{
             $data = [];
-            $data = $this->getUserAccessData();
+            $parametros = $request->all();
+
+            if(isset($parametros['pedido_id']) && $parametros['pedido_id']){
+                $pedido = Pedido::with('unidadMedica.almacenes')->find($parametros['pedido_id']);
+                if($pedido){
+                    $data['almacenes'] = $pedido->unidadMedica->almacenes;
+                }
+            }
 
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
+    
     /**
      * Display a listing of the resource.
      *
@@ -39,7 +47,7 @@ class RecepcionPedidosController extends Controller
         try{
             $parametros = $request->all();
             
-            $pedidos = Pedido::getModel();
+            $pedidos = Pedido::with('avanceRecepcion');
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -75,18 +83,23 @@ class RecepcionPedidosController extends Controller
     public function show($id)
     {
         try{
-            $pedido = Pedido::with(['listaInsumosMedicos'=>function($insumos){
-                                        $insumos->with('insumoMedico.medicamento','insumoMedico.materialCuracion')
-                                                ->select('pedidos_lista_insumos.*',DB::raw('sum(movimientos_insumos.cantidad) as cantidad_recibida'))
-                                                ->leftjoin('rel_movimientos_pedidos','rel_movimientos_pedidos.pedido_id','=','pedidos_lista_insumos.pedido_id')
+            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion',
+                                    'listaArticulos'=>function($articulos){
+                                        $articulos->with(['articulo'=>function($articulo){
+                                                                        $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                                                                ->select('bienes_servicios.*','familias.nombre as nombre_familia');
+                                                                    },'articulo.partidaEspecifica'])
+                                                ->select('pedidos_lista_articulos.*',DB::raw('sum(movimientos_insumos.cantidad) as cantidad_recibida'))
+                                                ->leftjoin('rel_movimientos_pedidos','rel_movimientos_pedidos.pedido_id','=','pedidos_lista_articulos.pedido_id')
                                                 ->leftjoin('movimientos_insumos',function($join){
-                                                    $join->on('movimientos_insumos.movimiento_id','=','rel_movimientos_pedidos.movimiento_id')->whereNull('movimientos_insumos.deleted_at')
-                                                            ->on('movimientos_insumos.insumo_medico_id','=','pedidos_lista_insumos.insumo_medico_id');
+                                                    $join->on('movimientos_insumos.movimiento_id','=','rel_movimientos_pedidos.movimiento_id')
+                                                            ->whereNull('movimientos_insumos.deleted_at')
+                                                            ->on('movimientos_insumos.bienes_servicios_id','=','pedidos_lista_articulos.bien_servicio_id');
                                                 })
-                                                ->groupBy('pedidos_lista_insumos.insumo_medico_id')
-                                                ->orderBy('pedidos_lista_insumos.id');
-                                    },'unidadMedica.almacenes','programa','avanceRecepcion','recepcionesAnteriores','recepcionActual.listaInsumosBorrador'])->find($id);
-                                    
+                                                ->groupBy('pedidos_lista_articulos.bien_servicio_id')
+                                                ->orderBy('pedidos_lista_articulos.id');
+                                    },'listaUnidadesMedicas.unidadMedica'])->find($id);
+
             $return_data = ['data'=>$pedido];
 
             return response()->json($return_data,HttpResponse::HTTP_OK);

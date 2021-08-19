@@ -106,6 +106,9 @@ table td {
     background-color:whitesmoke;
 }
 
+.item-articulo:hover{
+    background-color: whitesmoke;
+}
 
 /*.lista-articulos-item-contenido{
     padding: 0px 8px 8px 8px;

@@ -3,9 +3,9 @@
     <section fxFlex fxLayout="row" fxLayoutGap="10px">
         <section fxFlex="30" fxLayout="row">
             <mat-card fxFlex="100" fxLayout="column">
-                <div fxFlex fxLayout="column" *ngIf="!mostrarRecepciones"> <!-- Panel principal del pedido -->
-                    <div fxFlex="none" fxLayout="row">
-                        <button fxFlex="none" [routerLink]="'/pedidos/estatus-avance'" mat-button><mat-icon>backspace</mat-icon></button>
+                <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'PEDIDO'"> <!-- Panel principal del pedido -->
+                    <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
+                        <button fxFlex="none" [routerLink]="'/pedidos/recepcion-pedidos'" mat-stroked-button><mat-icon>backspace</mat-icon></button>
                         <div fxFlex></div>
                         <button fxFlex="none" mat-icon-button color="primary" matTooltip="Imprimir" (click)="imprimirPedido()"><mat-icon>print</mat-icon></button>
                     </div>
@@ -53,18 +53,69 @@
                         </mat-list>
                     </div>
                     <div fxFlex></div>
-                    <div fxFlex="none" fxLayout="row">
-                        <button fxFlex mat-flat-button color="info" (click)="verDialogoArchivo()">
-                            <mat-icon>file_upload</mat-icon> Subir Recepciones
+                    <div fxFlex="none" fxLayout="row" fxLayoutAlign="space-around center">
+                        <button fxFlex="30" mat-flat-button color="primary" matTooltip="Recepción manual [Activa]" *ngIf="recepcionPendiente" (click)="mostrarFormularioRecepcion()">
+                            <mat-icon>edit</mat-icon>
                         </button>
-                    </div>
-                    <div fxFlex="none" fxLayout="row">
-                        <button fxFlex mat-flat-button color="info" (click)="verRecepciones()" [matBadge]="0" [matBadgeHidden]="true" matBadgeColor="accent" [disabled]="true">
-                            <mat-icon>list_alt</mat-icon> Recepciones Capturadas
+
+                        <button fxFlex="30" mat-stroked-button color="primary" matTooltip="Recepción manual" *ngIf="!recepcionPendiente" (click)="mostrarFormularioRecepcion()">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+
+                        <button fxFlex="30" mat-flat-button color="accent" matTooltip="Subir archivo de entrada" [disabled]="recepcionPendiente" (click)="verDialogoArchivo()">
+                            <mat-icon>file_upload</mat-icon>
+                        </button>
+
+                        <button fxFlex="30" mat-flat-button color="info" matTooltip="Ver recepciones capturadas" (click)="mostrarRecepciones()" [matBadge]="0" [matBadgeHidden]="false" matBadgeColor="accent">
+                            <mat-icon>list_alt</mat-icon>
                         </button>
                     </div>
                 </div>
-                <div fxFlex fxLayout="column" *ngIf="mostrarRecepciones"></div>
+                <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'RECEPCIONES'"><!-- Panel de recepciones -->
+                    <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
+                        <button fxFlex="none" (click)="mostrarPedido()" mat-icon-button><mat-icon>clear</mat-icon></button>
+                        <div fxFlex></div>
+                    </div>
+                </div>
+                <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'ENTRADA'"><!-- Panel de formulario de entrada -->
+                    <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
+                        <button fxFlex="none" (click)="mostrarPedido()" mat-icon-button><mat-icon>clear</mat-icon></button>
+                        <div fxFlex></div>
+                        <button fxFlex="none" mat-icon-button color="accent" matTooltip="Finalizar Recepción"><mat-icon>move_to_inbox</mat-icon></button>
+                        <button fxFlex="none" mat-icon-button color="primary" matTooltip="Guardar"><mat-icon>save</mat-icon></button>
+                    </div>
+                    <div fxFlex="none" fxLayout="row raw" [formGroup]="formRecepcion">
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Almacen</mat-label>
+                            <mat-select formControlName="almacen_id" required>
+                                <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
+                                <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
+                                    {{item.nombre}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="formRecepcion.get('almacen_id').hasError('required')">Este campo es requerido</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Fecha Recepción</mat-label>
+                            <input matInput mascaraFecha formControlName="fecha_movimiento" required>
+                            <mat-error *ngIf="formRecepcion.get('fecha_movimiento').hasError('isValidDate')">La fecha no es valida</mat-error>
+                            <mat-error *ngIf="formRecepcion.get('fecha_movimiento').hasError('required')">Este campo es requerido</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Nombre de quien recibe</mat-label>
+                            <input matInput formControlName="recibe" required>
+                            <mat-error *ngIf="formRecepcion.get('recibe').hasError('required')">Este campo es requerido</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Nombre de quien entrega</mat-label>
+                            <input matInput formControlName="entrega" required>
+                            <mat-error *ngIf="formRecepcion.get('entrega').hasError('required')">Este campo es requerido</mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
             </mat-card>
         </section>
         <section fxFlex fxLayout="column">
@@ -99,11 +150,11 @@
                 <mat-divider [inset]="true"></mat-divider>
                 <div fxFlex style="overflow: auto;">
                     <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
-                        <div *ngIf="listaFiltroArticulos.length == 0" class="no-items-found">
+                        <div *ngIf="dataSourceArticulos && dataSourceArticulos.filteredData.length == 0" class="no-items-found">
                             No se encontraron articulos
                         </div>
-                        <div *cdkVirtualFor="let articulo of listaFiltroArticulos;" style="height: 80px;">
-                            <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
+                        <div *cdkVirtualFor="let articulo of dataSourceArticulos;" style="height: 80px;">
+                            <div fxLayout="row" class="item-articulo" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
                                 <div fxFlex fxLayout="column" class="datos-articulo">
                                     <div fxFlex="none" class="titulo">
                                         <span class="label">Clave:</span> {{articulo.clave}}
@@ -112,12 +163,17 @@
                                         <span class="label">Nombre:</span> {{articulo.nombre}}
                                     </div>
                                     <div fxFlex="none">
-                                        <mat-progress-bar mode="determinate" [value]="articulo.porcentaje" style="height: 15px;" color="primary"></mat-progress-bar>
+                                        <mat-progress-bar [mode]="progressBarMode" [value]="articulo.porcentaje" [bufferValue]="articulo.agregado" style="height: 15px;" color="primary"></mat-progress-bar>
                                     </div>
                                     <div fxFlex="none" class="detalles">
-                                        <span class="label">Total Piezas:</span> {{articulo.recibido}}/{{articulo.cantidad}}
+                                        <span class="label">Total Piezas:</span> {{articulo.recibido}}/{{articulo.cantidad}} {{(articulo.total_piezas)?'(+'+articulo.total_piezas+')':''}}
                                         <mat-divider></mat-divider>
                                     </div>
+                                </div>
+                                <div fxFlex="none" *ngIf="estatusEntradaManual">
+                                    <button mat-flat-button color="primary" aria-label="Agregar/Editar Lotes" (click)="verDialogoLotes(articulo)">
+                                        <mat-icon>{{(controlArticulosModificados[articulo.id])?'edit':'add'}}</mat-icon>
+                                    </button>
                                 </div>
                             </div>
                         </div>

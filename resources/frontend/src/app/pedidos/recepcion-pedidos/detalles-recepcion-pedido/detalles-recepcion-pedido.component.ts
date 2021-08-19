@@ -1,9 +1,14 @@
+import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
+import { CustomValidator } from '../../../utils/classes/custom-validator';
 import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-subir-archivo.component';
-import { EstatusAvanceRecepcionService } from '../estatus-avance-recepcion.service';
+import { DialogoLotesArticulosComponent } from '../dialogo-lotes-articulos/dialogo-lotes-articulos.component';
+import { RecepcionPedidosService } from '../recepcion-pedidos.service';
+import { SharedService } from '../../../shared/shared.service';
 
 @Component({
   selector: 'app-detalles-recepcion-pedido',
@@ -12,7 +17,12 @@ import { EstatusAvanceRecepcionService } from '../estatus-avance-recepcion.servi
 })
 export class DetallesRecepcionPedidoComponent implements OnInit {
 
-  constructor(private route: ActivatedRoute, private estatusAvanceService: EstatusAvanceRecepcionService, private dialog: MatDialog) { }
+  constructor(
+    private route: ActivatedRoute, 
+    private recepcionPedidosService: RecepcionPedidosService, 
+    private sharedService: SharedService,
+    private dialog: MatDialog,
+    private formBuilder: FormBuilder) { }
 
   isLoading:boolean;
 
@@ -24,30 +34,57 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
 
   dataPedido:any
 
-  mostrarRecepciones:boolean;
+  estatusEntradaManual:boolean;
+  progressBarMode:string;
+
+  recepcionPendiente:boolean;
+  formRecepcion:FormGroup;
+
+  mostrarPanel:string;
+  catalogos:any;
+
   totalAvanceRecepcion:number;
   totalRecibido:number;
 
-  listaFiltroArticulos:any[];
+  controlArticulosModificados:any;
+  totalClavesRecibidas:number;
+
   dataSourceArticulos: MatTableDataSource<any>;
 
   ngOnInit(): void {
     this.clavesTotalesFiltro = {articulos:0};
     this.clavesTotales = {articulos:0};
-    this.listaFiltroArticulos = [];
+    this.mostrarPanel = 'PEDIDO';
+    this.progressBarMode = 'determinate';
 
-    this.dataPedido = {
-      descripcion: '',
-      mes: '',
-      anio: '',
-      programa: '',
-      observaciones: '',
+    this.catalogos = {
+      'almacenes': []
     };
+
+    this.dataPedido = {};
 
     this.route.paramMap.subscribe(params => {
       if(params.get('id')){
         let id = params.get('id');
         this.cargarPedido(id);
+
+        this.recepcionPedidosService.obtenerDatosCatalogo({pedido_id:id}).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            } else {
+              this.catalogos['almacenes'] = response.data.almacenes;
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          }
+        );
       }
     });
   }
@@ -57,7 +94,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.totalRecibido = 0;
     this.isLoading = true;
 
-    this.estatusAvanceService.verPedido(id).subscribe(
+    this.recepcionPedidosService.verPedido(id).subscribe(
       response =>{
         this.dataPedido = response.data;
         
@@ -85,7 +122,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
 
           articulo.cantidad = articulo_server.cantidad;
           articulo.recibido = articulo_server.cantidad_recibida|0;
-          //articulo.porcentaje = Math.floor(Math.random() * 100) + 1;
+          articulo.cantidad_restante = articulo.cantidad - articulo.recibido;
+          articulo.agregado = 0;
           articulo.porcentaje = Math.floor((articulo.recibido/articulo.cantidad)*100);
           articulo.pedido_articulo_id = articulo_server.id;
 
@@ -141,13 +179,61 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.clavesTotalesFiltro = { articulos: 0 };
     if(this.dataSourceArticulos){
       this.dataSourceArticulos.filter = filter_value;
-      this.listaFiltroArticulos = this.dataSourceArticulos.connect().value;
     }
   }
 
   limpiarFiltroArticulos(){
     this.filtroArticulos = '';
     this.cargarFiltroArticulos();
+  }
+
+  verDialogoLotes(articulo){
+    let configDialog:any = {
+      width: '99%',
+      maxHeight: '90vh',
+      height: '643px',
+      panelClass: 'no-padding-dialog'
+    };
+
+    console.log(articulo);
+    
+    configDialog.data = {articulo: articulo, editar: true};
+    
+    const dialogRef = this.dialog.open(DialogoLotesArticulosComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        console.log(response);
+        
+        if(response.total_piezas > 0){
+          if(!this.controlArticulosModificados[response.id]){
+            this.controlArticulosModificados[response.id] = '*';
+            this.totalClavesRecibidas++;
+          }
+        }else{
+          this.controlArticulosModificados[response.id] = undefined;
+          this.totalClavesRecibidas--;
+        }
+
+        let index = this.dataSourceArticulos.data.findIndex(x => x.id === response.id);
+        let articulo = this.dataSourceArticulos.data[index];
+
+        /*if(insumo.total_piezas > 0){
+          this.totalInsumosRecibidos -= insumo.total_piezas;
+        }
+        this.totalInsumosRecibidos += response.total_piezas;*/
+
+        this.dataSourceArticulos.data.splice(index,1);
+        this.dataSourceArticulos.data.unshift(response);
+
+        //this.recepcionActiva = (this.totalInsumosRecibidos > 0);
+        
+        //this.cargarPaginaInsumos();
+        this.cargarFiltroArticulos();
+      }else{
+        console.log('Cancelar');
+      }
+    });
   }
 
   verDialogoArchivo(){
@@ -170,8 +256,40 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     });
   }
 
-  verRecepciones(){
+  mostrarFormularioRecepcion(){
+    this.mostrarPanel = 'ENTRADA';
+    this.estatusEntradaManual = true;
+    this.progressBarMode = 'buffer';
+
+    if(!this.controlArticulosModificados){
+      this.controlArticulosModificados = {};
+    }
+
+    let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
+    if(!this.formRecepcion){
+      this.formRecepcion = this.formBuilder.group({
+        almacen_id:['',Validators.required],
+        fecha_movimiento:[fecha_hoy,[Validators.required, CustomValidator.isValidDate()]],
+        entrega:['',Validators.required],
+        recibe:['',Validators.required],
+        id:['']
+      });
+    }else{
+      this.formRecepcion.reset();
+      this.formRecepcion.get('fecha_movimiento').setValue(fecha_hoy);
+    }
+    
+  }
+
+  mostrarRecepciones(){
+    this.mostrarPanel = 'RECEPCIONES';
     //
+  }
+
+  mostrarPedido(){
+    this.mostrarPanel = 'PEDIDO';
+    this.estatusEntradaManual = false;
+    this.progressBarMode = 'determinate';
   }
 
   imprimirPedido(){
@@ -179,3 +297,4 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   }
 
 }
+

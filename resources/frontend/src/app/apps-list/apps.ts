@@ -28,7 +28,7 @@ export const APPS:App [] = [
       apps:[
         { name:'Pedidos Ordinarios',        route: "pedidos/pedidos-ordinarios",     icon: "assets/icons/pedidos.svg",           permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
         { name:'Recepción de Pedidos',      route: "pedidos/recepcion-pedidos",      icon: "assets/icons/recepcion-pedidos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
-        { name:'Estatus de Avance',         route: "pedidos/estatus-avance",         icon: "assets/icons/estatus-avance.svg",    permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
+        //{ name:'Estatus de Avance',         route: "pedidos/estatus-avance",         icon: "assets/icons/estatus-avance.svg",    permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
       ]
     },
     { name:'Catalogos',       route: "catalogos",             icon: "assets/icons/catalogos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",

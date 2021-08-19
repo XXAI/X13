@@ -10,8 +10,17 @@ import { map } from 'rxjs/operators';
 export class RecepcionPedidosService {
   url_pedidos = `${environment.base_url}/recepcion-pedidos`;
   url_insumos = `${environment.base_url}/lista-insumos-recepcion`;
+  url_catalogos = `${environment.base_url}/recepcion-pedidos-catalogos`;
 
   constructor(private http: HttpClient) { }
+
+  obtenerDatosCatalogo(payload):Observable<any> {
+    return this.http.get<any>(this.url_catalogos,{params:payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
 
   obtenerListaPedidos(payload):Observable<any> {
     return this.http.get<any>(this.url_pedidos,{params: payload}).pipe(

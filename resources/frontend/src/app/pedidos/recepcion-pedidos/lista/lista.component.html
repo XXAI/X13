@@ -26,66 +26,50 @@
     <section fxFlex fxLayout="row">
         <mat-card fxFlex fxLayout="column" >
             <div fxFlex="none" fxLayout="row">
+                <div fxFlex="none"></div>
                 <div fxFlex></div>
-                <div fxFlex="none">
-                </div>
+                <div fxFlex="none"></div>
             </div>
-            <div fxFlex style="overflow: auto;">
-                <table #dataTable mat-table [dataSource]="listadoPedidos" class="data-table pedidos-table" matSort>
-                    <ng-container matColumnDef="id">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Estatus </th>
-                        <td mat-cell *matCellDef="let row" class="{{row.estatus_clave}}-color" style="text-align: center;"> <mat-icon matTooltip="{{row.estatus_label}}">{{row.estatus_icono}}</mat-icon> </td>
-                    </ng-container>
-                    
-                    <ng-container matColumnDef="folio">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Folio </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"> {{row.folio}} </td>
-                    </ng-container>
-                    
-                    <ng-container matColumnDef="descripcion" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Descripción </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.descripcion}} </td>
-                    </ng-container>
 
-                    <ng-container matColumnDef="mes_expiracion" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1"> Mes / Expiración </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;"> {{row.mes}} {{row.anio}} <br> {{(row.estatus_clave == 'expirado')?'Expiró hace ':'Expira en'}} {{row.expiracion | number:'1.0-0'}} dias </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="total_claves" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Claves </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_claves | number:'1.0-0'}} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="total_insumos" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Insumos </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_insumos | number:'1.0-0'}} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="total_monto" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Monto </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;">$ {{row.total_monto | number:'1.2-2'}} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
-                        <td mat-cell *matCellDef="let row; let i = index" width="1">
-                            <button mat-button [routerLink]="'/pedidos/recepcion-pedidos/recibir/'+row.id"><mat-icon>local_shipping</mat-icon></button>
-                        </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="noResultsFound">
-                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length">
-                            No se encontraron registros 
-                        </td>
-                    </ng-container>
-                    
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
-
-                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoPedidos!=null && listadoPedidos.length==0)}"></tr>
-                </table>
+            <div fxFlex fxLayout="row raw" style="overflow: auto;">
+               <div *ngFor="let pedido of listadoPedidos" fxFlex="33" style="padding:3px;">
+                    <mat-card class="grupo" fxLayout="column">
+                        <div fxFlex="none" fxLayout="column">
+                            <span class="folio-label" fxFlex="none">Folio:</span>
+                            <span class="folio-value" fxFlex>{{pedido.folio}}</span>
+                        </div>
+                        <div fxFlex class="grupo-body">
+                            {{pedido.descripcion}}
+                        </div>
+                        <div fxFlex="none" class="grupo-action" fxLayout="column">
+                            <div fxFlex fxLayout="column" style="padding-bottom:4px;">
+                                <div fxFlex><span>Claves:</span>(0/0)</div>
+                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div>
+                            </div>
+                            <div fxFlex fxLayout="column" style="padding-bottom:4px;">
+                                <div fxFlex><span>Articulos:</span>(0/0)</div>
+                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div>
+                            </div>
+                            <div fxFlex fxLayout="column" style="padding-bottom:4px;">
+                                <div fxFlex><span>Monto:</span>($0.00/$0.00)</div>
+                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div>
+                            </div>
+                        </div>
+                        <div fxFlex="none" fxLayout="row">
+                            <div fxFlex="none">
+                                <button mat-stroked-button color="accent">
+                                    <mat-icon>info</mat-icon>
+                                </button>
+                            </div>
+                            <div fxFlex></div>
+                            <div fxFlex="none">
+                                <button mat-flat-button color="primary" [routerLink]="'/pedidos/recepcion-pedidos/detalles/'+pedido.id"><mat-icon>view_list</mat-icon> Detalles</button>
+                            </div>
+                        </div>
+                    </mat-card>
+               </div>
             </div>
+
             <div fxFlex="none">
                 <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoPedidos($event)"></mat-paginator>
             </div>

@@ -1,0 +1,156 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.articulo-bg-color{
+    background-color: cornflowerblue;
+}
+
+.lista-articulos-item{
+    overflow: hidden;
+    padding:8px;
+    /*background-color: rgb(233, 224, 224);*/
+    margin: -10px -10px 0px -10px;
+    color:whitesmoke;
+}
+
+/*.lista-insumos-item-contenido{
+    padding: 0px 8px 8px 8px;
+}*/
+
+.lista-articulos-item .lista-articulos-item-etiqueta{
+    height: 49px;
+    width: 100%;
+    display: table;
+    border-radius: 2%;
+}
+
+.lista-articulos-item .lista-articulos-item-etiqueta-icono{
+    height: 35px;
+    width: 35px;
+    border-radius: 25%;
+    flex-shrink: 0;
+    object-fit: cover;
+    padding:5px;
+    display: table-cell;
+}
+
+.lista-articulos-item .lista-articulos-item-etiqueta-texto{
+    padding:5px;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    height: 18px;
+}
+
+.lista-articulos-item-cabecera{
+    display: flex;
+    flex-direction: column;
+}
+
+.lista-articulos-item-cabecera-titulo{
+    height: 48px;
+    display: block;
+    font-weight: 450;
+    font-size: 20px;
+    text-overflow: ellipsis;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.lista-articulos-item-cabecera-subtitulo{
+    height: 17px;
+    display: block;
+    font-size: 14px;
+    color: rgba(0,0,0,.54);
+}
+
+.lista-articulos-item-texto{
+    height: 60px;
+    display: block;
+    font-size: 14px;
+    padding: 5px 0;
+    overflow-y: auto;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.outer-grid-tile{
+    /*border: solid thin lightblue;*/
+    /*background: lightblue;*/
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    background-color: whitesmoke;
+}
+
+.outer-grid-tile.recent{
+    background-color: lightgoldenrodyellow;
+    border: dashed thin green;
+}
+
+.outer-grid-tile:hover{    
+    z-index: 99999;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    text-shadow: 1px 1px darkgrey;
+    background-color: lightskyblue;
+    /*border: solid thin steelblue;*/
+    background: white;
+}
+
+.inner-grid{
+    border: solid thin lightblue;
+}
+
+.inner-grid.caducado .inner-grid-tile{
+    /*background: white;*/
+    /*border:solid thin #ff1e1e;*/
+    color: #ff1e1e;
+}
+
+.inner-grid.por-caducar .inner-grid-tile{
+    color: #937c1f;
+}
+
+.inner-grid-tile{
+    /*background: white;*/
+    border-bottom:solid thin lightseagreen;
+}
+
+.inner-grid-tile.label{
+    text-align: right;
+    font-weight: bold;
+}
+
+.outer-grid-tile.selected{
+    background-color: steelblue;
+    color:lightblue;
+}
+
+.outer-grid-tile.selected .inner-grid.caducado .inner-grid-tile{
+    background-color: #ff1e1e;
+    color:#ffffff !important;
+}
+
+.outer-grid-tile.selected .inner-grid.por-caducar .inner-grid-tile{
+    background-color: #ffe476;
+    color:#000000 !important;
+}
+
+.caducidad-articulo{
+    /*text-align: center;*/
+    font-weight: 500;
+}
+
+.caducidad-articulo .caducado{
+    padding: 0px 5px;
+    background-color: #ff1e1e;
+    color:white;
+}
+
+.caducidad-articulo .por-caducar{
+    padding: 0px 5px;
+    background-color: #ffe476;
+}
