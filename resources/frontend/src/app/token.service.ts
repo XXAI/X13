@@ -17,10 +17,16 @@ export class TokenInterceptor implements HttpInterceptor {
 
     const token: string = this.authService.getToken();
 
+    let content_type:string = 'application/json';
+    let isFile = request.headers.get('X-File-Upload-Header');
+    if(isFile){
+      content_type = 'application/x-www-form-urlencoded;charset=UTF-8';
+    }
+    
     request = request.clone({
       setHeaders: {
         'Authorization' : `Bearer ${token}`,
-        'Content-type' : 'application/json'
+        'Content-type' : content_type,
       }
     });
     return next.handle(request);
@@ -96,12 +102,25 @@ export class ErrorInterceptor implements HttpInterceptor {
         return request;
     }
 
-    // We clone the request, because the original request is immutable
+    let content_type:string = 'application/json';
+    let isFile = request.headers.get('X-File-Upload-Header');
+    if(isFile){
+      content_type = 'application/x-www-form-urlencoded;charset=UTF-8';
+    }
+    
+    request = request.clone({
+      setHeaders: {
+        'Authorization' : `Bearer ${accessToken}`,
+        'Content-type' : content_type,
+      }
+    });
+
+    /* We clone the request, because the original request is immutable
     return request.clone({
       setHeaders: {
         'Authorization' : `Bearer ${accessToken}`,
         'Content-type' : 'application/json'
       }
-    });
+    });*/
   }
 }
