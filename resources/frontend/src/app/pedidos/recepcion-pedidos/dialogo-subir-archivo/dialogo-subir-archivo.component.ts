@@ -98,7 +98,10 @@ export class DialogoSubirArchivoComponent implements OnInit {
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
         if(errorResponse.status == 409){
-          errorMessage = errorResponse.error.error.message;
+          if(errorResponse.error.errors){
+            errorMessage = 'Error: Faltan datos del formulario';
+          }
+          //errorMessage = errorResponse.error.errors;
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
       }

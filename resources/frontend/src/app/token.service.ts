@@ -14,13 +14,12 @@ export class TokenInterceptor implements HttpInterceptor {
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>>{
     this.authService = this.injector.get(AuthService);
-
     const token: string = this.authService.getToken();
 
     let content_type:string = 'application/json';
     let isFile = request.headers.get('X-File-Upload-Header');
     if(isFile){
-      content_type = 'application/x-www-form-urlencoded;charset=UTF-8';
+      content_type = 'multipart/form-data; charset=utf-8; boundary=' + Math.random().toString().substr(2);
     }
     
     request = request.clone({
@@ -29,6 +28,7 @@ export class TokenInterceptor implements HttpInterceptor {
         'Content-type' : content_type,
       }
     });
+    
     return next.handle(request);
   }
 }
@@ -105,7 +105,7 @@ export class ErrorInterceptor implements HttpInterceptor {
     let content_type:string = 'application/json';
     let isFile = request.headers.get('X-File-Upload-Header');
     if(isFile){
-      content_type = 'application/x-www-form-urlencoded;charset=UTF-8';
+      content_type = 'multipart/form-data; charset=utf-8; boundary=' + Math.random().toString().substr(2);
     }
     
     request = request.clone({

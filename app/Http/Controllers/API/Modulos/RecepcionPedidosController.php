@@ -89,12 +89,12 @@ class RecepcionPedidosController extends Controller
                                                                         $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
                                                                                 ->select('bienes_servicios.*','familias.nombre as nombre_familia');
                                                                     },'articulo.partidaEspecifica'])
-                                                ->select('pedidos_lista_articulos.*',DB::raw('sum(movimientos_insumos.cantidad) as cantidad_recibida'))
+                                                ->select('pedidos_lista_articulos.*',DB::raw('sum(movimientos_articulos.cantidad) as cantidad_recibida'))
                                                 ->leftjoin('rel_movimientos_pedidos','rel_movimientos_pedidos.pedido_id','=','pedidos_lista_articulos.pedido_id')
-                                                ->leftjoin('movimientos_insumos',function($join){
-                                                    $join->on('movimientos_insumos.movimiento_id','=','rel_movimientos_pedidos.movimiento_id')
-                                                            ->whereNull('movimientos_insumos.deleted_at')
-                                                            ->on('movimientos_insumos.bienes_servicios_id','=','pedidos_lista_articulos.bien_servicio_id');
+                                                ->leftjoin('movimientos_articulos',function($join){
+                                                    $join->on('movimientos_articulos.movimiento_id','=','rel_movimientos_pedidos.movimiento_id')
+                                                            ->whereNull('movimientos_articulos.deleted_at')
+                                                            ->on('movimientos_articulos.bien_servicio_id','=','pedidos_lista_articulos.bien_servicio_id');
                                                 })
                                                 ->groupBy('pedidos_lista_articulos.bien_servicio_id')
                                                 ->orderBy('pedidos_lista_articulos.id');
@@ -110,7 +110,7 @@ class RecepcionPedidosController extends Controller
 
     public function listaInsumosRecepcion($id){
         try{
-            $recepcion = Movimiento::with(['listaInsumosMedicos.stock','almacen'])->find($id);
+            $recepcion = Movimiento::with(['listaArticulos.stock','almacen'])->find($id);
 
             $return_data = ['data'=>$recepcion];
 
@@ -136,7 +136,7 @@ class RecepcionPedidosController extends Controller
 
             $parametros = $request->all();
 
-            $pedido = Pedido::with(['listaInsumosMedicos','avanceRecepcion','recepcionActual.listaInsumosBorrador'])->find($id); 
+            $pedido = Pedido::with(['listaArticulos','avanceRecepcion','recepcionActual.listaArticulosBorrador'])->find($id); 
 
             if(isset($pedido->recepcionActual[0])){
                 $pedido->recepcionActual[0]->almacen_id = $parametros['recepcion']['almacen_id'];
@@ -170,62 +170,62 @@ class RecepcionPedidosController extends Controller
 
             if(!$parametros['concluir']){
                 //MovmientosInsumosBorrador
-                $insumos_guardados = [];
-                if(count($recepcion_actual->listaInsumosBorrador)){
-                    foreach ($recepcion_actual->listaInsumosBorrador as $insumo) {
-                        $insumos_guardados[$insumo->id] = $insumo;
+                $articulos_guardados = [];
+                if(count($recepcion_actual->listaArticulosBorrador)){
+                    foreach ($recepcion_actual->listaArticulosBorrador as $articulo) {
+                        $articulos_guardados[$articulo->id] = $articulo;
                     }
                 }
 
-                $listado_insumos = $parametros['insumos_recibidos'];
-                $crear_insumos_borrador = [];
-                $editar_insumos_borrador = [];
-                $eliminar_insumos_borrador = [];
+                $listado_articulos = $parametros['articulos_recibidos'];
+                $crear_articulos_borrador = [];
+                $editar_articulos_borrador = [];
+                $eliminar_articulos_borrador = [];
 
-                foreach ($listado_insumos as $insumo) {
-                    if(!$insumo['id']){
-                        $crear_insumos_borrador[] = [
-                            'insumo_medico_id' => $insumo['insumo_medico_id'],
+                foreach ($listado_articulos as $articulo) {
+                    if(!$articulo['id']){
+                        $crear_articulos_borrador[] = [
+                            'bien_servicio_id' => $articulo['bien_servicio_id'],
                             'direccion_movimiento' => 'ENT',
                             'modo_movimiento' => 'NRM',
-                            'cantidad' => $insumo['cantidad'],
-                            'lote' => $insumo['lote'],
-                            'fecha_caducidad' => $insumo['fecha_caducidad'],
-                            'codigo_barras' => $insumo['codigo_barras'],
+                            'cantidad' => $articulo['cantidad'],
+                            'lote' => $articulo['lote'],
+                            'fecha_caducidad' => $articulo['fecha_caducidad'],
+                            'codigo_barras' => $articulo['codigo_barras'],
                             'user_id' => $loggedUser->id
                         ];
                     }else{
-                        $insumo_editar = $insumos_guardados[$insumo['id']];
-                        $insumo_editar->cantidad = $insumo['cantidad'];
-                        $insumo_editar->lote = $insumo['lote'];
-                        $insumo_editar->fecha_caducidad = $insumo['fecha_caducidad'];
-                        $insumo_editar->codigo_barras = $insumo['codigo_barras'];
+                        $articulo_editar = $articulos_guardados[$articulo['id']];
+                        $articulo_editar->cantidad = $articulo['cantidad'];
+                        $articulo_editar->lote = $articulo['lote'];
+                        $articulo_editar->fecha_caducidad = $articulo['fecha_caducidad'];
+                        $articulo_editar->codigo_barras = $articulo['codigo_barras'];
 
-                        $editar_insumos_borrador[] = $insumo_editar;
-                        unset($insumos_guardados[$insumo['id']]);
+                        $editar_articulos_borrador[] = $articulo_editar;
+                        unset($articulos_guardados[$articulo['id']]);
                     }
                 }
 
-                if(count($insumos_guardados)){
-                    $eliminar_insumos_borrador = array_keys($insumos_guardados);
+                if(count($articulos_guardados)){
+                    $eliminar_articulos_borrador = array_keys($articulos_guardados);
                 }
 
-                if(count($crear_insumos_borrador)){
-                    $recepcion_actual->listaInsumosBorrador()->createMany($crear_insumos_borrador);
+                if(count($crear_articulos_borrador)){
+                    $recepcion_actual->listaArticulosBorrador()->createMany($crear_articulos_borrador);
                 }
 
-                if(count($editar_insumos_borrador)){
-                    $recepcion_actual->listaInsumosBorrador()->saveMany($editar_insumos_borrador);
+                if(count($editar_articulos_borrador)){
+                    $recepcion_actual->listaArticulosBorrador()->saveMany($editar_articulos_borrador);
                 }
 
-                if(count($eliminar_insumos_borrador)){
-                    $recepcion_actual->listaInsumosBorrador()->whereIn('id',$eliminar_insumos_borrador)->delete();
+                if(count($eliminar_articulos_borrador)){
+                    $recepcion_actual->listaArticulosBorrador()->whereIn('id',$eliminar_articulos_borrador)->delete();
                 }
             }else{
                 //MovimientoInsumos y Stock
                 //creando estructura con stocks
-                $listado_insumos = $parametros['insumos_recibidos'];
-                foreach ($listado_insumos as $insumo) {
+                $listado_articulos = $parametros['insumos_recibidos'];
+                foreach ($listado_articulos as $insumo) {
                     if(!isset($insumo['marca_id'])){
                         $insumo['marca_id'] = null;
                     }
@@ -304,10 +304,10 @@ class RecepcionPedidosController extends Controller
             
             DB::commit();
 
-            //$pedido = Pedido::with(['listaInsumosMedicos','avanceRecepcion','recepcionActual.listaInsumosBorrador'])->find($id); 
+            //$pedido = Pedido::with(['listaInsumosMedicos','avanceRecepcion','recepcionActual.listaArticulosBorrador'])->find($id); 
             $return_data = [];
             if(!$parametros['concluir']){
-                $pedido->load('avanceRecepcion','recepcionActual.listaInsumosBorrador');
+                $pedido->load('avanceRecepcion','recepcionActual.listaArticulosBorrador');
                 $return_data['data'] = $pedido;
             }else{
                 $pedido->load('avanceRecepcion'); //Agregar Recepcion Anterior
