@@ -9,6 +9,7 @@ import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-s
 import { DialogoLotesArticulosComponent } from '../dialogo-lotes-articulos/dialogo-lotes-articulos.component';
 import { RecepcionPedidosService } from '../recepcion-pedidos.service';
 import { SharedService } from '../../../shared/shared.service';
+import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 
 @Component({
   selector: 'app-detalles-recepcion-pedido',
@@ -37,6 +38,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   estatusEntradaManual:boolean;
   progressBarMode:string;
 
+  totalRecepcionesAnteriores:number;
   recepcionPendiente:boolean;
   formRecepcion:FormGroup;
 
@@ -45,10 +47,15 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
 
   totalAvanceRecepcion:number;
   totalRecibido:number;
-
-  controlArticulosModificados:any;
+  totalArticulosRecibidos:number;
   totalClavesRecibidas:number;
 
+  recepcionActiva:boolean;
+  idArticuloSeleccionado:number;
+  recepcionesAnteriores:any[];
+
+  controlArticulosModificados:any;
+  
   dataSourceArticulos: MatTableDataSource<any>;
 
   ngOnInit(): void {
@@ -56,6 +63,17 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.clavesTotales = {articulos:0};
     this.mostrarPanel = 'PEDIDO';
     this.progressBarMode = 'determinate';
+    this.totalClavesRecibidas = 0;
+    this.totalArticulosRecibidos = 0;
+
+    let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
+    this.formRecepcion = this.formBuilder.group({
+      almacen_id:['',Validators.required],
+      fecha_movimiento:[fecha_hoy,[Validators.required, CustomValidator.isValidDate()]],
+      entrega:['',Validators.required],
+      recibe:['',Validators.required],
+      id:['']
+    });
 
     this.catalogos = {
       'almacenes': []
@@ -136,8 +154,51 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
           this.totalAvanceRecepcion = Math.floor((this.totalRecibido/this.dataPedido.total_articulos)*100);
         }
 
+        this.totalRecepcionesAnteriores = response.data.recepciones_anteriores.length;
+        this.recepcionesAnteriores = [];
+        if(response.data.recepcion_actual.length > 0){
+          this.recepcionPendiente = true;
+          this.controlArticulosModificados = {};
+
+          let recepcion_borrador = response.data.recepcion_actual[0];
+          this.formRecepcion.patchValue(recepcion_borrador);
+          
+          let lista_lotes_borrador:any = {};
+
+          for(let i in recepcion_borrador.lista_articulos_borrador){
+            let articulo_borrador = recepcion_borrador.lista_articulos_borrador[i];
+            //console.log(articulo_borrador);
+            
+            if(!this.controlArticulosModificados[articulo_borrador.bien_servicio_id]){
+              this.controlArticulosModificados[articulo_borrador.bien_servicio_id] = '*';
+              this.totalClavesRecibidas++;
+            }
+
+            if(!lista_lotes_borrador[articulo_borrador.bien_servicio_id]){
+              lista_lotes_borrador[articulo_borrador.bien_servicio_id] = {'lotes':[],'total_piezas':0};
+            }
+            lista_lotes_borrador[articulo_borrador.bien_servicio_id]['lotes'].push(articulo_borrador);
+            lista_lotes_borrador[articulo_borrador.bien_servicio_id]['total_piezas'] += articulo_borrador.cantidad;
+          }
+
+          for(let articulo_id in lista_lotes_borrador){
+            let articulo_borrador = lista_lotes_borrador[articulo_id];
+            //articulo.agregado = 0;
+            let index = lista_articulos.findIndex(x => x.id == articulo_id);
+            let articulo = lista_articulos[index];
+            
+            this.totalArticulosRecibidos += articulo_borrador.total_piezas;
+            
+            articulo.lotes = articulo_borrador.lotes;
+            articulo.total_piezas = articulo_borrador.total_piezas;
+            articulo.agregado = Math.floor(((articulo.recibido+articulo.total_piezas)/articulo.cantidad)*100);
+
+            lista_articulos.splice(index,1);
+            lista_articulos.unshift(articulo);
+          }
+        }
+
         this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
-  
         this.dataSourceArticulos.filterPredicate = (data:any, filter:string) => {
           let filtroTexto:boolean;
           let filtros = filter.split('|');
@@ -203,8 +264,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
-        console.log(response);
-        
+        //console.log(response);
         if(response.total_piezas > 0){
           if(!this.controlArticulosModificados[response.id]){
             this.controlArticulosModificados[response.id] = '*';
@@ -218,10 +278,10 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
         let index = this.dataSourceArticulos.data.findIndex(x => x.id === response.id);
         let articulo = this.dataSourceArticulos.data[index];
 
-        /*if(insumo.total_piezas > 0){
-          this.totalInsumosRecibidos -= insumo.total_piezas;
+        if(articulo.total_piezas > 0){
+          this.totalArticulosRecibidos -= articulo.total_piezas;
         }
-        this.totalInsumosRecibidos += response.total_piezas;*/
+        this.totalArticulosRecibidos += response.total_piezas;
 
         this.dataSourceArticulos.data.splice(index,1);
         this.dataSourceArticulos.data.unshift(response);
@@ -264,21 +324,111 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     if(!this.controlArticulosModificados){
       this.controlArticulosModificados = {};
     }
-
-    let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
-    if(!this.formRecepcion){
-      this.formRecepcion = this.formBuilder.group({
-        almacen_id:['',Validators.required],
-        fecha_movimiento:[fecha_hoy,[Validators.required, CustomValidator.isValidDate()]],
-        entrega:['',Validators.required],
-        recibe:['',Validators.required],
-        id:['']
-      });
-    }else{
+    
+    /*let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
+    if(!this.recepcionPendiente){
       this.formRecepcion.reset();
       this.formRecepcion.get('fecha_movimiento').setValue(fecha_hoy);
+    }*/
+  }
+
+  concluirRecepcion(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'¿Desea concluir la recepción?', dialogMessage:'Al concluir la recepción no se podrán realizar mas cambios, escriba CONCLUIR para aceptar el proceso.', validationString:'CONCLUIR', btnColor:'primary', btnText:'Aceptar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.guardarRecepcion(true);
+      }
+    });
+  }
+
+  guardarRecepcion(concluir:boolean = false){
+    let datosRecepcion:any = {
+      avance:{total_claves:this.totalClavesRecibidas, total_articulos:this.totalArticulosRecibidos},
+      recepcion:this.formRecepcion.value,
+      articulos_recibidos: [],
+      concluir: concluir
+    };
+
+    for(let index in this.dataSourceArticulos.data){
+      let articulo = this.dataSourceArticulos.data[index];
+      if(articulo.lotes && articulo.lotes.length){
+        for(let i in articulo.lotes){
+          let lote:any = {
+            id: articulo.lotes[i].id,
+            cantidad: articulo.lotes[i].cantidad,
+            lote: articulo.lotes[i].lote,
+            fecha_caducidad: articulo.lotes[i].fecha_caducidad,
+            codigo_barras: articulo.lotes[i].codigo_barras,
+            bien_servicio_id: articulo.id
+          };
+          datosRecepcion.articulos_recibidos.push(lote);
+        }
+        
+      }
     }
     
+    this.isLoading = true;
+    this.recepcionPedidosService.actualizarPedido(datosRecepcion,this.dataPedido.id).subscribe(
+      response=>{
+        //this.formPedido.patchValue(response.data);
+        console.log(response);
+
+        if(response.data.avance_recepcion){
+          this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_articulos;
+        }
+
+        if(datosRecepcion.concluir){
+          for(let id in this.controlArticulosModificados){
+            if(this.controlArticulosModificados[id]){
+              let index_local = this.dataSourceArticulos.data.findIndex(x => x.id == id);
+              this.dataSourceArticulos.data[index_local].lotes = [];
+              this.dataSourceArticulos.data[index_local].cantidad_restante -= this.dataSourceArticulos.data[index_local].total_piezas;
+              this.dataSourceArticulos.data[index_local].recibido += this.dataSourceArticulos.data[index_local].total_piezas;
+              this.dataSourceArticulos.data[index_local].porcentaje = Math.floor((this.dataSourceArticulos.data[index_local].recibido/this.dataSourceArticulos.data[index_local].cantidad)*100);
+              this.dataSourceArticulos.data[index_local].total_piezas = 0;
+              this.dataSourceArticulos.data[index_local].agregado = 0;
+            }
+          }
+
+          delete response.recepcion_reciente.lista_articulos_borrador;
+          this.recepcionesAnteriores.push(response.recepcion_reciente);
+          this.totalRecepcionesAnteriores = this.recepcionesAnteriores.length;
+
+          this.controlArticulosModificados = {};
+          this.formRecepcion.reset();
+          this.recepcionActiva = true;
+          this.idArticuloSeleccionado = 0;
+
+          this.recepcionPendiente = false;
+        }else{
+          for(let id in this.controlArticulosModificados){
+            if(this.controlArticulosModificados[id]){
+              let index_local = this.dataSourceArticulos.data.findIndex(x => x.id == id);
+              this.dataSourceArticulos.data[index_local].lotes = [];
+            }
+          }
+          
+          if(response.data.recepcion_actual && response.data.recepcion_actual.length && !datosRecepcion.concluir){
+            for(let i in response.data.recepcion_actual[0].lista_articulos_borrador){
+              let articulo_borrador = response.data.recepcion_actual[0].lista_articulos_borrador[i];
+  
+              let index_articulo = this.dataSourceArticulos.data.findIndex(x => x.id == articulo_borrador.bien_servicio_id);
+              this.dataSourceArticulos.data[index_articulo].lotes.push(articulo_borrador);
+            }
+          }
+
+          this.recepcionPendiente = true;
+        }
+        //this.listadoArticulosEliminados = [];
+        
+        this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+        this.isLoading = false;
+      }
+    );
   }
 
   mostrarRecepciones(){

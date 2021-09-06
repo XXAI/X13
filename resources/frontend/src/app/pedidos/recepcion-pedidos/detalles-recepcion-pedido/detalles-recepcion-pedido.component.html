@@ -66,7 +66,7 @@
                             <mat-icon>file_upload</mat-icon>
                         </button>
 
-                        <button fxFlex="30" mat-flat-button color="info" matTooltip="Ver recepciones capturadas" (click)="mostrarRecepciones()" [matBadge]="0" [matBadgeHidden]="false" matBadgeColor="accent">
+                        <button fxFlex="30" mat-flat-button color="info" matTooltip="Ver recepciones capturadas" (click)="mostrarRecepciones()" [matBadge]="totalRecepcionesAnteriores" [matBadgeHidden]="!(totalRecepcionesAnteriores > 0)" [disabled]="!(totalRecepcionesAnteriores > 0)" matBadgeColor="accent">
                             <mat-icon>list_alt</mat-icon>
                         </button>
                     </div>
@@ -81,8 +81,8 @@
                     <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
                         <button fxFlex="none" (click)="mostrarPedido()" mat-icon-button><mat-icon>clear</mat-icon></button>
                         <div fxFlex></div>
-                        <button fxFlex="none" mat-icon-button color="accent" matTooltip="Finalizar Recepción"><mat-icon>move_to_inbox</mat-icon></button>
-                        <button fxFlex="none" mat-icon-button color="primary" matTooltip="Guardar"><mat-icon>save</mat-icon></button>
+                        <button fxFlex="none" mat-icon-button (click)="concluirRecepcion()" [disabled]="!formRecepcion.valid" color="accent" matTooltip="Finalizar Recepción"><mat-icon>move_to_inbox</mat-icon></button>
+                        <button fxFlex="none" mat-icon-button (click)="guardarRecepcion()"  [disabled]="!formRecepcion.valid" color="primary" matTooltip="Guardar"><mat-icon>save</mat-icon></button>
                     </div>
                     <div fxFlex="none" fxLayout="row raw" [formGroup]="formRecepcion">
                         <mat-form-field fxFlex="100">
@@ -166,12 +166,12 @@
                                         <mat-progress-bar [mode]="progressBarMode" [value]="articulo.porcentaje" [bufferValue]="articulo.agregado" style="height: 15px;" color="primary"></mat-progress-bar>
                                     </div>
                                     <div fxFlex="none" class="detalles">
-                                        <span class="label">Total Piezas:</span> {{articulo.recibido}}/{{articulo.cantidad}} {{(articulo.total_piezas)?'(+'+articulo.total_piezas+')':''}}
+                                        <span class="label">Total Piezas:</span> {{articulo.recibido}}/{{articulo.cantidad}} <span *ngIf="estatusEntradaManual">{{(articulo.total_piezas)?'(+'+articulo.total_piezas+')':''}}</span>
                                         <mat-divider></mat-divider>
                                     </div>
                                 </div>
                                 <div fxFlex="none" *ngIf="estatusEntradaManual">
-                                    <button mat-flat-button color="primary" aria-label="Agregar/Editar Lotes" (click)="verDialogoLotes(articulo)">
+                                    <button mat-flat-button color="primary" aria-label="Agregar/Editar Lotes" [disabled]="articulo.cantidad_restante == 0" (click)="verDialogoLotes(articulo)">
                                         <mat-icon>{{(controlArticulosModificados[articulo.id])?'edit':'add'}}</mat-icon>
                                     </button>
                                 </div>

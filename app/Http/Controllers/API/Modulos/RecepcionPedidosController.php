@@ -83,7 +83,7 @@ class RecepcionPedidosController extends Controller
     public function show($id)
     {
         try{
-            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion',
+            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion','listaUnidadesMedicas.unidadMedica','recepcionActual.listaArticulosBorrador','recepcionesAnteriores',
                                     'listaArticulos'=>function($articulos){
                                         $articulos->with(['articulo'=>function($articulo){
                                                                         $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
@@ -98,7 +98,7 @@ class RecepcionPedidosController extends Controller
                                                 })
                                                 ->groupBy('pedidos_lista_articulos.bien_servicio_id')
                                                 ->orderBy('pedidos_lista_articulos.id');
-                                    },'listaUnidadesMedicas.unidadMedica'])->find($id);
+                                    }])->find($id);
 
             $return_data = ['data'=>$pedido];
 
@@ -108,7 +108,7 @@ class RecepcionPedidosController extends Controller
         }
     }
 
-    public function listaInsumosRecepcion($id){
+    public function listaArticulosRecepcion($id){
         try{
             $recepcion = Movimiento::with(['listaArticulos.stock','almacen'])->find($id);
 
@@ -144,7 +144,7 @@ class RecepcionPedidosController extends Controller
                 $pedido->recepcionActual[0]->entrega = $parametros['recepcion']['entrega'];
                 $pedido->recepcionActual[0]->recibe = $parametros['recepcion']['recibe'];
                 $pedido->recepcionActual[0]->total_claves = $parametros['avance']['total_claves'];
-                $pedido->recepcionActual[0]->total_insumos = $parametros['avance']['total_insumos'];
+                $pedido->recepcionActual[0]->total_articulos = $parametros['avance']['total_articulos'];
                 $pedido->recepcionActual[0]->save();
 
                 $recepcion_actual = $pedido->recepcionActual[0];
@@ -160,7 +160,7 @@ class RecepcionPedidosController extends Controller
                     'folio' => $pedido->folio,
                     'descripcion' => 'Recepción de pedido',
                     'total_claves' => $parametros['avance']['total_claves'],
-                    'total_insumos' => $parametros['avance']['total_insumos'],
+                    'total_articulos' => $parametros['avance']['total_articulos'],
                     'user_id' => $loggedUser->id
                 ];
                 $recepcion_actual = Movimiento::create($movimiento_data);
@@ -222,46 +222,46 @@ class RecepcionPedidosController extends Controller
                     $recepcion_actual->listaArticulosBorrador()->whereIn('id',$eliminar_articulos_borrador)->delete();
                 }
             }else{
-                //MovimientoInsumos y Stock
+                //MovimientoArticulos y Stock
                 //creando estructura con stocks
-                $listado_articulos = $parametros['insumos_recibidos'];
-                foreach ($listado_articulos as $insumo) {
-                    if(!isset($insumo['marca_id'])){
-                        $insumo['marca_id'] = null;
+                $listado_articulos = $parametros['articulos_recibidos'];
+                foreach ($listado_articulos as $articulo) {
+                    if(!isset($articulo['marca_id'])){
+                        $articulo['marca_id'] = null;
                     }
 
                     $stock = Stock::where('almacen_id',$recepcion_actual->almacen_id)
-                                    ->where('insumo_medico_id',$insumo['insumo_medico_id'])
+                                    ->where('bienes_servicios_id',$articulo['bien_servicio_id'])
                                     ->where('programa_id',$recepcion_actual->programa_id)
-                                    ->where('marca_id',$insumo['marca_id'])
-                                    ->where('lote',$insumo['lote'])
-                                    ->where('fecha_caducidad',$insumo['fecha_caducidad'])
-                                    ->where('codigo_barras',$insumo['codigo_barras'])
+                                    ->where('marca_id',$articulo['marca_id'])
+                                    ->where('lote',$articulo['lote'])
+                                    ->where('fecha_caducidad',$articulo['fecha_caducidad'])
+                                    ->where('codigo_barras',$articulo['codigo_barras'])
                                     ->first();
 
                     if($stock){
-                        $stock->existencia += $insumo['cantidad'];
+                        $stock->existencia += $articulo['cantidad'];
                         $stock->save();
                     }else{
                         $stock = Stock::create([
                             'almacen_id'    => $recepcion_actual->almacen_id,
-                            'insumo_medico_id'  => $insumo['insumo_medico_id'],
+                            'bienes_servicios_id'  => $articulo['bien_servicio_id'],
                             'programa_id'   => $recepcion_actual->programa_id,
-                            'marca_id'  => $insumo['marca_id'],
-                            'lote'  => $insumo['lote'],
-                            'fecha_caducidad'   => $insumo['fecha_caducidad'],
-                            'codigo_barras' => $insumo['codigo_barras'],
+                            'marca_id'  => $articulo['marca_id'],
+                            'lote'  => $articulo['lote'],
+                            'fecha_caducidad'   => $articulo['fecha_caducidad'],
+                            'codigo_barras' => $articulo['codigo_barras'],
                             'user_id' => $loggedUser->id,
-                            'existencia' => $insumo['cantidad']
+                            'existencia' => $articulo['cantidad']
                         ]);
                     }
 
-                    $recepcion_actual->listaInsumosMedicos()->create([
+                    $recepcion_actual->listaArticulos()->create([
                         'stock_id' => $stock->id,
-                        'insumo_medico_id' => $insumo['insumo_medico_id'],
+                        'bien_servicio_id' => $articulo['bien_servicio_id'],
                         'direccion_movimiento' => 'EN',
                         'modo_movimiento' => 'NRM',
-                        'cantidad' => $insumo['cantidad'],
+                        'cantidad' => $articulo['cantidad'],
                         'user_id' => $loggedUser->id,
                     ]);
                 }
@@ -269,42 +269,36 @@ class RecepcionPedidosController extends Controller
                 $recepcion_actual->save();
 
                 $pedido->load(['recepcionesAnteriores' => function($recepciones){
-                    $recepciones->select('movimientos.*',DB::raw('COUNT(distinct movimientos_insumos.insumo_medico_id) as total_claves'),
-                                            DB::raw('SUM(movimientos_insumos.cantidad) as total_insumos'))
-                                ->leftjoin('movimientos_insumos','movimientos.id','=','movimientos_insumos.movimiento_id')
+                    $recepciones->select('movimientos.id',DB::raw('COUNT(distinct movimientos_articulos.bien_servicio_id) as total_claves'), DB::raw('SUM(movimientos_articulos.cantidad) as total_articulos'),
+                                        DB::raw('MAX(fecha_movimiento) as ultimo_movimiento'))
+                                ->leftjoin('movimientos_articulos','movimientos.id','=','movimientos_articulos.movimiento_id')
+                                ->whereNull('movimientos_articulos.deleted_at')
                                 ->groupBy('rel_movimientos_pedidos.pedido_id');
                 }]);
                 $suma_recepciones = $pedido->recepcionesAnteriores;
                 //
+                $porcentaje_claves  = round((($suma_recepciones[0]->total_claves/$pedido->total_claves)*100),2);
+                $porcentaje_articulos = round((($suma_recepciones[0]->total_articulos/$pedido->total_articulos)*100),2);
+                $datos_avance = [
+                    'total_claves_recibidas'        => $suma_recepciones[0]->total_claves,
+                    'porcentaje_claves'             => $porcentaje_claves,
+                    'total_articulos_recibidos'     => $suma_recepciones[0]->total_articulos,
+                    'porcentaje_articulos'          => $porcentaje_articulos,
+                    'porcentaje_total'              => round(($porcentaje_articulos+$porcentaje_claves)/2,2),
+                    'fecha_ultima_entrega'          => $suma_recepciones[0]->ultimo_movimiento
+                ];
+
                 if($pedido->avanceRecepcion){
-                    //$porcentaje_claves  = round(((($pedido->avanceRecepcion->total_claves_recibidas + $parametros['avance']['total_claves'])/$pedido->total_claves)*100),2);
-                    $porcentaje_insumos = round(((($pedido->avanceRecepcion->total_insumos_recibidos + $parametros['avance']['total_insumos'])/$pedido->total_insumos)*100),2);
-                    $pedido->avanceRecepcion()->update([
-                        'total_claves_recibidas'    =>'0',
-                        'porcentaje_claves'         =>'0',
-                        'total_insumos_recibidos'   =>$pedido->avanceRecepcion->total_insumos_recibidos + $parametros['avance']['total_insumos'],
-                        'porcentaje_insumos'        =>$porcentaje_insumos,
-                        'porcentaje_total'          =>'0',
-                        'fecha_ultima_entrega'      =>$parametros['recepcion']['fecha_movimiento']
-                    ]);
+                    $pedido->avanceRecepcion()->update($datos_avance);
                 }else{
-                    //$porcentaje_claves = round((($parametros['avance']['total_claves'] / $pedido->total_claves) * 100),2);
-                    $porcentaje_insumos = round((($parametros['avance']['total_insumos'] / $pedido->total_insumos) * 100),2);
-                    $pedido->avanceRecepcion()->create([
-                        'total_claves_recibidas'    =>'0',
-                        'porcentaje_claves'         =>'0',
-                        'total_insumos_recibidos'   =>$parametros['avance']['total_insumos'],
-                        'porcentaje_insumos'        =>$porcentaje_insumos,
-                        'porcentaje_total'          =>'0',
-                        'fecha_primer_entrega'      =>$parametros['recepcion']['fecha_movimiento'],
-                        'fecha_ultima_entrega'      =>$parametros['recepcion']['fecha_movimiento']
-                    ]);
+                    $datos_avance['fecha_primer_entrega'] = $suma_recepciones[0]->ultimo_movimiento;
+                    $pedido->avanceRecepcion()->create($datos_avance);
                 }
             }
             
             DB::commit();
 
-            //$pedido = Pedido::with(['listaInsumosMedicos','avanceRecepcion','recepcionActual.listaArticulosBorrador'])->find($id); 
+            //$pedido = Pedido::with(['listaArticulos','avanceRecepcion','recepcionActual.listaArticulosBorrador'])->find($id); 
             $return_data = [];
             if(!$parametros['concluir']){
                 $pedido->load('avanceRecepcion','recepcionActual.listaArticulosBorrador');
