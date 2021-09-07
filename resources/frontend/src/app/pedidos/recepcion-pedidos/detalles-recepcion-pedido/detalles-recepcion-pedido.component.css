@@ -276,8 +276,29 @@ table td {
     cursor: default;
 }
 
+.unidad-medica-item:hover{
+    background-color: #daf7e7;
+}
+
 .seleccionable{
     cursor: pointer;
+}
+
+.unidad-medica-item .datos-unidad .titulo{
+    font-weight: 450; 
+    font-size: 16px; 
+    padding-top:5px;
+}
+
+.unidad-medica-item .datos-unidad .descripcion{
+    font-size: 14px;
+    font-size: 1vw;
+    color:#8c8c8c;
+}
+
+.unidad-medica-item .datos-unidad .detalles{
+    font-size: 14px;
+    color:#575757;
 }
 
 .datos-articulo span.label {

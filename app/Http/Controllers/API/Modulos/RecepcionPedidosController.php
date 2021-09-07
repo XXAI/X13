@@ -308,7 +308,6 @@ class RecepcionPedidosController extends Controller
                 $return_data['data'] = $pedido;
                 $return_data['recepcion_reciente'] = $recepcion_actual;
             }
-            $return_data['prueba'] = $suma_recepciones;
 
             return response()->json($return_data,HttpResponse::HTTP_OK);
         }catch(\Exception $e){

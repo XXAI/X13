@@ -9,13 +9,15 @@
                         <div fxFlex></div>
                         <button fxFlex="none" mat-icon-button color="primary" matTooltip="Imprimir" (click)="imprimirPedido()"><mat-icon>print</mat-icon></button>
                     </div>
+                    <mat-divider [inset]="true"></mat-divider>
                     <div fxFlex="none" fxLayout="column">
-                        <div fxFlex>
-                            <mat-progress-bar mode="determinate" [value]="totalAvanceRecepcion" style="height: 20px;" color="accent"></mat-progress-bar>
-                            <mat-hint>Avance Total: {{totalAvanceRecepcion | number:'1.0-2'}}%</mat-hint>
+                        <div fxFlex class="label-unidad-entrega">
+                            Folio:
+                        </div>
+                        <div fxFlex class="unidad-entrega">
+                            {{(dataPedido.folio)?dataPedido.folio:'Sin Folio'}}
                         </div>
                     </div>
-                    <mat-divider [inset]="true"></mat-divider>
                     <div fxFlex="none" fxLayout="column">
                         <div fxFlex class="label-unidad-entrega">
                             Tipo de Pedido:
@@ -53,6 +55,17 @@
                         </mat-list>
                     </div>
                     <div fxFlex></div>
+                    <div fxFlex fxLayout="row" fxLayoutAlign="space-around" *ngIf="dataPedido.avance_recepcion">
+                        <div fxFlex="none" style="text-align: center;">
+                            <mat-progress-spinner mode="determinate" [value]="dataPedido.avance_recepcion.porcentaje_claves" color="accent"></mat-progress-spinner>
+                            <mat-hint>Claves:<br>{{dataPedido.avance_recepcion.total_claves_recibidas | number:'1.0-0'}}<br>({{dataPedido.avance_recepcion.porcentaje_claves | number:'1.0-2'}}%)</mat-hint>
+                        </div>
+                        <div fxFlex="none" style="text-align: center;">
+                            <mat-progress-spinner mode="determinate" [value]="dataPedido.avance_recepcion.porcentaje_articulos" color="accent"></mat-progress-spinner>
+                            <mat-hint>Articulos:<br>{{dataPedido.avance_recepcion.total_articulos_recibidos | number:'1.0-0'}}<br>({{dataPedido.avance_recepcion.porcentaje_articulos | number:'1.0-2'}}%)</mat-hint>
+                        </div>
+                    </div>
+                    <div fxFlex></div>
                     <div fxFlex="none" fxLayout="row" fxLayoutAlign="space-around center">
                         <button fxFlex="30" mat-flat-button color="primary" matTooltip="Recepción manual [Activa]" *ngIf="recepcionPendiente" (click)="mostrarFormularioRecepcion()">
                             <mat-icon>edit</mat-icon>
@@ -74,13 +87,62 @@
                 <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'RECEPCIONES'"><!-- Panel de recepciones -->
                     <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
                         <button fxFlex="none" (click)="mostrarPedido()" mat-icon-button><mat-icon>clear</mat-icon></button>
+                        <div fxFlex="none" style="text-align: center;"><h1 style="margin: 9px;">Recepciones Anteriores</h1></div>
                         <div fxFlex></div>
+                    </div>
+                    <div fxFlex>
+                        <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+                            <div *ngIf="totalRecepcionesAnteriores == 0" class="no-items-found">
+                                No se encontraron recepciones
+                            </div>
+                            <div *cdkVirtualFor="let recepcion of recepcionesAnteriores;" class="unidad-medica-item seleccionable">
+                                <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
+                                    <div fxFlex fxLayout="column" class="datos-unidad">
+                                        <div fxFlex="none" class="titulo">
+                                            Fecha Recepción: {{recepcion.fecha_movimiento}}
+                                        </div>
+                                        <div fxFlex class="descripcion">
+                                            Nombre Recibe: {{recepcion.recibe}}<br>
+                                            Nombre Entrega: {{recepcion.entrega}}
+                                        </div>
+                                        <div fxFlex="none" class="detalles">
+                                            Total Piezas: {{recepcion.total_articulos | number:'1.0-0' }}
+                                        </div>
+                                    </div>
+                                    <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
+                                        <div fxFlex="none">
+                                            <button mat-icon-button [matMenuTriggerFor]="menuRecepcionAnterior" [matMenuTriggerData]="{id: recepcion.id}">
+                                                <mat-icon>more_vert</mat-icon>
+                                            </button>
+                                        </div>
+                                        <div fxFlex></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </cdk-virtual-scroll-viewport>
+                        <mat-menu #menuRecepcionAnterior="matMenu">
+                            <ng-template matMenuContent let-id="id">
+                                <button mat-menu-item disabled>
+                                    <mat-icon>visibility</mat-icon>
+                                    <span>Ver Detalles</span>
+                                </button>
+                                <mat-divider></mat-divider>
+                                <button mat-menu-item disabled>
+                                    <mat-icon svgIcon="pdf-icon" ></mat-icon>
+                                    <span>Descargar en PDF</span>
+                                </button>
+                                <button mat-menu-item disabled>
+                                    <mat-icon svgIcon="xls-icon" ></mat-icon>
+                                    <span>Descargar en Excel</span>
+                                </button>
+                            </ng-template>
+                        </mat-menu>
                     </div>
                 </div>
                 <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'ENTRADA'"><!-- Panel de formulario de entrada -->
                     <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
                         <button fxFlex="none" (click)="mostrarPedido()" mat-icon-button><mat-icon>clear</mat-icon></button>
-                        <div fxFlex></div>
+                        <div fxFlex style="text-align: center;"><h1 style="margin: 9px;">Entrada</h1></div>
                         <button fxFlex="none" mat-icon-button (click)="concluirRecepcion()" [disabled]="!formRecepcion.valid" color="accent" matTooltip="Finalizar Recepción"><mat-icon>move_to_inbox</mat-icon></button>
                         <button fxFlex="none" mat-icon-button (click)="guardarRecepcion()"  [disabled]="!formRecepcion.valid" color="primary" matTooltip="Guardar"><mat-icon>save</mat-icon></button>
                     </div>

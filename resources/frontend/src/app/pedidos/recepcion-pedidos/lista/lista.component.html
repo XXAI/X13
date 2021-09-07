@@ -43,27 +43,29 @@
                         </div>
                         <div fxFlex="none" class="grupo-action" fxLayout="column">
                             <div fxFlex fxLayout="column" style="padding-bottom:4px;">
-                                <div fxFlex><span>Claves:</span>(0/0)</div>
-                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div>
+                                <div fxFlex><span>Claves:</span>({{pedido.avance_recepcion.total_claves_recibidas | number:'1.0-0'}}/{{pedido.total_claves | number:'1.0-0'}})</div>
+                                <div fxFlex><mat-progress-bar color="primary" mode="determinate" [value]="pedido.avance_recepcion.porcentaje_claves"></mat-progress-bar></div>
+                                <div fxFlex><div fxFlex></div><mat-hint>{{pedido.avance_recepcion.porcentaje_claves | number:'1.0-2'}}%</mat-hint></div>
                             </div>
                             <div fxFlex fxLayout="column" style="padding-bottom:4px;">
-                                <div fxFlex><span>Articulos:</span>(0/0)</div>
-                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div>
+                                <div fxFlex><span>Articulos:</span>({{pedido.avance_recepcion.total_articulos_recibidos | number:'1.0-0'}}/{{pedido.total_articulos | number:'1.0-0'}})</div>
+                                <div fxFlex><mat-progress-bar color="primary" mode="determinate" [value]="pedido.avance_recepcion.porcentaje_articulos"></mat-progress-bar></div>
+                                <div fxFlex><div fxFlex></div><mat-hint>{{pedido.avance_recepcion.porcentaje_articulos | number:'1.0-2'}}%</mat-hint></div>
                             </div>
                             <div fxFlex fxLayout="column" style="padding-bottom:4px;">
-                                <div fxFlex><span>Monto:</span>($0.00/$0.00)</div>
-                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div>
+                                <!--div fxFlex><span>Monto:</span>($0.00/$0.00)</div>
+                                <div fxFlex><mat-progress-bar mode="determinate" value="40"></mat-progress-bar></div-->
                             </div>
                         </div>
                         <div fxFlex="none" fxLayout="row">
                             <div fxFlex="none">
-                                <button mat-stroked-button color="accent">
+                                <!--button mat-stroked-button color="accent">
                                     <mat-icon>info</mat-icon>
-                                </button>
+                                </button-->
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none">
-                                <button mat-flat-button color="primary" [routerLink]="'/pedidos/recepcion-pedidos/detalles/'+pedido.id"><mat-icon>view_list</mat-icon> Detalles</button>
+                                <button mat-flat-button color="accent" [routerLink]="'/pedidos/recepcion-pedidos/detalles/'+pedido.id"><mat-icon>local_shipping</mat-icon> Recepción</button>
                             </div>
                         </div>
                     </mat-card>

@@ -45,7 +45,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   mostrarPanel:string;
   catalogos:any;
 
-  totalAvanceRecepcion:number;
+  //porcentajeClaves:number;
+  //porcentajeArticulos:number;
   totalRecibido:number;
   totalArticulosRecibidos:number;
   totalClavesRecibidas:number;
@@ -65,6 +66,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.progressBarMode = 'determinate';
     this.totalClavesRecibidas = 0;
     this.totalArticulosRecibidos = 0;
+    //this.porcentajeClaves = 0;
+    //this.porcentajeArticulos = 0;
 
     let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
     this.formRecepcion = this.formBuilder.group({
@@ -115,13 +118,12 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.recepcionPedidosService.verPedido(id).subscribe(
       response =>{
         this.dataPedido = response.data;
-        
-        if(response.data.avance_recepcion){
-          this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_insumos;
-        }else{
-          this.totalAvanceRecepcion = 0;
-        }
 
+        /*if(this.dataPedido.avance_recepcion){
+          this.porcentajeClaves = this.dataPedido.avance_recepcion.porcentaje_claves;
+          this.porcentajeArticulos = this.dataPedido.avance_recepcion.porcentaje_articulos;
+        }*/
+        
         this.clavesTotales.articulos = response.data.lista_articulos.length;
         for(let i in response.data.lista_articulos){
           let articulo_server = response.data.lista_articulos[i];
@@ -150,12 +152,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
           lista_articulos.push(articulo);
         }
 
-        if(this.totalRecibido > 0){
-          this.totalAvanceRecepcion = Math.floor((this.totalRecibido/this.dataPedido.total_articulos)*100);
-        }
-
         this.totalRecepcionesAnteriores = response.data.recepciones_anteriores.length;
-        this.recepcionesAnteriores = [];
+        this.recepcionesAnteriores = response.data.recepciones_anteriores;
         if(response.data.recepcion_actual.length > 0){
           this.recepcionPendiente = true;
           this.controlArticulosModificados = {};
@@ -374,12 +372,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.isLoading = true;
     this.recepcionPedidosService.actualizarPedido(datosRecepcion,this.dataPedido.id).subscribe(
       response=>{
-        //this.formPedido.patchValue(response.data);
-        console.log(response);
-
-        if(response.data.avance_recepcion){
-          this.totalAvanceRecepcion = response.data.avance_recepcion.porcentaje_articulos;
-        }
+        //console.log(response);
 
         if(datosRecepcion.concluir){
           for(let id in this.controlArticulosModificados){
@@ -394,8 +387,14 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
             }
           }
 
+          if(response.data.avance_recepcion){
+            this.dataPedido.avance_recepcion = response.data.avance_recepcion;
+            //this.porcentajeClaves = response.data.avance_recepcion.porcentaje_claves;
+            //this.porcentajeArticulos = response.data.avance_recepcion.porcentaje_articulos;
+          }
+
           delete response.recepcion_reciente.lista_articulos_borrador;
-          this.recepcionesAnteriores.push(response.recepcion_reciente);
+          this.recepcionesAnteriores.unshift(response.recepcion_reciente);
           this.totalRecepcionesAnteriores = this.recepcionesAnteriores.length;
 
           this.controlArticulosModificados = {};

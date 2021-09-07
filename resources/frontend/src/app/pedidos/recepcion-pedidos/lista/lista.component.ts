@@ -29,14 +29,14 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['id','folio','descripcion','total_claves','total_insumos','actions'];
+  //displayedColumns: string[] = ['id','folio','descripcion','total_claves','total_insumos','actions'];
   dataSource: MatTableDataSource<any>;
   listadoPedidos: any[] = [];
 
-  meses:any = {1:'Enero', 2:'Febrero', 3:'Marzo', 4:'Abril', 5:'Mayo', 6:'Junio', 7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'};
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'VAL':'verified', 'PUB':'published_wit_changes', 'CAN':'cancel',    'EXP':'warning'  };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'VAL':'validado', 'PUB':'publicado',             'CAN':'cancelado', 'EXP':'expirado' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'VAL':'Validado', 'PUB':'Publicado',             'CAN':'Cancelado', 'EXP':'Expirado' };
+  //meses:any = {1:'Enero', 2:'Febrero', 3:'Marzo', 4:'Abril', 5:'Mayo', 6:'Junio', 7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'};
+  //listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'VAL':'verified', 'PUB':'published_wit_changes', 'CAN':'cancel',    'EXP':'warning'  };
+  //listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'VAL':'validado', 'PUB':'publicado',             'CAN':'cancelado', 'EXP':'expirado' };
+  //listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'VAL':'Validado', 'PUB':'Publicado',             'CAN':'Cancelado', 'EXP':'Expirado' };
 
   ngOnInit() {
     this.mediaObserver.media$.subscribe(
@@ -122,13 +122,18 @@ export class ListaComponent implements OnInit {
             for(let i in this.listadoPedidos){
               let pedido = this.listadoPedidos[i];
 
-              if(!pedido.folio){
-                pedido.folio = 'S/F';
+              if(!pedido.avance_recepcion){
+                pedido.avance_recepcion = {
+                  porcentaje_articulos: 0,
+                  porcentaje_claves: 0,
+                  total_articulos_recibidos: 0,
+                  total_claves_recibidas: 0,
+                }
               }
 
-              pedido.estatus_label = this.listaEstatusLabels[pedido.estatus];
-              pedido.estatus_clave = this.listaEstatusClaves[pedido.estatus];
-              pedido.estatus_icono = this.listaEstatusIconos[pedido.estatus];
+              //pedido.estatus_label = this.listaEstatusLabels[pedido.estatus];
+              //pedido.estatus_clave = this.listaEstatusClaves[pedido.estatus];
+              //pedido.estatus_icono = this.listaEstatusIconos[pedido.estatus];
             }
 
             this.resultsLength = response.data.total;
