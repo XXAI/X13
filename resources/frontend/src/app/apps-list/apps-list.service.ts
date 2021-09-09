@@ -37,7 +37,17 @@ export class AppsListService {
         }
       }
 
-      if((app.permission && !permissions[app.permission]) || (app.isHub && app.children && app.children.length == 0)){
+      if(app.apps && app.apps.length > 0){
+        for (let j = 0; j < app.apps.length; j++) {
+          let child = app.apps[j];
+          if(child.permission && !permissions[child.permission]){
+            userApps[i].apps.splice(j,1);
+            j -= 1;
+          }
+        }
+      }
+
+      if((app.permission && !permissions[app.permission]) || (app.isHub && app.children && app.children.length == 0) || ( app.apps && app.apps.length == 0)){
         userApps.splice(i,1);
         i -= 1;
       }

@@ -16,7 +16,8 @@ use App\EDocs\EDoc;
 
 use App\Models\Stock;
 use App\Models\Movimiento;
-use App\Models\MovimientoInsumo;
+use App\Models\MovimientoArticulo;
+use App\Models\Programa;
 
 
 class AlmacenExistenciasController extends Controller
@@ -107,6 +108,10 @@ class AlmacenExistenciasController extends Controller
                 $items = $items->where("stocks.almacen_id","=", "");
             }
 
+            if(isset($params['programa_id']) && trim($params['programa_id'])!= ""){
+                $items = $items->where("stocks.programa_id","=", $params['programa_id']);
+            }
+
             if(isset($params['search']) && trim($params['search'])!= ""){
 
                 $items = $items->where(function($query) use ($params) {
@@ -153,12 +158,16 @@ class AlmacenExistenciasController extends Controller
     }
 
     private function getUserAccessData($loggedUser = null){
+        //I hate this SSADII
+        $programas = Programa::all();
+
         if(!$loggedUser){
             $loggedUser = auth()->userOrFail();
-        }        
+        }
         $loggedUser->load('grupos.unidadesMedicas','grupos.unidadesMedicas.almacenes');
         $accessData = (object)[];
         $accessData = $loggedUser->grupos[0];
+        $accessData->catalogo_programas = $programas;
         return $accessData;
     }
 
@@ -171,16 +180,16 @@ class AlmacenExistenciasController extends Controller
     public function movimientos($id, Request $request)
     {
         $params = $request->input();
-        $items = MovimientoInsumo::select(
-            "movimientos_insumos.movimiento_id as id", 
+        $items = MovimientoArticulo::select(
+            "movimientos_articulos.movimiento_id as id", 
             "movimientos.folio as folio", 
             "movimientos.estatus as estatus", 
-            "movimientos_insumos.direccion_movimiento as direccion_movimiento",
+            "movimientos_articulos.direccion_movimiento as direccion_movimiento",
             "movimientos.fecha_movimiento as fecha_movimiento",
-            "movimientos_insumos.cantidad as cantidad",
-            "movimientos_insumos.user_id",
+            "movimientos_articulos.cantidad as cantidad",
+            "movimientos_articulos.user_id",
             "users.username as user")
-        ->leftJoin("movimientos", "movimientos.id","=","movimientos_insumos.movimiento_id")->leftJoin("users", "users.id","=","movimientos_insumos.user_id")->where("stock_id",$id);
+        ->leftJoin("movimientos", "movimientos.id","=","movimientos_articulos.movimiento_id")->leftJoin("users", "users.id","=","movimientos_articulos.user_id")->where("stock_id",$id);
 
         if(isset($params['orderBy']) && trim($params['orderBy'])!= ""){
             $sortOrder = 'asc';

@@ -35,6 +35,7 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
     caducidad: "",
     fecha_caducidad_hasta: "",
     almacen_id: "",
+    programa_id: "",
     unidad_medica_id: "",
 
     clave_partida_especifica: "",
@@ -48,6 +49,7 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
 
   filterCatalogos:any = {};
   filterAlmacenes:any[];
+  filterProgramas:any[];
 
   filterPartidas:any[];
   filterFamilias:any[];
@@ -96,6 +98,8 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
         this.filterCatalogos = response;
         this.filter.unidad_medica_id = this.filterCatalogos.unidad_medica_principal_id;
         this.updateAlmacenes();
+        this.filterProgramas = this.filterCatalogos.catalogo_programas;
+        
         this.loadingFilterCatalogos = false;
         //Anti pattern :( lo siento tendre que echarme un buen clavado de buenas practicas
         this.loadData();        
@@ -156,7 +160,6 @@ export class IndexComponent implements OnInit, AfterViewInit,OnDestroy {
     } else {
       this.filter.almacen_id = "";
     }
-    
   }
 
   ngAfterViewInit(){

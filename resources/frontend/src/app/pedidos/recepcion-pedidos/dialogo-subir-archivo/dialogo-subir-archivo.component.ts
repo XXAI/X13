@@ -85,6 +85,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
     formData.append('almacen_id', this.entradaForm.get('almacen_id').value);
     formData.append('pedido_id', this.data.pedidoId.toString());
 
+    /*
     this.recepcionPedidosService.subirArchivo(formData).subscribe(
       response =>{
         if(response.error) {
@@ -105,13 +106,13 @@ export class DialogoSubirArchivoComponent implements OnInit {
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
       }
-    );
-      /*
+    );*/
+    
     this.importSubscription = this.subirArchivoService.upload(formData).subscribe(
       success => {
         this.isLoading = false;
         console.log(success);
-        //this._snackBar.open("Importación satisfactoria","Cerrar");
+        this.sharedService.showSnackBar('Importación satisfactoria', null, 3000);
       },
       error =>{
         this.isLoading = false;
@@ -132,7 +133,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
         this.sharedService.showSnackBar(message, null, 3000);
       }
 
-    );*/
+    );
 
     /*this.estatusAvanceService.subirArchivo(formData).subscribe(
       response =>{

@@ -19,6 +19,8 @@ use App\Imports\EntradasInsumosImport;
 use App\Imports\SalidasInsumosImport;
 use App\Imports\ExistenciasInsumosImport;
 
+use App\Models\Pedido;
+
 
 class ExcelImportInsumosController extends Controller
 {
@@ -58,7 +60,9 @@ class ExcelImportInsumosController extends Controller
                 if(isset($input['pedido_id']) && $input['pedido_id']){
                     $pedido_id = $input['pedido_id'];
                 }
+
                 Excel::import(new EntradasInsumosImport($input["almacen_id"],$pedido_id), $path);
+                
                 return response()->json([
                     'message' => "Importación de entradas realizada correctamente"
                 ],200);
@@ -67,6 +71,7 @@ class ExcelImportInsumosController extends Controller
             {
                 return response()->json([
                     'message' => "Hay uno o mas errores en el layout",
+                    'line' => $e->getLine(),
                     "data" =>$e->getData()
                 ],400);
             }

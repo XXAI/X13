@@ -46,8 +46,13 @@ class RecepcionPedidosController extends Controller
     {
         try{
             $parametros = $request->all();
-            
+            $access_data = $this->getUserAccessData();
+
             $pedidos = Pedido::with('avanceRecepcion');
+
+            if(!$access_data->is_superuser){
+                $pedidos = $pedidos->whereIn('unidad_medica_id',$access_data->lista_unidades_ids);
+            }
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -335,16 +340,17 @@ class RecepcionPedidosController extends Controller
         //$loggedUser->load('perfilCr');
         $loggedUser->load('grupos.unidadesMedicas','grupos.unidadMedicaPrincipal');
         
-        //$lista_clues = [];
-        /*foreach ($loggedUser->grupos as $grupo) {
-            $lista_unidades = $grupo->unidadesMedicas->toArray();
+        $lista_unidades_id = [];
+        foreach ($loggedUser->grupos as $grupo) {
+            $lista_unidades = $grupo->unidadesMedicas->pluck('id')->all();
             
-            $lista_clues += $lista_clues + $lista_unidades;
-        }*/
-        //$accessData->lista_clues = $lista_clues;
+            $lista_unidades_id = array_merge($lista_unidades_id,$lista_unidades);
+        }
 
         $accessData = (object)[];
         $accessData->grupo_pedidos = $loggedUser->grupos[0];
+        $accessData->lista_unidades_ids = $lista_unidades_id;
+        $accessData->is_superuser = $loggedUser->is_superuser;
 
         /*if (\Gate::allows('has-permission', \Permissions::ADMIN_PERSONAL_ACTIVO)){
             $accessData->is_admin = true;

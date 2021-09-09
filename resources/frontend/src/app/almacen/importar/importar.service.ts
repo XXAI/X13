@@ -20,7 +20,10 @@ export class ImportarService {
   catalogos(): Observable<any>{  
     // La obtengo del controlador de existencias porque ya esta hecho   
     let token = localStorage.getItem('token');   
-    return this.http.get(`${this.api}/almacen-existencias/catalogos/?token=${token}`);
+    let headers = new HttpHeaders();
+    headers.append('Content-Type','application/json');
+    headers.append('Access-Control-Allow-Origin','*');
+    return this.http.get(`${this.api}/almacen-existencias/catalogos`,{params:{token: token}, headers:headers});
   }
 
   upload(data:any,file:File,path:string): Observable<any>{
@@ -46,9 +49,10 @@ export class ImportarService {
       let headers = new HttpHeaders();
 			//headers.append('Authorization', 'Bearer ' + localStorage.getItem('token'));
       headers.append('Content-Type','application/x-www-form-urlencoded;charset=UTF-8');
-        
+      headers.append('Access-Control-Allow-Origin','*');
+      formData.append('token',token);
     return this.http
-      .post(`${this.api}/${path}/?token=${token}`, formData, { headers:headers});
+      .post(`${this.api}/${path}`, formData, { headers:headers});
 
   }
 }

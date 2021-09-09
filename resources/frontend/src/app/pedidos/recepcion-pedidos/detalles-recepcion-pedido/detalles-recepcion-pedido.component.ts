@@ -38,21 +38,21 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   estatusEntradaManual:boolean;
   progressBarMode:string;
 
-  totalRecepcionesAnteriores:number;
   recepcionPendiente:boolean;
   formRecepcion:FormGroup;
 
   mostrarPanel:string;
   catalogos:any;
 
-  //porcentajeClaves:number;
-  //porcentajeArticulos:number;
   totalRecibido:number;
   totalArticulosRecibidos:number;
   totalClavesRecibidas:number;
 
-  recepcionActiva:boolean;
+  
   idArticuloSeleccionado:number;
+
+  recepcionActiva:boolean;
+  totalRecepcionesAnteriores:number;
   recepcionesAnteriores:any[];
 
   controlArticulosModificados:any;
@@ -439,6 +439,10 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.mostrarPanel = 'PEDIDO';
     this.estatusEntradaManual = false;
     this.progressBarMode = 'determinate';
+  }
+
+  imprimirRecepcionPDF(id){
+    console.log(id);
   }
 
   imprimirPedido(){

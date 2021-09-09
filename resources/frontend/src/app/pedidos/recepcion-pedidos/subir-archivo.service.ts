@@ -29,7 +29,9 @@ export class SubirArchivoService {
     let token = localStorage.getItem('token');
     let headers = new HttpHeaders();
     headers.append('Content-Type','application/x-www-form-urlencoded;charset=UTF-8');
+    headers.append('Access-Control-Allow-Origin','*');
+    formData.append('token',token);
         
-    return this.http.post(`${this.api}/importar-entradas-excel/?token=${token}`, formData, { headers:headers});
+    return this.http.post(`${this.api}/importar-entradas-excel`, formData, { headers:headers});
   }
 }

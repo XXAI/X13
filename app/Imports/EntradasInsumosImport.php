@@ -61,6 +61,8 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
     
     public function collection(Collection $rows)
     {
+        $loggedUser = auth()->userOrFail();
+
         $proveedoresBatch = [];
 
         $rowIndex = 2;
@@ -97,14 +99,34 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
         $movimientosInsumosCreated = [];
         // ----
 
-        try
-        {   
+        try{   
+            $programa_id = null;
+            $lista_articulos_pedido = [];
             if($this->pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
-                $pedido = Pedido::find($this->pedido_id);
+                //$pedido = Pedido::find($this->pedido_id);
+                $pedido = Pedido::with([ //Sacamos cuanto tenemos recibido en el pedido
+                                'listaArticulos'=>function($listaArticulos){
+                                    $listaArticulos->select('pedidos_lista_articulos.id','pedidos_lista_articulos.pedido_id','pedidos_lista_articulos.bien_servicio_id','pedidos_lista_articulos.cantidad',
+                                                            DB::raw('SUM(movimientos_articulos.cantidad) as total_recibido'),
+                                                            DB::raw('pedidos_lista_articulos.cantidad - SUM(IF(movimientos_articulos.cantidad,movimientos_articulos.cantidad,0)) as restante'))
+                                                ->leftjoin('rel_movimientos_pedidos','rel_movimientos_pedidos.pedido_id','=','pedidos_lista_articulos.pedido_id')
+                                                ->leftjoin('movimientos',function($join){
+                                                    $join->on('movimientos.id','=','rel_movimientos_pedidos.movimiento_id')->whereNull('movimientos.deleted_at');
+                                                })
+                                                ->leftjoin('movimientos_articulos',function($join){
+                                                    $join->on('movimientos_articulos.movimiento_id','=','movimientos.id')
+                                                        ->on('movimientos_articulos.bien_servicio_id','=','pedidos_lista_articulos.bien_servicio_id')
+                                                        ->whereNull('movimientos_articulos.deleted_at');
+                                                })
+                                                ->groupBy('pedidos_lista_articulos.bien_servicio_id')
+                                                ->whereNull('pedidos_lista_articulos.deleted_at');
+                                }])->where('id',$this->pedido_id)->first();
+                //
+                $programa_id = $pedido->programa_id;
+                $lista_articulos_pedido = $pedido->listaArticulos->pluck('restante','bien_servicio_id');
             }
 
-            foreach($movimientosBatch as $batch)
-            {
+            foreach($movimientosBatch as $batch){
     
                 $movimiento = Movimiento::create([
                     "almacen_id"=>$this->almacen_id,
@@ -112,10 +134,15 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                     "estatus" => "IM-FI",
                     "fecha_movimiento"=> $batch["fecha_movimiento"],
                     "proveedor_id" => $batch["proveedor_id"],
-                    "descripcion" => "Importación de entradas por proveedor con layout xlsx"
+                    "descripcion" => "Importación de entradas por proveedor con layout xlsx",
+                    "user_id" => $loggedUser->id,
                 ]);
 
                 if($this->pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
+                    $movimiento->folio = $pedido->folio;
+                    $movimiento->programa_id = $pedido->programa_id;
+                    $movimiento->descripcion = "Importación de entradas por proveedor con layout xlsx; asignado como recepción del pedido con folio: " . $pedido->folio;
+                    $movimiento->save();
                     $pedido->recepcionActual()->attach($movimiento);
                 }
                 
@@ -123,46 +150,57 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                 $movimientosCreated[] = $movimiento;
                 // ----
 
-                foreach($batch["insumos"] as $insumo)
-                {
+                foreach($batch["insumos"] as $insumo){
                     $bienServicio = BienServicio::where("clave_local",$insumo["clave"])->first();
 
-                    if($bienServicio != null)
-                    {
+                    if($bienServicio != null){
+                        if($this->pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
+                            if(!isset($lista_articulos_pedido[$bienServicio->id])){
+                                $this->addToErrors("Articulo no existe en pedido",$insumo["excel_index"],$bienServicio);
+                                continue;
+                            }
+
+                            if(((int) $lista_articulos_pedido[$bienServicio->id]) == 0 || ((int) $lista_articulos_pedido[$bienServicio->id] - (int) $insumo["cantidad"]) < 0 ){
+                                $this->addToErrors("Se sobrepasa la cantidad solicitada",$insumo["excel_index"],$bienServicio);
+                                continue;
+                            }
+                        }
+
                         $stock = Stock::where("almacen_id",$this->almacen_id)
                         ->where("bienes_servicios_id",$bienServicio->id)
+                        ->where("programa_id",$programa_id)
                         ->where("lote",$insumo["lote"])
-                        ->where("fecha_caducidad",$insumo["fecha_caducidad"])->first();
+                        ->where("fecha_caducidad",$insumo["fecha_caducidad"])
+                        ->whereNull("codigo_barras")
+                        ->first();
                         
                         $cantidad_anterior = 0;
-                        if($stock != null)
-                        {
+                        if($stock != null){
                             $cantidad_anterior = $stock->existencia;
                             $stock->existencia = (int)$stock->existencia + (int) $insumo["cantidad"];
                             $stock->save();
-                        }
-                        else
-                        {
+                        }else{
                             $stock = Stock::create(
                                 [
-                                    "almacen_id"=>$this->almacen_id,
-                                    "bienes_servicios_id"=>$bienServicio->id,
-                                    "lote"=>$insumo["lote"],
-                                    "fecha_caducidad" => $insumo["fecha_caducidad"],
-                                    "existencia" => $insumo["cantidad"]
+                                    "almacen_id"            => $this->almacen_id,
+                                    "bienes_servicios_id"   => $bienServicio->id,
+                                    "programa_id"           => $programa_id,
+                                    "lote"                  => $insumo["lote"],
+                                    "fecha_caducidad"       => $insumo["fecha_caducidad"],
+                                    "existencia"            => $insumo["cantidad"]
                                 ]
                             );
                         }
 
                         $movimientoInsumo = MovimientoInsumo::create(
                             [
-                                "movimiento_id" => $movimiento->id,
-                                "stock_id" => $stock->id,
-                                "bienes_servicios_id"=>$bienServicio->id,
-                                "direccion_movimiento" => "ENT",
-                                "modo_movimiento" => "NRM",
-                                "cantidad" => $insumo["cantidad"],
-                                "cantidad_anterior" => $cantidad_anterior,
+                                "movimiento_id"         => $movimiento->id,
+                                "stock_id"              => $stock->id,
+                                "bienes_servicios_id"   =>$bienServicio->id,
+                                "direccion_movimiento"  => "ENT",
+                                "modo_movimiento"       => "NRM",
+                                "cantidad"              => $insumo["cantidad"],
+                                "cantidad_anterior"     => $cantidad_anterior,
                             ]
                         );
 
@@ -170,26 +208,51 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                         $stocksUpdated[] = $stock;
                         $movimientosInsumosCreated[] = $movimientoInsumo;
                         // ----
-                    }
-                    else
-                    {
-                        $this->addToErrors("Insumo no existe",$insumo["excel_index"],$insumo);
+                    }else{
+                        $this->addToErrors("Articulo no existe en catalogo",$insumo["excel_index"],$insumo);
                     }                    
                 }
             }
-            if (count($this->rowErrors) == 0)
-            {
+
+            if (count($this->rowErrors) == 0){
+                if($this->pedido_id){ //Harima:: Se agrego parametro opcional pedido_id
+                    $pedido = Pedido::with(['avanceRecepcion','recepcionesAnteriores' => function($recepciones){
+                        $recepciones->select('movimientos.id',DB::raw('COUNT(distinct movimientos_articulos.bien_servicio_id) as total_claves'), DB::raw('SUM(movimientos_articulos.cantidad) as total_articulos'),
+                                            DB::raw('MAX(fecha_movimiento) as ultimo_movimiento'))
+                                    ->leftjoin('movimientos_articulos','movimientos.id','=','movimientos_articulos.movimiento_id')
+                                    ->whereNull('movimientos_articulos.deleted_at')
+                                    ->groupBy('rel_movimientos_pedidos.pedido_id');
+                    }])->where('id',$this->pedido_id);
+                    $suma_recepciones = $pedido->recepcionesAnteriores[0];
+                    //
+                    $porcentaje_claves  = round((($suma_recepciones->total_claves/$pedido->total_claves)*100),2);
+                    $porcentaje_articulos = round((($suma_recepciones->total_articulos/$pedido->total_articulos)*100),2);
+                    $datos_avance = [
+                        'total_claves_recibidas'        => $suma_recepciones->total_claves,
+                        'porcentaje_claves'             => $porcentaje_claves,
+                        'total_articulos_recibidos'     => $suma_recepciones->total_articulos,
+                        'porcentaje_articulos'          => $porcentaje_articulos,
+                        'porcentaje_total'              => round(($porcentaje_articulos+$porcentaje_claves)/2,2),
+                        'fecha_ultima_entrega'          => $suma_recepciones->ultimo_movimiento
+                    ];
+    
+                    if($pedido->avanceRecepcion){
+                        $pedido->avanceRecepcion()->update($datos_avance);
+                    }else{
+                        $datos_avance['fecha_primer_entrega'] = $suma_recepciones[0]->ultimo_movimiento;
+                        $pedido->avanceRecepcion()->create($datos_avance);
+                    }
+                }
+
                 DB::commit();
             }
-        }
-        catch(\Exception $e)
-        {
-            throw new DataException([],$e->getMessage());
+
+        }catch(\Exception $e){
+            throw new DataException($e->getData(),$e->getMessage());
             DB::rollback();
         }
 
-        if (count($this->rowErrors))
-        {
+        if (count($this->rowErrors)){
             throw new DataException($this->rowErrors);
         }
         /*    

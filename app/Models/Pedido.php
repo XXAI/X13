@@ -41,7 +41,7 @@ class Pedido extends Model{
     }
 
     public function recepcionesAnteriores(){
-        return $this->belongsToMany('App\Models\Movimiento', 'rel_movimientos_pedidos', 'pedido_id', 'movimiento_id')->where('estatus','RP-FI')->orderBy('fecha_movimiento','DESC');
+        return $this->belongsToMany('App\Models\Movimiento', 'rel_movimientos_pedidos', 'pedido_id', 'movimiento_id')->whereIn('estatus',['RP-FI','IM-FI'])->orderBy('fecha_movimiento','DESC');
     }
 
     public function recepcionActual(){

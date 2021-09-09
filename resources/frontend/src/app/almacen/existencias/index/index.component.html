@@ -42,6 +42,14 @@
                         <mat-option value="PROX">Proximos a vencer</mat-option>                        
                     </mat-select>
                 </mat-form-field>
+                <mat-form-field appearance="fill" >
+                    <mat-label>Programa</mat-label>
+                    <mat-select [(ngModel)]="filter.programa_id" [disabled]="loadingFilterCatalogos">
+                        <mat-option value="">Cualquiera</mat-option>
+                        <mat-option *ngFor="let item of filterProgramas" [value]="item.id">{{ item.descripcion }}</mat-option>                        
+                    </mat-select>
+                </mat-form-field>
+                <button mat-raised-button color="primary" (click)="applyFilter()">Aplicar Filtro</button>
                 <!--
                 <mat-form-field appearance="fill" >
                     <mat-label>Tipo</mat-label>
