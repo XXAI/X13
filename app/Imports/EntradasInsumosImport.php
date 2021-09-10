@@ -222,7 +222,7 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                                     ->leftjoin('movimientos_articulos','movimientos.id','=','movimientos_articulos.movimiento_id')
                                     ->whereNull('movimientos_articulos.deleted_at')
                                     ->groupBy('rel_movimientos_pedidos.pedido_id');
-                    }])->where('id',$this->pedido_id);
+                    }])->where('id',$this->pedido_id)->first();
                     $suma_recepciones = $pedido->recepcionesAnteriores[0];
                     //
                     $porcentaje_claves  = round((($suma_recepciones->total_claves/$pedido->total_claves)*100),2);
@@ -248,7 +248,7 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
             }
 
         }catch(\Exception $e){
-            throw new DataException($e->getData(),$e->getMessage());
+            throw new DataException(['data'=>$e->getMessage(),'line'=>$e->getLine()],$e->getMessage());
             DB::rollback();
         }
 

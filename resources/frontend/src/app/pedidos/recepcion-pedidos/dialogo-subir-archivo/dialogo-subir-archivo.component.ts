@@ -32,6 +32,8 @@ export class DialogoSubirArchivoComponent implements OnInit {
   
   almacenes:any[];
 
+  erroresImport: any[];
+
   entradaForm = this.fb.group({
     'almacen_id': ['',[Validators.required]],
     'layout': ['',[Validators.required]],
@@ -74,6 +76,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
   subirArchivo(){
     
     let errorDetails = null;
+    this.erroresImport = null;
     this.isLoading = true;
 
     if(this.importSubscription != null){
@@ -123,10 +126,20 @@ export class DialogoSubirArchivoComponent implements OnInit {
         if(error.status == 0){
           message = "Hubo un error antes de subir el archivo.";
           errorDetails = "¿Modifico el archivo después de seleccionarlo? Si es así, por favor recargue la página o seleccione otro archivo.";
-        }
-        else if(error.status == 400){
+        } else if(error.status == 400){
           message = dataError.message;
           errorDetails = dataError.data;
+          this.erroresImport = [];
+          for(let i in errorDetails){
+            this.erroresImport.push({
+              'linea': errorDetails[i].index,
+              'error': errorDetails[i].message,
+              'clave': (errorDetails[i].data.clave_cubs)?errorDetails[i].data.clave_cubs:errorDetails[i].data.clave_local,
+              'articulo': errorDetails[i].data.articulo,
+            });
+          }
+          //this.erroresImport = errorDetails;
+          console.log(this.erroresImport);
         }
 
         //this._snackBar.open(message,"Cerrar",{duration:4000});
@@ -134,25 +147,28 @@ export class DialogoSubirArchivoComponent implements OnInit {
       }
 
     );
+  }
 
-    /*this.estatusAvanceService.subirArchivo(formData).subscribe(
-      response =>{
-        if(response.error) {
-          let errorMessage = response.error.message;
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
-        } else {
-          console.log(response);
-          this.dialogRef.close(true);
-        }
-      },
-      errorResponse =>{
-        var errorMessage = "Ocurrió un error.";
-        if(errorResponse.status == 409){
-          errorMessage = errorResponse.error.error.message;
-        }
-        this.sharedService.showSnackBar(errorMessage, null, 3000);
-      }
-    );*/
+  downloadFile(data: any) {
+    const replacer = (key, value) => (value === null ? '' : value); // specify how you want to handle null values here
+    const header = Object.keys(data[0]);
+    const csv = data.map((row) =>
+      header
+        .map((fieldName) => JSON.stringify(row[fieldName], replacer))
+        .join(',')
+    );
+    csv.unshift(header.join(','));
+    const csvArray = csv.join('\r\n');
+  
+    const a = document.createElement('a');
+    const blob = new Blob([csvArray], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+  
+    a.href = url;
+    a.download = 'errores-layout-entrada-excel.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
   }
 
   cancelar(){

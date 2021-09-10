@@ -21,6 +21,19 @@
             </div>
         </div>
     </div>
+    <div fxFlex *ngIf="erroresImport">
+        <div>Se encontraron los siguientes errores: <button mat-flat-button (click)="downloadFile(erroresImport)"><mat-icon>download</mat-icon> Descargar en un archivo</button></div>
+        <cdk-virtual-scroll-viewport itemSize="40" class="error-list">
+            <div *cdkVirtualFor="let error of erroresImport;" class="error-container">
+                <div fxLayout="row" class="error-item">
+                    <div fxFlex="none">Linea: {{error.linea}}; </div>
+                    <div fxFlex style="text-align: center;">{{error.error}}; </div>
+                    <div fxFlex style="text-align: center;">Clave: {{error.clave}}</div>
+                    <div fxFlex style="text-align: center;">{{error.articulo}}</div>
+                </div>
+            </div>
+        </cdk-virtual-scroll-viewport>
+    </div>
     <section fxFlex="none" fxLayout="row">
         <div fxFlex></div>
         <button fxFlex="20" mat-raised-button color="primary" (click)="subirArchivo()" [disabled]="!entradaForm.valid"><mat-icon>upload_file</mat-icon>Subir</button>
