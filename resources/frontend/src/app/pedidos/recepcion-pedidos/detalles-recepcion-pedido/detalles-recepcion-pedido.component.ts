@@ -55,6 +55,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   totalRecepcionesAnteriores:number;
   recepcionesAnteriores:any[];
 
+  tiposRecepcion:any;
+
   controlArticulosModificados:any;
   
   dataSourceArticulos: MatTableDataSource<any>;
@@ -68,6 +70,11 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.totalArticulosRecibidos = 0;
     //this.porcentajeClaves = 0;
     //this.porcentajeArticulos = 0;
+
+    this.tiposRecepcion = {
+      'IM-FI': 'Archivo Importado',
+      'RP-FI': 'Recepción Manual',
+    }
 
     let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
     this.formRecepcion = this.formBuilder.group({
@@ -135,6 +142,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
             nombre: articulo_raw.articulo,
             descripcion: articulo_raw.especificaciones,
             descontinuado: (articulo_raw.descontinuado)?true:false,
+            tiene_fecha_caducidad: (articulo_raw.tiene_fecha_caducidad)?true:false,
             partida_clave: articulo_raw.partida_especifica.clave,
             partida_descripcion: articulo_raw.partida_especifica.descripcion,
             familia: articulo_raw.nombre_familia,

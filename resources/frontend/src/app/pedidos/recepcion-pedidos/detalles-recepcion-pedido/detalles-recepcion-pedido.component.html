@@ -91,52 +91,6 @@
                         <div fxFlex></div>
                     </div>
                     <div fxFlex>
-                        <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
-                            <div *ngIf="totalRecepcionesAnteriores == 0" class="no-items-found">
-                                No se encontraron recepciones
-                            </div>
-                            <div *cdkVirtualFor="let recepcion of recepcionesAnteriores;" class="unidad-medica-item seleccionable">
-                                <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
-                                    <div fxFlex fxLayout="column" class="datos-unidad">
-                                        <div fxFlex="none" class="titulo">
-                                            Fecha Recepción: {{recepcion.fecha_movimiento}}
-                                        </div>
-                                        <div fxFlex class="descripcion">
-                                            Nombre Recibe: {{recepcion.recibe}}<br>
-                                            Nombre Entrega: {{recepcion.entrega}}
-                                        </div>
-                                        <div fxFlex="none" class="detalles">
-                                            Total Piezas: {{recepcion.total_articulos | number:'1.0-0' }}
-                                        </div>
-                                    </div>
-                                    <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
-                                        <div fxFlex="none">
-                                            <button mat-icon-button [matMenuTriggerFor]="menuRecepcionAnterior" [matMenuTriggerData]="{id: recepcion.id}">
-                                                <mat-icon>more_vert</mat-icon>
-                                            </button>
-                                        </div>
-                                        <div fxFlex></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </cdk-virtual-scroll-viewport>
-                        <mat-menu #menuRecepcionAnterior="matMenu">
-                            <ng-template matMenuContent let-id="id">
-                                <button mat-menu-item disabled>
-                                    <mat-icon>visibility</mat-icon>
-                                    <span>Ver Detalles</span>
-                                </button>
-                                <mat-divider></mat-divider>
-                                <button mat-menu-item (click)="imprimirRecepcionPDF(id)">
-                                    <mat-icon svgIcon="pdf-icon" ></mat-icon>
-                                    <span>Descargar en PDF</span>
-                                </button>
-                                <button mat-menu-item disabled>
-                                    <mat-icon svgIcon="xls-icon" ></mat-icon>
-                                    <span>Descargar en Excel</span>
-                                </button>
-                            </ng-template>
-                        </mat-menu>
                     </div>
                 </div>
                 <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'ENTRADA'"><!-- Panel de formulario de entrada -->
@@ -181,7 +135,7 @@
             </mat-card>
         </section>
         <section fxFlex fxLayout="column">
-            <mat-card fxFlex="100" fxLayout="column">
+            <mat-card fxFlex="100" fxLayout="column" *ngIf="mostrarPanel != 'RECEPCIONES'">
                 <div fxFlex="none" fxLayout="row">
                     <div fxFlex="none">
                     </div>
@@ -248,6 +202,71 @@
                     <div fxFlex>
                     </div>
                 </div>
+            </mat-card>
+            <mat-card fxFlex="100" fxLayout="column" *ngIf="mostrarPanel == 'RECEPCIONES'">
+                <div fxFlex="none" fxLayout="row">
+                    <div fxFlex></div>
+                    <div fxFlex="none">
+                        <mat-chip-list aria-label="Pedido Interno">
+                            <mat-chip color="accent" selected [disableRipple]="true">
+                                Total: {{ totalRecepcionesAnteriores | number}} Recepciones
+                            </mat-chip>
+                        </mat-chip-list>
+                    </div>
+                </div>
+                <div fxFlex fxLayout="row raw" style="overflow: auto;">
+                    <div fxFlex="33" *ngFor="let recepcion of recepcionesAnteriores;" style="padding: 3px;" >
+                        <mat-card class="unidad-medica-item">
+                            <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
+                                <div fxFlex fxLayout="column" class="datos-unidad">
+                                    <div fxFlex="none" class="titulo">
+                                        <span class="etiqueta">{{tiposRecepcion[recepcion.estatus]}}</span>
+                                    </div>
+                                    <div fxFlex="none" class="subtitulo">
+                                        <span class="etiqueta">Fecha Recepción: </span><br>{{recepcion.fecha_movimiento}}
+                                    </div>
+                                    <div fxFlex="none" class="subtitulo">
+                                        <span class="etiqueta">Proveedor: </span><br>{{(recepcion.proveedor_id)?recepcion.proveedor.nombre:'Sin Proveedor'}}
+                                    </div>
+                                    <div fxFlex="none" class="subtitulo">
+                                        <span class="etiqueta">Almacen: </span><br>{{(recepcion.almacen_id)?recepcion.almacen.nombre:'Sin Almacen'}}
+                                    </div>
+                                    <div fxFlex="none" class="detalles">
+                                        <span class="etiqueta">Total Claves: </span>{{recepcion.total_claves | number:'1.0-0' }}
+                                    </div>
+                                    <div fxFlex="none" class="detalles">
+                                        <span class="etiqueta">Total Piezas: </span>{{recepcion.total_articulos | number:'1.0-0' }}
+                                    </div>
+                                </div>
+                                <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
+                                    <div fxFlex="none">
+                                        <button mat-icon-button  [matMenuTriggerFor]="menuRecepcionAnterior" [matMenuTriggerData]="{id: recepcion.id}">
+                                            <mat-icon>more_vert</mat-icon>
+                                        </button>
+                                    </div>
+                                    <div fxFlex></div>
+                                </div>
+                            </div>
+                        </mat-card>
+                    </div>
+                </div>
+                <mat-menu #menuRecepcionAnterior="matMenu">
+                    <ng-template matMenuContent let-id="id">
+                        <button mat-menu-item disabled>
+                            <mat-icon>visibility</mat-icon>
+                            <span>Ver Detalles</span>
+                        </button>
+                        <mat-divider></mat-divider>
+                        <button mat-menu-item (click)="imprimirRecepcionPDF(id)">
+                            <mat-icon svgIcon="pdf-icon" ></mat-icon>
+                            <span>Descargar en PDF</span>
+                        </button>
+                        <button mat-menu-item disabled>
+                            <mat-icon svgIcon="xls-icon" ></mat-icon>
+                            <span>Descargar en Excel</span>
+                        </button>
+                    </ng-template>
+                </mat-menu>
             </mat-card>
         </section>
     </section>

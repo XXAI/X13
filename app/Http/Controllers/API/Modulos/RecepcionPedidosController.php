@@ -15,6 +15,7 @@ use App\Models\Pedido;
 use App\Models\UnidadMedica;
 use App\Models\Movimiento;
 use App\Models\Stock;
+use App\Models\Proveedor;
 
 class RecepcionPedidosController extends Controller
 {
@@ -30,6 +31,8 @@ class RecepcionPedidosController extends Controller
                     $data['almacenes'] = $pedido->unidadMedica->almacenes;
                 }
             }
+
+            $data['proveedores'] = Proveedor::all();
 
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -88,8 +91,11 @@ class RecepcionPedidosController extends Controller
     public function show($id)
     {
         try{
-            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion','listaUnidadesMedicas.unidadMedica','recepcionActual.listaArticulosBorrador','recepcionesAnteriores',
-                                    'listaArticulos'=>function($articulos){
+            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion','listaUnidadesMedicas.unidadMedica','recepcionActual.listaArticulosBorrador',
+                                    'recepcionesAnteriores' => function($recepciones){
+                                        $recepciones->with('proveedor','almacen');
+                                    },
+                                    'listaArticulos' => function($articulos){
                                         $articulos->with(['articulo'=>function($articulo){
                                                                         $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
                                                                                 ->select('bienes_servicios.*','familias.nombre as nombre_familia');
@@ -309,6 +315,8 @@ class RecepcionPedidosController extends Controller
                 $pedido->load('avanceRecepcion','recepcionActual.listaArticulosBorrador');
                 $return_data['data'] = $pedido;
             }else{
+                $recepcion_actual->load('proveedor','almacen');
+
                 $pedido->load('avanceRecepcion'); //Agregar Recepcion Anterior
                 $return_data['data'] = $pedido;
                 $return_data['recepcion_reciente'] = $recepcion_actual;

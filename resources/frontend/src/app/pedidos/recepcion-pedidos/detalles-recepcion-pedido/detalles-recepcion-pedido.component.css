@@ -267,13 +267,17 @@ table td {
 }
 
 .unidad-medica-item{
-    height: 80px;
+    
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     border-bottom: solid thin #dddddd;
     z-index: 99999;
     cursor: default;
+
+    height: auto; 
+    padding: 0px; 
+    background-color: whitesmoke;
 }
 
 .unidad-medica-item:hover{
@@ -287,13 +291,25 @@ table td {
 .unidad-medica-item .datos-unidad .titulo{
     font-weight: 450; 
     font-size: 16px; 
-    padding-top:5px;
+    padding-top:2px;
+    padding-bottom:2px;
+}
+
+.unidad-medica-item .datos-unidad .subtitulo{
+    font-weight: 400; 
+    font-size: 14px; 
+    padding-top:2px;
+    padding-bottom:2px;
 }
 
 .unidad-medica-item .datos-unidad .descripcion{
     font-size: 14px;
     font-size: 1vw;
     color:#8c8c8c;
+}
+
+.unidad-medica-item .datos-unidad .etiqueta{
+    font-weight: bold;
 }
 
 .unidad-medica-item .datos-unidad .detalles{

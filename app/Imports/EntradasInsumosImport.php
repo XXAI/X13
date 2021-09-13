@@ -14,7 +14,7 @@ use App\Models\Proveedor;
 use App\Models\Pedido;
 use App\Models\BienServicio;
 use App\Models\Movimiento;
-use App\Models\MovimientoInsumo;
+use App\Models\MovimientoArticulo;
 use App\Models\Stock;
 
 
@@ -192,11 +192,11 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                             );
                         }
 
-                        $movimientoInsumo = MovimientoInsumo::create(
+                        $movimientoInsumo = MovimientoArticulo::create(
                             [
                                 "movimiento_id"         => $movimiento->id,
                                 "stock_id"              => $stock->id,
-                                "bienes_servicios_id"   =>$bienServicio->id,
+                                "bien_servicio_id"      => $bienServicio->id,
                                 "direccion_movimiento"  => "ENT",
                                 "modo_movimiento"       => "NRM",
                                 "cantidad"              => $insumo["cantidad"],

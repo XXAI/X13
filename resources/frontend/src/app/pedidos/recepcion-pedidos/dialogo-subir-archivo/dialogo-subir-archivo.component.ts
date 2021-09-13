@@ -50,7 +50,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response);
+          //console.log(response);
           this.almacenes = response.data.almacenes;
         }
       },
@@ -114,8 +114,9 @@ export class DialogoSubirArchivoComponent implements OnInit {
     this.importSubscription = this.subirArchivoService.upload(formData).subscribe(
       success => {
         this.isLoading = false;
-        console.log(success);
+        //console.log(success);
         this.sharedService.showSnackBar('Importación satisfactoria', null, 3000);
+        this.dialogRef.close(true);
       },
       error =>{
         this.isLoading = false;
@@ -139,7 +140,7 @@ export class DialogoSubirArchivoComponent implements OnInit {
             });
           }
           //this.erroresImport = errorDetails;
-          console.log(this.erroresImport);
+          //console.log(this.erroresImport);
         }
 
         //this._snackBar.open(message,"Cerrar",{duration:4000});

@@ -98,7 +98,7 @@ export class DialogoLotesArticulosComponent implements OnInit {
 
         if (diferencia_dias < 0){
           this.estatusCaducidad = 3; //Caducado
-        }else if (diferencia_dias >= 60){
+        }else if (diferencia_dias >= 90){
           this.estatusCaducidad = 1; //Normal
         }else{
           this.estatusCaducidad = 2; //Por caducar

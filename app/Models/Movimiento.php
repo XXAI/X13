@@ -16,20 +16,20 @@ class Movimiento extends Model{
         return $this->belongsTo('App\Models\Almacen','almacen_id');
     }
 
+    public function programa(){
+        return $this->belongsTo('App\Models\Programa','programa_id');
+    }
+
+    public function proveedor(){
+        return $this->belongsTo('App\Models\Proveedor','proveedor_id');
+    }
+
     public function listaArticulos(){
         return $this->hasMany('App\Models\MovimientoArticulo','movimiento_id');
     }
 
     public function listaArticulosBorrador(){
         return $this->hasMany('App\Models\MovimientoArticuloBorrador','movimiento_id');
-    }
-
-    public function listaInsumosMedicos(){
-        return $this->hasMany('App\Models\MovimientoInsumo','movimiento_id');
-    }
-
-    public function listaInsumosBorrador(){
-        return $this->hasMany('App\Models\MovimientoInsumoBorrador','movimiento_id');
     }
 
     public function pedido(){
