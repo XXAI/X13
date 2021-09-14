@@ -10,6 +10,8 @@ import { DialogoLotesArticulosComponent } from '../dialogo-lotes-articulos/dialo
 import { RecepcionPedidosService } from '../recepcion-pedidos.service';
 import { SharedService } from '../../../shared/shared.service';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
+import { ReportWorker } from '../../../web-workers/report-worker';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-detalles-recepcion-pedido',
@@ -450,11 +452,81 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   }
 
   imprimirRecepcionPDF(id){
-    console.log(id);
+    this.recepcionPedidosService.obtenerListaArticulosRecepcion(id).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          console.log(response);
+
+          const reportWorker = new ReportWorker();
+            reportWorker.onmessage().subscribe(
+              data => {
+                console.log(data);
+                FileSaver.saveAs(data.data,'RecepcionPedido:'+response.data.fecha_movimiento);
+                reportWorker.terminate();
+            });
+
+            reportWorker.onerror().subscribe(
+              (data) => {
+                //this.sharedService.showSnackBar('Error: ' + data.message,null, 3000);
+                //this.isLoadingPDF = false;
+                //console.log(data);
+                reportWorker.terminate();
+              }
+            );
+            
+            reportWorker.postMessage({data:response.data, reporte:'pedidos/recepcion-pedido'});
+        }
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+      }
+    );
   }
 
   imprimirPedido(){
-    //
+    this.recepcionPedidosService.reportePedido(this.dataPedido.id).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          console.log(response);
+
+          const reportWorker = new ReportWorker();
+            reportWorker.onmessage().subscribe(
+              data => {
+                console.log(data);
+                FileSaver.saveAs(data.data,'Pedido:'+this.dataPedido.folio);
+                reportWorker.terminate();
+            });
+
+            reportWorker.onerror().subscribe(
+              (data) => {
+                //this.sharedService.showSnackBar('Error: ' + data.message,null, 3000);
+                //this.isLoadingPDF = false;
+                //console.log(data);
+                reportWorker.terminate();
+              }
+            );
+            
+            reportWorker.postMessage({data:response.data, reporte:'pedidos/pedido'});
+        }
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+      }
+    );
   }
 
 }

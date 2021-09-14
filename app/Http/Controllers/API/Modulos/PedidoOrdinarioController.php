@@ -150,19 +150,24 @@ class PedidoOrdinarioController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try{
-            $pedido = Pedido::with(['tipoElementoPedido',
+            $parametros = $request->all();
+            if(isset($parametros['reporte_pdf']) && $parametros['reporte_pdf']){
+                $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','listaArticulos.articulo','programa'])->find($id);
+                $return_data = ['data'=>$pedido];
+            }else{
+                $pedido = Pedido::with(['tipoElementoPedido',
                                     'listaArticulos'=>function($articulos){ //Agrega la Familia
                                         $articulos->with(['articulo'=>function($articulo){
                                             $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
                                                     ->select('bienes_servicios.*','familias.nombre as nombre_familia');
                                         },'articulo.partidaEspecifica','listaArticulosUnidades']);
                                     },'listaUnidadesMedicas.unidadMedica'])->find($id);
-
-            $return_data = ['data'=>$pedido];
-
+                $return_data = ['data'=>$pedido];
+            }
+            
             return response()->json($return_data,HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);

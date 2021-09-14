@@ -121,7 +121,9 @@ class RecepcionPedidosController extends Controller
 
     public function listaArticulosRecepcion($id){
         try{
-            $recepcion = Movimiento::with(['listaArticulos.stock','almacen'])->find($id);
+            $recepcion = Movimiento::with(['listaArticulos' => function($lista){
+                                                $lista->with('stock','articulo');
+                                            },'almacen','proveedor','programa'])->find($id);
 
             $return_data = ['data'=>$recepcion];
 

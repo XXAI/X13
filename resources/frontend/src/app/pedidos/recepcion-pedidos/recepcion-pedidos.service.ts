@@ -8,8 +8,9 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class RecepcionPedidosService {
+  url_reporte_pedido = `${environment.base_url}/pedido-ordinario`;
   url_pedidos = `${environment.base_url}/recepcion-pedidos`;
-  url_insumos = `${environment.base_url}/lista-insumos-recepcion`;
+  url_articulos = `${environment.base_url}/lista-articulos-recepcion`;
   url_catalogos = `${environment.base_url}/recepcion-pedidos-catalogos`;
   url_archivo = `${environment.base_url}/importar-entradas-excel`;
 
@@ -31,8 +32,17 @@ export class RecepcionPedidosService {
     );
   }
 
-  obtenerListaInsumosRecepcion(id):Observable<any> {
-    return this.http.get<any>(this.url_insumos+'/'+id,{}).pipe(
+  obtenerListaArticulosRecepcion(id):Observable<any> {
+    return this.http.get<any>(this.url_articulos+'/'+id,{}).pipe(
+      map( (response: any) => {        
+        return response;
+      }
+    ));
+  }
+
+  reportePedido(id) {
+    let payload:any = {reporte_pdf:true};
+    return this.http.get<any>(this.url_reporte_pedido+'/'+id,{params:payload}).pipe(
       map( (response: any) => {        
         return response;
       }

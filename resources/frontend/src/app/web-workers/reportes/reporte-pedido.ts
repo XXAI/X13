@@ -1,7 +1,20 @@
 import { LOGOS } from "../../logos";
-export class ReporteRecepcionPedido{
+export class ReportePedido{
     getDocumentDefinition(reportData:any) {
-        
+        let catalogo_meses = {
+            1: 'Enero',
+            2: 'Febrero',
+            3: 'Marzo',
+            4: 'Abril',
+            5: 'Mayo',
+            6: 'Junio',
+            7: 'Julio',
+            8: 'Agosto',
+            9: 'Septiembre',
+            10: 'Octubre',
+            11: 'Noviembre',
+            12: 'Diciembre',
+        };
         let contadorLineasHorizontalesV = 0;
         let fecha_hoy =  Date.now();
         let datos = {
@@ -17,7 +30,7 @@ export class ReporteRecepcionPedido{
                 },
                 {
                     margin: [10, 0, 0, 0],
-                    text: 'SECRETARÍA DE SALUD\n RECEPCIÓN DE PEDIDO',
+                    text: 'SECRETARÍA DE SALUD\n PEDIDO',
                     bold: true,
                     fontSize: 12,
                     alignment: 'center'
@@ -64,7 +77,7 @@ export class ReporteRecepcionPedido{
               fontSize: 5,
               bold:true,
               fillColor:"#DEDEDE",
-              alignment:"center"
+              alignment:"right"
             },
             pedido_title:{
               alignment:"right",
@@ -88,19 +101,19 @@ export class ReporteRecepcionPedido{
         datos.content.push({
           table: {
             margin: [0,0,0,0],
-            widths: [ 60, '*', 40, '*', 50, 50],
+            widths: [ 60, '*', 40, '*', 50, 65],
             body: [
               [
-                {text: "Folio Pedido:",                                                     style: "pedido_title" },
-                {text: reportData.folio,                                                    style: "pedido_datos" },
-                {text: "Almacen:",                                                          style: "pedido_title" },
-                {text: (reportData.almacen_id)?reportData.almacen.nombre:'Sin Almacen',     style: "pedido_datos" },
-                {text: "Fecha:",                                                            style: "pedido_title" },
-                {text: reportData.fecha_movimiento,                                         style: "pedido_datos" },
+                {text: "Folio:",                                                                style: "pedido_title" },
+                {text: reportData.folio,                                                        style: "pedido_datos" },
+                {text: "Programa:",                                                             style: "pedido_title" },
+                {text: (reportData.programa_id)?reportData.programa.descripcion:'Sin Programa', style: "pedido_datos" },
+                {text: "Mes/Año:",                                                              style: "pedido_title" },
+                {text: catalogo_meses[reportData.mes] + ' - ' + reportData.anio,                style: "pedido_datos" },
               ],
               [
-                {text: "Proveedor:",                                                            style: "pedido_title"},
-                {text: (reportData.proveedor_id)?reportData.proveedor.nombre:'Sin Proveedor',   style: "pedido_datos", colSpan: 3 },
+                {text: "Unidad Medica:",                                                        style: "pedido_title"},
+                {text: reportData.unidad_medica.nombre,                                         style: "pedido_datos", colSpan: 3 },
                 {text: ""},
                 {text: ""},
                 {text: "Total Claves:",                                                         style: "pedido_title"},
@@ -118,42 +131,36 @@ export class ReporteRecepcionPedido{
             headerRows:1,
             dontBreakRows: true,
             keepWithHeaderRows: 1,
-            widths: [ 10, 45, '*', 40, 30, 30],
+            widths: [ 10, 45, '*', 30],
             margin: [0,0,0,0],
             body: [
               [
                 {text: "#",               style: 'cabecera'},
                 {text: "CLAVE",           style: 'cabecera'},
                 {text: "DESCRIPCION",     style: 'cabecera'},
-                {text: "LOTE",            style: 'cabecera'},
-                {text: "FECHA CADUCIDAD", style: 'cabecera'},
                 {text: "CANTIDAD",        style: 'cabecera'},
               ]
             ]
           }
         });
 
-        let total_recibido = 0;
+        let total_pedido = 0;
         for(let i = 0; i < reportData.lista_articulos.length; i++){
           let item = reportData.lista_articulos[i];
           datos.content[1].table.body.push([  
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
             { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
             { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-            { text: item.stock.lote,                                                                style: 'tabla_datos'},
-            { text: item.stock.fecha_caducidad,                                                     style: 'tabla_datos'},
             { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
           ]);
-          total_recibido += item.cantidad;
+          total_pedido += item.cantidad;
         }
 
         datos.content[1].table.body.push([  
-          { text: '', colSpan: 4, border: [false, false, false, false]},
-          { text: ''},
-          { text: ''},
+          { text: '', colSpan: 2, border: [false, false, false, false]},
           { text: ''},
           { text: 'Total:',         style: 'subcabecera'},
-          { text: total_recibido,   style: 'tabla_datos_center'},
+          { text: total_pedido,   style: 'tabla_datos_center'},
         ]);
 
         return datos;
