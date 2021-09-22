@@ -90,8 +90,22 @@
                         <div fxFlex="none" style="text-align: center;"><h1 style="margin: 9px;">Recepciones Anteriores</h1></div>
                         <div fxFlex></div>
                     </div>
-                    <div fxFlex>
+                    <div fxFlex="none" fxLayout="row raw">
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Proveedor</mat-label>
+                            <input matInput [(ngModel)]="filtroProveedor" autocomplete="off" (keyup.enter)="filtrarRecepciones()">
+                        </mat-form-field>
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Almacen</mat-label>
+                            <mat-select [(ngModel)]="filtroAlmacen" >
+                                <mat-option [value]="">Todos</mat-option>
+                                <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
+                                    {{item.nombre}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
                     </div>
+                    <div fxFlex></div>
                 </div>
                 <div fxFlex fxLayout="column" *ngIf="mostrarPanel == 'ENTRADA'"><!-- Panel de formulario de entrada -->
                     <div fxFlex="none" fxLayout="row" style="background-color: whitesmoke;">
@@ -209,13 +223,13 @@
                     <div fxFlex="none">
                         <mat-chip-list aria-label="Pedido Interno">
                             <mat-chip color="accent" selected [disableRipple]="true">
-                                Total: {{ totalRecepcionesAnteriores | number}} Recepciones
+                                Total: {{ recepcionesAnteriores.filteredData.length | number}} Recepciones
                             </mat-chip>
                         </mat-chip-list>
                     </div>
                 </div>
                 <div fxFlex fxLayout="row raw" style="overflow: auto;">
-                    <div fxFlex="33" *ngFor="let recepcion of recepcionesAnteriores;" style="padding: 3px;" >
+                    <div fxFlex="33" *ngFor="let recepcion of recepcionesAnteriores.filteredData;" style="padding: 3px;" >
                         <mat-card class="unidad-medica-item">
                             <div fxLayout="row" style="padding-left:5px; height: 100%; overflow: hidden; flex: 1 1 0%;">
                                 <div fxFlex fxLayout="column" class="datos-unidad">

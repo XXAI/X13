@@ -43,6 +43,10 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   recepcionPendiente:boolean;
   formRecepcion:FormGroup;
 
+  //filtros Recepciones
+  filtroProveedor:string;
+  filtroAlmacen:number;
+
   mostrarPanel:string;
   catalogos:any;
 
@@ -55,7 +59,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
 
   recepcionActiva:boolean;
   totalRecepcionesAnteriores:number;
-  recepcionesAnteriores:any[];
+  recepcionesAnteriores: MatTableDataSource<any>;
 
   tiposRecepcion:any;
 
@@ -163,7 +167,32 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
         }
 
         this.totalRecepcionesAnteriores = response.data.recepciones_anteriores.length;
-        this.recepcionesAnteriores = response.data.recepciones_anteriores;
+        this.recepcionesAnteriores = new MatTableDataSource<any>(response.data.recepciones_anteriores);
+        this.recepcionesAnteriores.filterPredicate = (data:any, filter:string) => {
+          let filtroTexto:boolean;
+          let filtros = filter.split('|');
+
+          //index:0 = texto a buscar
+          if(filtros[0]){
+            let filtro_query = filtros[0].toLowerCase();
+            if(data.proveedor_id){
+              filtroTexto = data.proveedor.nombre.toLowerCase().includes(filtro_query); //|| data.nombre.toLowerCase().includes(filtro_query) || data.descripcion.toLowerCase().includes(filtro_query);
+            }else{
+              filtroTexto = false;
+            }
+          }else{
+            filtroTexto = true;
+          }
+
+          //index:1 = almacen
+          if(filtros[1] && filtroTexto){
+            let almacen_id = +filtros[1];
+            filtroTexto = (data.almacen_id == almacen_id);
+          }
+
+          return filtroTexto;
+        };
+        //this.recepcionesAnteriores.data = response.data.recepciones_anteriores;
         if(response.data.recepcion_actual.length > 0){
           this.recepcionPendiente = true;
           this.controlArticulosModificados = {};
@@ -230,6 +259,26 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  filtrarRecepciones(){
+    let filter_value;
+
+    if(this.filtroProveedor){
+      filter_value = this.filtroProveedor.trim() + '|';
+    }else{
+      filter_value = '|';
+    }
+
+    if(this.filtroAlmacen){
+      filter_value += this.filtroAlmacen + '|';
+    }else{
+      filter_value += '|';
+    }
+    
+    if(this.recepcionesAnteriores){
+      this.recepcionesAnteriores.filter = filter_value;
+    }
   }
 
   cargarFiltroArticulos(){
@@ -404,8 +453,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
           }
 
           delete response.recepcion_reciente.lista_articulos_borrador;
-          this.recepcionesAnteriores.unshift(response.recepcion_reciente);
-          this.totalRecepcionesAnteriores = this.recepcionesAnteriores.length;
+          this.recepcionesAnteriores.data.unshift(response.recepcion_reciente);
+          this.totalRecepcionesAnteriores = this.recepcionesAnteriores.data.length;
 
           this.controlArticulosModificados = {};
           this.formRecepcion.reset();
