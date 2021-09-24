@@ -7,11 +7,14 @@ import { ActivatedRoute } from '@angular/router';
 import { CustomValidator } from '../../../utils/classes/custom-validator';
 import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-subir-archivo.component';
 import { DialogoLotesArticulosComponent } from '../dialogo-lotes-articulos/dialogo-lotes-articulos.component';
+import { DialogoDetallesRecepcionComponent } from '../dialogo-detalles-recepcion/dialogo-detalles-recepcion.component';
 import { RecepcionPedidosService } from '../recepcion-pedidos.service';
 import { SharedService } from '../../../shared/shared.service';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { ReportWorker } from '../../../web-workers/report-worker';
 import * as FileSaver from 'file-saver';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-detalles-recepcion-pedido',
@@ -43,6 +46,8 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   recepcionPendiente:boolean;
   formRecepcion:FormGroup;
 
+  filteredProveedores: Observable<any[]>;
+
   //filtros Recepciones
   filtroProveedor:string;
   filtroAlmacen:number;
@@ -53,13 +58,13 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
   totalRecibido:number;
   totalArticulosRecibidos:number;
   totalClavesRecibidas:number;
-
-  
+ 
   idArticuloSeleccionado:number;
 
   recepcionActiva:boolean;
   totalRecepcionesAnteriores:number;
   recepcionesAnteriores: MatTableDataSource<any>;
+  loadingRecepionPDF:number;
 
   tiposRecepcion:any;
 
@@ -85,6 +90,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     let fecha_hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en');
     this.formRecepcion = this.formBuilder.group({
       almacen_id:['',Validators.required],
+      proveedor:['',Validators.required],
       fecha_movimiento:[fecha_hoy,[Validators.required, CustomValidator.isValidDate()]],
       entrega:['',Validators.required],
       recibe:['',Validators.required],
@@ -92,8 +98,16 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     });
 
     this.catalogos = {
-      'almacenes': []
+      'almacenes': [],
+      'proveedores': [],
     };
+
+    this.filteredProveedores = this.formRecepcion.get('proveedor').valueChanges
+      .pipe(
+        startWith(''),
+        map(value => value?(typeof value === 'string' ? value : value.nombre):''),
+        map(nombre => nombre ? this._filterProveedores(nombre) : this.catalogos['proveedores'].slice())
+      );
 
     this.dataPedido = {};
 
@@ -109,6 +123,7 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
               this.sharedService.showSnackBar(errorMessage, null, 3000);
             } else {
               this.catalogos['almacenes'] = response.data.almacenes;
+              this.catalogos['proveedores'] =response.data.proveedores;
             }
           },
           errorResponse =>{
@@ -121,6 +136,15 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
         );
       }
     });
+  }
+
+  displayFn(proveedor: any): string {
+    return proveedor && proveedor.nombre ? proveedor.nombre : '';
+  }
+
+  private _filterProveedores(nombre:string): any[]{
+    const filterValue = nombre.toLowerCase();
+    return this.catalogos['proveedores'].filter(option => option.nombre.toLowerCase().includes(filterValue));
   }
 
   cargarPedido(id){
@@ -259,6 +283,13 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  limpiarFiltroRecepciones(){
+    this.filtroProveedor = '';
+    this.filtroAlmacen = 0;
+
+    this.filtrarRecepciones();
   }
 
   filtrarRecepciones(){
@@ -500,7 +531,28 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
     this.progressBarMode = 'determinate';
   }
 
+  mostrarDetallesRecepcion(id){
+    let configDialog:any = {
+      width: '99%',
+      height: '90vh',
+      panelClass: 'no-padding-dialog'
+    };
+
+    configDialog.data = {recepcionId: id};
+    
+    const dialogRef = this.dialog.open(DialogoDetallesRecepcionComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        console.log(response);
+      }else{
+        console.log('Cancelar');
+      }
+    });
+  }
+
   imprimirRecepcionPDF(id){
+    this.loadingRecepionPDF = id;
     this.recepcionPedidosService.obtenerListaArticulosRecepcion(id).subscribe(
       response =>{
         if(response.error) {
@@ -512,16 +564,14 @@ export class DetallesRecepcionPedidoComponent implements OnInit {
           const reportWorker = new ReportWorker();
             reportWorker.onmessage().subscribe(
               data => {
-                console.log(data);
+                this.loadingRecepionPDF = 0;
                 FileSaver.saveAs(data.data,'RecepcionPedido:'+response.data.fecha_movimiento);
                 reportWorker.terminate();
             });
 
             reportWorker.onerror().subscribe(
               (data) => {
-                //this.sharedService.showSnackBar('Error: ' + data.message,null, 3000);
-                //this.isLoadingPDF = false;
-                //console.log(data);
+                this.loadingRecepionPDF = 0;
                 reportWorker.terminate();
               }
             );

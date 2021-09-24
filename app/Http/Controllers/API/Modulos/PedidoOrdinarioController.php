@@ -35,7 +35,7 @@ class PedidoOrdinarioController extends Controller
             
             $data['catalogos'] = [];
             if(isset($parametros['tipos_pedido']) && $parametros['tipos_pedido']){
-                $data['catalogos']['tipos_pedido'] = TipoElementoPedido::all();
+                $data['catalogos']['tipos_pedido'] = TipoElementoPedido::where('activo',1)->get();
             }
 
             if(isset($parametros['programas']) && $parametros['programas']){

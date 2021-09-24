@@ -91,7 +91,10 @@ class RecepcionPedidosController extends Controller
     public function show($id)
     {
         try{
-            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion','listaUnidadesMedicas.unidadMedica','recepcionActual.listaArticulosBorrador',
+            $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','programa','avanceRecepcion','listaUnidadesMedicas.unidadMedica',
+                                    'recepcionActual' => function($recepcion){
+                                        $recepcion->with('proveedor','listaArticulosBorrador');
+                                    },
                                     'recepcionesAnteriores' => function($recepciones){
                                         $recepciones->with('proveedor','almacen');
                                     },
@@ -153,6 +156,7 @@ class RecepcionPedidosController extends Controller
 
             if(isset($pedido->recepcionActual[0])){
                 $pedido->recepcionActual[0]->almacen_id = $parametros['recepcion']['almacen_id'];
+                $pedido->recepcionActual[0]->proveedor_id = $parametros['recepcion']['proveedor']['id'];
                 $pedido->recepcionActual[0]->fecha_movimiento = $parametros['recepcion']['fecha_movimiento'];
                 $pedido->recepcionActual[0]->entrega = $parametros['recepcion']['entrega'];
                 $pedido->recepcionActual[0]->recibe = $parametros['recepcion']['recibe'];
@@ -164,6 +168,7 @@ class RecepcionPedidosController extends Controller
             }else{
                 $movimiento_data = [
                     'almacen_id' => $parametros['recepcion']['almacen_id'],
+                    'proveedor_id' => $parametros['recepcion']['proveedor']['id'],
                     'direccion_movimiento' => 'ENT',
                     'estatus' => 'RP-BR',
                     'fecha_movimiento' => $parametros['recepcion']['fecha_movimiento'],

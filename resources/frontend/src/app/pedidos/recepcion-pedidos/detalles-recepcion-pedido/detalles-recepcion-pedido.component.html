@@ -104,6 +104,11 @@
                                 </mat-option>
                             </mat-select>
                         </mat-form-field>
+                        <div fxFlex="100" fxLayout="row">
+                            <button fxFlex mat-stroked-button (click)="limpiarFiltroRecepciones()"><mat-icon>clear</mat-icon> Limpiar</button>
+                            <div fxFlex></div>
+                            <button fxFlex mat-stroked-button color="accent" (click)="filtrarRecepciones()"><mat-icon>filter_alt</mat-icon> Filtrar</button>
+                        </div>
                     </div>
                     <div fxFlex></div>
                 </div>
@@ -125,6 +130,17 @@
                             </mat-select>
                             <mat-error *ngIf="formRecepcion.get('almacen_id').hasError('required')">Este campo es requerido</mat-error>
                         </mat-form-field>
+
+                        <mat-form-field fxFlex="100">
+                            <mat-label>Proveedor</mat-label>
+                            <input type="text" matInput formControlName="proveedor" [matAutocomplete]="autoProveedor" required>
+                            <mat-autocomplete #autoProveedor="matAutocomplete" [displayWith]="displayFn">
+                              <mat-option *ngFor="let proveedor of filteredProveedores | async" [value]="proveedor">
+                                {{proveedor.nombre}}
+                              </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="formRecepcion.get('proveedor').hasError('required')">Este campo es requerido</mat-error>
+                          </mat-form-field>
 
                         <mat-form-field fxFlex="100">
                             <mat-label>Fecha Recepción</mat-label>
@@ -259,6 +275,11 @@
                                         </button>
                                     </div>
                                     <div fxFlex></div>
+                                    <div fxFlex="none" *ngIf="loadingRecepionPDF == recepcion.id">
+                                        <button mat-icon-button [class.button-spinner]="true">
+                                            <mat-icon svgIcon="pdf-icon" ></mat-icon>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </mat-card>
@@ -266,12 +287,12 @@
                 </div>
                 <mat-menu #menuRecepcionAnterior="matMenu">
                     <ng-template matMenuContent let-id="id">
-                        <button mat-menu-item disabled>
+                        <button mat-menu-item (click)="mostrarDetallesRecepcion(id)">
                             <mat-icon>visibility</mat-icon>
                             <span>Ver Detalles</span>
                         </button>
                         <mat-divider></mat-divider>
-                        <button mat-menu-item (click)="imprimirRecepcionPDF(id)">
+                        <button mat-menu-item (click)="imprimirRecepcionPDF(id)" [class.button-spinner]="loadingRecepionPDF == id" [disabled]="loadingRecepionPDF == id">
                             <mat-icon svgIcon="pdf-icon" ></mat-icon>
                             <span>Descargar en PDF</span>
                         </button>

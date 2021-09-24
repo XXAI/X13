@@ -1,0 +1,85 @@
+<div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+<div fxLayout="column"  style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <div fxFlex="none" fxLayout="row">
+        <div fxFlex fxLayout="row">
+            <div fxFlex="none" class="etiqueta">Folio Pedido:</div>
+            <div fxFlex class="valor">{{datosRecepcion.folio}}</div>
+        </div>
+        <div fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="etiqueta">Almacen:</div>
+            <div fxFlex class="valor">{{(datosRecepcion.almacen_id)?datosRecepcion.almacen.nombre:'Sin Almacen'}}</div>
+        </div>
+        <div fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="etiqueta">Fecha:</div>
+            <div fxFlex class="valor">{{datosRecepcion.fecha_movimiento}}</div>
+        </div>
+    </div>
+    <div fxFlex="none" fxLayout="row">
+        <div fxFlex fxLayout="row">
+            <div fxFlex="none" class="etiqueta">Proveedor:</div>
+            <div fxFlex class="valor">{{(datosRecepcion.proveedor_id)?datosRecepcion.proveedor.nombre:'Sin Proveedor'}}</div>
+        </div>
+        <div fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="etiqueta">Total Claves:</div>
+            <div fxFlex class="valor">{{datosRecepcion.total_claves}}</div>
+        </div>
+        <div fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="etiqueta">Total Articulos:</div>
+            <div fxFlex class="valor">{{datosRecepcion.total_articulos}}</div>
+        </div>
+    </div>
+    <div fxFlex="none">
+        <div fxLayout="row" class="table-header">
+            <div fxFlex="18" class="header-label">
+                Clave
+            </div>
+            <div fxFlex class="header-label">
+                Descripción
+            </div>
+            <div fxFlex="10" class="header-label">
+                Lote
+            </div>
+            <div fxFlex="12" class="header-label">
+                Caducidad
+            </div>
+            <div fxFlex="9" class="header-label">
+                Cantidad
+            </div>
+        </div>
+    </div>
+    <div fxFlex>
+        <cdk-virtual-scroll-viewport itemSize="80" style="overflow: auto; height: 100%;">
+            <div *ngIf="datosRecepcion.lista_articulos && datosRecepcion.lista_articulos.length == 0" class="no-items-found">
+                No se encontraron articulos
+            </div>
+            <div *cdkVirtualFor="let item of datosRecepcion.lista_articulos;" style="height: 80px; border-bottom:black 1px solid;">
+                <div fxLayout="row" style="width: 100%;">
+                    <div fxFlex="18">
+                        {{(item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local}}
+                    </div>
+                    <div fxFlex style="overflow: auto;">
+                        {{item.articulo.especificaciones}}
+                    </div>
+                    <div fxFlex="10" style="text-align: center;">
+                        {{item.stock.lote}}
+                    </div>
+                    <div fxFlex="12" style="text-align: center;">
+                        {{item.stock.fecha_caducidad}}
+                    </div>
+                    <div fxFlex="9" style="text-align: center;">
+                        {{item.cantidad}}
+                    </div>
+                </div>
+            </div>
+        </cdk-virtual-scroll-viewport>
+    </div>
+    <div fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        <div fxFlex="none" style="padding-left: 5px;">
+            <button mat-stroked-button (click)="imprimirRecepcionPDF()" color="primary" [disabled]="isLoadingPDF"><mat-icon svgIcon="pdf-icon" ></mat-icon> Descargar</button>
+        </div>
+        <div fxFlex="none" style="padding-left: 5px;">
+            <button mat-raised-button (click)="cerrar()">Cerrar</button>
+        </div>
+    </div>
+</div>
