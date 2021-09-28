@@ -363,7 +363,7 @@ class RecepcionPedidosController extends Controller
         }
 
         $accessData = (object)[];
-        $accessData->grupo_pedidos = $loggedUser->grupos[0];
+        $accessData->grupo_pedidos = (count($loggedUser->grupos))?$loggedUser->grupos[0]:[];
         $accessData->lista_unidades_ids = $lista_unidades_id;
         $accessData->is_superuser = $loggedUser->is_superuser;
 

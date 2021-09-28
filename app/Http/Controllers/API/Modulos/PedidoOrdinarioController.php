@@ -158,7 +158,7 @@ class PedidoOrdinarioController extends Controller
                 $pedido = Pedido::with(['tipoElementoPedido','unidadMedica','listaArticulos.articulo','programa'])->find($id);
                 $return_data = ['data'=>$pedido];
             }else{
-                $pedido = Pedido::with(['tipoElementoPedido',
+                $pedido = Pedido::with(['tipoElementoPedido','programa',
                                     'listaArticulos'=>function($articulos){ //Agrega la Familia
                                         $articulos->with(['articulo'=>function($articulo){
                                             $articulo->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
@@ -202,6 +202,7 @@ class PedidoOrdinarioController extends Controller
 
             $listado_articulos = [];
             $total_articulos = 0;
+            $total_claves = 0;
             foreach ($parametros['articulos_pedido'] as $articulo) {
                 $listado_articulos[] = [
                     'bien_servicio_id'=>$articulo['id'],
@@ -209,6 +210,7 @@ class PedidoOrdinarioController extends Controller
                     'cantidad'=>$articulo['cantidad']
                 ];
                 $total_articulos += $articulo['cantidad'];
+                $total_claves++;
             }
             $pedido->listaArticulos()->createMany($listado_articulos);
 
@@ -225,7 +227,7 @@ class PedidoOrdinarioController extends Controller
                 $pedido->listaArticulosUnidades()->createMany($listado_articulos_unidades);
             }
 
-            $pedido->total_claves = count($listado_articulos);
+            $pedido->total_claves = $total_claves;
             $pedido->total_articulos = $total_articulos;
             $pedido->save();
 
@@ -266,8 +268,9 @@ class PedidoOrdinarioController extends Controller
             $datos_pedido = $parametros['pedido'];
             $datos_pedido['estatus'] = ($parametros['concluir'])?'CON':'BOR';
             $datos_pedido['tipo_pedido'] = 'ORD';
-            $diferencia_claves = 0;
+            //$diferencia_claves = 0;
             $total_articulos = 0;
+            $total_claves = 0;
 
             $listado_articulos = $parametros['articulos_pedido'];
             $articulos_editados = [];
@@ -332,6 +335,7 @@ class PedidoOrdinarioController extends Controller
                 if(!isset($articulo['pedido_articulo_id'])){
                     $articulos_agregados[] = ['bien_servicio_id' => $articulo['id'], 'cantidad_original' => $articulo['cantidad'], 'cantidad' => $articulo['cantidad'], 'monto' => $articulo['monto'] ];
                     $total_articulos += $articulo['cantidad'];
+                    $total_claves++;
                 }elseif(isset($articulos_pedido[$articulo['pedido_articulo_id']])){
                     $articulo_pedido = $articulos_pedido[$articulo['pedido_articulo_id']];
                     if($articulo_pedido->bien_servicio_id !=  $articulo['id'] || $articulo_pedido->cantidad !=  $articulo['cantidad'] || $articulo_pedido->monto !=  $articulo['monto'] ){
@@ -343,6 +347,7 @@ class PedidoOrdinarioController extends Controller
                         $articulos_editados[] = $articulo_pedido;
                     }
                     $total_articulos += $articulo['cantidad'];
+                    $total_claves++;
                     $articulos_pedido[$articulo['pedido_articulo_id']] = NULL;
                 }
                 
@@ -369,8 +374,9 @@ class PedidoOrdinarioController extends Controller
                 }
             }
 
-            $diferencia_claves = (count($articulos_agregados) - count($articulos_eliminados));
-            $datos_pedido['total_claves'] = $pedido->total_claves + $diferencia_claves;
+            //$diferencia_claves = (count($articulos_agregados) - count($articulos_eliminados));
+            //$datos_pedido['total_claves'] = $pedido->total_claves + $diferencia_claves;
+            $datos_pedido['total_claves'] = $total_claves;
             $datos_pedido['total_articulos'] = $total_articulos;
 
             if(count($articulos_agregados)){
@@ -526,7 +532,7 @@ class PedidoOrdinarioController extends Controller
         //$accessData->lista_clues = $lista_clues;
 
         $accessData = (object)[];
-        $accessData->grupo_pedidos = $loggedUser->grupos[0];
+        $accessData->grupo_pedidos = (count($loggedUser->grupos))?$loggedUser->grupos[0]:[];
         $accessData->lista_unidades_ids = $lista_unidades_id;
         $accessData->is_superuser = $loggedUser->is_superuser;
 
