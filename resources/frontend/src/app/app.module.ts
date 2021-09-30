@@ -36,6 +36,7 @@ import { AlmacenModule } from './almacen/almacen.module';
 import { CatalogosModule } from './catalogos/catalogos.module';
 import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { PedidosModule } from './pedidos/pedidos.module';
+import { CapturaReporteSemanalModule } from './captura-reporte-semanal/captura-reporte-semanal.module';
 
 @NgModule({
   declarations: [
@@ -61,6 +62,7 @@ import { PedidosModule } from './pedidos/pedidos.module';
     CatalogosModule,
     ConfiguracionModule,
     PedidosModule,
+    CapturaReporteSemanalModule,
     ProfileModule,
     AppRoutingModule,
     WildcardRoutingModule,

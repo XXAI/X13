@@ -29,6 +29,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 import { MatPaginatorModule } from '@angular/material/paginator';
 
@@ -60,6 +62,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatGridListModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     MatBadgeModule,
     MatButtonToggleModule,
     MatProgressBarModule,
@@ -91,6 +95,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatGridListModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     MatBadgeModule,
     MatButtonToggleModule,
     MatProgressBarModule,

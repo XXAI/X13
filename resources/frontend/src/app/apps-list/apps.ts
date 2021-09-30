@@ -52,6 +52,7 @@ export const APPS:App [] = [
         {name:'JSON a Excel',   route:'dev-tools/json-excel',     icon:'text_snippet',      permission:"6ARHQGj1N8YPkr02DY04K1Zy7HjIdDcj"}
       ],
     },
+    { name:'Captura Semanal: Abasto y Surtimiento',  route: "captura-reporte-semanal",      icon: "assets/icons/captura-reporte.svg",    permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
     /*
     { name: "Seguridad", route: "seguridad", icon: "assets/icons/security-shield.svg", 
         children: [
