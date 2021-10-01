@@ -1,0 +1,60 @@
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hide{
+    display: none;
+  }
+
+table {
+    width: 100%;
+}
+
+table th {
+    padding:0 5px;
+    text-align: center;
+}
+
+table td {
+    padding:0 5px;
+}
+
+.selected-item{
+    background-color: lightskyblue;
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.search-button {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    height: 60px;
+    margin: 0 10px;
+}
+
+.desabasto{
+    color: red;
+    font-weight: bold;
+}
+
+.abasto{
+    color:green;
+    font-weight: bold;
+}
+
+.old-row{
+    color:grey;
+}

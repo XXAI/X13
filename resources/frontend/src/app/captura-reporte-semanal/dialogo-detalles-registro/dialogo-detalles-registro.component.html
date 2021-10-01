@@ -1,0 +1,62 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Registro Semanal de Abasto y Surtimiento:
+    </section>
+    <div fxFlex fxLayout="column" style="overflow: auto;position:relative;">
+        <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+        <div fxFlex fxLayout="row raw" [formGroup]="registroForm">
+            <mat-form-field fxFlex="100" appearance="fill">
+                <mat-label>Rango de Fechas del registro: </mat-label>
+                <input matInput placeholder="Inicio - Fin" formControlName="rango_inicio_fin" [readonly]="true">
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Medicamentos Catalogo" formControlName="claves_medicamentos_catalogo" [readonly]="true">
+                <mat-hint align="start">[No. de Claves]</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Medicamentos Existentes" formControlName="claves_medicamentos_existentes" [readonly]="true">
+                <mat-hint align="start">[No. de Claves]</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Mat. Curación Catalogo" formControlName="claves_material_curacion_catalogo" [readonly]="true">
+                <mat-hint align="start">[No. de Claves]</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Mat. Curación Existentes" formControlName="claves_material_curacion_existentes" [readonly]="true">
+                <mat-hint align="start">[No. de Claves]</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Recetas Recibidas" formControlName="recetas_recibidas" [readonly]="true">
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Recetas Surtidas" formControlName="recetas_surtidas" [readonly]="true">
+                <mat-hint align="start">[Completas]</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Colectivos Recibidos" formControlName="colectivos_recibidos" [readonly]="true">
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Colectivos Surtidos" formControlName="colectivos_surtidos" [readonly]="true">
+                <mat-hint align="start">[Completos]</mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Claves con Caducidad < 3 Meses" formControlName="caducidad_3_meses_total_claves" [readonly]="true">
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Piezas con Caducidad < 3 Meses" formControlName="caducidad_3_meses_total_piezas" [readonly]="true">
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Claves con Caducidad de 4 a 6 Meses" formControlName="caducidad_4_6_meses_total_claves" [readonly]="true">
+            </mat-form-field>
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
+                <input matInput placeholder="Piezas con Caducidad de 4 a 6 Meses" formControlName="caducidad_4_6_meses_total_piezas" [readonly]="true">
+            </mat-form-field>
+        </div>
+    </div>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        <div fxFlex="none">
+            <button mat-button (click)="cerrar()">Cerrar</button>&nbsp;
+        </div>
+    </section>
+</section>

@@ -1,0 +1,87 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+    <section fxFlex="none" fxLayout="row" >
+        <mat-card fxFlex>
+            <div fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="none">
+                    <button mat-icon-button (click)="loadListadoRegistros()">
+                        <mat-icon>refresh</mat-icon>
+                    </button>
+                </div>
+                <div fxFlex></div>
+                <div fxFlex="none">
+                    <button mat-raised-button color="accent" (click)="imprimirReporteExcel()">
+                        <mat-icon>print</mat-icon> Reporte en Excel
+                    </button>
+                </div>
+                <!--div fxFlex fxLayout="row wrap">
+                    <mat-form-field fxFill appearance="outline">
+                        <mat-label>Buscar</mat-label>
+                        <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applyFilter()" placeholder="Buscar">
+                        <button matSuffix *ngIf="searchQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="none" fxFlex.xs="100">
+                    <div fxFlex></div>
+                    <section class="search-button">
+                        <button mat-raised-button color="accent" (click)="applyFilter()">
+                            <mat-icon>search</mat-icon> Buscar
+                        </button>
+                    </section>
+                </div-->
+            </div>
+        </mat-card>
+    </section>
+    <section fxFlex fxLayout="row">
+        <mat-card fxFlex fxLayout="column" >
+            <div fxFlex style="overflow: auto;">
+                <table #dataTable mat-table [dataSource]="listadoRegistros" matSort>
+                    <ng-container matColumnDef="unidad_medica">
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center;" width="1"> Unidad Médica </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"  width="1"> [{{row.clues}}] {{row.nombre_unidad}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="fechas">
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center;" width="1"> Fecha<br>[Inicio - Fin] </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">[{{row.fecha_inicio}}] - [{{row.fecha_fin}}]</span> </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="total_claves" >
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs style="text-align: center; white-space: nowrap;"> Total Claves<br>Catalogo/Existentes </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs style="text-align: center;"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">{{row.total_claves_catalogo | number:'1.0-0'}} / {{row.total_claves_existentes | number:'1.0-0'}}</span> </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="total_porcentaje" >
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;"> Total Claves<br>%  </th>
+                        <td mat-cell *matCellDef="let row" [ngClass]="{'desabasto':row.total_claves_porcentaje<70,'abasto':row.total_claves_porcentaje>=70}" style="text-align: center;"> <span class="not-results-found" *ngIf="!row.id">0</span><span *ngIf="row.id">{{row.total_claves_porcentaje | number:'1.0-2'}} %</span> </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef width="1">Acciones</th>
+                        <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
+                            <button mat-icon-button (click)="verDetalles(row.id)" color="primary" *ngIf="row.id"><mat-icon>visibility</mat-icon></button>
+                            <!--button mat-icon-button (click)="imprimirPDF(row.id)"><mat-icon>print</mat-icon></button-->
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="noResultsFound">
+                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length">
+                            No se encontraron registros 
+                        </td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+
+                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoRegistros!=null && listadoRegistros.length==0)}"></tr>
+                </table>
+            </div>
+
+            <div fxFlex="none">
+                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoRegistros($event)"></mat-paginator>
+            </div>
+        </mat-card>
+    </section>
+</section>

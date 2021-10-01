@@ -11,8 +11,13 @@ import { map } from 'rxjs/operators';
 export class CapturaReporteSemanalService {
   url_registros = `${environment.base_url}/cap-reporte-abasto-surtimiento`;
   url_data = `${environment.base_url}/get-data-cap-reporte-as`;
+  url_export_reporter =  `${environment.base_url}/excel-admin-reporte-abasto`;
 
   constructor(private http: HttpClient) { }
+
+  exportarAdminExcel(payload:any={}):Observable<any>{
+    return this.http.get<any>(this.url_export_reporter, {params:payload, responseType: 'blob' as 'json'});
+  }
 
   obtenerDatosUsuario():Observable<any> {
     return this.http.get<any>(this.url_data,{}).pipe(

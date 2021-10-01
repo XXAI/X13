@@ -78,6 +78,7 @@ Route::group(['middleware'=>'auth'],function($router){
     //Route::apiResource('estatus-avance-recepcion',   'API\Modulos\EstatusAvanceRecepcionPedidoController')->except(['create','store','update','destroy']);
     //Route::get('estatus-avance-recepcion-catalogos', 'API\Modulos\EstatusAvanceRecepcionPedidoController@datosCatalogo');
     Route::get('get-data-cap-reporte-as',               'API\Modulos\CapturaReporteAbastoSurtimientoController@getDataInfo');
+    Route::get('excel-admin-reporte-abasto',            'API\Modulos\CapturaReporteAbastoSurtimientoController@exportAdminExcel');
     Route::apiResource('cap-reporte-abasto-surtimiento', 'API\Modulos\CapturaReporteAbastoSurtimientoController');
 
     /*

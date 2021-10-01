@@ -53,6 +53,7 @@ export const APPS:App [] = [
       ],
     },
     { name:'Captura Semanal: Abasto y Surtimiento',  route: "captura-reporte-semanal",      icon: "assets/icons/captura-reporte.svg",    permission:"BA4rXXfPIcaePRspIOTl88I4HH00INQa" },
+    { name:'Admin Captura: Abasto y Surtimiento',    route: "admin-captura-reporte-semanal",      icon: "assets/icons/admin-captura-reporte.svg",    permission:"BjvroJXhbaJvcKrBnxHpRRBq2u6BovUN" },
     /*
     { name: "Seguridad", route: "seguridad", icon: "assets/icons/security-shield.svg", 
         children: [
