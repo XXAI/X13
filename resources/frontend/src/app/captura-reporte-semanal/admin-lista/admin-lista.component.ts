@@ -135,7 +135,7 @@ export class AdminListaComponent implements OnInit {
           errorMessage = errorResponse.error.error.message;
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
-        this.isLoading = false;
+        this.isLoadingExcel = false;
       }
     );
   }

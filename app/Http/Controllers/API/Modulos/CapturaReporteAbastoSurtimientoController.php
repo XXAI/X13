@@ -56,27 +56,19 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 }
                 
                 if(count($lista_unidades_id)){
-                    /*$registros = CorteReporteAbastoSurtimiento::select(DB::raw('MAX(fecha_fin) as max_fecha_fin'),'catalogo_unidades_medicas.clues','catalogo_unidades_medicas.nombre as nombre_unidad','corte_reporte_abasto_surtimiento.*')
-                                                                ->leftjoin('catalogo_unidades_medicas',function($join)use($lista_unidades_id){
-                                                                    $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id')
-                                                                        ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id);
-                                                                })
-                                                                ->groupBy('corte_reporte_abasto_surtimiento.unidad_medica_id')
-                                                                ->orderBy('corte_reporte_abasto_surtimiento.fecha_fin','DESC')
-                                                                ->orderBy('catalogo_unidades_medicas.nombre');*/
+                    $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))->whereNULL('deleted_at')->groupBy('unidad_medica_id');
 
-                    $registros = UnidadMedica::select('catalogo_unidades_medicas.clues','catalogo_unidades_medicas.nombre as nombre_unidad','corte_reporte_abasto_surtimiento.*',DB::raw('MAX(fecha_fin) as max_fecha_fin'),DB::raw('count(corte_reporte_abasto_surtimiento.id) as conteo'))
-                                                ->leftjoin('corte_reporte_abasto_surtimiento',function($join){
-                                                    $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id')
-                                                            ->whereNull('corte_reporte_abasto_surtimiento.deleted_at');
-                                                })
-                                                ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
-                                                ->groupBy('catalogo_unidades_medicas.id')
-                                                ->orderBy('corte_reporte_abasto_surtimiento.fecha_fin','DESC')
-                                                ->orderBy('catalogo_unidades_medicas.nombre');
+                    $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues', 'catalogo_unidades_medicas.nombre as nombre_unidad','corte_reporte_abasto_surtimiento.*')
+                                                                    ->joinSub($max_fecha_subquery,'b',function($join){
+                                                                        $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','b.unidad_medica_id')->on('corte_reporte_abasto_surtimiento.fecha_fin','=','b.fecha_fin');
+                                                                    })
+                                                                    ->rightJoin('catalogo_unidades_medicas',function($join){
+                                                                        $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id');
+                                                                    })
+                                                                    ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                                                    ->groupBy('catalogo_unidades_medicas.id');
                 }else{
                     throw new Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
-                    
                 }
 
                 //$registros = $registros->select('*',DB::raw('MAX(fecha_fin) as max_fecha_fin'))->with('unidadMedica')->groupBy('unidad_medica_id');
@@ -376,23 +368,48 @@ class CapturaReporteAbastoSurtimientoController extends Controller
         ini_set('memory_limit', '-1');
 
         try{
-            $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.nombre as Unidad Medica','fecha_inicio as Fecha Inicio',DB::raw('MAX(fecha_fin) as "Fecha Fin"'),
-                                                            'claves_medicamentos_catalogo as Medicamentos Catalogo','claves_medicamentos_existentes as Medicamentos Existentes','claves_medicamentos_porcentaje as Medicamentos Porcentaje',
-                                                            'claves_material_curacion_catalogo as Mat. Curacion Catalogo','claves_material_curacion_existentes as Mat. Curacion Existentes','claves_material_curacion_porcentaje as Mat. Curacion Porcentaje',
-                                                            'total_claves_catalogo as Total Claves Catalogo','total_claves_existentes as Total Claves Existentes','total_claves_porcentaje as Total Claves Porcentaje',
-                                                            'recetas_recibidas as Total Recetas Recibidas','recetas_surtidas as Total Recetas Surtidas','recetas_porcentaje as Recetas Porcentaje',
-                                                            'colectivos_recibidos as Total Colectivos Recibidos','colectivos_surtidos as Total Colectivos Surtidos','colectivos_porcentaje as Colectivos Porcentaje',
-                                                            'caducidad_3_meses_total_claves as Claves con Caducidad Menor a 3 Meses','caducidad_3_meses_total_piezas as Piezas con Caducidad Menor a 3 Meses',
-                                                            'caducidad_4_6_meses_total_claves as Claves con Caducidad de 4 - 6 Meses','caducidad_4_6_meses_total_piezas as Piezas con Caducidad de 4 - 6 Meses')
-                                                        ->leftjoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','corte_reporte_abasto_surtimiento.unidad_medica_id')
-                                                        ->orderBy('catalogo_unidades_medicas.nombre')
-                                                        ->groupBy('corte_reporte_abasto_surtimiento.unidad_medica_id')->get();
-
-            $columnas = array_keys(collect($registros[0])->toArray());
-
-            $filename = 'Reporte-Semanal-Abasto-Y-Surtimiento';
+            $loggedUser = auth()->userOrFail();
             
-            return (new DevReportExport($registros,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
+            $loggedUser->load(['grupos'=>function($grupos){
+                $grupos->whereRaw('clave_tipo_grupo = "ABYSU"');
+            }]);
+
+            $lista_unidades_id = [];
+            foreach ($loggedUser->grupos as $grupo) {
+                $lista_unidades = $grupo->unidadesMedicas->pluck('id')->all();
+                $lista_unidades_id = array_merge($lista_unidades_id,$lista_unidades);
+            }
+
+            if(count($lista_unidades_id)){
+                $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+
+                $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues as CLUES', 'catalogo_unidades_medicas.nombre as Unidad Medica',
+                                                            'corte_reporte_abasto_surtimiento.fecha_inicio as Fecha Inicio', 'corte_reporte_abasto_surtimiento.fecha_fin as Fecha Fin',
+                                                            'corte_reporte_abasto_surtimiento.claves_medicamentos_catalogo as Medicamentos Catalogo','corte_reporte_abasto_surtimiento.claves_medicamentos_existentes as Medicamentos Existentes','corte_reporte_abasto_surtimiento.claves_medicamentos_porcentaje as Medicamentos Porcentaje',
+                                                            'corte_reporte_abasto_surtimiento.claves_material_curacion_catalogo as Mat. Curacion Catalogo','corte_reporte_abasto_surtimiento.claves_material_curacion_existentes as Mat. Curacion Existentes','corte_reporte_abasto_surtimiento.claves_material_curacion_porcentaje as Mat. Curacion Porcentaje',
+                                                            'corte_reporte_abasto_surtimiento.total_claves_catalogo as Total Claves Catalogo','corte_reporte_abasto_surtimiento.total_claves_existentes as Total Claves Existentes','corte_reporte_abasto_surtimiento.total_claves_porcentaje as Total Claves Porcentaje',
+                                                            'corte_reporte_abasto_surtimiento.recetas_recibidas as Total Recetas Recibidas','corte_reporte_abasto_surtimiento.recetas_surtidas as Total Recetas Surtidas','corte_reporte_abasto_surtimiento.recetas_porcentaje as Recetas Porcentaje',
+                                                            'corte_reporte_abasto_surtimiento.colectivos_recibidos as Total Colectivos Recibidos','corte_reporte_abasto_surtimiento.colectivos_surtidos as Total Colectivos Surtidos','corte_reporte_abasto_surtimiento.colectivos_porcentaje as Colectivos Porcentaje',
+                                                            'corte_reporte_abasto_surtimiento.caducidad_3_meses_total_claves as Claves con Caducidad Menor a 3 Meses','corte_reporte_abasto_surtimiento.caducidad_3_meses_total_piezas as Piezas con Caducidad Menor a 3 Meses',
+                                                            'corte_reporte_abasto_surtimiento.caducidad_4_6_meses_total_claves as Claves con Caducidad de 4 - 6 Meses','corte_reporte_abasto_surtimiento.caducidad_4_6_meses_total_piezas as Piezas con Caducidad de 4 - 6 Meses')
+                                                        ->joinSub($max_fecha_subquery,'b',function($join){
+                                                            $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','b.unidad_medica_id')->on('corte_reporte_abasto_surtimiento.fecha_fin','=','b.fecha_fin');
+                                                        })
+                                                        ->rightJoin('catalogo_unidades_medicas',function($join){
+                                                            $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id');
+                                                        })
+                                                        ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                                        ->groupBy('catalogo_unidades_medicas.id')->get();
+
+                $columnas = array_keys(collect($registros[0])->toArray());
+
+                $filename = 'Reporte-Semanal-Abasto-Y-Surtimiento';
+                
+                return (new DevReportExport($registros,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
+            }else{
+                throw new Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
+            }
+            
         }catch(\Exception $e){
             return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
         }
