@@ -11,6 +11,10 @@
     justify-content: center;
 }
 
+.hide{
+    display: none;
+  }
+
 table {
     width: 100%;
 }
@@ -39,4 +43,14 @@ table td {
     align-items: center;
     height: 60px;
     margin: 0 10px;
+}
+
+.desabasto{
+    color: red;
+    font-weight: bold;
+}
+
+.abasto{
+    color:green;
+    font-weight: bold;
 }

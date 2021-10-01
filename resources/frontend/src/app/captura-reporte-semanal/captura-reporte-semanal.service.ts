@@ -10,8 +10,17 @@ import { map } from 'rxjs/operators';
 
 export class CapturaReporteSemanalService {
   url_registros = `${environment.base_url}/cap-reporte-abasto-surtimiento`;
+  url_data = `${environment.base_url}/get-data-cap-reporte-as`;
 
   constructor(private http: HttpClient) { }
+
+  obtenerDatosUsuario():Observable<any> {
+    return this.http.get<any>(this.url_data,{}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
 
   obtenerListaRegistros(payload):Observable<any> {
     return this.http.get<any>(this.url_registros,{params: payload}).pipe(

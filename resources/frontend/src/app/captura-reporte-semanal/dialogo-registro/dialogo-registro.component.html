@@ -2,7 +2,8 @@
     <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
         Registro Semanal de Abasto y Surtimiento:
     </section>
-    <div fxFlex fxLayout="column" style="overflow: auto;">
+    <div fxFlex fxLayout="column" style="overflow: auto;position:relative;">
+        <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
         <div fxFlex="none">
             <mat-form-field appearance="fill">
                 <mat-label>Rango de Fechas del registro: </mat-label>
@@ -21,7 +22,7 @@
         </div>
         <div fxFlex fxLayout="row raw" [formGroup]="registroForm">
             <mat-form-field fxFlex="25">
-                <input matInput placeholder="Medicamentos Catalogo" formControlName="claves_medicamentos_catalogo" [type]="'number'" cdkFocusInitial required autocomplete="off">
+                <input matInput placeholder="Medicamentos Catalogo" formControlName="claves_medicamentos_catalogo" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_medicamentos_catalogo').invalid && (registroForm.get('claves_medicamentos_catalogo').dirty || registroForm.get('claves_medicamentos_catalogo').touched)">
                     <span *ngIf="registroForm.get('claves_medicamentos_catalogo').errors.required">Campo obligatorio</span>
@@ -35,7 +36,7 @@
                 </mat-error>
             </mat-form-field>
             <mat-form-field fxFlex="25">
-                <input matInput placeholder="Mat. Curación Catalogo" formControlName="claves_material_curacion_catalogo" [type]="'number'" cdkFocusInitial required autocomplete="off">
+                <input matInput placeholder="Mat. Curación Catalogo" formControlName="claves_material_curacion_catalogo" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_material_curacion_catalogo').invalid && (registroForm.get('claves_material_curacion_catalogo').dirty || registroForm.get('claves_material_curacion_catalogo').touched)">
                     <span *ngIf="registroForm.get('claves_material_curacion_catalogo').errors.required">Campo obligatorio</span>
@@ -104,7 +105,7 @@
         <div fxFlex></div>
         <div fxFlex="none">
             <button mat-button (click)="cancelar()">Cancelar</button>&nbsp;
-            <button mat-raised-button color="primary" (click)="guardarRegistro()" [disabled]="!(range.valid && registroForm.valid)">Guardar</button>
+            <button mat-raised-button color="primary" (click)="guardarRegistro()" [class.button-spinner]="isSaving" [disabled]="!(range.valid && registroForm.valid) || isSaving">Guardar</button>
         </div>
     </section>
 </section>

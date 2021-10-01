@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 
 import {SharedModule } from '../shared/shared.module';
 
@@ -14,6 +14,9 @@ import { DialogoRegistroComponent } from './dialogo-registro/dialogo-registro.co
     CommonModule,
     SharedModule,
     CapturaReporteSemanalRoutingModule
+  ],
+  providers:[
+    DatePipe
   ]
 })
 export class CapturaReporteSemanalModule { }

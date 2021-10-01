@@ -1,6 +1,6 @@
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
     <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
-    <section fxFlex="none" fxLayout="row" >
+    <!--section fxFlex="none" fxLayout="row" >
         <mat-card fxFlex>
             <div fxLayout="row" fxLayout.xs="column">
                 <div fxFlex fxLayout="row wrap">
@@ -22,6 +22,16 @@
                 </div>
             </div>
         </mat-card>
+    </section-->
+    <section fxFlex="none" fxLayout="row" >
+        <mat-card fxFlex>
+            <div fxLayout="row">
+                <div fxFlex *ngIf="unidadMedica" style="text-align: center;">
+                    <span style="display: block;font-weight: 400;font-size: 20px; font-weight: bold;">{{unidadMedica.nombre}}</span>
+                    <span style="display: block;">{{unidadMedica.clues}}</span>
+                </div>                
+            </div>
+        </mat-card>
     </section>
     <section fxFlex fxLayout="row">
         <mat-card fxFlex fxLayout="column" >
@@ -34,34 +44,45 @@
             <div fxFlex style="overflow: auto;">
                 <table #dataTable mat-table [dataSource]="listadoRegistros" matSort>
                     <ng-container matColumnDef="fechas">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header style="white-space: nowrap;" width="1"> Fecha [Inicio - Fin] </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"> {{row.rango_fechas}} </td>
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center;" width="1"> Fecha [Inicio - Fin] </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"  width="1"> [{{row.fecha_inicio}}] - [{{row.fecha_fin}}] </td>
                     </ng-container>
                     
-                    <ng-container matColumnDef="total_medicamentos">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Total Medicamentos </th>
-                        <td mat-cell *matCellDef="let row" > {{row.total_medicamentos | number:'1.0-0'}} </td>
+                    <ng-container matColumnDef="medicamentos">
+                        <th mat-header-cell *matHeaderCellDef> Medicamentos<br>Catalogo/Existentes </th>
+                        <td mat-cell *matCellDef="let row"  style="text-align: center;"> {{row.claves_medicamentos_catalogo | number:'1.0-0'}} / {{row.claves_medicamentos_existentes | number:'1.0-0'}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="porcentaje_medicamentos">
+                        <th mat-header-cell *matHeaderCellDef> Medicamentos<br>% </th>
+                        <td mat-cell *matCellDef="let row"  style="text-align: center;"> {{row.claves_medicamentos_porcentaje | number:'1.0-2'}} % </td>
                     </ng-container>
                     
-                    <ng-container matColumnDef="total_material_curacion">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Total Mat. de Curación </th>
-                        <td mat-cell *matCellDef="let row" > {{row.total_mat_curacion | number:'1.0-0'}} </td>
+                    <ng-container matColumnDef="material_curacion">
+                        <th mat-header-cell *matHeaderCellDef> Mat. de Curación<br>Catalogo/Existentes </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center;"> {{row.claves_material_curacion_catalogo | number:'1.0-0'}} / {{row.claves_material_curacion_existentes | number:'1.0-0'}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="porcentaje_material_curacion">
+                        <th mat-header-cell *matHeaderCellDef> Mat. de Curación<br>% </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center;"> {{row.claves_material_curacion_porcentaje | number:'1.0-2'}} % </td>
                     </ng-container>
 
                     <ng-container matColumnDef="total_claves" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Claves </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_claves | number:'1.0-0'}} </td>
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;"> Total Claves<br>Catalogo/Existentes </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center;"> {{row.total_claves_catalogo | number:'1.0-0'}} / {{row.total_claves_existentes | number:'1.0-0'}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="total_porcentaje" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Porcentaje </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_porcentaje | number:'1.0-2'}} </td>
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;"> Total Claves<br>%  </th>
+                        <td mat-cell *matCellDef="let row" [ngClass]="{'desabasto':row.total_claves_porcentaje<70,'abasto':row.total_claves_porcentaje>=70}" style="text-align: center;"> {{row.total_claves_porcentaje | number:'1.0-2'}} % </td>
                     </ng-container>
 
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef width="1">Acciones</th>
-                        <td mat-cell *matCellDef="let row; let i = index" width="1">
-                            <button mat-button (click)="editarRegistro(row.id)"><mat-icon>edit</mat-icon></button>
+                        <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
+                            <button mat-icon-button (click)="editarRegistro(row.id)" color="primary"><mat-icon>edit</mat-icon></button>
+                            <button mat-icon-button (click)="eliminarRegistro(row.id)" color="warn"><mat-icon>delete</mat-icon></button>
                         </td>
                     </ng-container>
 
