@@ -66,6 +66,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                                                                         $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id');
                                                                     })
                                                                     ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                                                    ->orderBy('corte_reporte_abasto_surtimiento.fecha_fin','DESC')
                                                                     ->groupBy('catalogo_unidades_medicas.id');
                 }else{
                     throw new \Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
@@ -73,7 +74,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
                 //$registros = $registros->select('*',DB::raw('MAX(fecha_fin) as max_fecha_fin'))->with('unidadMedica')->groupBy('unidad_medica_id');
             }else{
-                $registros = CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->orderBy('fecha_inicio','DESC');
+                $registros = CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->orderBy('fecha_fin','DESC');
             }
 
             
@@ -399,6 +400,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                                                             $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id');
                                                         })
                                                         ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                                        ->orderBy('corte_reporte_abasto_surtimiento.fecha_fin','DESC')
                                                         ->groupBy('catalogo_unidades_medicas.id')->get();
 
                 $columnas = array_keys(collect($registros[0])->toArray());
