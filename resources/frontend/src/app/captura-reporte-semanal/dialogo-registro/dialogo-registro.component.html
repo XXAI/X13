@@ -21,79 +21,79 @@
             </mat-form-field>
         </div>
         <div fxFlex fxLayout="row raw" [formGroup]="registroForm">
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Medicamentos Catalogo" formControlName="claves_medicamentos_catalogo" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_medicamentos_catalogo').invalid && (registroForm.get('claves_medicamentos_catalogo').dirty || registroForm.get('claves_medicamentos_catalogo').touched)">
                     <span *ngIf="registroForm.get('claves_medicamentos_catalogo').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Medicamentos Existentes" formControlName="claves_medicamentos_existentes" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_medicamentos_existentes').invalid && (registroForm.get('claves_medicamentos_existentes').dirty || registroForm.get('claves_medicamentos_existentes').touched)">
                     <span *ngIf="registroForm.get('claves_medicamentos_existentes').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Mat. Curación Catalogo" formControlName="claves_material_curacion_catalogo" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_material_curacion_catalogo').invalid && (registroForm.get('claves_material_curacion_catalogo').dirty || registroForm.get('claves_material_curacion_catalogo').touched)">
                     <span *ngIf="registroForm.get('claves_material_curacion_catalogo').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Mat. Curación Existentes" formControlName="claves_material_curacion_existentes" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_material_curacion_existentes').invalid && (registroForm.get('claves_material_curacion_existentes').dirty || registroForm.get('claves_material_curacion_existentes').touched)">
                     <span *ngIf="registroForm.get('claves_material_curacion_existentes').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Recetas Recibidas" formControlName="recetas_recibidas" [type]="'number'" required autocomplete="off">                
                 <mat-error *ngIf="registroForm.get('recetas_recibidas').invalid && (registroForm.get('recetas_recibidas').dirty || registroForm.get('recetas_recibidas').touched)">
                     <span *ngIf="registroForm.get('recetas_recibidas').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Recetas Surtidas" formControlName="recetas_surtidas" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[Completas]</mat-hint>
                 <mat-error *ngIf="registroForm.get('recetas_surtidas').invalid && (registroForm.get('recetas_surtidas').dirty || registroForm.get('recetas_surtidas').touched)">
                     <span *ngIf="registroForm.get('recetas_surtidas').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Colectivos Recibidos" formControlName="colectivos_recibidos" [type]="'number'" required autocomplete="off">                
                 <mat-error *ngIf="registroForm.get('colectivos_recibidos').invalid && (registroForm.get('colectivos_recibidos').dirty || registroForm.get('colectivos_recibidos').touched)">
                     <span *ngIf="registroForm.get('colectivos_recibidos').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Colectivos Surtidos" formControlName="colectivos_surtidos" [type]="'number'" required autocomplete="off">
                 <mat-hint align="start">[Completos]</mat-hint>
                 <mat-error *ngIf="registroForm.get('colectivos_surtidos').invalid && (registroForm.get('colectivos_surtidos').dirty || registroForm.get('colectivos_surtidos').touched)">
                     <span *ngIf="registroForm.get('colectivos_surtidos').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Claves con Caducidad < 3 Meses" formControlName="caducidad_3_meses_total_claves" [type]="'number'" required autocomplete="off">                
                 <mat-error *ngIf="registroForm.get('caducidad_3_meses_total_claves').invalid && (registroForm.get('caducidad_3_meses_total_claves').dirty || registroForm.get('caducidad_3_meses_total_claves').touched)">
                     <span *ngIf="registroForm.get('caducidad_3_meses_total_claves').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Piezas con Caducidad < 3 Meses" formControlName="caducidad_3_meses_total_piezas" [type]="'number'" required autocomplete="off">
                 <mat-error *ngIf="registroForm.get('caducidad_3_meses_total_piezas').invalid && (registroForm.get('caducidad_3_meses_total_piezas').dirty || registroForm.get('caducidad_3_meses_total_piezas').touched)">
                     <span *ngIf="registroForm.get('caducidad_3_meses_total_piezas').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Claves con Caducidad de 4 a 6 Meses" formControlName="caducidad_4_6_meses_total_claves" [type]="'number'" required autocomplete="off">                
                 <mat-error *ngIf="registroForm.get('caducidad_4_6_meses_total_claves').invalid && (registroForm.get('caducidad_4_6_meses_total_claves').dirty || registroForm.get('caducidad_4_6_meses_total_claves').touched)">
                     <span *ngIf="registroForm.get('caducidad_4_6_meses_total_claves').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
-            <mat-form-field fxFlex="25">
+            <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Piezas con Caducidad de 4 a 6 Meses" formControlName="caducidad_4_6_meses_total_piezas" [type]="'number'" required autocomplete="off">
                 <mat-error *ngIf="registroForm.get('caducidad_4_6_meses_total_piezas').invalid && (registroForm.get('caducidad_4_6_meses_total_piezas').dirty || registroForm.get('caducidad_4_6_meses_total_piezas').touched)">
                     <span *ngIf="registroForm.get('caducidad_4_6_meses_total_piezas').errors.required">Campo obligatorio</span>
