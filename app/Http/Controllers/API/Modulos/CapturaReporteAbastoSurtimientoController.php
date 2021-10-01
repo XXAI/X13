@@ -68,7 +68,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                                                                     ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
                                                                     ->groupBy('catalogo_unidades_medicas.id');
                 }else{
-                    throw new Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
+                    throw new \Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
                 }
 
                 //$registros = $registros->select('*',DB::raw('MAX(fecha_fin) as max_fecha_fin'))->with('unidadMedica')->groupBy('unidad_medica_id');
@@ -114,11 +114,11 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             $registro = CorteReporteAbastoSurtimiento::find($id);
 
             if(!$registro){
-                throw new Exception("Registro no encontrado", 1);
+                throw new \Exception("Registro no encontrado", 1);
             }
 
             if($loggedUser->unidad_medica_asignada_id && $loggedUser->unidad_medica_asignada_id != $registro->unidad_medica_id){
-                throw new Exception("El usuario no tiene acceso a este registro", 1);
+                throw new \Exception("El usuario no tiene acceso a este registro", 1);
             }
 
             return response()->json(['data'=>$registro],HttpResponse::HTTP_OK);
@@ -311,11 +311,11 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 $registro = CorteReporteAbastoSurtimiento::find($id);
 
                 if(!$registro){
-                    throw new Exception("Registro no encontrado", 1);
+                    throw new \Exception("Registro no encontrado", 1);
                 }
     
                 if($loggedUser->unidad_medica_asignada_id && $loggedUser->unidad_medica_asignada_id != $registro->unidad_medica_id){
-                    throw new Exception("El usuario no tiene acceso a este registro", 1);
+                    throw new \Exception("El usuario no tiene acceso a este registro", 1);
                 }
 
                 $registro->update($parametros);
@@ -349,11 +349,11 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             $registro = CorteReporteAbastoSurtimiento::find($id);
 
             if(!$registro){
-                throw new Exception("Registro no encontrado", 1);
+                throw new  \Exception("Registro no encontrado", 1);
             }
 
             if($loggedUser->unidad_medica_asignada_id && $loggedUser->unidad_medica_asignada_id != $registro->unidad_medica_id){
-                throw new Exception("El usuario no tiene acceso a este registro", 1);
+                throw new \Exception("El usuario no tiene acceso a este registro", 1);
             }
 
             $registro->delete();
@@ -369,7 +369,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
         try{
             $loggedUser = auth()->userOrFail();
-            
+
             $loggedUser->load(['grupos'=>function($grupos){
                 $grupos->whereRaw('clave_tipo_grupo = "ABYSU"');
             }]);
@@ -407,7 +407,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 
                 return (new DevReportExport($registros,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
             }else{
-                throw new Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
+                throw new \Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
             }
             
         }catch(\Exception $e){
