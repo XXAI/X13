@@ -56,7 +56,17 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 }
                 
                 if(count($lista_unidades_id)){
-                    $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                    if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                        $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', 'fecha_fin')
+                                                ->where(function ($where) use($parametros){
+                                                    $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
+                                                        ->where('corte_reporte_abasto_surtimiento.fecha_fin',$parametros['fecha_fin']);
+                                                })
+                                                ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                    }else{
+                        $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))
+                                                ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                    }
 
                     $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues', 'catalogo_unidades_medicas.nombre as nombre_unidad','corte_reporte_abasto_surtimiento.*')
                                                                     ->joinSub($max_fecha_subquery,'b',function($join){
@@ -75,15 +85,15 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 //$registros = $registros->select('*',DB::raw('MAX(fecha_fin) as max_fecha_fin'))->with('unidadMedica')->groupBy('unidad_medica_id');
             }else{
                 $registros = CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->orderBy('fecha_fin','DESC');
+
+                if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                    $registros = $registros->where(function ($where) use($parametros){
+                                                        $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
+                                                            ->where('corte_reporte_abasto_surtimiento.fecha_fin',$parametros['fecha_fin']);
+                                                    });
+                }
             }
 
-            
-            if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
-                $registros = $registros->where(function ($where) use($parametros){
-                                                    $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
-                                                        ->where('corte_reporte_abasto_surtimiento.fecha_fin',$parametros['fecha_fin']);
-                                                });
-            }
 
             //Filtros, busquedas, ordenamiento
             /*if(isset($parametros['query']) && $parametros['query']){
