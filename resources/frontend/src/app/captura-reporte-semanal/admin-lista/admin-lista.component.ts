@@ -77,11 +77,6 @@ export class AdminListaComponent implements OnInit {
     params.admin = true;
     this.resultsLength = 0;
 
-    /*
-    registro_data.rango_fechas.fecha_inicio = this.datepipe.transform(registro_data.rango_fechas.fecha_inicio, 'yyyy-MM-dd');
-    registro_data.rango_fechas.fecha_fin = this.datepipe.transform(registro_data.rango_fechas.fecha_fin, 'yyyy-MM-dd');
-    */
-
     if(this.range.valid){
       params.fecha_inicio = this.datepipe.transform(this.range.get('start').value, 'yyyy-MM-dd');
       params.fecha_fin = this.datepipe.transform(this.range.get('end').value, 'yyyy-MM-dd');
@@ -141,7 +136,13 @@ export class AdminListaComponent implements OnInit {
 
   imprimirReporteExcel(){
     this.isLoadingExcel = true;
-    this.capturaReporteSemanalService.exportarAdminExcel().subscribe(
+    let params:any = {};
+    if(this.range.valid){
+      params.fecha_inicio = this.datepipe.transform(this.range.get('start').value, 'yyyy-MM-dd');
+      params.fecha_fin = this.datepipe.transform(this.range.get('end').value, 'yyyy-MM-dd');
+    }
+
+    this.capturaReporteSemanalService.exportarAdminExcel(params).subscribe(
       response => {
         //FileSaver.saveAs(response);
         FileSaver.saveAs(response,'reporte-semanal-abasto-sumistro');

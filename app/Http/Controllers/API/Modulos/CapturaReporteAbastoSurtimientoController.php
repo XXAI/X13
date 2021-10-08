@@ -386,6 +386,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
         try{
             $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
 
             $loggedUser->load(['grupos'=>function($grupos){
                 $grupos->whereRaw('clave_tipo_grupo = "ABYSU"');
@@ -398,7 +399,18 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             }
 
             if(count($lista_unidades_id)){
-                $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                    $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', 'fecha_fin')
+                                            ->where(function ($where) use($parametros){
+                                                $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
+                                                    ->where('corte_reporte_abasto_surtimiento.fecha_fin',$parametros['fecha_fin']);
+                                            })
+                                            ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                }else{
+                    $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))
+                                            ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                }
+                //$max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))->whereNULL('deleted_at')->groupBy('unidad_medica_id');
 
                 $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues as CLUES', 'catalogo_unidades_medicas.nombre as Unidad Medica',
                                                             'corte_reporte_abasto_surtimiento.fecha_inicio as Fecha Inicio', 'corte_reporte_abasto_surtimiento.fecha_fin as Fecha Fin',
