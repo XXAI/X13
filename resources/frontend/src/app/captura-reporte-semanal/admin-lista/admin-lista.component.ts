@@ -126,6 +126,10 @@ export class AdminListaComponent implements OnInit {
     });
   }
 
+  verAdminSemanasCaptura(){
+    //
+  }
+
   imprimirPDF(id){
     //imprimir pdf
   }

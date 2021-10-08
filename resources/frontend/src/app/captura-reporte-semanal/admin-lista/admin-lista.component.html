@@ -24,6 +24,12 @@
                     </button>
                 </div>
                 <div fxFlex></div>
+                <!--div fxFlex="none">
+                    <button mat-raised-button color="primary" (click)="verAdminSemanasCaptura()">
+                        <mat-icon>settings</mat-icon> Configurar Semanas
+                    </button>
+                </div>
+                <div fxFlex></div-->
                 <div fxFlex="none">
                     <button mat-raised-button color="accent" (click)="imprimirReporteExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
                         <mat-icon>print</mat-icon> Reporte en Excel
