@@ -1,6 +1,21 @@
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
     <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
-    <section fxFlex="none" fxLayout="row" >
+    <section fxFlex="none" fxLayout="column" >
+        <div fxFlex="none">
+            <mat-form-field appearance="fill">
+                <mat-label>Semana a Filtrar</mat-label>
+                <mat-date-range-input [formGroup]="range" [rangePicker]="picker">
+                    <input matStartDate formControlName="start" placeholder="Inicio">
+                    <input matEndDate formControlName="end" placeholder="Fin">
+                </mat-date-range-input>
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-date-range-picker #picker></mat-date-range-picker>
+                <button mat-icon-button matSuffix *ngIf="range.valid" (click)="limpiarRango()"><mat-icon>backspace</mat-icon></button>
+                
+                <mat-error *ngIf="range.controls.start.hasError('matStartDateInvalid')">Fecha Inicial no Valida</mat-error>
+                <mat-error *ngIf="range.controls.end.hasError('matEndDateInvalid')">Fecha Final no Valida</mat-error>
+            </mat-form-field>
+        </div>
         <mat-card fxFlex>
             <div fxLayout="row" fxLayout.xs="column">
                 <div fxFlex="none">

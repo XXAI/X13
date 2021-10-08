@@ -66,7 +66,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                                                                         $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id');
                                                                     })
                                                                     ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
-                                                                    ->orderBy('corte_reporte_abasto_surtimiento.fecha_fin','DESC')
+                                                                    ->orderBy('corte_reporte_abasto_surtimiento.total_claves_porcentaje','DESC')
                                                                     ->groupBy('catalogo_unidades_medicas.id');
                 }else{
                     throw new \Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
@@ -78,6 +78,12 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             }
 
             
+            if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                $registros = $registros->where(function ($where) use($parametros){
+                                                    $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
+                                                        ->where('corte_reporte_abasto_surtimiento.fecha_fin',$parametros['fecha_fin']);
+                                                });
+            }
 
             //Filtros, busquedas, ordenamiento
             /*if(isset($parametros['query']) && $parametros['query']){
@@ -415,5 +421,29 @@ class CapturaReporteAbastoSurtimientoController extends Controller
         }catch(\Exception $e){
             return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
         }
+    }
+
+    public function descargarCatalogo(Request $request){
+        ini_set('memory_limit', '-1');
+
+        try{
+            /*$headers = [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'inline; filename="FORMATO CATALOGO DE MEDICAMENTOS.xlsx"',
+            ];
+            return Storage::download('app/descarga/FORMATO-CATALOGO-DE-MEDICAMENTOS.xlsx', 'FORMATO CATALOGO DE MEDICAMENTOS.xlsx', $headers);*/
+            
+            $file = storage_path("app/descarga/FORMATO-CATALOGO-DE-MEDICAMENTOS.xlsx");
+            //return response()->json(['error' => storage_path(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
+
+            $headers = [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                //'Content-Disposition' => 'inline; filename="FORMATO CATALOGO DE MEDICAMENTOS.xlsx"',
+            ];
+            return response()->download($file, 'FORMATO CATALOGO DE MEDICAMENTOS.xlsx', $headers);
+        }catch(\Exception $e){
+            return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
+        }
+        
     }
 }

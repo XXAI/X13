@@ -7,6 +7,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { DialogoDetallesRegistroComponent } from '../dialogo-detalles-registro/dialogo-detalles-registro.component';
 import { ConfirmActionDialogComponent } from '../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import * as FileSaver from 'file-saver';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-admin-lista',
@@ -16,7 +18,12 @@ import * as FileSaver from 'file-saver';
 export class AdminListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  constructor(private capturaReporteSemanalService: CapturaReporteSemanalService, private sharedService: SharedService, private dialog: MatDialog) { }
+  constructor(private capturaReporteSemanalService: CapturaReporteSemanalService, private sharedService: SharedService, private dialog: MatDialog, public datepipe: DatePipe) { }
+
+  range = new FormGroup({
+    start: new FormControl('',Validators.required),
+    end: new FormControl('',Validators.required)
+  });
 
   isLoading: boolean = false;
   isLoadingExcel: boolean = false;
@@ -70,17 +77,24 @@ export class AdminListaComponent implements OnInit {
     params.admin = true;
     this.resultsLength = 0;
 
+    /*
+    registro_data.rango_fechas.fecha_inicio = this.datepipe.transform(registro_data.rango_fechas.fecha_inicio, 'yyyy-MM-dd');
+    registro_data.rango_fechas.fecha_fin = this.datepipe.transform(registro_data.rango_fechas.fecha_fin, 'yyyy-MM-dd');
+    */
+
+    if(this.range.valid){
+      params.fecha_inicio = this.datepipe.transform(this.range.get('start').value, 'yyyy-MM-dd');
+      params.fecha_fin = this.datepipe.transform(this.range.get('end').value, 'yyyy-MM-dd');
+    }
+    
     this.capturaReporteSemanalService.obtenerListaRegistros(params).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          if(response.data.total > 0){
-            this.listadoRegistros = response.data.data;
-
-            this.resultsLength = response.data.total;
-          }
+          this.listadoRegistros = response.data.data;
+          this.resultsLength = response.data.total;
         }
         this.isLoading = false;
       },
@@ -119,6 +133,10 @@ export class AdminListaComponent implements OnInit {
 
   imprimirPDF(id){
     //imprimir pdf
+  }
+
+  limpiarRango(){
+    this.range.reset();
   }
 
   imprimirReporteExcel(){
