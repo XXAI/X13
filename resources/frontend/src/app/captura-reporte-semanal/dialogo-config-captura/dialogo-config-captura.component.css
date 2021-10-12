@@ -1,0 +1,49 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.semi-header{
+    text-align: center;
+    font-weight: bold;
+    color:rgba(0, 0, 0, 0.50);
+    padding: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.50);
+    border-collapse: collapse;
+}
+
+.semi-row{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.50);
+}
+
+.semana-activa{
+    font-weight: bold;
+    background-color: #d7f0ff;
+}
+
+.editando-semana{
+    font-style: italic;
+    background-color:#e6ffbf !important;
+}

@@ -1,0 +1,20 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Listado de Medicamentos Usados en la Unidad Médica:
+    </section>
+    <div fxFlex>
+        <div fxFlex fxLayout="row" [formGroup]="entradaForm">
+            <div fxFlex fxLayout="row">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="customFile" name="myfile" (change)="onFileSelect($event)" multiple="multiple" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" #UploadFileInput>
+                </div>
+            </div>
+        </div>
+    </div>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        <button fxFlex="20" mat-raised-button color="primary" (click)="subirArchivo()" [disabled]="!entradaForm.valid"><mat-icon>upload_file</mat-icon>Subir</button>
+        <div fxFlex="none">&nbsp;</div>
+        <button fxFlex="20" mat-stroked-button (click)="cancelar()" >Cancelar</button>
+    </section>
+</section>

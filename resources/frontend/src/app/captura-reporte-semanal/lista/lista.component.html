@@ -29,7 +29,12 @@
                 <div fxFlex *ngIf="unidadMedica" style="text-align: center;">
                     <span style="display: block;font-weight: 400;font-size: 20px; font-weight: bold;">{{unidadMedica.nombre}}</span>
                     <span style="display: block;">{{unidadMedica.clues}}</span>
-                </div>                
+                    <span style="display: block;">
+                        <mat-chip-list aria-label="Listado Activo">
+                            <mat-chip *ngIf="archivoCargado" style="cursor: pointer;" color="primary" selected (click)="verArchivo()" [disableRipple]="true"><mat-icon>attach_file</mat-icon> Ver Archivo Cargado</mat-chip>
+                        </mat-chip-list>
+                    </span>
+                </div>
             </div>
         </mat-card>
     </section>
@@ -39,9 +44,13 @@
                 <div fxFlex="none">
                     <a mat-stroked-button href="http://saludchiapas.gob.mx/storage/app/media/Documentos/catalogo_medicamentos.xlsx" target="_blank"><mat-icon>download</mat-icon>Catalogo Medicamentos</a>
                 </div>
-                <div fxFlex></div>
                 <div fxFlex="none">
-                    <button mat-raised-button color="info" (click)="nuevoRegistro()"  ><mat-icon>add_circle</mat-icon> Nuevo Registro</button>
+                    &nbsp;
+                    <button mat-stroked-button color="primary" (click)="subirArchivo()"><mat-icon>upload</mat-icon> Subir Archivo</button>
+                </div>
+                <div fxFlex></div>
+                <div fxFlex="none" *ngIf="semanaActiva">
+                    <button mat-raised-button color="info" (click)="nuevoRegistro()"><mat-icon>add_circle</mat-icon>&nbsp;<span fxHide.xs>Capturar Registro</span></button>
                 </div>
             </div>
             <div fxFlex style="overflow: auto;">
@@ -84,8 +93,14 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef width="1">Acciones</th>
                         <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                            <button mat-icon-button (click)="editarRegistro(row.id)" color="primary"><mat-icon>edit</mat-icon></button>
-                            <button mat-icon-button (click)="eliminarRegistro(row.id)" color="warn"><mat-icon>delete</mat-icon></button>
+                            <span *ngIf="semanaActiva">
+                                <button mat-icon-button *ngIf="semanaActiva.id != row.config_captura_id" (click)="verRegistro(row.id)" color="primary"><mat-icon>visibility</mat-icon></button>
+                                <button mat-icon-button *ngIf="semanaActiva.id == row.config_captura_id" (click)="editarRegistro(row.id)" color="primary"><mat-icon>edit</mat-icon></button>
+                                <button mat-icon-button *ngIf="semanaActiva.id == row.config_captura_id" (click)="eliminarRegistro(row.id)" color="warn"><mat-icon>delete</mat-icon></button>
+                            </span>
+                            <span *ngIf="!semanaActiva">
+                                <button mat-icon-button (click)="verRegistro(row.id)" color="primary"><mat-icon>visibility</mat-icon></button>
+                            </span>
                         </td>
                     </ng-container>
 

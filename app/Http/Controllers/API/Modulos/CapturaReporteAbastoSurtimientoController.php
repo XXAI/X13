@@ -12,7 +12,11 @@ use DB;
 
 use App\Exports\DevReportExport;
 
+use Illuminate\Support\Facades\Storage;
+
+use App\Models\ConfigCapturaAbastoSurtimiento;
 use App\Models\CorteReporteAbastoSurtimiento;
+use App\Models\ControlSubidaArchivos;
 use App\Models\UnidadMedica;
 
 class CapturaReporteAbastoSurtimientoController extends Controller
@@ -22,7 +26,9 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             $loggedUser = auth()->userOrFail();
 
             $data = [
-                'unidad_medica' => UnidadMedica::find($loggedUser->unidad_medica_asignada_id)
+                'unidad_medica' => UnidadMedica::find($loggedUser->unidad_medica_asignada_id),
+                'archivo_subido' => ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first(),
+                'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first()
             ];
             
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
@@ -156,25 +162,27 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             $loggedUser = auth()->userOrFail();
 
             $validation_rules = [
-                'fecha_inicio'  => 'required',
-                'fecha_fin'  => 'required',
-                'claves_medicamentos_catalogo'  => 'required',
-                'claves_medicamentos_existentes'  => 'required',
-                'claves_material_curacion_catalogo'  => 'required',
-                'claves_material_curacion_existentes'  => 'required',
-                'recetas_recibidas'  => 'required',
-                'recetas_surtidas'  => 'required',
-                'colectivos_recibidos'  => 'required',
-                'colectivos_surtidos'  => 'required',
-                'caducidad_3_meses_total_claves'  => 'required',
-                'caducidad_3_meses_total_piezas'  => 'required',
-                'caducidad_4_6_meses_total_claves'  => 'required',
-                'caducidad_4_6_meses_total_piezas'  => 'required',
+                'config_captura_id'                     => 'required',
+                //'fecha_inicio'                          => 'required',
+                //'fecha_fin'                             => 'required',
+                'claves_medicamentos_catalogo'          => 'required',
+                'claves_medicamentos_existentes'        => 'required',
+                'claves_material_curacion_catalogo'     => 'required',
+                'claves_material_curacion_existentes'   => 'required',
+                'recetas_recibidas'                     => 'required',
+                'recetas_surtidas'                      => 'required',
+                'colectivos_recibidos'                  => 'required',
+                'colectivos_surtidos'                   => 'required',
+                'caducidad_3_meses_total_claves'        => 'required',
+                'caducidad_3_meses_total_piezas'        => 'required',
+                'caducidad_4_6_meses_total_claves'      => 'required',
+                'caducidad_4_6_meses_total_piezas'      => 'required',
             ];
         
             $validation_eror_messages = [
-                'fecha_inicio.required' => 'El campo es requerido',
-                'fecha_fin.required' => 'El campo es requerido',
+                'config_captura_id.required' => 'El campo es requerido',
+                //'fecha_inicio.required' => 'El campo es requerido',
+                //'fecha_fin.required' => 'El campo es requerido',
                 'claves_medicamentos_catalogo.required' => 'El campo es requerido',
                 'claves_medicamentos_existentes.required' => 'El campo es requerido',
                 'claves_material_curacion_catalogo.required' => 'El campo es requerido',
@@ -190,8 +198,8 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             ];
 
             $parametros = $request->all();
-            $parametros['fecha_inicio'] = $parametros['rango_fechas']['fecha_inicio'];
-            $parametros['fecha_fin'] = $parametros['rango_fechas']['fecha_fin'];
+            //$parametros['fecha_inicio'] = $parametros['rango_fechas']['fecha_inicio'];
+            //$parametros['fecha_fin'] = $parametros['rango_fechas']['fecha_fin'];
             
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
@@ -223,17 +231,35 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                     $parametros['colectivos_porcentaje'] = 0;
                 }
                 
-
                 $parametros['usuario_captura_id'] = $loggedUser->id;
 
-                $registro = CorteReporteAbastoSurtimiento::create($parametros);
+                $config_captura = ConfigCapturaAbastoSurtimiento::find($parametros['config_captura_id']);
+
+                if($config_captura){
+                    $captura_anterior = CorteReporteAbastoSurtimiento::where('usuario_captura_id',$loggedUser->id)
+                                                                    ->where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
+                                                                    ->where('config_captura_id',$config_captura->id)->first();
+
+                    if($captura_anterior){
+                        DB::rollback();
+                        return response()->json(['message'=>'Ya existe un registro capturado para la semana seleccionada'], HttpResponse::HTTP_CONFLICT);
+                    }
+
+                    $parametros['fecha_inicio'] = $config_captura->fecha_inicio;
+                    $parametros['fecha_fin'] = $config_captura->fecha_fin;
+                    $registro = CorteReporteAbastoSurtimiento::create($parametros);
+                }else{
+                    DB::rollback();
+                    return response()->json(['message'=>'Error en Control de Captura'], HttpResponse::HTTP_CONFLICT);
+                }
+                
 
                 if($registro){
                     DB::commit();
                     return response()->json(['data'=>$registro], HttpResponse::HTTP_OK);
                 }else{
                     DB::rollback();
-                    return response()->json(['error'=>'No se pudo crear el Registro'], HttpResponse::HTTP_CONFLICT);
+                    return response()->json(['message'=>'No se pudo crear el Registro'], HttpResponse::HTTP_CONFLICT);
                 }
             }else{
                 return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
@@ -257,8 +283,9 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             $loggedUser = auth()->userOrFail();
 
             $validation_rules = [
-                'fecha_inicio'  => 'required',
-                'fecha_fin'  => 'required',
+                'config_captura_id'                     => 'required',
+                //'fecha_inicio'  => 'required',
+                //'fecha_fin'  => 'required',
                 'claves_medicamentos_catalogo'  => 'required',
                 'claves_medicamentos_existentes'  => 'required',
                 'claves_material_curacion_catalogo'  => 'required',
@@ -274,8 +301,9 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             ];
         
             $validation_eror_messages = [
-                'fecha_inicio.required' => 'El campo es requerido',
-                'fecha_fin.required' => 'El campo es requerido',
+                'config_captura_id.required' => 'El campo es requerido',
+                //'fecha_inicio.required' => 'El campo es requerido',
+                //'fecha_fin.required' => 'El campo es requerido',
                 'claves_medicamentos_catalogo.required' => 'El campo es requerido',
                 'claves_medicamentos_existentes.required' => 'El campo es requerido',
                 'claves_material_curacion_catalogo.required' => 'El campo es requerido',
@@ -291,8 +319,8 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             ];
 
             $parametros = $request->all();
-            $parametros['fecha_inicio'] = $parametros['rango_fechas']['fecha_inicio'];
-            $parametros['fecha_fin'] = $parametros['rango_fechas']['fecha_fin'];
+            //$parametros['fecha_inicio'] = $parametros['rango_fechas']['fecha_inicio'];
+            //$parametros['fecha_fin'] = $parametros['rango_fechas']['fecha_fin'];
             
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
@@ -325,6 +353,16 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
                 $parametros['usuario_captura_id'] = $loggedUser->id;
 
+                $config_captura = ConfigCapturaAbastoSurtimiento::find($parametros['config_captura_id']);
+
+                if(!$config_captura){
+                    DB::rollback();
+                    return response()->json(['message'=>'Control de captura no encontrado'], HttpResponse::HTTP_CONFLICT);
+                }elseif(!$config_captura->activo){
+                    DB::rollback();
+                    return response()->json(['message'=>'Solo se pueden editar registros de semanas activas'], HttpResponse::HTTP_CONFLICT);
+                }
+
                 $registro = CorteReporteAbastoSurtimiento::find($id);
 
                 if(!$registro){
@@ -342,7 +380,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                     return response()->json(['data'=>$registro], HttpResponse::HTTP_OK);
                 }else{
                     DB::rollback();
-                    return response()->json(['error'=>'No se pudo crear el Registro'], HttpResponse::HTTP_CONFLICT);
+                    return response()->json(['message'=>'No se pudo crear el Registro'], HttpResponse::HTTP_CONFLICT);
                 }
             }else{
                 return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
@@ -371,6 +409,14 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
             if($loggedUser->unidad_medica_asignada_id && $loggedUser->unidad_medica_asignada_id != $registro->unidad_medica_id){
                 throw new \Exception("El usuario no tiene acceso a este registro", 1);
+            }
+
+            $config_captura = ConfigCapturaAbastoSurtimiento::find($registro->config_captura_id);
+
+            if(!$config_captura){
+                return response()->json(['message'=>'Control de captura no encontrado'], HttpResponse::HTTP_CONFLICT);
+            }elseif(!$config_captura->activo){
+                return response()->json(['message'=>'Solo se pueden eliminar registros de semanas activas'], HttpResponse::HTTP_CONFLICT);
             }
 
             $registro->delete();
@@ -445,27 +491,90 @@ class CapturaReporteAbastoSurtimientoController extends Controller
         }
     }
 
-    public function descargarCatalogo(Request $request){
-        ini_set('memory_limit', '-1');
-
+    public function descargarArchivo(Request $request){
         try{
-            /*$headers = [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => 'inline; filename="FORMATO CATALOGO DE MEDICAMENTOS.xlsx"',
-            ];
-            return Storage::download('app/descarga/FORMATO-CATALOGO-DE-MEDICAMENTOS.xlsx', 'FORMATO CATALOGO DE MEDICAMENTOS.xlsx', $headers);*/
-            
-            $file = storage_path("app/descarga/FORMATO-CATALOGO-DE-MEDICAMENTOS.xlsx");
-            //return response()->json(['error' => storage_path(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
+            $loggedUser = auth()->userOrFail();
 
-            $headers = [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                //'Content-Disposition' => 'inline; filename="FORMATO CATALOGO DE MEDICAMENTOS.xlsx"',
-            ];
-            return response()->download($file, 'FORMATO CATALOGO DE MEDICAMENTOS.xlsx', $headers);
+            $control_archivo = ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first();
+            
+            if($control_archivo){
+                return Storage::download($control_archivo->ruta);
+            }else{
+                throw new \Exception("No hay registro de archivo", 1);
+            }
         }catch(\Exception $e){
-            return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
+            return response()->json(['message' => $e->getMessage(),'line' => $e->getLine()],400);
+        }
+    }
+
+    public function subirListaMedicamentos(Request $request){
+        $input = $request->all();
+        $loggedUser = auth()->userOrFail();
+
+        $messages = [
+            "required"=> "required",
+            "numeric"=> "numeric",
+            "file"=>"file"
+        ];
+
+        $rules = [
+            'archivo' => 'required|file',
+        ];
+
+        $validator = Validator::make($input, $rules, $messages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ],409);
         }
         
+        if($request->hasFile('archivo')){
+            if($request->file('archivo')->isValid()){
+                try{
+                    $unidad_medica = UnidadMedica::find($loggedUser->unidad_medica_asignada_id);
+
+                    $clues = 'SINCLUES';
+                    if($unidad_medica){
+                        $clues = $unidad_medica->clues;
+                    }
+
+                    $file = $request->archivo;
+
+                    $extension = $file->extension();
+                    $nombre_archivo = 'LISTA-MEDICAMENTOS-'.$clues.'-U'.$loggedUser->id;
+                    $path = $file->storeAs('archivos/lista-medicamentos-activos',$nombre_archivo.'.'.$extension);
+                    
+                    $control_archivo = ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first();
+
+                    if($control_archivo){
+                        if($control_archivo->ruta != $path){
+                            Storage::delete($control_archivo->ruta);
+                        }
+                        
+                        $control_archivo->update([
+                            'usuario_id' => $loggedUser->id,
+                            'clave_solicitud' => 'LISTA-MEDS-ACTIVOS',
+                            'nombre_archivo' => $nombre_archivo,
+                            'extension' => $extension,
+                            'conteo' => $control_archivo->conteo + 1,
+                            'ruta' => $path
+                        ]);
+                    }else{
+                        $control_archivo = ControlSubidaArchivos::create([
+                            'usuario_id' => $loggedUser->id,
+                            'clave_solicitud' => 'LISTA-MEDS-ACTIVOS',
+                            'nombre_archivo' => $nombre_archivo,
+                            'extension' => $extension,
+                            'conteo' => 0,
+                            'ruta' => $path
+                        ]);
+                    }
+                    return response()->json(['message' => "Archivo subido con éxito",'data'=>$control_archivo],200);
+                }catch(\Exception $e){
+                    return response()->json(['message' => $e->getMessage(),'line' => $e->getLine()],400);
+                }
+            }
+        }
     }
 }

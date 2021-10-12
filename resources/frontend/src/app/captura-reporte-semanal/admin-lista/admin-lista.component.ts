@@ -5,6 +5,7 @@ import { CapturaReporteSemanalService } from '../captura-reporte-semanal.service
 import { SharedService } from '../../shared/shared.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoDetallesRegistroComponent } from '../dialogo-detalles-registro/dialogo-detalles-registro.component';
+import { DialogoConfigCapturaComponent } from '../dialogo-config-captura/dialogo-config-captura.component';
 import { ConfirmActionDialogComponent } from '../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import * as FileSaver from 'file-saver';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -127,7 +128,21 @@ export class AdminListaComponent implements OnInit {
   }
 
   verAdminSemanasCaptura(){
-    //
+    let configDialog:any = {
+      width: '99%',
+      height: '80vh',
+      panelClass: 'no-padding-dialog'
+    };
+
+    const dialogRef = this.dialog.open(DialogoConfigCapturaComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        this.loadListadoRegistros();
+      }else{
+        console.log('Cancelar');
+      }
+    });
   }
 
   imprimirPDF(id){

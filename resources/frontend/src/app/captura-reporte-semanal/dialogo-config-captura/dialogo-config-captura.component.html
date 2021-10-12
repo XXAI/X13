@@ -1,0 +1,97 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Configurar Captura Semanal
+    </section>
+    <div fxFlex fxLayout="column" style="overflow: auto;position:relative;">
+        <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+        <div fxFlex fxLayout="row" [formGroup]="configForm" *ngIf="configForm">
+            <div fxFlex fxLayout="column">
+                <mat-card fxFlex="none" fxLayout="row raw">
+                    <mat-form-field fxFlex="100" fxFlex.xs="100" appearance="fill">
+                        <mat-label>Rango de Fechas del registro: </mat-label>
+                        <mat-date-range-input [rangePicker]="picker">
+                            <input matStartDate formControlName="fecha_inicio" placeholder="Inicio">
+                            <input matEndDate formControlName="fecha_fin" placeholder="Fin">
+                        </mat-date-range-input>
+                        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-date-range-picker #picker></mat-date-range-picker>
+                        
+                        <mat-error *ngIf="configForm.controls.fecha_inicio.hasError('matStartDateInvalid')">Fecha Invalida</mat-error>
+                        <mat-error *ngIf="configForm.controls.fecha_fin.hasError('matEndDateInvalid')">Fecha Invalida</mat-error>
+                        <mat-error *ngIf="configForm.controls.fecha_inicio.hasError('required') || configForm.controls.fecha_fin.hasError('required')">Fecha Requerida</mat-error>
+                    </mat-form-field>
+                    <mat-form-field fxFlex="60" fxFlex.xs="50">
+                        <input matInput placeholder="No. Semana" formControlName="no_semana" [type]="'number'" required autocomplete="off">
+                        <mat-error *ngIf="configForm.get('no_semana').invalid && (configForm.get('no_semana').dirty || configForm.get('no_semana').touched)">
+                            <span *ngIf="configForm.get('no_semana').errors.required">Campo obligatorio</span>
+                        </mat-error>
+                    </mat-form-field>
+                    <div fxFlex="40" fxFlex.xs="50" style="padding: 15px;">
+                        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+                    </div>
+                    
+                    <div fxFlex="100"> 
+                        <mat-divider [inset]="true"></mat-divider>
+                        <div fxLayout="row" style="padding-top: 5px;">
+                            <div fxFlex></div>
+                            <button fxFlex="none" mat-button (click)="resetearForm()">Cancelar</button>
+                            <button fxFlex="none" mat-raised-button color="primary" (click)="guardarSemana()" *ngIf="!configForm.get('id').value" [class.button-spinner]="isSaving" [disabled]="!configForm.valid || isSaving"><mat-icon>save</mat-icon> Guardar</button>
+                            <button fxFlex="none" mat-raised-button color="success" (click)="guardarSemana()" *ngIf="configForm.get('id').value" [class.button-spinner]="isSaving" [disabled]="!configForm.valid || isSaving"><mat-icon>save_alt</mat-icon> Actualizar</button>
+                        </div>
+                    </div>
+                </mat-card>
+                <div fxFlex>
+                </div>
+            </div>
+            <div fxFlex="60" fxLayout="column" style="padding:5px;">
+                <div fxFlex="none" fxLayout="row">
+                    <div class="semi-header" fxFlex="10">#</div>
+                    <div class="semi-header" fxFlex="50">Fecha [Inicio - Final]</div>
+                    <div class="semi-header" fxFlex="20">Registros</div>
+                    <div class="semi-header" fxFlex>Acciones</div>
+                </div>
+                <div fxFlex fxLayout="column" style="overflow: auto; background-color: whitesmoke;">
+                    <div fxFlex="none" fxLayout="row" *ngIf="listaSemanasCapturadas.length == 0">
+                        <div class="semi-row not-results-found" fxFlex>
+                            No hay registros capturados
+                        </div>
+                    </div>
+                    <div *ngFor="let item of listaSemanasCapturadas" fxFlex="none" fxLayout="row" [ngClass]="{'semana-activa':item.activo,'editando-semana':isEditing == item.id}">
+                        <div class="semi-row" fxFlex="10">{{item.no_semana}}</div>
+                        <div class="semi-row" fxFlex="50">[{{item.fecha_inicio}} - {{item.fecha_fin}}]</div>
+                        <div class="semi-row" fxFlex="20">{{item.total_registros}}</div>
+                        <div class="semi-row" fxFlex>
+                            <mat-icon [color]="(item.activo)?'primary':'default'">{{(item.activo)?'event_available':'calendar_today'}}</mat-icon>                            
+                            <button mat-icon-button  [matMenuTriggerFor]="menuAccionesRow" [matMenuTriggerData]="{id: item.id}">
+                                <mat-icon>more_vert</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <mat-menu #menuAccionesRow="matMenu">
+                    <ng-template matMenuContent let-id="id">
+                        <button mat-menu-item (click)="editarSemana(id)">
+                            <mat-icon color="success">edit</mat-icon>
+                            <span>Editar</span>
+                        </button>
+                        <mat-divider></mat-divider>
+                        <button mat-menu-item (click)="eliminarSemana(id,true)">
+                            <mat-icon color="warn">delete_sweep</mat-icon>
+                            <span>Eliminar Registros</span>
+                        </button>
+                        <button mat-menu-item (click)="eliminarSemana(id)">
+                            <mat-icon color="warn">delete_forever</mat-icon>
+                            <span>Eliminar Semana</span>
+                        </button>
+                    </ng-template>
+                </mat-menu>
+            </div>
+        </div>
+    </div>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        <div fxFlex="none">
+            <button mat-button (click)="cerrar()">Cerrar</button>&nbsp;
+        </div>
+    </section>
+</section>

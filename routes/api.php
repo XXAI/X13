@@ -80,16 +80,20 @@ Route::group(['middleware'=>'auth'],function($router){
     /*
     *   Modulos Reporte Semanal
     */
-    Route::get('get-data-cap-reporte-as',               'API\Modulos\CapturaReporteAbastoSurtimientoController@getDataInfo');
-    Route::get('excel-admin-reporte-abasto',            'API\Modulos\CapturaReporteAbastoSurtimientoController@exportAdminExcel');
-    Route::get('descargar-catalogo-meds',               'API\Modulos\CapturaReporteAbastoSurtimientoController@descargarCatalogo');
+    Route::get('get-data-cap-reporte-as',                'API\Modulos\CapturaReporteAbastoSurtimientoController@getDataInfo');
+    Route::get('excel-admin-reporte-abasto',             'API\Modulos\CapturaReporteAbastoSurtimientoController@exportAdminExcel');
     Route::apiResource('cap-reporte-abasto-surtimiento', 'API\Modulos\CapturaReporteAbastoSurtimientoController');
+    Route::apiResource('config-cap-abasto-surtimiento',  'API\Modulos\ConfigCapturaAbastoSurtimientoController');
+
 
     /*
     *   Modulos generales
     */
     Route::apiResource('insumos-medicos',          'API\Modulos\InsumosMedicosController');
     Route::get('cargar-catalogos',                 'API\Modulos\CatalogosController@getCatalogos');
+    //De forma temporal, mientras se trabaja modulo de subir archivos
+    Route::post('subir-lista-meds-tmp',            'API\Modulos\CapturaReporteAbastoSurtimientoController@subirListaMedicamentos');
+    Route::get('ver-lista-meds-tmp',               'API\Modulos\CapturaReporteAbastoSurtimientoController@descargarArchivo');
 
     /*
     * Módulos de importacion de insumos a existencias

@@ -24,12 +24,12 @@
                     </button>
                 </div>
                 <div fxFlex></div>
-                <!--div fxFlex="none">
+                <div fxFlex="none">
                     <button mat-raised-button color="primary" (click)="verAdminSemanasCaptura()">
                         <mat-icon>settings</mat-icon> Configurar Semanas
                     </button>
                 </div>
-                <div fxFlex></div-->
+                <div fxFlex></div>
                 <div fxFlex="none">
                     <button mat-raised-button color="accent" (click)="imprimirReporteExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
                         <mat-icon>print</mat-icon> Reporte en Excel
@@ -65,7 +65,7 @@
                     </ng-container>
 
                     <ng-container matColumnDef="fechas">
-                        <th mat-header-cell *matHeaderCellDef style="text-align: center;" width="1"> Fecha<br>[Inicio - Fin] </th>
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;" width="1"> Fecha<br>[Inicio - Fin] </th>
                         <td mat-cell *matCellDef="let row" style="white-space: nowrap;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">[{{row.fecha_inicio}}] - [{{row.fecha_fin}}]</span> </td>
                     </ng-container>
                     
