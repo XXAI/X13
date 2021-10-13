@@ -10,6 +10,8 @@ import { ConfirmActionDialogComponent } from '../../utils/confirm-action-dialog/
 import * as FileSaver from 'file-saver';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { Observable } from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-lista',
@@ -19,13 +21,13 @@ import { DatePipe } from '@angular/common';
 export class AdminListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  constructor(private capturaReporteSemanalService: CapturaReporteSemanalService, private sharedService: SharedService, private dialog: MatDialog, public datepipe: DatePipe) { }
+  constructor(private capturaReporteSemanalService: CapturaReporteSemanalService, private sharedService: SharedService, private dialog: MatDialog, public datepipe: DatePipe) {
+  }
 
-  range = new FormGroup({
-    start: new FormControl('',Validators.required),
-    end: new FormControl('',Validators.required)
-  });
-
+  semanas: any[];
+  semanaSeleccionada:number;
+  semanaActiva: any;
+  
   isLoading: boolean = false;
   isLoadingExcel: boolean = false;
   searchQuery: string = '';
@@ -33,7 +35,7 @@ export class AdminListaComponent implements OnInit {
   pageEvent: PageEvent;
   resultsLength: number = 0;
   currentPage: number = 0;
-  pageSize: number = 20;
+  pageSize: number = 50;
   selectedItemIndex: number = -1;
 
   displayedColumns: string[] = ['unidad_medica','fechas','total_claves','total_porcentaje','actions'];
@@ -41,17 +43,27 @@ export class AdminListaComponent implements OnInit {
   listadoRegistros: any[] = [];
 
   ngOnInit(): void {
-    this.loadListadoRegistros();
+    this.semanas = [];    
+    let params = {admin: true};
 
-    this.capturaReporteSemanalService.obtenerDatosUsuario().subscribe(
+    this.capturaReporteSemanalService.obtenerDatosUsuario(params).subscribe(
       response =>{
+        this.isLoading = false;
         if(response.error) {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
+          this.semanas = response.data.semanas_capturadas;
+          this.semanaActiva = response.data.semana_activa;
+
+          if(this.semanaActiva){
+            this.semanaSeleccionada = this.semanaActiva.id;
+          }else{
+            this.semanaSeleccionada = this.semanas[0].id;
+          }
+          this.loadListadoRegistros();
           //this.unidadMedica = response.data.unidad_medica;
         }
-        this.isLoading = false;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -68,6 +80,7 @@ export class AdminListaComponent implements OnInit {
     this.isLoading = true;
     let params:any;
     if(!event){
+      this.currentPage = 0;
       params = { page: 1, per_page: this.pageSize }
     }else{
       params = {
@@ -78,10 +91,7 @@ export class AdminListaComponent implements OnInit {
     params.admin = true;
     this.resultsLength = 0;
 
-    if(this.range.valid){
-      params.fecha_inicio = this.datepipe.transform(this.range.get('start').value, 'yyyy-MM-dd');
-      params.fecha_fin = this.datepipe.transform(this.range.get('end').value, 'yyyy-MM-dd');
-    }
+    params.config_captura_id = this.semanaSeleccionada;
     
     this.capturaReporteSemanalService.obtenerListaRegistros(params).subscribe(
       response =>{
@@ -149,17 +159,11 @@ export class AdminListaComponent implements OnInit {
     //imprimir pdf
   }
 
-  limpiarRango(){
-    this.range.reset();
-  }
-
   imprimirReporteExcel(){
     this.isLoadingExcel = true;
     let params:any = {};
-    if(this.range.valid){
-      params.fecha_inicio = this.datepipe.transform(this.range.get('start').value, 'yyyy-MM-dd');
-      params.fecha_fin = this.datepipe.transform(this.range.get('end').value, 'yyyy-MM-dd');
-    }
+    
+    params.config_captura_id = this.semanaSeleccionada;
 
     this.capturaReporteSemanalService.exportarAdminExcel(params).subscribe(
       response => {
@@ -185,5 +189,5 @@ export class AdminListaComponent implements OnInit {
   cleanSearch(){
     this.searchQuery = '';
   }
-
+  
 }

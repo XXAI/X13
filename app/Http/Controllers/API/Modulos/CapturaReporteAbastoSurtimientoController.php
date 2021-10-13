@@ -23,13 +23,21 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 {
     public function getDataInfo(Request $request){
         try{
+            $parametros = $request->all();
             $loggedUser = auth()->userOrFail();
 
-            $data = [
-                'unidad_medica' => UnidadMedica::find($loggedUser->unidad_medica_asignada_id),
-                'archivo_subido' => ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first(),
-                'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first()
-            ];
+            if(isset($parametros['admin']) && $parametros['admin']){
+                $data = [
+                    'semanas_capturadas' => ConfigCapturaAbastoSurtimiento::orderBy('no_semana','desc')->get(),
+                    'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first()
+                ];
+            }else{
+                $data = [
+                    'unidad_medica' => UnidadMedica::find($loggedUser->unidad_medica_asignada_id),
+                    'archivo_subido' => ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first(),
+                    'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first()
+                ];
+            }
             
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -62,19 +70,34 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 }
                 
                 if(count($lista_unidades_id)){
-                    if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                    /*if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
                         $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', 'fecha_fin')
                                                 ->where(function ($where) use($parametros){
                                                     $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
                                                         ->where('corte_reporte_abasto_surtimiento.fecha_fin',$parametros['fecha_fin']);
                                                 })
                                                 ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
+                    }*/
+                    /*if(isset($parametros['config_captura_id']) && $parametros['config_captura_id']){
+                        $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', 'fecha_fin')
+                                                ->where(function ($where) use($parametros){
+                                                    $where->where('corte_reporte_abasto_surtimiento.config_captura_id',$parametros['config_captura_id']);
+                                                })
+                                                ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
                     }else{
                         $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))
                                                 ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
-                    }
-
-                    $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues', 'catalogo_unidades_medicas.nombre as nombre_unidad','corte_reporte_abasto_surtimiento.*')
+                    }*/
+                    $registros = UnidadMedica::select('catalogo_unidades_medicas.clues', 'catalogo_unidades_medicas.nombre as nombre_unidad','corte_semanal.*')
+                                            ->leftjoin('corte_reporte_abasto_surtimiento as corte_semanal',function($join)use($parametros){
+                                                $join->on('corte_semanal.unidad_medica_id','=','catalogo_unidades_medicas.id')
+                                                    ->whereNull('corte_semanal.deleted_at')
+                                                    ->where('corte_semanal.config_captura_id',$parametros['config_captura_id']);
+                                            })
+                                            ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                            ->orderBy('corte_semanal.total_claves_porcentaje','DESC')
+                                            ->groupBy('catalogo_unidades_medicas.id');
+                    /*$registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues', 'catalogo_unidades_medicas.nombre as nombre_unidad','corte_reporte_abasto_surtimiento.*')
                                                                     ->joinSub($max_fecha_subquery,'b',function($join){
                                                                         $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','b.unidad_medica_id')->on('corte_reporte_abasto_surtimiento.fecha_fin','=','b.fecha_fin');
                                                                     })
@@ -82,12 +105,12 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                                                                         $join->on('corte_reporte_abasto_surtimiento.unidad_medica_id','=','catalogo_unidades_medicas.id');
                                                                     })
                                                                     ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                                                    ->where('corte_reporte_abasto_surtimiento.config_captura_id',$parametros['config_captura_id'])
                                                                     ->orderBy('corte_reporte_abasto_surtimiento.total_claves_porcentaje','DESC')
-                                                                    ->groupBy('catalogo_unidades_medicas.id');
+                                                                    ->groupBy('catalogo_unidades_medicas.id');*/
                 }else{
                     throw new \Exception("El usuario debe tener un grupo asignado con unidades medicas", 1);
                 }
-
                 //$registros = $registros->select('*',DB::raw('MAX(fecha_fin) as max_fecha_fin'))->with('unidadMedica')->groupBy('unidad_medica_id');
             }else{
                 $registros = CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->orderBy('fecha_fin','DESC');
@@ -163,8 +186,6 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
             $validation_rules = [
                 'config_captura_id'                     => 'required',
-                //'fecha_inicio'                          => 'required',
-                //'fecha_fin'                             => 'required',
                 'claves_medicamentos_catalogo'          => 'required',
                 'claves_medicamentos_existentes'        => 'required',
                 'claves_material_curacion_catalogo'     => 'required',
@@ -181,8 +202,6 @@ class CapturaReporteAbastoSurtimientoController extends Controller
         
             $validation_eror_messages = [
                 'config_captura_id.required' => 'El campo es requerido',
-                //'fecha_inicio.required' => 'El campo es requerido',
-                //'fecha_fin.required' => 'El campo es requerido',
                 'claves_medicamentos_catalogo.required' => 'El campo es requerido',
                 'claves_medicamentos_existentes.required' => 'El campo es requerido',
                 'claves_material_curacion_catalogo.required' => 'El campo es requerido',
@@ -198,8 +217,6 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             ];
 
             $parametros = $request->all();
-            //$parametros['fecha_inicio'] = $parametros['rango_fechas']['fecha_inicio'];
-            //$parametros['fecha_fin'] = $parametros['rango_fechas']['fecha_fin'];
             
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
@@ -284,26 +301,22 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
             $validation_rules = [
                 'config_captura_id'                     => 'required',
-                //'fecha_inicio'  => 'required',
-                //'fecha_fin'  => 'required',
-                'claves_medicamentos_catalogo'  => 'required',
-                'claves_medicamentos_existentes'  => 'required',
-                'claves_material_curacion_catalogo'  => 'required',
-                'claves_material_curacion_existentes'  => 'required',
-                'recetas_recibidas'  => 'required',
-                'recetas_surtidas'  => 'required',
-                'colectivos_recibidos'  => 'required',
-                'colectivos_surtidos'  => 'required',
-                'caducidad_3_meses_total_claves'  => 'required',
-                'caducidad_3_meses_total_piezas'  => 'required',
-                'caducidad_4_6_meses_total_claves'  => 'required',
-                'caducidad_4_6_meses_total_piezas'  => 'required',
+                'claves_medicamentos_catalogo'          => 'required',
+                'claves_medicamentos_existentes'        => 'required',
+                'claves_material_curacion_catalogo'     => 'required',
+                'claves_material_curacion_existentes'   => 'required',
+                'recetas_recibidas'                     => 'required',
+                'recetas_surtidas'                      => 'required',
+                'colectivos_recibidos'                  => 'required',
+                'colectivos_surtidos'                   => 'required',
+                'caducidad_3_meses_total_claves'        => 'required',
+                'caducidad_3_meses_total_piezas'        => 'required',
+                'caducidad_4_6_meses_total_claves'      => 'required',
+                'caducidad_4_6_meses_total_piezas'      => 'required',
             ];
         
             $validation_eror_messages = [
                 'config_captura_id.required' => 'El campo es requerido',
-                //'fecha_inicio.required' => 'El campo es requerido',
-                //'fecha_fin.required' => 'El campo es requerido',
                 'claves_medicamentos_catalogo.required' => 'El campo es requerido',
                 'claves_medicamentos_existentes.required' => 'El campo es requerido',
                 'claves_material_curacion_catalogo.required' => 'El campo es requerido',
@@ -319,8 +332,6 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             ];
 
             $parametros = $request->all();
-            //$parametros['fecha_inicio'] = $parametros['rango_fechas']['fecha_inicio'];
-            //$parametros['fecha_fin'] = $parametros['rango_fechas']['fecha_fin'];
             
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
@@ -445,7 +456,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
             }
 
             if(count($lista_unidades_id)){
-                if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                /*if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
                     $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', 'fecha_fin')
                                             ->where(function ($where) use($parametros){
                                                 $where->where('corte_reporte_abasto_surtimiento.fecha_inicio',$parametros['fecha_inicio'])
@@ -455,10 +466,10 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 }else{
                     $max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))
                                             ->whereNULL('deleted_at')->groupBy('unidad_medica_id');
-                }
+                }*/
                 //$max_fecha_subquery = DB::table('corte_reporte_abasto_surtimiento')->select('id', 'unidad_medica_id', DB::raw('MAX(fecha_fin) as fecha_fin'))->whereNULL('deleted_at')->groupBy('unidad_medica_id');
 
-                $registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues as CLUES', 'catalogo_unidades_medicas.nombre as Unidad Medica',
+                /*$registros = CorteReporteAbastoSurtimiento::select('catalogo_unidades_medicas.clues as CLUES', 'catalogo_unidades_medicas.nombre as Unidad Medica',
                                                             'corte_reporte_abasto_surtimiento.fecha_inicio as Fecha Inicio', 'corte_reporte_abasto_surtimiento.fecha_fin as Fecha Fin',
                                                             'corte_reporte_abasto_surtimiento.claves_medicamentos_catalogo as Medicamentos Catalogo','corte_reporte_abasto_surtimiento.claves_medicamentos_existentes as Medicamentos Existentes','corte_reporte_abasto_surtimiento.claves_medicamentos_porcentaje as Medicamentos Porcentaje',
                                                             'corte_reporte_abasto_surtimiento.claves_material_curacion_catalogo as Mat. Curacion Catalogo','corte_reporte_abasto_surtimiento.claves_material_curacion_existentes as Mat. Curacion Existentes','corte_reporte_abasto_surtimiento.claves_material_curacion_porcentaje as Mat. Curacion Porcentaje',
@@ -475,7 +486,25 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                                                         })
                                                         ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
                                                         ->orderBy('corte_reporte_abasto_surtimiento.fecha_fin','DESC')
-                                                        ->groupBy('catalogo_unidades_medicas.id')->get();
+                                                        ->groupBy('catalogo_unidades_medicas.id')->get();*/
+
+                $registros = UnidadMedica::select('catalogo_unidades_medicas.clues as CLUES', 'catalogo_unidades_medicas.nombre as Unidad Medica',
+                                                'corte_semanal.fecha_inicio as Fecha Inicio', 'corte_semanal.fecha_fin as Fecha Fin',
+                                                'corte_semanal.claves_medicamentos_catalogo as Medicamentos Catalogo','corte_semanal.claves_medicamentos_existentes as Medicamentos Existentes','corte_semanal.claves_medicamentos_porcentaje as Medicamentos Porcentaje',
+                                                'corte_semanal.claves_material_curacion_catalogo as Mat. Curacion Catalogo','corte_semanal.claves_material_curacion_existentes as Mat. Curacion Existentes','corte_semanal.claves_material_curacion_porcentaje as Mat. Curacion Porcentaje',
+                                                'corte_semanal.total_claves_catalogo as Total Claves Catalogo','corte_semanal.total_claves_existentes as Total Claves Existentes','corte_semanal.total_claves_porcentaje as Total Claves Porcentaje',
+                                                'corte_semanal.recetas_recibidas as Total Recetas Recibidas','corte_semanal.recetas_surtidas as Total Recetas Surtidas','corte_semanal.recetas_porcentaje as Recetas Porcentaje',
+                                                'corte_semanal.colectivos_recibidos as Total Colectivos Recibidos','corte_semanal.colectivos_surtidos as Total Colectivos Surtidos','corte_semanal.colectivos_porcentaje as Colectivos Porcentaje',
+                                                'corte_semanal.caducidad_3_meses_total_claves as Claves con Caducidad Menor a 3 Meses','corte_semanal.caducidad_3_meses_total_piezas as Piezas con Caducidad Menor a 3 Meses',
+                                                'corte_semanal.caducidad_4_6_meses_total_claves as Claves con Caducidad de 4 - 6 Meses','corte_semanal.caducidad_4_6_meses_total_piezas as Piezas con Caducidad de 4 - 6 Meses')
+                                            ->leftjoin('corte_reporte_abasto_surtimiento as corte_semanal',function($join)use($parametros){
+                                                $join->on('corte_semanal.unidad_medica_id','=','catalogo_unidades_medicas.id')
+                                                    ->whereNull('corte_semanal.deleted_at')
+                                                    ->where('corte_semanal.config_captura_id',$parametros['config_captura_id']);
+                                            })
+                                            ->whereIn('catalogo_unidades_medicas.id',$lista_unidades_id)
+                                            ->orderBy('corte_semanal.total_claves_porcentaje','DESC')
+                                            ->groupBy('catalogo_unidades_medicas.id')->get();
 
                 $columnas = array_keys(collect($registros[0])->toArray());
 

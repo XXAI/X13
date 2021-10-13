@@ -11,6 +11,18 @@
     justify-content: center;
 }
 
+.small-select-input{
+    padding: 0px;
+}
+
+:host ::ng-deep .small-select-input > .mat-form-field-appearance-outline .mat-form-field-infix {
+    padding: 5px 0 5px 0;
+}
+
+:host ::ng-deep .small-select-input > .mat-form-field > .mat-form-field-wrapper {
+    padding-bottom: 0 !important;
+}
+
 .hide{
     display: none;
   }

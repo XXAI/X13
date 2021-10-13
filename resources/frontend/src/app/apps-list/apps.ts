@@ -30,6 +30,8 @@ export const APPS:App [] = [
         { name:'Recepción de Pedidos',      route: "pedidos/recepcion-pedidos",      icon: "assets/icons/recepcion-pedidos.svg", permission:"5ZbNLsYUWx6w6mTY4wcJlcaBrrNYr85D" },
       ]
     },
+    { name:'Captura Semanal: Abasto y Surtimiento',  route: "captura-reporte-semanal",      icon: "assets/icons/captura-reporte.svg",    permission:"BA4rXXfPIcaePRspIOTl88I4HH00INQa" },
+    { name:'Admin Captura: Abasto y Surtimiento',    route: "admin-captura-reporte-semanal",      icon: "assets/icons/admin-captura-reporte.svg",    permission:"BjvroJXhbaJvcKrBnxHpRRBq2u6BovUN" },
     { name:'Catalogos',       route: "catalogos",             icon: "assets/icons/catalogos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",
       apps:[
         { name:'Almacenes',   route: "catalogos/almacenes",   icon: "assets/icons/catalogo-almacenes.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
@@ -52,8 +54,6 @@ export const APPS:App [] = [
         {name:'JSON a Excel',   route:'dev-tools/json-excel',     icon:'text_snippet',      permission:"6ARHQGj1N8YPkr02DY04K1Zy7HjIdDcj"}
       ],
     },
-    { name:'Captura Semanal: Abasto y Surtimiento',  route: "captura-reporte-semanal",      icon: "assets/icons/captura-reporte.svg",    permission:"BA4rXXfPIcaePRspIOTl88I4HH00INQa" },
-    { name:'Admin Captura: Abasto y Surtimiento',    route: "admin-captura-reporte-semanal",      icon: "assets/icons/admin-captura-reporte.svg",    permission:"BjvroJXhbaJvcKrBnxHpRRBq2u6BovUN" },
     /*
     { name: "Seguridad", route: "seguridad", icon: "assets/icons/security-shield.svg", 
         children: [

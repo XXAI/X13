@@ -24,8 +24,8 @@ export class CapturaReporteSemanalService {
     return this.http.get<any>(this.url_archivo, {params:{}, responseType: 'blob' as 'json'});
   }
 
-  obtenerDatosUsuario():Observable<any> {
-    return this.http.get<any>(this.url_data,{}).pipe(
+  obtenerDatosUsuario(payload:any={}):Observable<any> {
+    return this.http.get<any>(this.url_data,{params: payload}).pipe(
       map( response => {
         return response;
       })
