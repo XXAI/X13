@@ -35,7 +35,8 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 $data = [
                     'unidad_medica' => UnidadMedica::find($loggedUser->unidad_medica_asignada_id),
                     'archivo_subido' => ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first(),
-                    'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first()
+                    'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first(),
+                    'totales_claves_catalogo' => CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->select(DB::raw('MAX(claves_medicamentos_catalogo) as claves_medicamentos_catalogo'), DB::raw('MAX(claves_material_curacion_catalogo) as claves_material_curacion_catalogo'))->groupBy('unidad_medica_id')->first()
                 ];
             }
             

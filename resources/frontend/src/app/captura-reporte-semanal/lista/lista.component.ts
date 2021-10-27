@@ -27,6 +27,7 @@ export class ListaComponent implements OnInit {
   unidadMedica:any;
   archivoCargado:any;
   semanaActiva:any;
+  totalesCatalogo:any;
 
   pageEvent: PageEvent;
   resultsLength: number = 0;
@@ -50,6 +51,7 @@ export class ListaComponent implements OnInit {
           this.unidadMedica = response.data.unidad_medica;
           this.archivoCargado = response.data.archivo_subido;
           this.semanaActiva = response.data.semana_activa;
+          this.totalesCatalogo = response.data.totales_claves_catalogo;
         }
         this.isLoading = false;
       },
@@ -152,7 +154,7 @@ export class ListaComponent implements OnInit {
       panelClass: 'no-padding-dialog'
     };
 
-    configDialog.data = {registroId: 0, semanaActiva: this.semanaActiva};
+    configDialog.data = {registroId: 0, semanaActiva: this.semanaActiva, clavesCatalogo: this.totalesCatalogo};
     
     const dialogRef = this.dialog.open(DialogoRegistroComponent, configDialog);
 

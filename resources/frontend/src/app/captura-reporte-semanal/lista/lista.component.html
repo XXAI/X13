@@ -32,6 +32,8 @@
                     <span style="display: block;">
                         <mat-chip-list aria-label="Listado Activo">
                             <mat-chip *ngIf="archivoCargado" style="cursor: pointer;" color="primary" selected (click)="verArchivo()" [disableRipple]="true"><mat-icon>attach_file</mat-icon> Ver Archivo Cargado</mat-chip>
+                            <mat-chip *ngIf="totalesCatalogo" color="accent" selected [disableRipple]="true">Medicamentos en Catalogo: {{totalesCatalogo.claves_medicamentos_catalogo | number:'1.0-0'}}</mat-chip>
+                            <mat-chip *ngIf="totalesCatalogo" color="accent" selected [disableRipple]="true">Mat. Curación en Catalogo: {{totalesCatalogo.claves_material_curacion_catalogo | number:'1.0-0'}}</mat-chip>
                         </mat-chip-list>
                     </span>
                 </div>
@@ -61,8 +63,8 @@
                     </ng-container>
                     
                     <ng-container matColumnDef="medicamentos">
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs> Medicamentos<br>Catalogo/Existentes </th>
-                        <td mat-cell *matCellDef="let row"  fxHide.xs style="text-align: center;"> {{row.claves_medicamentos_catalogo | number:'1.0-0'}} / {{row.claves_medicamentos_existentes | number:'1.0-0'}} </td>
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs> Medicamentos<br>Existentes/Catalogo </th>
+                        <td mat-cell *matCellDef="let row"  fxHide.xs style="text-align: center;"> {{row.claves_medicamentos_existentes | number:'1.0-0'}} / {{row.claves_medicamentos_catalogo | number:'1.0-0'}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="porcentaje_medicamentos">
@@ -71,8 +73,8 @@
                     </ng-container>
                     
                     <ng-container matColumnDef="material_curacion">
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs> Mat. de Curación<br>Catalogo/Existentes </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs style="text-align: center;"> {{row.claves_material_curacion_catalogo | number:'1.0-0'}} / {{row.claves_material_curacion_existentes | number:'1.0-0'}} </td>
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs> Mat. de Curación<br>Existentes/Catalogo </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs style="text-align: center;"> {{row.claves_material_curacion_existentes | number:'1.0-0'}} / {{row.claves_material_curacion_catalogo | number:'1.0-0'}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="porcentaje_material_curacion">
@@ -81,8 +83,8 @@
                     </ng-container>
 
                     <ng-container matColumnDef="total_claves" >
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs style="text-align: center; white-space: nowrap;"> Total Claves<br>Catalogo/Existentes </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs style="text-align: center;"> {{row.total_claves_catalogo | number:'1.0-0'}} / {{row.total_claves_existentes | number:'1.0-0'}} </td>
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs style="text-align: center; white-space: nowrap;"> Total Claves<br>Existentes/Catalogo </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs style="text-align: center;"> {{row.total_claves_existentes | number:'1.0-0'}} / {{row.total_claves_catalogo | number:'1.0-0'}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="total_porcentaje" >

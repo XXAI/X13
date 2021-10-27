@@ -76,6 +76,8 @@ export class ErrorInterceptor implements HttpInterceptor {
                 return next.handle(this.addAuthenticationToken(request));
               }),
               catchError((response:any)=>{
+                console.log('refrescar token error')
+                console.log(response);
                 this.refreshTokenInProgress = false;
                 this.authService.logout();
                 return throwError(response);

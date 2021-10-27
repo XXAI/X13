@@ -8,6 +8,7 @@ import { DatePipe } from '@angular/common';
 export interface RegistroData {
   registroId: number;
   semanaActiva?: any;
+  clavesCatalogo?: any;
 }
 
 @Component({
@@ -43,9 +44,9 @@ export class DialogoRegistroComponent implements OnInit {
     this.registroForm = this.fb.group({
       'id':                                   [''],
       'config_captura_id':                    ['',Validators.required],
-      'claves_medicamentos_catalogo':         ['',Validators.required],
+      'claves_medicamentos_catalogo':         [''],
       'claves_medicamentos_existentes':       ['',Validators.required],
-      'claves_material_curacion_catalogo':    ['',Validators.required],
+      'claves_material_curacion_catalogo':    [''],
       'claves_material_curacion_existentes':  ['',Validators.required],
       'recetas_recibidas':                    ['',Validators.required],
       'recetas_surtidas':                     ['',Validators.required],
@@ -86,6 +87,10 @@ export class DialogoRegistroComponent implements OnInit {
         let semana_activa = this.data.semanaActiva;
         this.rangoFechasActivas = semana_activa.fecha_inicio + ' - ' + semana_activa.fecha_fin;
         this.registroForm.get('config_captura_id').patchValue(semana_activa.id);
+        if(this.data.clavesCatalogo){
+          this.registroForm.get('claves_medicamentos_catalogo').patchValue(this.data.clavesCatalogo.claves_medicamentos_catalogo);
+          this.registroForm.get('claves_material_curacion_catalogo').patchValue(this.data.clavesCatalogo.claves_material_curacion_catalogo);
+        }
       }
       
       this.isLoading = false;

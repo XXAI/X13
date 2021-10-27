@@ -26,25 +26,19 @@
         </div>
         <div fxFlex fxLayout="row raw" [formGroup]="registroForm">
             <mat-form-field fxFlex="25" fxFlex.xs="100">
-                <input matInput placeholder="Medicamentos Catalogo" formControlName="claves_medicamentos_catalogo" [type]="'number'" required autocomplete="off" cdkFocusInitial>
+                <input matInput placeholder="Medicamentos Catalogo" formControlName="claves_medicamentos_catalogo" [readonly]="true">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
-                <mat-error *ngIf="registroForm.get('claves_medicamentos_catalogo').invalid && (registroForm.get('claves_medicamentos_catalogo').dirty || registroForm.get('claves_medicamentos_catalogo').touched)">
-                    <span *ngIf="registroForm.get('claves_medicamentos_catalogo').errors.required">Campo obligatorio</span>
-                </mat-error>
             </mat-form-field>
             <mat-form-field fxFlex="25" fxFlex.xs="100">
-                <input matInput placeholder="Medicamentos Existentes" formControlName="claves_medicamentos_existentes" [type]="'number'" required autocomplete="off">
+                <input matInput placeholder="Medicamentos Existentes" formControlName="claves_medicamentos_existentes" [type]="'number'" required autocomplete="off" cdkFocusInitial>
                 <mat-hint align="start">[No. de Claves]</mat-hint>
                 <mat-error *ngIf="registroForm.get('claves_medicamentos_existentes').invalid && (registroForm.get('claves_medicamentos_existentes').dirty || registroForm.get('claves_medicamentos_existentes').touched)">
                     <span *ngIf="registroForm.get('claves_medicamentos_existentes').errors.required">Campo obligatorio</span>
                 </mat-error>
             </mat-form-field>
             <mat-form-field fxFlex="25" fxFlex.xs="100">
-                <input matInput placeholder="Mat. Curación Catalogo" formControlName="claves_material_curacion_catalogo" [type]="'number'" required autocomplete="off">
+                <input matInput placeholder="Mat. Curación Catalogo" formControlName="claves_material_curacion_catalogo" [readonly]="true">
                 <mat-hint align="start">[No. de Claves]</mat-hint>
-                <mat-error *ngIf="registroForm.get('claves_material_curacion_catalogo').invalid && (registroForm.get('claves_material_curacion_catalogo').dirty || registroForm.get('claves_material_curacion_catalogo').touched)">
-                    <span *ngIf="registroForm.get('claves_material_curacion_catalogo').errors.required">Campo obligatorio</span>
-                </mat-error>
             </mat-form-field>
             <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Mat. Curación Existentes" formControlName="claves_material_curacion_existentes" [type]="'number'" required autocomplete="off">
