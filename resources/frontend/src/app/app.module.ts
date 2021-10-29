@@ -37,6 +37,7 @@ import { CatalogosModule } from './catalogos/catalogos.module';
 import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { CapturaReporteSemanalModule } from './captura-reporte-semanal/captura-reporte-semanal.module';
+import { ConfiguracionUnidadModule } from './configuracion-unidad/configuracion-unidad.module';
 
 @NgModule({
   declarations: [
@@ -63,6 +64,7 @@ import { CapturaReporteSemanalModule } from './captura-reporte-semanal/captura-r
     ConfiguracionModule,
     PedidosModule,
     CapturaReporteSemanalModule,
+    ConfiguracionUnidadModule,
     ProfileModule,
     AppRoutingModule,
     WildcardRoutingModule,

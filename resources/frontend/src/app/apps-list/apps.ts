@@ -43,10 +43,11 @@ export const APPS:App [] = [
         { name:'Tipos de Pedidos',     route: "configuracion/tipos-pedidos",    icon: "assets/icons/tipos-pedidos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
       ]
     },
-    { name:'Configuración Unidad',   route: "configuracion-unidad",     icon: "assets/icons/configuracion-unidad.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",
-      apps:[
-        { name:'Grupos',           route: "configuracion/grupos",       icon: "assets/icons/catalogo-grupos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
-      ]
+    { name:'Configuración Unidad',   route: "configuracion-unidad",     icon: "assets/icons/configuracion-unidad.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK", isHub:true, hideHome:true,
+      children:[
+        {name:'Catalogo de Articulos',  route:'configuracion-unidad/catalogo-articulos',  icon:'format_list_bulleted',  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"},
+        {name:'Almacenes',              route:'configuracion-unidad/almacenes',           icon:'inventory',             permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"}
+      ],
     },
     { name:'Herramientas Dev', route: "dev-tools",  icon: "assets/icons/toolbox.svg", isHub:true, hideHome:true, 
       children:[
