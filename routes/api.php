@@ -47,6 +47,12 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('configuracion/tipos-elementos-pedidos-catalogos', 'API\Configuracion\TiposPedidosController@getCatalogos');
 
     /**
+     *  Modulo de Configuración
+     */
+    Route::apiResource('configuracion-unidad/catalogo-articulos',   'API\ConfiguracionUnidad\CatalogoArticulosController');
+    Route::get('configuracion-unidad/catalogo-articulos-catalogos', 'API\ConfiguracionUnidad\CatalogoArticulosController@getCatalogos');
+
+    /**
      *  Modulo de Reportes
      */
     Route::get('ejecutar-query',                    'API\Admin\DevReporterController@executeQuery');

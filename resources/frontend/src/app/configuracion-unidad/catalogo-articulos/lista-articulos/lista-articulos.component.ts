@@ -24,16 +24,37 @@ export class ListaArticulosComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['id','folio','descripcion','total_claves','total_insumos','actions'];
-  listadoPedidos: any[] = [];
+  displayedColumns: string[] = ['clave','descripcion','minimo','maximo','actions'];
+  listadoArticulos: any[] = [];
 
   ngOnInit(): void {
     this.resultsLength = 0;
+
+    this.catalogoArticulosService.getCatalogos().subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          console.log(response);
+        }
+        //this.isLoading = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.isLoading = false;
+      }
+    );
+
+    this.loadListadoArticulos();
   }
 
   applyFilter(){
-    this.loadListadoPedidos();
-    this.loadListadoPedidos();
+    this.loadListadoArticulos();
   }
 
   cleanSearch(){
@@ -44,7 +65,7 @@ export class ListaArticulosComponent implements OnInit {
     //
   }
 
-  loadListadoPedidos(event?){
+  loadListadoArticulos(event?){
     this.isLoading = true;
     let params:any;
     if(!event){
@@ -56,30 +77,18 @@ export class ListaArticulosComponent implements OnInit {
       };
     }
 
-    this.listadoPedidos = [];
+    this.listadoArticulos = [];
     
     params.query = this.searchQuery;
     this.resultsLength = 0;
     
-    /*this.catalogoArticulosService.obtenerCatalogo(params).subscribe(
+    this.catalogoArticulosService.getListaArticulos(params).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          if(response.data.total > 0){
-            this.listadoPedidos = response.data.data;
-
-            for(let i in this.listadoPedidos){
-              let pedido = this.listadoPedidos[i];
-
-              if(!pedido.folio){
-                pedido.folio = 'S/F';
-              }
-            }
-
-            this.resultsLength = response.data.total;
-          }
+          console.log(response);
         }
         this.isLoading = false;
       },
@@ -91,7 +100,7 @@ export class ListaArticulosComponent implements OnInit {
         this.sharedService.showSnackBar(errorMessage, null, 3000);
         this.isLoading = false;
       }
-    );*/
+    );
     
     return event;
   }
