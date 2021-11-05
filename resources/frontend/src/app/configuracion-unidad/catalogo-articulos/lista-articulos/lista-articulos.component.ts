@@ -3,6 +3,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { SharedService } from '../../../shared/shared.service';
 import { MatDialog } from '@angular/material/dialog';
 import { CatalogoArticulosService } from '../catalogo-articulos.service';
+import { DialogoArticuloComponent } from '../dialogo-articulo/dialogo-articulo.component';
 
 @Component({
   selector: 'app-lista-articulos',
@@ -65,6 +66,25 @@ export class ListaArticulosComponent implements OnInit {
     //
   }
 
+  mostrarArticulo(articulo){
+    let configDialog:any;
+    
+    configDialog = {
+      width: '60%',
+      height: '80%',
+      data:{articuloId: articulo.id},
+      panelClass: 'no-padding-dialog'
+    }
+
+    const dialogRef = this.dialog.open(DialogoArticuloComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.loadListadoArticulos();
+      }
+    });
+  }
+
   loadListadoArticulos(event?){
     this.isLoading = true;
     let params:any;
@@ -88,7 +108,9 @@ export class ListaArticulosComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response);
+          this.resultsLength = response.data.total;
+          this.listadoArticulos = response.data.data;
+          
         }
         this.isLoading = false;
       },

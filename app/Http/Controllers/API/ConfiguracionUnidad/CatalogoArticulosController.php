@@ -96,6 +96,23 @@ class CatalogoArticulosController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id){
+        //$this->authorize('has-permission',\Permissions::VER_ROL);
+        try{
+            $articulo = UnidadMedicaCatalogoArticulo::with('articulo')->find($id);
+            
+            return response()->json(['data'=>$articulo],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -148,23 +165,6 @@ class CatalogoArticulosController extends Controller
             }
         }catch(\Exception $e){
             DB::rollback();
-            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
-        }
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id){
-        //$this->authorize('has-permission',\Permissions::VER_ROL);
-        try{
-            $tipo_pedido = TipoElementoPedido::find($id);
-            
-            return response()->json(['data'=>$tipo_pedido],HttpResponse::HTTP_OK);
-        }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }

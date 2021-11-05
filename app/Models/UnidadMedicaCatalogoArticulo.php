@@ -16,7 +16,7 @@ class UnidadMedicaCatalogoArticulo extends Model{
         return $this->belongsTo('App\Models\BienServicio','unidad_medica_id');
     }
     
-    public function bienServicio(){
+    public function articulo(){
         return $this->belongsTo('App\Models\BienServicio','bien_servicio_id');
     }
 }

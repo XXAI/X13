@@ -1,0 +1,25 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.table-articulo{
+    width: 100%;
+}
+
+.table-articulo th {
+    vertical-align: top;
+}
+
+.table-articulo th span{
+    display: block;
+    width: 100%;
+    text-align: right;
+    background-color: black;
+    color:white;
+    padding: 3px;
+}
+
+.table-articulo td {
+    background-color: whitesmoke;
+    padding: 3px;
+}
