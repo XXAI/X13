@@ -104,7 +104,7 @@ class CatalogoArticulosController extends Controller
     public function show($id){
         //$this->authorize('has-permission',\Permissions::VER_ROL);
         try{
-            $articulo = UnidadMedicaCatalogoArticulo::with('articulo')->find($id);
+            $articulo = UnidadMedicaCatalogoArticulo::with(['articulo'=>function($articulo){ $articulo->with('partidaEspecifica','familia'); }])->find($id);
             
             return response()->json(['data'=>$articulo],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -179,55 +179,37 @@ class CatalogoArticulosController extends Controller
     public function update(Request $request, $id){
         //$this->authorize('has-permission',\Permissions::EDITAR_ROL);
         try{
-            $tipo_elementos = TipoElementoPedido::find($id);
+            $parametros = $request->all();
+            $articulo = UnidadMedicaCatalogoArticulo::find($id);
 
-            $validation_rules = [
-                'clave'             => ['required',Rule::unique('tipos_elementos_pedidos','clave')->ignore($tipo_elementos->id)->where(function($query){ return $query->whereNull('deleted_at'); })],
-                'descripcion'       => ['required',Rule::unique('tipos_elementos_pedidos','descripcion')->ignore($tipo_elementos->id)->where(function($query){ return $query->whereNull('deleted_at'); })],
-                //'archivo_fuente'    => 'required',
-                'filtro_familias'   => 'required',
+            /*$validation_rules = [
+                'cantidad_minima' => ['integer'],
+                'cantidad_maxima' => ['integer'],
+                //'descripcion'       => ['required',Rule::unique('tipos_elementos_pedidos','descripcion')->ignore($tipo_elementos->id)->where(function($query){ return $query->whereNull('deleted_at'); })],
+                //'filtro_familias'   => 'required',
             ];
         
             $validation_eror_messages = [
+                'integer'  => 'Este campo debe ser numerico',
                 'required'  => 'Este campo es requerido',
                 'unique'    => 'Este campo debe ser único',
             ];
             
-            $parametros = $request->all();
-
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
-            if($resultado->passes()){
-                DB::beginTransaction();
+            if($resultado->passes()){*/
+            DB::beginTransaction();
 
-                if($parametros['archivo_fuente']){
-                    $image = $parametros['archivo_fuente'];  // your base64 encoded
-                    $image = str_replace('data:image/svg+xml;base64,', '', $image);
-                    $image = str_replace(' ', '+', $image);
-                    $image_name = $parametros['clave'].'-ICON.svg';
-                    \File::put(storage_path(). '/app/public/tipo-elementos-pedido/' . $image_name, base64_decode($image));
-
-                    $parametros['icon_image'] = 'tipo-elementos-pedido/'.$image_name;
-                }
-
-                $parametros['origen_articulo'] = $parametros['origen_articulo'];
-                $parametros['filtro_detalles'] = json_encode(array_values($parametros['filtro_familias']));
-                
-                if($tipo_elementos->icon_image != $parametros['icon_image']){
-                    //Delete old image
-                    \File::delete(storage_path(). '/app/public/' . $tipo_elementos->icon_image);
-                }
-
-                if($tipo_elementos->update($parametros)){
-                    DB::commit();
-                    return response()->json(['data'=>$tipo_elementos], HttpResponse::HTTP_OK);
-                }else{
-                    DB::rollback();
-                    return response()->json(['error'=>'No se pudo guardar el Tipo de Pedido'], HttpResponse::HTTP_CONFLICT);
-                }
+            if($articulo->update($parametros)){
+                DB::commit();
+                return response()->json(['data'=>$articulo], HttpResponse::HTTP_OK);
             }else{
-                return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
+                DB::rollback();
+                return response()->json(['error'=>'No se pudo guardar el Tipo de Pedido'], HttpResponse::HTTP_CONFLICT);
             }
+            /*}else{
+                return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
+            }*/
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);

@@ -25,7 +25,7 @@ export class ListaArticulosComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['clave','descripcion','minimo','maximo','actions'];
+  displayedColumns: string[] = ['clave','descripcion','minimo','maximo','indispensable','actions'];
   listadoArticulos: any[] = [];
 
   ngOnInit(): void {
@@ -71,7 +71,7 @@ export class ListaArticulosComponent implements OnInit {
     
     configDialog = {
       width: '60%',
-      height: '80%',
+      height: '50%',
       data:{articuloId: articulo.id},
       panelClass: 'no-padding-dialog'
     }

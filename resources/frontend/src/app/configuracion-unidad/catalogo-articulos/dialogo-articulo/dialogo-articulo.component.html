@@ -4,16 +4,32 @@
             <tr><th><span>Clave:</span></th><td>{{(datosArticulo.clave_cubs)?datosArticulo.clave_cubs:datosArticulo.clave_local}}</td></tr>
             <tr><th><span>Articulo:</span></th><td>{{datosArticulo.articulo}}</td></tr>
             <tr><th><span>Especificaciones:</span></th><td>{{datosArticulo.especificaciones}}</td></tr>
+            <tr><th><span>Partida:</span></th><td>{{(datosArticulo.partida_especifica)? datosArticulo.partida_especifica.descripcion:'--'}}</td></tr>
+            <tr><th><span>Familia:</span></th><td>{{(datosArticulo.familia)?datosArticulo.familia.nombre:'--'}}</td></tr>
         </table>
     </section>
     <section fxFlex>
-        <div>
-            5456
+        <div fxFlex fxLayout="row" [formGroup]="formArticulo">
+            <mat-form-field fxFlex>
+                <mat-label>Cantidad Minima</mat-label>
+                <input matInput formControlName="cantidad_minima" cdkFocusInitial type="number" autocomplete="off">
+            </mat-form-field>
+            <mat-form-field fxFlex>
+                <mat-label>Cantidad Maxima</mat-label>
+                <input matInput formControlName="cantidad_maxima" type="number" autocomplete="off">
+            </mat-form-field>
+            <div fxFlex>
+                <div style="border-top: 0.84375em solid transparent">
+                    <mat-slide-toggle formControlName="es_indispensable">Indispensable</mat-slide-toggle>
+                </div>
+            </div>
         </div>
     </section>
     <section fxFlex="none">
-        <div>
-            5456
+        <div fxFlex></div>
+        <div fxFlex="none">
+            <button mat-button (click)="cancelar()">Cancelar</button>&nbsp;
+            <button mat-raised-button color="primary" (click)="guardar()" [class.button-spinner]="isSaving" [disabled]="!formArticulo.valid || isSaving">Guardar</button>
         </div>
     </section>
 </section>
