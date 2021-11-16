@@ -72,3 +72,15 @@ table {
   height: 60px;
   margin: 0 10px;
 }
+
+.borrador-color{
+  color:#b6b6b6;
+}
+
+.concluido-color{
+  color:#07a8ff;
+}
+
+.cancelado-color{
+  color:#ff2a2a;
+}

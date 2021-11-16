@@ -1,14 +1,15 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatTableDataSource } from '@angular/material/table';
-import { InsumoLoteDialogoComponent } from '../insumo-lote-dialogo/insumo-lote-dialogo.component';
-import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
-import { CustomValidator } from '../../../utils/classes/custom-validator';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+//import { AlmacenService } from '../../almacen.service';
 import { EntradasService } from '../entradas.service';
 import { SharedService } from '../../../shared/shared.service';
-import { startWith, map } from 'rxjs/operators';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatInput } from '@angular/material/input';
+import { MatDrawer } from '@angular/material/sidenav';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute } from '@angular/router';
+import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 
 @Component({
   selector: 'app-entrada',
@@ -16,37 +17,59 @@ import { startWith, map } from 'rxjs/operators';
   styleUrls: ['./entrada.component.css']
 })
 export class EntradaComponent implements OnInit {
-  @ViewChild(MatPaginator) insumosPaginator: MatPaginator;
+  @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
+  @ViewChild(MatDrawer) articulosDrawer: MatDrawer;
+  @ViewChild(MatInput) busquedaArticuloQuery: MatInput;
 
-  constructor(private formBuilder: FormBuilder, private dialog: MatDialog, private entradasService: EntradasService, private sharedService: SharedService) { }
-
-  isLoadingInsumos:boolean;
+  constructor(
+    private formBuilder: FormBuilder, 
+    //private almacenService: AlmacenService, 
+    private entradasService: EntradasService, 
+    private sharedService: SharedService, 
+    private dialog: MatDialog, 
+    private route: ActivatedRoute
+  ) { }
 
   formEntrada:FormGroup;
-  catalogos: any;
-  totales: any;
-  mostrarBuscadorInsumos:boolean;
+  catalogos:any;
 
-  insumoQuery:string;
-  listadoInsumos:any[];
-  busquedaTipoInsumo:string;
-  claveInsumoSeleccionado:string;
+  clavesTotales: any;
+  clavesTotalesFiltro: any;
+  clavesTotalesMovimiento: any;
+  
+  isLoadingArticulos:boolean;
+  articuloQuery:string;
+  listadoArticulos:any[];
+  idArticuloSeleccionado:number;
 
-  iconoMedicamento:string = 'assets/icons-ui/MED.svg';
-  iconoMatCuracion:string = 'assets/icons-ui/MTC.svg';
+  controlArticulosModificados:any;
+  listadoArticulosEliminados:any[];
 
-  listadoInsumosMovimiento:any[];
-  filtroInsumosMovimiento:any[];
-  controlInsumosAgregados:any;
+  listadoArticulosMovimiento:any[];
+  filtroArticulosMovimiento:any[];
+  controlArticulosAgregados:any;
+  selectedItemIndex:number;
 
-  filtroInsumos:string;
-  filtroTipoInsumos:string;
+  filtroArticulos:string;
+  filtroTipoArticulo:string;
+  filtroAplicado:boolean;
 
   pageEvent: PageEvent;
   resultsLength: number = 0;
   currentPage: number = 0;
   pageSize: number = 9;
-  dataSourceInsumos: MatTableDataSource<any>;
+  dataSourceArticulos: MatTableDataSource<any>;
+
+  displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
+
+  editable:boolean;
+  puedeEditarElementos:boolean;
+
+  verBoton:any;
+  isLoading:boolean;
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'CAN':'cancel'  };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'CAN':'cancelado' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'CAN':'Cancelado' };
   
   ngOnInit() {
     this.mostrarBuscadorInsumos = false;

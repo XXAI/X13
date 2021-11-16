@@ -24,8 +24,8 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['id','formulario','persona','fecha_captura','actions'];
-  dataSource: any = [];
+  displayedColumns: string[] = ['id','folio','descripcion','fecha_movimiento','total_claves','total_insumos','actions'];
+  listadoMovimientos: any = [];
 
   constructor(private sharedService: SharedService, private entradasService: EntradasService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
 
@@ -38,10 +38,10 @@ export class ListaComponent implements OnInit {
         this.mediaSize = response.mqAlias;
     });
     
-    this.loadLlenadoFormularios();
+    this.loadListadoMovimientos();
   }
 
-  loadLlenadoFormularios(event?){
+  loadListadoMovimientos(event?){
     this.isLoading = true;
     let params:any;
     if(!event){
@@ -58,7 +58,7 @@ export class ListaComponent implements OnInit {
     }
     
     params.query = this.searchQuery;
-    this.dataSource = [];
+    this.listadoMovimientos = [];
     this.resultsLength = 0;
     
     this.entradasService.getListadoEntradas(params).subscribe(
@@ -68,7 +68,7 @@ export class ListaComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
           if(response.data.total > 0){
-            this.dataSource = response.data.data;
+            this.listadoMovimientos = response.data.data;
             this.resultsLength = response.data.total;
           }
         }
@@ -90,7 +90,7 @@ export class ListaComponent implements OnInit {
     this.selectedItemIndex = -1;
     this.paginator.pageIndex = 0;
     this.paginator.pageSize = this.pageSize;
-    this.loadLlenadoFormularios(null);
+    this.loadListadoMovimientos(null);
   }
 
   cleanSearch(){

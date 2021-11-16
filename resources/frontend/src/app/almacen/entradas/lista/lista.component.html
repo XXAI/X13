@@ -26,15 +26,14 @@
     <section fxFlex fxLayout="row">
         <mat-card fxFlex fxLayout="column" >
             <div fxFlex="none" fxLayout="row">
-                <div fxFlex="none"><mat-slide-toggle [(ngModel)]="mostrarTarjetas" color="primary"><mat-icon>table_view</mat-icon></mat-slide-toggle></div>
                 <div fxFlex></div>
                 <div fxFlex="none">
                     <!--button mat-raised-button color="info"   ><mat-icon>add_circle</mat-icon> Nuevo Pedido</button-->
                     <button mat-raised-button color="info" [routerLink]="'/almacen/entradas/nueva'" ><mat-icon>add_circle</mat-icon> Nueva Entrada</button>
                 </div>
             </div>
-            <div fxFlex style="overflow: auto;" *ngIf="!mostrarTarjetas">
-                <table #dataTable mat-table [dataSource]="listadoPedidos" class="data-table pedidos-table" matSort>
+            <div fxFlex style="overflow: auto;">
+                <table #dataTable mat-table [dataSource]="listadoMovimientos" class="data-table pedidos-table" matSort>
                     <ng-container matColumnDef="id">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Estatus </th>
                         <td mat-cell *matCellDef="let row" class="{{row.estatus_clave}}-color" style="text-align: center;"> <mat-icon matTooltip="{{row.estatus_label}}">{{row.estatus_icono}}</mat-icon> </td>
@@ -50,9 +49,9 @@
                         <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.descripcion}} </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="mes_expiracion" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1"> Mes / Expiración </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;"> {{row.mes}} {{row.anio}} <br> {{(row.estatus_clave == 'expirado')?'Expiró hace ':'Expira en'}} {{row.expiracion | number:'1.0-0'}} dias </td>
+                    <ng-container matColumnDef="fecha_movimiento" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1"> Fecha </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;"> {{row.fecha_movimiento}}</td>
                     </ng-container>
 
                     <ng-container matColumnDef="total_claves" >
@@ -65,15 +64,10 @@
                         <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_articulos | number:'1.0-0'}} </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="total_monto" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Total Monto </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;">$ {{row.total_monto | number:'1.2-2'}} </td>
-                    </ng-container>
-
                     <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <th mat-header-cell *matHeaderCellDef width="1">Acciones</th>
                         <td mat-cell *matCellDef="let row; let i = index" width="1">
-                            <button mat-button [routerLink]="'/pedidos/pedidos-ordinarios/editar/'+row.id"><mat-icon>edit</mat-icon></button>
+                            <button mat-button [routerLink]="'/almacen/entradas/editar/'+row.id"><mat-icon>edit</mat-icon></button>
                         </td>
                     </ng-container>
 
@@ -86,45 +80,12 @@
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                     <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
 
-                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoPedidos!=null && listadoPedidos.length==0)}"></tr>
+                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoMovimientos!=null && listadoMovimientos.length==0)}"></tr>
                 </table>
             </div>
 
-            <div fxFlex fxLayout="row raw" style="overflow: auto;" *ngIf="mostrarTarjetas">
-               <div *ngFor="let pedido of listadoPedidos" fxFlex="25" style="padding:3px;">
-                    <mat-card class="grupo" fxLayout="column">
-                        <div fxFlex="none" fxLayout="row">
-                            <span class="folio-label" fxFlex="none">Folio:</span><span class="folio-value" fxFlex>{{pedido.folio}}</span>
-                        </div>
-                        <div fxFlex class="grupo-body">
-                            {{pedido.descripcion}}
-                        </div>
-                        <div fxFlex="none" class="grupo-action" fxLayout="row">
-                            <mat-chip-list aria-label="Group Users" fxFlex style="padding-top: 5px;">
-                                <mat-chip [selected]="true"><mat-icon>list_alt</mat-icon> {{pedido.total_claves | number:'1.0-0'}}</mat-chip>
-                            </mat-chip-list>
-                            <div fxFlex style="padding-top: 5px;">
-                                <mat-chip [selected]="true"><mat-icon>monetization_on</mat-icon> {{pedido.total_monto | number:'1.0-0'}}</mat-chip>
-                            </div>
-                            <!--div fxFlex="none">
-                                <button mat-icon-button [matMenuTriggerFor]="appMenu">
-                                    <mat-icon>more_vert</mat-icon>
-                                </button>
-
-                                <mat-menu #appMenu="matMenu">
-                                    <button mat-menu-item><mat-icon color="accent">add_circle</mat-icon> Asignar Usuarios</button>
-                                    <button mat-menu-item><mat-icon color="primary">edit</mat-icon> Editar</button>
-                                    <mat-divider></mat-divider>
-                                    <button mat-menu-item><mat-icon color="warn">delete</mat-icon> Eliminar</button>
-                                </mat-menu>
-                            </div-->
-                        </div>
-                    </mat-card>
-               </div>
-            </div>
-
             <div fxFlex="none">
-                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoPedidos($event)"></mat-paginator>
+                <mat-paginator #paginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons (page)="pageEvent = loadListadoMovimientos($event)"></mat-paginator>
             </div>
         </mat-card>
     </section>

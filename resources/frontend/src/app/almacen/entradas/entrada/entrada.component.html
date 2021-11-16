@@ -1,177 +1,221 @@
-<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
-    <section fxFlex="none" fxLayout="row">
-        <div fxFlex="none">
-            <button mat-raised-button color="primary"><mat-icon>save_alt</mat-icon> Finalizar</button>
-        </div>
-        <div fxFlex></div>
-        <div fxFlex="none">
-            <button [routerLink]="'/almacen/entradas'" mat-button>Cancelar</button>
-            &nbsp;
-            <button mat-raised-button color="primary" (click)="guardarMovimiento()"><mat-icon>save</mat-icon> Guardar</button>
-        </div>
-    </section>
-    <section fxFlex fxLayout="row" fxLayoutGap="10px">
-        <section fxFlex="30" fxLayout="row">
-            <mat-card fxFlex="100" fxLayout="column" *ngIf="!mostrarBuscadorInsumos">
-                <div fxFlex="none" fxLayout="row raw" [formGroup]="formEntrada">
-                    <mat-form-field fxFlex="100">
-                        <mat-label>Fecha Entrada (aaaa-mm-dd)</mat-label>
-                        <input matInput mascaraFecha formControlName="fecha_movimiento" required>
-                        <mat-hint>Ejemplo: 1985-08-15</mat-hint>
-                        <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
-                        <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('isValidDate')">La fecha no es valida</mat-error>
-                    </mat-form-field>
-                    <mat-form-field fxFlex="100">
-                        <mat-label>Folio</mat-label>
-                        <input matInput formControlName="folio">
-                        <mat-hint>En caso de ser necesario</mat-hint>
-                    </mat-form-field>
-                    <mat-form-field fxFlex="100">
-                        <mat-label>Descripcion</mat-label>
-                        <input matInput formControlName="descripcion" required>
-                        <mat-error *ngIf="formEntrada.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
-                    </mat-form-field>
-                    <mat-form-field fxFlex="100">
-                        <mat-label>Persona que Entrega</mat-label>
-                        <input matInput formControlName="actor" required>
-                        <mat-error *ngIf="formEntrada.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
-                    </mat-form-field>
-                    <mat-form-field fxFlex="100">
-                        <mat-label>Programa</mat-label>
-                        <mat-select formControlName="programa_id">
-                            <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
-                            <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
-                                {{item.descripcion}}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    <mat-form-field  fxFlex="100">
-                        <mat-label>Observaciones</mat-label>
-                        <textarea matInput formControlName="observaciones" rows="2"></textarea>
-                    </mat-form-field>
-                </div>
-                <div fxFlex></div>
-                <div fxFlex="none" fxLayout="row">
-                    <div fxFlex></div>
-                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = true" [disabled]="false && !formEntrada.valid"><mat-icon>chevron_right</mat-icon> Insumos</button>
-                </div>
-            </mat-card>
-            <mat-card fxFlex="100" fxLayout="column" *ngIf="mostrarBuscadorInsumos">
-                <div fxFlex fxLayout="column">
-                    <section fxFlex="none">
-                        <div fxLayout="column">
-                            <div fxFlex fxLayout="row wrap">
-                                <mat-form-field fxFill appearance="outline">
-                                    <mat-label>Buscar</mat-label>
-                                    <input matInput [(ngModel)]="insumoQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Buscar">
-                                    <button matSuffix *ngIf="insumoQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
-                                        <mat-icon>close</mat-icon>
-                                    </button>
-                                    <mat-hint>
-                                        <mat-radio-group [(ngModel)]="busquedaTipoInsumo" aria-label="Select an option">
-                                            <mat-radio-button color="primary" value="*">Todos</mat-radio-button>
-                                            <mat-radio-button value="MED">Meds</mat-radio-button>
-                                            <mat-radio-button value="MTC">Mat Curación</mat-radio-button>
-                                        </mat-radio-group>
-                                    </mat-hint>
-                                </mat-form-field>
-                            </div>
-                            <button fxFlex mat-raised-button color="accent" (click)="applySearch()" [disabled]="isLoadingInsumos">
-                                <mat-icon>search</mat-icon> Buscar
-                            </button>
+<mat-drawer-container class="example-container" style="height: 100%; overflow: auto; flex: 1 1 0%;">
+    <mat-drawer #articulosDrawer [mode]="'side'" style="min-width: 390px;">
+        <mat-card fxFlex="100" fxLayout="column">
+            <div class="data-loading-shade" *ngIf="isLoadingArticulos"><mat-spinner></mat-spinner></div>
+            <div fxFlex fxLayout="column">
+                <section fxFlex="none">
+                    <div fxLayout="column">
+                        <div fxFlex fxLayout="row wrap">
+                            <mat-form-field fxFill appearance="outline">
+                                <mat-label>Buscar</mat-label>
+                                <input #busquedaInsumoQuery matInput [(ngModel)]="articuloQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="buscarArticulos()" placeholder="Buscar">
+                                <button matSuffix *ngIf="articuloQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            </mat-form-field>
                         </div>
-                    </section>
-                    <mat-divider [inset]="true"></mat-divider>
-                    <section fxFlex style="overflow: hidden;">
-                        <cdk-virtual-scroll-viewport itemSize="289" style="overflow: auto; height: 100%;">
-                            <div *cdkVirtualFor="let insumo of listadoInsumos;">
-                                <div class="lista-insumos-item" [ngClass]="{'selected': insumo.clave==claveInsumoSeleccionado}">
-                                    <div class="lista-insumos-item-etiqueta" [ngClass]="{'medicamento-bg-color': insumo.tipo_insumo=='MED','mat-curacion-bg-color': insumo.tipo_insumo=='MTC'}">
-                                        <div class="lista-insumos-item-etiqueta-icono"><img src="{{(insumo.tipo_insumo=='MED')?iconoMedicamento:iconoMatCuracion}}" alt="Icon"></div>
-                                        <div class="lista-insumos-item-etiqueta-texto">{{insumo.clave}}</div>
+                        <button fxFlex mat-raised-button color="accent" (click)="buscarArticulos()" [disabled]="isLoadingArticulos">
+                            <mat-icon>search</mat-icon> Buscar {{(tipoDeElementoPedido)?tipoDeElementoPedido.descripcion:''}}
+                        </button>
+                    </div>
+                </section>
+                <mat-divider [inset]="true"></mat-divider>
+                <section fxFlex style="overflow: hidden;">
+                    <cdk-virtual-scroll-viewport itemSize="222" style="overflow: auto; height: 100%;">
+                        <div *cdkVirtualFor="let articulo of listadoArticulos;">
+                            <div class="lista-articulos-item" [ngClass]="{'selected': articulo.id==idArticuloSeleccionado}">
+                                <div class="lista-articulos-item-etiqueta articulo-bg-color">
+                                    <div class="lista-articulos-item-etiqueta-icono">
+                                        <span style="font-weight: bold;">Partida</span><br>
+                                        <span>{{articulo.partida_clave}}</span>
                                     </div>
-                                    <div class="lista-insumos-item-contenido">
-                                        <div class="lista-insumos-item-cabecera">
-                                            <div class="lista-insumos-item-cabecera-titulo">{{insumo.nombre_generico}}</div>
-                                            <div class="lista-insumos-item-cabecera-subtitulo">{{insumo.info}}</div>
-                                        </div>
-                                        <div class="lista-insumos-item-texto">
-                                            {{insumo.descripcion}}
-                                        </div>
-                                    </div>
-                                    <div class="lista-insumo-item-acciones" fxLayout="row">
-                                        <div fxFlex style="padding: 8px 0px;">
-                                            Stock: 0
-                                        </div>
-                                        <button fxFlex="none" mat-flat-button (click)="agregarInsumo(insumo)">
-                                            <mat-icon>{{(controlInsumosAgregados[insumo.id])?'subject':'playlist_add'}}</mat-icon>
-                                        </button>
+                                    <div class="lista-articulos-item-etiqueta-texto">
+                                        {{articulo.familia}}
                                     </div>
                                 </div>
-                                <mat-divider [inset]="true"></mat-divider>
+                                <div class="lista-articulos-item-contenido">
+                                    <div class="lista-articulos-item-cabecera">
+                                        <div class="lista-articulos-item-cabecera-titulo">Clave: {{(tipoDeElementoPedido.origen_articulo == 2)?articulo.clave_local:articulo.clave_cubs}}</div>
+                                        <div class="lista-articulos-item-cabecera-subtitulo">{{articulo.descripcion}}</div>
+                                    </div>
+                                </div>
+                                <div class="lista-articulo-item-acciones" fxLayout="row">
+                                    <div fxFlex style="padding: 8px 0px;">
+                                        Existencias: 0
+                                    </div>
+                                    <button fxFlex="none" mat-flat-button (click)="agregarArticulo(articulo)">
+                                        <mat-icon>{{(controlArticulosAgregados[articulo.id])?'edit':'add'}}</mat-icon>
+                                    </button>
+                                </div>
                             </div>
-                        </cdk-virtual-scroll-viewport>
-                    </section>
-                </div>
-                <mat-divider [inset]="true"></mat-divider>
-                <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
-                    <button fxFlex="none" mat-stroked-button (click)="mostrarBuscadorInsumos = false"><mat-icon>chevron_left</mat-icon> Datos Entrada</button>
-                    <div fxFlex></div>
-                    <div fxFlex="none">
-                        <mat-hint>Resultados:<br> {{listadoInsumos.length | number}}</mat-hint>
-                    </div>
-                </div>
-            </mat-card>
-        </section>
-        
-        <mat-card fxFlex fxLayout="column" fxLayoutGap="5px">
-            <div fxFlex="none" fxLayout="row">
-                <div fxFlex class="small-search-input">
-                    <mat-form-field appearance="outline">
-                        <input matInput [(ngModel)]="filtroInsumos" (keyup.enter)="aplicarFiltroInsumos()" placeholder="Filtrar">
-                    </mat-form-field>
-                </div>
-                <div fxFlex="none">
-                    <mat-button-toggle-group [(ngModel)]="filtroTipoInsumos" appearance="legacy" aria-label="Filtro Tipo Insumo" class="filtro-tipo-insumo" (change)="aplicarFiltroInsumos()">
-                        <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
-                        <mat-button-toggle class="medicamento-color" value="MED"><img class="icono-tipo-insumo" src="{{iconoMedicamento}}" alt="Icon"> MED: {{totales.medicamentos | number}}</mat-button-toggle>
-                        <mat-button-toggle class="mat-curacion-color" value="MTC"><img class="icono-tipo-insumo" src="{{iconoMatCuracion}}" alt="Icon"> MTC: {{totales.mat_curacion | number}}</mat-button-toggle>
-                    </mat-button-toggle-group>
-                </div>
+                            <mat-divider [inset]="true"></mat-divider>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
+                </section>
             </div>
             <mat-divider [inset]="true"></mat-divider>
-            <div fxFlex style="overflow: auto; background-color: whitesmoke;">
-                <mat-grid-list cols="3" rowHeight="176">
-                    <mat-grid-tile class="insumo-lotes-tile" *ngFor="let insumo of filtroInsumosMovimiento; index as i;" [ngClass]="{'medicamento-bg-color':insumo.tipo_insumo=='MED','mat-curacion-bg-color':insumo.tipo_insumo=='MTC'}">
-                        <div fxFill fxLayout="column">
-                            <div fxFlex="none" style="padding:8px; color:whitesmoke; text-align: center;">
-                                {{insumo.clave}}
-                            </div>
-                            <div fxFlex style="margin: 0px 8px ; background-color:whitesmoke;"><p>{{insumo.nombre_generico}}</p></div>
-                            <div fxFlex="none" fxLayout="row" style="padding: 5px;">
-                                <div fxFlex="none">
-                                    <button mat-raised-button (click)="eliminarInsumo(i)" color="warn" style="padding: 0px 8px; min-width: 0px;"><mat-icon>delete</mat-icon></button>
-                                </div>
-                                <div fxFlex="none" style="text-align: center; color:whitesmoke; padding:8px;">L: {{ insumo.lotes.length | number }}</div>
-                                <div fxFlex style="text-align: center; color:whitesmoke; padding:8px;">P: {{ insumo.total_piezas | number }}</div>
-                                <div fxFlex="none">
-                                    <button mat-raised-button (click)="agregarLoteInsumo(insumo)" style="padding: 0px 8px; min-width: 0px;"><mat-icon>subject</mat-icon></button>
-                                </div>
-                            </div>
-                        </div>
-                        <!--mat-grid-list cols="2" rowHeight="1:0.5" style="width: 100%; color:whitesmoke;">
-                            <mat-grid-tile [colspan]="2">{{insumo.nombre}}</mat-grid-tile>
-                            <mat-grid-tile [colspan]="2">cosas, casas, que cacas?</mat-grid-tile>
-                            <mat-grid-tile>editar</mat-grid-tile>
-                            <mat-grid-tile>eliminar</mat-grid-tile>
-                        </mat-grid-list-->
-                    </mat-grid-tile>
-                </mat-grid-list>
-            </div>
-            <div fxFlex="none">
-                <!-- Puede haber algo -->
-                <mat-paginator #insumosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaInsumos($event)"></mat-paginator>
+            <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
+                <div fxFlex="none">
+                    <button mat-raised-button (click)="cerrarBuscadorArticulos()"><mat-icon>chevron_left</mat-icon> Cerrar</button>
+                </div>
+                <div fxFlex></div>
+                <div fxFlex="none">
+                    <mat-hint>Resultados: {{listadoArticulos.length | number}}</mat-hint>
+                </div>
             </div>
         </mat-card>
-    </section>
-</section>
+    </mat-drawer>
+    <mat-drawer-content>
+        <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+        <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+            <section fxFlex fxLayout="row" fxLayoutGap="10px">
+                <section fxFlex="30" fxLayout="row" *ngIf="!articulosDrawer.opened">
+                    <mat-card fxFlex="100" fxLayout="column">
+                        <div fxFlex fxLayout="column" *ngIf="!mostrarPedidosInternos"> <!-- Panel principal del pedido -->
+                            <div fxFlex="none" fxLayout="row">
+                                <button fxFlex="none" [routerLink]="'/almacen/entradas'" mat-button><mat-icon>backspace</mat-icon></button>
+                                <div fxFlex></div>
+                                <button fxFlex="none" *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" matTooltip="Generar Folio" (click)="generarFolio()" [disabled]="!formPedido.valid"><mat-icon>source</mat-icon></button>
+                                <button fxFlex="none" *ngIf="verBoton['concluir']" mat-raised-button color="primary" matTooltip="Concluir Captura" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>all_inbox</mat-icon></button>
+                                &nbsp;
+                                <button fxFlex="none" *ngIf="verBoton['guardar']" mat-raised-button color="success" matTooltip="Guardar" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon></button>
+                            </div>
+                            <div fxFlex="none" fxLayout="column">
+                                <div fxFlex class="estatus-pedido {{listaEstatusClaves[estatusPedido]}}-color">
+                                    <mat-icon>{{listaEstatusIconos[estatusPedido]}}</mat-icon><br>
+                                    {{(estatusFolio)?estatusFolio:listaEstatusLabels[estatusPedido]}}
+                                </div>
+                            </div>
+                            <div fxFlex="none" fxLayout="row raw" [formGroup]="formEntrada">
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Fecha Entrada (aaaa-mm-dd)</mat-label>
+                                    <input matInput mascaraFecha formControlName="fecha_movimiento" required>
+                                    <mat-hint>Ejemplo: 1985-08-15</mat-hint>
+                                    <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+                                    <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('isValidDate')">La fecha no es valida</mat-error>
+                                </mat-form-field>
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Folio</mat-label>
+                                    <input matInput formControlName="folio">
+                                    <mat-hint>En caso de ser necesario</mat-hint>
+                                </mat-form-field>
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Descripcion</mat-label>
+                                    <input matInput formControlName="descripcion" required>
+                                    <mat-error *ngIf="formEntrada.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
+                                </mat-form-field>
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Persona que Entrega</mat-label>
+                                    <input matInput formControlName="actor" required>
+                                    <mat-error *ngIf="formEntrada.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
+                                </mat-form-field>
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Programa</mat-label>
+                                    <mat-select formControlName="programa_id">
+                                        <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
+                                        <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
+                                            {{item.descripcion}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                <mat-form-field  fxFlex="100">
+                                    <mat-label>Observaciones</mat-label>
+                                    <textarea matInput formControlName="observaciones" rows="2"></textarea>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex></div>
+                            <div fxFlex="none" fxLayout="row" style="padding-top:5px;">
+                                <button *ngIf="verBoton['agregar_articulos']" mat-flat-button color="accent" (click)="abrirBuscadorArticulos()" [disabled]="articulosDrawer.opened">
+                                    <mat-icon>add</mat-icon> Agregar Articulo
+                                </button>
+                            </div>
+                        </div>
+                    </mat-card>
+                </section>
+                <section fxFlex fxLayout="column">
+                    <mat-card fxFlex="100" fxLayout="column">
+                        <div fxFlex="none" fxLayout="row">
+                            <div fxFlex></div>
+                            <div fxFlex="none">
+                                <mat-chip-list aria-label="Pedido Interno">
+                                    <mat-chip color="primary" selected [disableRipple]="true">
+                                        Total: {{ (filtroAplicado && filtroArticulos)?(clavesTotalesFiltro.articulos | number)+'/':'' }}{{clavesTotales.articulos | number}} Claves
+                                    </mat-chip>
+                                </mat-chip-list>
+                            </div>
+                        </div>
+                        <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
+                            <div fxFlex class="small-search-input">
+                                <mat-form-field fxFlex appearance="outline">
+                                    <input matInput [(ngModel)]="filtroArticulos" (keyup.enter)="aplicarFiltroArticulos()" placeholder="Filtrar">
+                                    <button *ngIf="filtroAplicado" mat-icon-button matSuffix (click)="limpiarFiltroArticulos()" [attr.aria-label]="'Limpiar Filtro'" [attr.aria-pressed]="filtroAplicado">
+                                        <mat-icon>clear</mat-icon>
+                                    </button>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="none">
+                                <button mat-flat-button color="info" (click)="aplicarFiltroArticulos()">
+                                    <mat-icon>filter_alt</mat-icon> Filtrar
+                                </button>
+                            </div>
+                        </div>
+                        <mat-divider [inset]="true"></mat-divider>
+                        <div fxFlex style="overflow: auto;">
+                            <table #dataTable mat-table [dataSource]="filtroArticulosMovimiento" class="data-table" matSort>
+                                
+                                <ng-container matColumnDef="clave">
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
+                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                                        {{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{(tipoDeElementoPedido.origen_articulo == 2)?row.clave_local:row.clave_cubs}}
+                                    </td>
+                                </ng-container>
+                                
+                                <ng-container matColumnDef="nombre" >
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Nombre </th>
+                                    <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre}} </td>
+                                </ng-container>
+                                
+                                <ng-container matColumnDef="cantidad" >
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="white-space: nowrap;"> Cantidad </th>
+                                    <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.cantidad | number:'1.0-0'}} </td>
+                                </ng-container>
+            
+                                <ng-container matColumnDef="monto" >
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Monto </th>
+                                    <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;">$ {{row.monto | number:'1.2-2'}} </td>
+                                </ng-container>
+            
+                                <ng-container matColumnDef="actions">
+                                    <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
+                                    <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
+                                        <button *ngIf="puedeEditarElementos" mat-icon-button (click)="agregarArticulo(row)"><mat-icon>edit</mat-icon></button>
+                                        <button *ngIf="puedeEditarElementos" mat-icon-button (click)="quitarArticulo(row)" color="warn"><mat-icon>delete</mat-icon></button>
+                                    </td>
+                                </ng-container>
+            
+                                <ng-container matColumnDef="noResultsFound">
+                                    <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length">
+                                        No se encontraron articulos 
+                                    </td>
+                                </ng-container>
+                                
+                                <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                                <tr mat-row [ngClass]="{'selected-item': row.id==idArticuloSeleccionado }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+            
+                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroArticulosPedido!=null && filtroArticulosPedido.length==0)}"></tr>
+                            </table>
+                        </div>
+                        <div fxFlex="none" fxLayout="row">
+                            <div fxFlex="none" style="padding-top: 10px;">
+                            </div>
+                            <!-- Puede haber algo -->
+                            <div fxFlex>
+                                <mat-paginator #articulosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaArticulos($event)"></mat-paginator>
+                            </div>
+                        </div>
+                    </mat-card>
+                </section>
+            </section>
+        </section>
+    </mat-drawer-content>
+</mat-drawer-container>
