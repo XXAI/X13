@@ -35,6 +35,9 @@ Route::group(['middleware'=>'auth'],function($router){
 
     Route::apiResource('catalogos/grupos',    'API\Catalogos\GruposController');
 
+    /* Busqueda de Bienes y servicios */
+    Route::get('buscar-articulos', 'API\Catalogos\BienesServiciosController@index');
+
     Route::apiResource('permission',    'API\Admin\PermissionController');
     Route::apiResource('role',          'API\Admin\RoleController');
     Route::apiResource('profile',       'API\ProfileController')->only([ 'show', 'update']);

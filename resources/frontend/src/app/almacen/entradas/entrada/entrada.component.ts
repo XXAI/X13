@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-//import { AlmacenService } from '../../almacen.service';
+import { AlmacenService } from '../../almacen.service';
 import { EntradasService } from '../entradas.service';
 import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -23,7 +23,7 @@ export class EntradaComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder, 
-    //private almacenService: AlmacenService, 
+    private almacenService: AlmacenService, 
     private entradasService: EntradasService, 
     private sharedService: SharedService, 
     private dialog: MatDialog, 
@@ -75,6 +75,7 @@ export class EntradaComponent implements OnInit {
   ngOnInit() {
     this.listadoArticulos = [];
     this.filtroArticulosMovimiento = [];
+    this.controlArticulosAgregados = {};
     this.catalogos = {'programas':[]};
 
     this.formMovimiento = this.formBuilder.group({
@@ -127,17 +128,75 @@ export class EntradaComponent implements OnInit {
     }*/
   }
 
-  generarFolio(){}
-  concluirMovimiento(){}
-  guardarMovimiento(){}
-  agregarArticulo(articulo){}
-  cerrarBuscadorArticulos(){}
-  cargarPaginaArticulos(event?){return event;}
-  quitarArticulo(articulo){}
-  buscarArticulos(){}
-  aplicarFiltroArticulos(){}
-  limpiarFiltroArticulos(){}
-  abrirBuscadorArticulos(){}
-  cleanSearch(){}
+  abrirBuscadorArticulos(){
+    this.articuloQuery = '';
+    this.articulosDrawer.open().finally(() => this.busquedaArticuloQuery.focus() );
+  }
 
+  cerrarBuscadorArticulos(){
+    this.articulosDrawer.close();
+    this.cleanSearch();
+    this.listadoArticulos = [];
+    this.idArticuloSeleccionado = 0;
+  }
+
+  cleanSearch(){
+    this.articuloQuery = '';
+  }
+
+  buscarArticulos(){ 
+    this.listadoArticulos = [];
+    this.isLoadingArticulos = true;
+
+    let params = {
+      query: this.articuloQuery,
+    }
+
+    this.almacenService.buscarArticulosCatalogo(params).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          //this.listadoArticulos = response.data;
+          let articulos_temp = [];
+          for(let i in response.data){
+            let articulo:any = {
+              id: response.data[i].id,
+              clave_cubs: response.data[i].clave_cubs,
+              clave_local: response.data[i].clave_local,
+              nombre: response.data[i].articulo,
+              descripcion: response.data[i].especificaciones,
+              descontinuado: (response.data[i].descontinuado)?true:false,
+              partida_clave: response.data[i].clave_partida_especifica,
+              partida_descripcion: response.data[i].partida_especifica,
+              familia: response.data[i].familia,
+              indispensable: (response.data[i].es_indispensable)?true:false,
+              en_catalogo: (response.data[i].en_catalogo_unidad)?true:false,
+            };
+            articulos_temp.push(articulo);
+          }
+          this.listadoArticulos = articulos_temp;
+        }
+        this.isLoadingArticulos = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingArticulos = false;
+      }
+    );
+  }
+
+  generarFolio(){ console.log('generarFolio'); }
+  concluirMovimiento(){ console.log('concluirMovimiento'); }
+  guardarMovimiento(){ console.log('guardarMovimiento'); }
+  agregarArticulo(articulo){ console.log('agregarArticulo'); }
+  cargarPaginaArticulos(event?){ console.log('cargarPaginaArticulos'); return event;}
+  quitarArticulo(articulo){ console.log('quitarArticulo'); }
+  aplicarFiltroArticulos(){ console.log('aplicarFiltroArticulos'); }
+  limpiarFiltroArticulos(){ console.log('limpiarFiltroArticulos'); }
 }

@@ -6,9 +6,10 @@ import { ListaComponent } from './lista/lista.component';
 import { EntradaComponent } from './entrada/entrada.component';
 import { InsumoLoteDialogoComponent } from './insumo-lote-dialogo/insumo-lote-dialogo.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { DialogoLotesArticuloComponent } from './dialogo-lotes-articulo/dialogo-lotes-articulo.component';
 
 @NgModule({
-  declarations: [ListaComponent, EntradaComponent, InsumoLoteDialogoComponent],
+  declarations: [ListaComponent, EntradaComponent, InsumoLoteDialogoComponent, DialogoLotesArticuloComponent],
   imports: [
     CommonModule,
     SharedModule,

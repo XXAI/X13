@@ -37,7 +37,7 @@ export class EntradasService {
     ));
   }
 
-  buscarInsumos(payload):Observable<any> {
+  buscarArticulos(payload):Observable<any> {
     return this.http.get<any>(this.url_insumos,{params:payload}).pipe(
       map( response => {
         return response;
