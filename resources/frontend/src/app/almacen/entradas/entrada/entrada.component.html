@@ -15,7 +15,7 @@
                             </mat-form-field>
                         </div>
                         <button fxFlex mat-raised-button color="accent" (click)="buscarArticulos()" [disabled]="isLoadingArticulos">
-                            <mat-icon>search</mat-icon> Buscar {{(tipoDeElementoPedido)?tipoDeElementoPedido.descripcion:''}}
+                            <mat-icon>search</mat-icon> Buscar
                         </button>
                     </div>
                 </section>
@@ -35,7 +35,7 @@
                                 </div>
                                 <div class="lista-articulos-item-contenido">
                                     <div class="lista-articulos-item-cabecera">
-                                        <div class="lista-articulos-item-cabecera-titulo">Clave: {{(tipoDeElementoPedido.origen_articulo == 2)?articulo.clave_local:articulo.clave_cubs}}</div>
+                                        <div class="lista-articulos-item-cabecera-titulo">Clave: {{(articulo.clave_local)?articulo.clave_local:articulo.clave_cubs}}</div>
                                         <div class="lista-articulos-item-cabecera-subtitulo">{{articulo.descripcion}}</div>
                                     </div>
                                 </div>
@@ -71,28 +71,28 @@
             <section fxFlex fxLayout="row" fxLayoutGap="10px">
                 <section fxFlex="30" fxLayout="row" *ngIf="!articulosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
-                        <div fxFlex fxLayout="column" *ngIf="!mostrarPedidosInternos"> <!-- Panel principal del pedido -->
+                        <div fxFlex fxLayout="column"> <!-- Panel principal del pedido -->
                             <div fxFlex="none" fxLayout="row">
                                 <button fxFlex="none" [routerLink]="'/almacen/entradas'" mat-button><mat-icon>backspace</mat-icon></button>
                                 <div fxFlex></div>
-                                <button fxFlex="none" *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" matTooltip="Generar Folio" (click)="generarFolio()" [disabled]="!formPedido.valid"><mat-icon>source</mat-icon></button>
-                                <button fxFlex="none" *ngIf="verBoton['concluir']" mat-raised-button color="primary" matTooltip="Concluir Captura" (click)="concluirPedido()" [disabled]="!formPedido.valid"><mat-icon>all_inbox</mat-icon></button>
+                                <button fxFlex="none" *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" matTooltip="Generar Folio" (click)="generarFolio()" [disabled]="!formMovimiento.valid"><mat-icon>source</mat-icon></button>
+                                <button fxFlex="none" *ngIf="verBoton['concluir']" mat-raised-button color="primary" matTooltip="Concluir Captura" (click)="concluirMovimiento()" [disabled]="!formMovimiento.valid"><mat-icon>all_inbox</mat-icon></button>
                                 &nbsp;
-                                <button fxFlex="none" *ngIf="verBoton['guardar']" mat-raised-button color="success" matTooltip="Guardar" (click)="guardarPedido()" [disabled]="!formPedido.valid"><mat-icon>save</mat-icon></button>
+                                <button fxFlex="none" *ngIf="verBoton['guardar']" mat-raised-button color="success" matTooltip="Guardar" (click)="guardarMovimiento()" [disabled]="!formMovimiento.valid"><mat-icon>save</mat-icon></button>
                             </div>
                             <div fxFlex="none" fxLayout="column">
-                                <div fxFlex class="estatus-pedido {{listaEstatusClaves[estatusPedido]}}-color">
-                                    <mat-icon>{{listaEstatusIconos[estatusPedido]}}</mat-icon><br>
-                                    {{(estatusFolio)?estatusFolio:listaEstatusLabels[estatusPedido]}}
+                                <div fxFlex class="estatus-pedido {{listaEstatusClaves[estatusMovimiento]}}-color">
+                                    <mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon><br>
+                                    {{listaEstatusLabels[estatusMovimiento]}}
                                 </div>
                             </div>
-                            <div fxFlex="none" fxLayout="row raw" [formGroup]="formEntrada">
+                            <div fxFlex="none" fxLayout="row raw" [formGroup]="formMovimiento">
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Fecha Entrada (aaaa-mm-dd)</mat-label>
                                     <input matInput mascaraFecha formControlName="fecha_movimiento" required>
                                     <mat-hint>Ejemplo: 1985-08-15</mat-hint>
-                                    <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
-                                    <mat-error *ngIf="formEntrada.get('fecha_movimiento').hasError('isValidDate')">La fecha no es valida</mat-error>
+                                    <mat-error *ngIf="formMovimiento.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+                                    <mat-error *ngIf="formMovimiento.get('fecha_movimiento').hasError('isValidDate')">La fecha no es valida</mat-error>
                                 </mat-form-field>
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Folio</mat-label>
@@ -102,12 +102,12 @@
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Descripcion</mat-label>
                                     <input matInput formControlName="descripcion" required>
-                                    <mat-error *ngIf="formEntrada.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
+                                    <mat-error *ngIf="formMovimiento.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
                                 </mat-form-field>
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Persona que Entrega</mat-label>
                                     <input matInput formControlName="actor" required>
-                                    <mat-error *ngIf="formEntrada.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
+                                    <mat-error *ngIf="formMovimiento.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
                                 </mat-form-field>
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Programa</mat-label>
@@ -166,7 +166,7 @@
                                 <ng-container matColumnDef="clave">
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
                                     <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
-                                        {{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{(tipoDeElementoPedido.origen_articulo == 2)?row.clave_local:row.clave_cubs}}
+                                        {{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{(row.clave_cubs)?row.clave_cubs:row.clave_local}}
                                     </td>
                                 </ng-container>
                                 
@@ -202,7 +202,7 @@
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                                 <tr mat-row [ngClass]="{'selected-item': row.id==idArticuloSeleccionado }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
-                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroArticulosPedido!=null && filtroArticulosPedido.length==0)}"></tr>
+                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroArticulosMovimiento!=null && filtroArticulosMovimiento.length==0)}"></tr>
                             </table>
                         </div>
                         <div fxFlex="none" fxLayout="row">
