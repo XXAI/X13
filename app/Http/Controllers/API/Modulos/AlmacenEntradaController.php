@@ -60,29 +60,7 @@ class AlmacenEntradaController extends Controller
     public function show($id)
     {
         try{
-            $llenado = RegistroLlenadoFormulario::with(['persona'=>function($persona){
-                return $persona->select('personas.*','catalogo_estados.descripcion as estado',DB::raw('IF(personas.municipio_id,catalogo_municipios.descripcion,personas.municipio) as municipio'),DB::raw('IF(personas.localidad_id,catalogo_localidades.descripcion,personas.localidad) as localidad'))
-                                ->leftjoin('catalogo_estados','catalogo_estados.id','=','personas.estado_id')
-                                ->leftjoin('catalogo_municipios','catalogo_municipios.id','=','personas.municipio_id')
-                                ->leftjoin('catalogo_localidades','catalogo_localidades.id','=','personas.localidad_id');
-            },'registroLlenadoRespuestas'=>function($registro){
-                return $registro->select('registro_llenado_respuestas.*','catalogo_tipos_preguntas.llave as tipo_pregunta','catalogo_tipos_valores.llave as tipo_valor','preguntas.descripcion as pregunta','respuestas.descripcion as respuesta')
-                                    ->leftjoin('preguntas','preguntas.id','=','registro_llenado_respuestas.pregunta_id')
-                                    ->leftjoin('catalogo_tipos_preguntas','catalogo_tipos_preguntas.id','=','preguntas.tipo_pregunta_id')
-                                    ->leftjoin('catalogo_tipos_valores','catalogo_tipos_valores.id','=','preguntas.tipo_valor_id')
-                                    ->leftjoin('respuestas','respuestas.id','=','registro_llenado_respuestas.respuesta_id');
-            }])->find($id); //,'registroLlenadoRespuestas.pregunta','registroLlenadoRespuestas.respuesta'
-
-            $return_data = [
-                'id'=> $llenado->id,
-                'fecha_finalizado'=> $llenado->fecha_finalizado,
-                'finalizado'=> $llenado->finalizado,
-                'datos_persona'=> $llenado->persona,
-                'datos_preguntas'=>[]
-            ];
-
-            $return_data['datos_preguntas'] = array_values($datos_preguntas);
-
+            $return_data = [];
             return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -90,13 +68,12 @@ class AlmacenEntradaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Create the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function store(Request $request)
     {
         //
     }

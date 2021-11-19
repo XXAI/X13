@@ -35,12 +35,17 @@
                                 </div>
                                 <div class="lista-articulos-item-contenido">
                                     <div class="lista-articulos-item-cabecera">
-                                        <div class="lista-articulos-item-cabecera-titulo">Clave: {{(articulo.clave_local)?articulo.clave_local:articulo.clave_cubs}}</div>
+                                        <div class="lista-articulos-item-cabecera-titulo">Clave: {{articulo.clave}}</div>
                                         <div class="lista-articulos-item-cabecera-subtitulo">{{articulo.descripcion}}</div>
                                     </div>
                                 </div>
                                 <div class="lista-articulo-item-acciones" fxLayout="row">
-                                    <div fxFlex style="padding: 8px 0px;">
+                                    <div fxFlex="none" style="padding: 6px 0px; width: 72px;">
+                                        <mat-icon matTooltip="En Catalogo" *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
+                                        <mat-icon matTooltip="Indispensable" *ngIf="articulo.indispensable" style="color:green;">notification_important</mat-icon>
+                                        <mat-icon matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
+                                    </div>
+                                    <div fxFlex style="padding: 8px 0px; text-align: center;">
                                         Existencias: 0
                                     </div>
                                     <button fxFlex="none" mat-flat-button (click)="agregarArticulo(articulo)">
@@ -72,10 +77,9 @@
                 <section fxFlex="30" fxLayout="row" *ngIf="!articulosDrawer.opened">
                     <mat-card fxFlex="100" fxLayout="column">
                         <div fxFlex fxLayout="column"> <!-- Panel principal del pedido -->
-                            <div fxFlex="none" fxLayout="row">
+                            <div fxFlex="none" fxLayout="row" style="padding-bottom:1px;">
                                 <button fxFlex="none" [routerLink]="'/almacen/entradas'" mat-button><mat-icon>backspace</mat-icon></button>
                                 <div fxFlex></div>
-                                <button fxFlex="none" *ngIf="verBoton['generar_folio']" mat-raised-button color="primary" matTooltip="Generar Folio" (click)="generarFolio()" [disabled]="!formMovimiento.valid"><mat-icon>source</mat-icon></button>
                                 <button fxFlex="none" *ngIf="verBoton['concluir']" mat-raised-button color="primary" matTooltip="Concluir Captura" (click)="concluirMovimiento()" [disabled]="!formMovimiento.valid"><mat-icon>all_inbox</mat-icon></button>
                                 &nbsp;
                                 <button fxFlex="none" *ngIf="verBoton['guardar']" mat-raised-button color="success" matTooltip="Guardar" (click)="guardarMovimiento()" [disabled]="!formMovimiento.valid"><mat-icon>save</mat-icon></button>
@@ -106,8 +110,13 @@
                                 </mat-form-field>
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Persona que Entrega</mat-label>
-                                    <input matInput formControlName="actor" required>
-                                    <mat-error *ngIf="formMovimiento.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
+                                    <input matInput formControlName="entrega" required>
+                                    <mat-error *ngIf="formMovimiento.get('entrega').hasError('required')">Este campo es obligatorio</mat-error>
+                                </mat-form-field>
+                                <mat-form-field fxFlex="100">
+                                    <mat-label>Persona que Recibe</mat-label>
+                                    <input matInput formControlName="recibe" required>
+                                    <mat-error *ngIf="formMovimiento.get('recibe').hasError('required')">Este campo es obligatorio</mat-error>
                                 </mat-form-field>
                                 <mat-form-field fxFlex="100">
                                     <mat-label>Programa</mat-label>
@@ -139,7 +148,7 @@
                             <div fxFlex="none">
                                 <mat-chip-list aria-label="Pedido Interno">
                                     <mat-chip color="primary" selected [disableRipple]="true">
-                                        Total: {{ (filtroAplicado && filtroArticulos)?(clavesTotalesFiltro.articulos | number)+'/':'' }}{{clavesTotales.articulos | number}} Claves
+                                        Total: {{ totalClavesRecibidas | number }} Claves [{{ totalArticulosRecibidos | number}} Articulos]
                                     </mat-chip>
                                 </mat-chip-list>
                             </div>
@@ -147,26 +156,23 @@
                         <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
                             <div fxFlex class="small-search-input">
                                 <mat-form-field fxFlex appearance="outline">
-                                    <input matInput [(ngModel)]="filtroArticulos" (keyup.enter)="aplicarFiltroArticulos()" placeholder="Filtrar">
-                                    <button *ngIf="filtroAplicado" mat-icon-button matSuffix (click)="limpiarFiltroArticulos()" [attr.aria-label]="'Limpiar Filtro'" [attr.aria-pressed]="filtroAplicado">
-                                        <mat-icon>clear</mat-icon>
-                                    </button>
+                                    <input matInput [(ngModel)]="filtroArticulos" (keyup)="aplicarFiltroArticulos($event)" placeholder="Filtrar">
                                 </mat-form-field>
                             </div>
                             <div fxFlex="none">
-                                <button mat-flat-button color="info" (click)="aplicarFiltroArticulos()">
-                                    <mat-icon>filter_alt</mat-icon> Filtrar
+                                <button mat-flat-button (click)="limpiarFiltroArticulos()" [disabled]="!filtroAplicado">
+                                    <mat-icon>filter_alt_off</mat-icon>
                                 </button>
                             </div>
                         </div>
                         <mat-divider [inset]="true"></mat-divider>
                         <div fxFlex style="overflow: auto;">
-                            <table #dataTable mat-table [dataSource]="filtroArticulosMovimiento" class="data-table" matSort>
+                            <table mat-table [dataSource]="dataSourceArticulos" class="data-table" matSort>
                                 
                                 <ng-container matColumnDef="clave">
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
                                     <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
-                                        {{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{(row.clave_cubs)?row.clave_cubs:row.clave_local}}
+                                        {{(controlArticulosModificados[row.id])?controlArticulosModificados[row.id]:''}} {{row.clave}}
                                     </td>
                                 </ng-container>
                                 
@@ -174,17 +180,17 @@
                                     <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Nombre </th>
                                     <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre}} </td>
                                 </ng-container>
+
+                                <ng-container matColumnDef="no_lotes" >
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> # Lotes </th>
+                                    <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.lotes.length | number:'1.0-0'}} </td>
+                                </ng-container>
                                 
                                 <ng-container matColumnDef="cantidad" >
-                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="white-space: nowrap;"> Cantidad </th>
-                                    <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.cantidad | number:'1.0-0'}} </td>
+                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Cantidad </th>
+                                    <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_piezas | number:'1.0-0'}} </td>
                                 </ng-container>
-            
-                                <ng-container matColumnDef="monto" >
-                                    <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="white-space: nowrap;"> Monto </th>
-                                    <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;">$ {{row.monto | number:'1.2-2'}} </td>
-                                </ng-container>
-            
+
                                 <ng-container matColumnDef="actions">
                                     <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
                                     <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
@@ -202,15 +208,15 @@
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                                 <tr mat-row [ngClass]="{'selected-item': row.id==idArticuloSeleccionado }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
-                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(filtroArticulosMovimiento!=null && filtroArticulosMovimiento.length==0)}"></tr>
+                                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide': dataSourceArticulos.filteredData.length > 0}"></tr>
                             </table>
                         </div>
                         <div fxFlex="none" fxLayout="row">
                             <div fxFlex="none" style="padding-top: 10px;">
                             </div>
-                            <!-- Puede haber algo -->
                             <div fxFlex>
-                                <mat-paginator #articulosPaginator [pageSize]="pageSize" [pageIndex]="currentPage" [length]="resultsLength" [pageSizeOptions]="[9, 18, 27, 36]" showFirstLastButtons (page)="pageEvent = cargarPaginaArticulos($event)"></mat-paginator>
+                                <!-- (page)="pageEvent = cargarPaginaArticulos($event)" -->
+                                <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
                             </div>
                         </div>
                     </mat-card>

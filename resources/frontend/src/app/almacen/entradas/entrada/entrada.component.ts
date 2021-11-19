@@ -6,9 +6,10 @@ import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatInput } from '@angular/material/input';
 import { MatDrawer } from '@angular/material/sidenav';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
+import { DialogoLotesArticuloComponent } from '../dialogo-lotes-articulo/dialogo-lotes-articulo.component';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 
 @Component({
@@ -18,6 +19,8 @@ import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dial
 })
 export class EntradaComponent implements OnInit {
   @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
+  @ViewChild(MatTable) articulosTable: MatTable<any>;
+
   @ViewChild(MatDrawer) articulosDrawer: MatDrawer;
   @ViewChild(MatInput) busquedaArticuloQuery: MatInput;
 
@@ -46,7 +49,7 @@ export class EntradaComponent implements OnInit {
   listadoArticulosEliminados:any[];
 
   listadoArticulosMovimiento:any[];
-  filtroArticulosMovimiento:any[];
+  //filtroArticulosMovimiento:any[];
   controlArticulosAgregados:any;
   selectedItemIndex:number;
 
@@ -54,13 +57,17 @@ export class EntradaComponent implements OnInit {
   filtroTipoArticulo:string;
   filtroAplicado:boolean;
 
+  totalClavesRecibidas:number;
+  totalArticulosRecibidos:number;
+
   pageEvent: PageEvent;
   resultsLength: number = 0;
   currentPage: number = 0;
-  pageSize: number = 9;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [10, 20, 30, 50];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['clave','nombre','cantidad','actions']; //'monto',
+  displayedColumns: string[] = ['clave','nombre','no_lotes','cantidad','actions']; //'monto',
 
   editable: boolean;
   puedeEditarElementos: boolean;
@@ -74,15 +81,20 @@ export class EntradaComponent implements OnInit {
   
   ngOnInit() {
     this.listadoArticulos = [];
-    this.filtroArticulosMovimiento = [];
+    this.listadoArticulosEliminados = [];
+    //this.filtroArticulosMovimiento = [];
     this.controlArticulosAgregados = {};
+    this.controlArticulosModificados = {};
+    this.totalClavesRecibidas = 0;
+    this.totalArticulosRecibidos = 0;
     this.catalogos = {'programas':[]};
 
     this.formMovimiento = this.formBuilder.group({
       fecha_movimiento: ['',Validators.required],
       folio: [''],
       descripcion: ['',Validators.required],
-      actor: ['',Validators.required],
+      entrega: ['',Validators.required],
+      recibe: ['',Validators.required],
       programa_id: [''],
       observaciones: ['']
     });
@@ -94,38 +106,20 @@ export class EntradaComponent implements OnInit {
       agregar_articulos:true
     };
 
-    this.clavesTotales = {total:0, articulos:0};
-    this.clavesTotalesFiltro = {total:0, articulos:0};
-    this.clavesTotalesMovimiento = {total:0, articulos:0};
+    this.clavesTotales = {articulos:0};
+    this.clavesTotalesFiltro = {articulos:0};
+    this.clavesTotalesMovimiento = {articulos:0};
 
-
-
-    /*this.mostrarBuscadorInsumos = false;
-    this.busquedaTipoInsumo = '*';
-    this.filtroTipoInsumos = '*';
-    this.filtroInsumos = '';
-    this.listadoInsumosMovimiento = [];
-    this.controlInsumosAgregados = {};
-    this.listadoInsumos = [];
-
-    this.formEntrada = this.formBuilder.group({
-      fecha_movimiento:['',[Validators.required,CustomValidator.isValidDate()]],
-      programa_id:[''],
-      folio:[''],
-      descripcion:['',Validators.required],
-      actor:['',Validators.required],
-      observaciones:[''],
+    this.route.paramMap.subscribe(params => {
+      if(params.get('id')){
+        console.log('Editar Entrada');
+        this.cargarPaginaArticulos();
+      }else{
+        this.dataSourceArticulos = new MatTableDataSource<any>([]);
+        this.dataSourceArticulos.paginator = this.articulosPaginator;
+        this.puedeEditarElementos = true;
+      }
     });
-
-    this.cargarPaginaInsumos();
-
-    this.catalogos = {programas:[]};
-
-    this.totales = {
-      insumos: 0,
-      medicamentos: 0,
-      mat_curacion: 0
-    }*/
   }
 
   abrirBuscadorArticulos(){
@@ -163,8 +157,9 @@ export class EntradaComponent implements OnInit {
           for(let i in response.data){
             let articulo:any = {
               id: response.data[i].id,
-              clave_cubs: response.data[i].clave_cubs,
-              clave_local: response.data[i].clave_local,
+              //clave_cubs: response.data[i].clave_cubs,
+              //clave_local: response.data[i].clave_local,
+              clave: (response.data[i].clave_cubs)?response.data[i].clave_cubs:response.data[i].clave_local,
               nombre: response.data[i].articulo,
               descripcion: response.data[i].especificaciones,
               descontinuado: (response.data[i].descontinuado)?true:false,
@@ -191,12 +186,110 @@ export class EntradaComponent implements OnInit {
     );
   }
 
+  agregarArticulo(articulo){ 
+    let configDialog:any = {
+      width: '99%',
+      maxHeight: '90vh',
+      height: '643px',
+      panelClass: 'no-padding-dialog'
+    };
+
+    if(this.controlArticulosAgregados[articulo.id]){
+      let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
+      articulo = this.dataSourceArticulos.data[index];
+    }
+    
+    configDialog.data = {articulo: articulo, editar: true};
+    
+    const dialogRef = this.dialog.open(DialogoLotesArticuloComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        console.log(response);
+        if(response.total_piezas > 0){
+          if(!this.controlArticulosAgregados[response.id]){
+            this.controlArticulosAgregados[response.id] = true;
+            this.controlArticulosModificados[response.id] = '+';
+            this.totalClavesRecibidas++;
+          }
+          if(!this.controlArticulosModificados[response.id]){
+            this.controlArticulosModificados[response.id] = '*';
+            //this.totalClavesRecibidas++;
+          }
+        }else{
+          this.controlArticulosAgregados[response.id] = undefined;
+          this.controlArticulosModificados[response.id] = undefined;
+          this.totalClavesRecibidas--;
+        }
+
+        let index = this.dataSourceArticulos.data.findIndex(x => x.id === response.id);
+
+        if(index >= 0){
+          let articulo = this.dataSourceArticulos.data[index];
+          if(articulo.total_piezas > 0){
+            this.totalArticulosRecibidos -= articulo.total_piezas;
+          }
+          this.dataSourceArticulos.data.splice(index,1);
+        }
+        this.totalArticulosRecibidos += response.total_piezas;
+        
+        this.dataSourceArticulos.data.unshift(response);
+        this.articulosTable.renderRows();
+        this.dataSourceArticulos.paginator = this.articulosPaginator;
+        
+        //this.cargarFiltroArticulos();
+        //this.cargarPaginaArticulos();
+      }else{
+        console.log('Cancelar');
+      }
+    });
+  }
+
+  quitarArticulo(articulo){ 
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Articulo?',dialogMessage:'Esta seguro de eliminar este articulo?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.controlArticulosAgregados[articulo.id] = false;
+        this.totalClavesRecibidas -= 1;
+        this.totalArticulosRecibidos -= articulo.total_piezas;
+        
+        let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
+
+        //Guardar para papelera
+        let articulo_copia = JSON.parse(JSON.stringify(this.dataSourceArticulos.data[index]));
+        this.listadoArticulosEliminados.push(articulo_copia);
+
+        this.dataSourceArticulos.data.splice(index,1);
+        this.articulosTable.renderRows();
+        this.dataSourceArticulos.paginator = this.articulosPaginator;
+      }
+    });
+  }
+
+  aplicarFiltroArticulos(event: Event){ 
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSourceArticulos.filter = filterValue.trim().toLowerCase();
+
+    if(filterValue.trim().toLowerCase() == ''){
+      this.filtroAplicado = false;
+    }else{
+      this.filtroAplicado = true;
+    }
+    
+  }
+  
+  limpiarFiltroArticulos(){ 
+    this.filtroArticulos = '';
+    this.dataSourceArticulos.filter = '';
+    this.filtroAplicado = false;
+  }
+
   generarFolio(){ console.log('generarFolio'); }
   concluirMovimiento(){ console.log('concluirMovimiento'); }
   guardarMovimiento(){ console.log('guardarMovimiento'); }
-  agregarArticulo(articulo){ console.log('agregarArticulo'); }
   cargarPaginaArticulos(event?){ console.log('cargarPaginaArticulos'); return event;}
-  quitarArticulo(articulo){ console.log('quitarArticulo'); }
-  aplicarFiltroArticulos(){ console.log('aplicarFiltroArticulos'); }
-  limpiarFiltroArticulos(){ console.log('limpiarFiltroArticulos'); }
 }
