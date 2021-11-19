@@ -82,7 +82,6 @@ export class EntradaComponent implements OnInit {
   ngOnInit() {
     this.listadoArticulos = [];
     this.listadoArticulosEliminados = [];
-    //this.filtroArticulosMovimiento = [];
     this.controlArticulosAgregados = {};
     this.controlArticulosModificados = {};
     this.totalClavesRecibidas = 0;
@@ -152,7 +151,6 @@ export class EntradaComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          //this.listadoArticulos = response.data;
           let articulos_temp = [];
           for(let i in response.data){
             let articulo:any = {
@@ -236,9 +234,6 @@ export class EntradaComponent implements OnInit {
         this.dataSourceArticulos.data.unshift(response);
         this.articulosTable.renderRows();
         this.dataSourceArticulos.paginator = this.articulosPaginator;
-        
-        //this.cargarFiltroArticulos();
-        //this.cargarPaginaArticulos();
       }else{
         console.log('Cancelar');
       }
@@ -270,6 +265,14 @@ export class EntradaComponent implements OnInit {
     });
   }
 
+  guardarMovimiento(){
+    let formData:any = this.formMovimiento.value;
+    formData.lista_articulos = this.dataSourceArticulos.data;
+
+    console.log('enviar a servidor');
+    console.log(formData);
+  }
+
   aplicarFiltroArticulos(event: Event){ 
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSourceArticulos.filter = filterValue.trim().toLowerCase();
@@ -290,6 +293,5 @@ export class EntradaComponent implements OnInit {
 
   generarFolio(){ console.log('generarFolio'); }
   concluirMovimiento(){ console.log('concluirMovimiento'); }
-  guardarMovimiento(){ console.log('guardarMovimiento'); }
   cargarPaginaArticulos(event?){ console.log('cargarPaginaArticulos'); return event;}
 }
