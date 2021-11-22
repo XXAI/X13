@@ -50,7 +50,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('configuracion/tipos-elementos-pedidos-catalogos', 'API\Configuracion\TiposPedidosController@getCatalogos');
 
     /**
-     *  Modulo de Configuración
+     *  Modulo de Configuración de la Unidad
      */
     Route::apiResource('configuracion-unidad/catalogo-articulos',   'API\ConfiguracionUnidad\CatalogoArticulosController');
     Route::get('configuracion-unidad/catalogo-articulos-catalogos', 'API\ConfiguracionUnidad\CatalogoArticulosController@getCatalogos');
@@ -66,12 +66,13 @@ Route::group(['middleware'=>'auth'],function($router){
     /**
      * Modulos Almacen
      */
-    Route::apiResource('almacen-entradas',          'API\Modulos\AlmacenEntradaController');
-    Route::get('almacen-existencias',          'API\Modulos\AlmacenExistenciasController@index');
-    Route::get('almacen-existencias/movimientos/{id}',          'API\Modulos\AlmacenExistenciasController@movimientos');
-    Route::get('almacen-existencias/catalogos/',       'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');
-    Route::get('partidas-bienes-servicios/',       'API\Modulos\PartidasController@partidas');
-    Route::get('familias-bienes-servicios/',       'API\Modulos\FamiliasController@familias');
+    Route::get('almacen-movimientos-catalogos',         'API\Modulos\AlmacenMovimientosController@obtenerCatalogos');
+    Route::apiResource('almacen-entradas',              'API\Modulos\AlmacenEntradaController');
+    Route::get('almacen-existencias',                   'API\Modulos\AlmacenExistenciasController@index');
+    Route::get('almacen-existencias/movimientos/{id}',  'API\Modulos\AlmacenExistenciasController@movimientos');
+    Route::get('almacen-existencias/catalogos/',        'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');
+    Route::get('partidas-bienes-servicios/',            'API\Modulos\PartidasController@partidas');
+    Route::get('familias-bienes-servicios/',            'API\Modulos\FamiliasController@familias');
 
     /**
      * Modulos Pedidos

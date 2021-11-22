@@ -26,6 +26,15 @@
 table {
   width: 100%;
 }
+
+table th {
+  padding:0 5px;
+  text-align: center;
+}
+
+table td {
+  padding:0 5px;
+}
   
 .mat-form-field {
   font-size: 14px;
@@ -74,7 +83,7 @@ table {
 }
 
 .borrador-color{
-  color:#b6b6b6;
+  color:#6b6767;
 }
 
 .concluido-color{

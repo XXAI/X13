@@ -301,8 +301,12 @@ table td {
     font-weight: bold;
 }
 
+.nuevo-color{
+    color:#8f8787;
+}
+
 .borrador-color{
-    color:#b6b6b6;
+    color:#6b6767;
 }
 
 .concluido-color{

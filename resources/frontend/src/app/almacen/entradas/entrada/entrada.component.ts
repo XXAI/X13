@@ -11,6 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
 import { DialogoLotesArticuloComponent } from '../dialogo-lotes-articulo/dialogo-lotes-articulo.component';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-entrada',
@@ -25,6 +26,7 @@ export class EntradaComponent implements OnInit {
   @ViewChild(MatInput) busquedaArticuloQuery: MatInput;
 
   constructor(
+    private datepipe: DatePipe,
     private formBuilder: FormBuilder, 
     private almacenService: AlmacenService, 
     private entradasService: EntradasService, 
@@ -49,7 +51,6 @@ export class EntradaComponent implements OnInit {
   listadoArticulosEliminados:any[];
 
   listadoArticulosMovimiento:any[];
-  //filtroArticulosMovimiento:any[];
   controlArticulosAgregados:any;
   selectedItemIndex:number;
 
@@ -74,27 +75,40 @@ export class EntradaComponent implements OnInit {
 
   verBoton: any;
   isLoading: boolean;
+  isSaving: boolean;
   estatusMovimiento: string;
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'CON':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'CON':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'CON':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'CON':'description', 'CAN':'cancel'  };
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'CON':'concluido',   'CAN':'cancelado' };
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'CON':'Concluido',   'CAN':'Cancelado' };
+  maxFechaMovimiento: Date;
   
   ngOnInit() {
+    this.isLoading = true;
+
+    this.puedeEditarElementos = false;
     this.listadoArticulos = [];
     this.listadoArticulosEliminados = [];
     this.controlArticulosAgregados = {};
     this.controlArticulosModificados = {};
     this.totalClavesRecibidas = 0;
     this.totalArticulosRecibidos = 0;
-    this.catalogos = {'programas':[]};
 
+    this.catalogos = {
+      'almacenes':[],
+      'programas':[],
+    };
+
+    this.maxFechaMovimiento = new Date();
+    
     this.formMovimiento = this.formBuilder.group({
-      fecha_movimiento: ['',Validators.required],
+      id:[''],
+      fecha_movimiento: [new Date(),Validators.required],
       folio: [''],
       descripcion: ['',Validators.required],
       entrega: ['',Validators.required],
       recibe: ['',Validators.required],
       programa_id: [''],
+      almacen_id: ['',Validators.required],
       observaciones: ['']
     });
 
@@ -109,11 +123,110 @@ export class EntradaComponent implements OnInit {
     this.clavesTotalesFiltro = {articulos:0};
     this.clavesTotalesMovimiento = {articulos:0};
 
+    this.almacenService.obtenerMovimientoCatalogos().subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          if(response.data.almacenes.length == 1){
+            this.formMovimiento.get('almacen_id').patchValue(response.data.almacenes[0].id);
+          }
+          this.catalogos['almacenes'] = response.data.almacenes;
+          this.catalogos['programas'] = response.data.programas;
+        }
+        this.isLoading = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoading = false;
+      }
+    );
+
     this.route.paramMap.subscribe(params => {
       if(params.get('id')){
-        console.log('Editar Entrada');
-        this.cargarPaginaArticulos();
+        this.entradasService.verEntrada(params.get('id')).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            } else {
+              this.formMovimiento.patchValue(response.data);
+
+              if(response.data.estatus == 'ME-BR'){
+                this.estatusMovimiento = 'BOR';
+                this.puedeEditarElementos = true;
+              }else if(response.data.estatus == 'ME-FI'){
+                this.estatusMovimiento = 'CON';
+              }else if(response.data.estatus == 'ME-CA'){
+                this.estatusMovimiento = 'CAN';
+              }
+
+              let articulos_temp = [];
+              let lista_articulos = response.data.lista_articulos_borrador;
+              for(let i in lista_articulos){
+                if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
+                  let articulo:any = {
+                    id: lista_articulos[i].articulo.id,
+                    clave: (lista_articulos[i].articulo.clave_cubs)?lista_articulos[i].articulo.clave_cubs:lista_articulos[i].articulo.clave_local,
+                    nombre: lista_articulos[i].articulo.articulo,
+                    descripcion: lista_articulos[i].articulo.especificaciones,
+                    descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
+                    partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
+                    partida_descripcion: lista_articulos[i].articulo.partida_especifica,
+                    familia: lista_articulos[i].articulo.familia,
+                    indispensable: (lista_articulos[i].articulo.es_indispensable)?true:false,
+                    en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
+                  };
+
+                  articulo.lotes = [{
+                    lote:lista_articulos[i].lote,
+                    cantidad:lista_articulos[i].cantidad,
+                    fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                    codigo_barras:lista_articulos[i].codigo_barras,
+                  }];
+
+                  articulo.total_piezas = lista_articulos[i].cantidad;
+                  articulos_temp.push(articulo);
+
+                  this.controlArticulosAgregados[articulo.id] = true;
+                  this.totalClavesRecibidas += 1;
+                }else{
+                  let index = articulos_temp.findIndex(x => x.id == lista_articulos[i].articulo.id);
+                  let articulo:any = articulos_temp[index];
+
+                  articulo.lotes.push({
+                    lote:lista_articulos[i].lote,
+                    cantidad:lista_articulos[i].cantidad,
+                    fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                    codigo_barras:lista_articulos[i].codigo_barras,
+                  });
+
+                  articulo.total_piezas += lista_articulos[i].cantidad;
+                }
+                this.totalArticulosRecibidos += lista_articulos[i].cantidad;
+              }
+
+              this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
+              this.dataSourceArticulos.paginator = this.articulosPaginator;
+            }
+            this.isLoading = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isLoading = false;
+          }
+        );
       }else{
+        this.estatusMovimiento = 'NV';
         this.dataSourceArticulos = new MatTableDataSource<any>([]);
         this.dataSourceArticulos.paginator = this.articulosPaginator;
         this.puedeEditarElementos = true;
@@ -265,12 +378,56 @@ export class EntradaComponent implements OnInit {
     });
   }
 
-  guardarMovimiento(){
-    let formData:any = this.formMovimiento.value;
-    formData.lista_articulos = this.dataSourceArticulos.data;
+  concluirMovimiento(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Concluir Movimiento?',dialogMessage:'Esta seguro de concluir esta entrada? escriba CONCLUIR para confirmar la acción',validationString:'CONCLUIR',btnColor:'primary',btnText:'Concluir'}
+    });
 
-    console.log('enviar a servidor');
-    console.log(formData);
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.guardarMovimiento(true);
+      }
+    });
+  }
+
+  guardarMovimiento(concluir:boolean = false){
+    if(this.formMovimiento.valid){
+      this.isSaving = true;
+      let formData:any = this.formMovimiento.value;
+      formData.lista_articulos = this.dataSourceArticulos.data;
+      formData.concluir = concluir;
+
+      formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
+
+      this.entradasService.guardarEntrada(formData).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error.message;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          }else{
+            this.formMovimiento.get('id').patchValue(response.data.id);
+            if(response.data.estatus == 'ME-BR'){ //Borrador
+              this.estatusMovimiento = 'BOR';
+            }else if(response.data.estatus == 'ME-FI'){ //Finalizado
+              this.estatusMovimiento = 'CON';
+            }else if(response.data.estatus == 'ME-CA'){ //Cancelado
+              this.estatusMovimiento = 'CAN';
+            }
+            console.log(response);
+          }
+          this.isSaving = false;
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isSaving = false;
+        }
+      );
+    }
   }
 
   aplicarFiltroArticulos(event: Event){ 
@@ -292,6 +449,5 @@ export class EntradaComponent implements OnInit {
   }
 
   generarFolio(){ console.log('generarFolio'); }
-  concluirMovimiento(){ console.log('concluirMovimiento'); }
   cargarPaginaArticulos(event?){ console.log('cargarPaginaArticulos'); return event;}
 }

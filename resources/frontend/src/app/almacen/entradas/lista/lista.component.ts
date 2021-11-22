@@ -24,7 +24,11 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['id','folio','descripcion','fecha_movimiento','total_claves','total_insumos','actions'];
+  listaEstatusIconos: any = { 'ME-BR':'content_paste',  'ME-FI':'description', 'ME-CA':'cancel'  };
+  listaEstatusClaves: any = { 'ME-BR':'borrador',       'ME-FI':'concluido',   'ME-CA':'cancelado' };
+  listaEstatusLabels: any = { 'ME-BR':'Borrador',       'ME-FI':'Concluido',   'ME-CA':'Cancelado' };
+
+  displayedColumns: string[] = ['id','almacen','programa','descripcion','fecha_movimiento','totales_claves_articulos','actions'];
   listadoMovimientos: any = [];
 
   constructor(private sharedService: SharedService, private entradasService: EntradasService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
@@ -68,6 +72,12 @@ export class ListaComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
           if(response.data.total > 0){
+            let lista_items = response.data.data;
+            lista_items.forEach(element => {
+              element.estatus_clave = this.listaEstatusClaves[element.estatus];
+              element.estatus_label = this.listaEstatusLabels[element.estatus];
+              element.estatus_icono = this.listaEstatusIconos[element.estatus];
+            });
             this.listadoMovimientos = response.data.data;
             this.resultsLength = response.data.total;
           }
@@ -86,6 +96,10 @@ export class ListaComponent implements OnInit {
     return event;
   }
 
+  eliminarEntrada(id){
+    console.log('eliminar : '+id);
+  }
+
   applyFilter(){
     this.selectedItemIndex = -1;
     this.paginator.pageIndex = 0;
@@ -96,37 +110,4 @@ export class ListaComponent implements OnInit {
   cleanSearch(){
     this.searchQuery = '';
   }
-
-  verRespuestas(id: number, index: number){
-    this.selectedItemIndex = index;
-    /*
-    let configDialog = {};
-    if(this.mediaSize == 'xs'){
-      configDialog = {
-        //maxWidth: '100vw',
-        //maxHeight: '100vh',
-        //height: '100%',
-        width: '100%',
-        data:{id: id, scSize:this.mediaSize}
-      };
-    }else{
-      configDialog = {
-        width: '99%',
-        //maxHeight: '90vh',
-        //height: '643px',
-        data:{id: id}
-      }
-    }
-
-    const dialogRef = this.dialog.open(DetallesLlenadoFormularioComponent, configDialog);
-
-    dialogRef.afterClosed().subscribe(valid => {
-      if(valid){
-        console.log('Aceptar');
-      }else{
-        console.log('Cancelar');
-      }
-    });*/
-  }
-
 }

@@ -110,7 +110,7 @@ export class ErrorInterceptor implements HttpInterceptor {
       content_type = 'multipart/form-data; charset=utf-8; boundary=' + Math.random().toString().substr(2);
     }
     
-    request = request.clone({
+    return request.clone({
       setHeaders: {
         'Authorization' : `Bearer ${accessToken}`,
         'Content-type' : content_type,

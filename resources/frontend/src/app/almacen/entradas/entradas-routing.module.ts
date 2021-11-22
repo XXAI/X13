@@ -7,7 +7,7 @@ import { EntradaComponent } from './entrada/entrada.component';
 const routes: Routes = [
   { path: 'almacen/entradas',            component: ListaComponent, canActivate: [AuthGuard] },
   { path: 'almacen/entradas/nueva',      component: EntradaComponent, canActivate: [AuthGuard] },
-  { path: 'almacen/entradas/editar/id:', component: EntradaComponent, canActivate: [AuthGuard] },
+  { path: 'almacen/entradas/editar/:id', component: EntradaComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

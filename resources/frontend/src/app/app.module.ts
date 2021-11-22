@@ -27,6 +27,8 @@ import { MAT_STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { ForbiddenComponent } from './forbidden/forbidden.component';
 
+
+
 import { SecurityModule } from './security/security.module';
 import { ProfileModule } from './profile/profile.module';
 import { DevToolsModule } from './dev-tools/dev-tools.module';
@@ -38,6 +40,7 @@ import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { CapturaReporteSemanalModule } from './captura-reporte-semanal/captura-reporte-semanal.module';
 import { ConfiguracionUnidadModule } from './configuracion-unidad/configuracion-unidad.module';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 @NgModule({
   declarations: [
@@ -88,6 +91,10 @@ import { ConfiguracionUnidadModule } from './configuracion-unidad/configuracion-
     {
       provide: MAT_STEPPER_GLOBAL_OPTIONS,
       useValue: { showError: true }
+    },
+    {
+      provide: MAT_DATE_LOCALE, 
+      useValue: 'es-MX'
     },
     SharedService
   ],

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\API\Modulos;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Validation\Rule;
 
 use App\Http\Controllers\Controller;
 
 use App\Http\Requests;
 
+use Validator;
 use DB;
 
 use App\Models\Movimiento;
@@ -26,7 +28,11 @@ class AlmacenEntradaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $entradas = Movimiento::where('direccion_movimiento','ENT')->where('unidad_medica_id',$loggedUser->id);
+            $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa')
+                                    ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
+                                    ->leftJoin('programas','programas.id','=','movimientos.programa_id')
+                                    ->where('movimientos.direccion_movimiento','ENT')
+                                    ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id);
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -63,7 +69,7 @@ class AlmacenEntradaController extends Controller
      */
     public function show($id){
         try{
-            $movimiento = Movimiento::with('listaArticulos','listaArticulosBorrador')->find($id);
+            $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos){ return $listaArticulos->with('articulo','stock'); },'listaArticulosBorrador.articulo'])->find($id);
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -145,7 +151,7 @@ class AlmacenEntradaController extends Controller
                 for ($i=0; $i < $total_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
-                    for($j; $j < count($articulo['lotes']); $j++){
+                    for($j=0; $j < count($articulo['lotes']); $j++){
                         $lote = $articulo['lotes'][$j];
                         $lista_articulos_borrador[] = [
                             'bien_servicio_id' => $articulo['id'],
@@ -178,7 +184,7 @@ class AlmacenEntradaController extends Controller
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
 
-                    for($j; $j < count($articulo['lotes']); $j++){
+                    for($j=0; $j < count($articulo['lotes']); $j++){
                         $lote = $articulo['lotes'][$j];
 
                         $stock_lote[] = [

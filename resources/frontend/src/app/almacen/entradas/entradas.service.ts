@@ -29,8 +29,8 @@ export class EntradasService {
     );
   }
 
-  nuevaEntrada(datos):Observable<any>{
-    return this.http.put<any>(this.url_entradas,datos).pipe(
+  guardarEntrada(datos):Observable<any>{
+    return this.http.post<any>(this.url_entradas,datos).pipe(
       map( (response) => {
         return response;
       }
