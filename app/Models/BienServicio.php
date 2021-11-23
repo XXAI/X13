@@ -12,6 +12,20 @@ class BienServicio extends Model{
     protected $table = 'bienes_servicios';  
     protected $fillable = ['clave_partida_especifica','familia_id','clave_cubs','clave_local','articulo','especificaciones','descontinuado'];
 
+    public function scopeDatosDescripcion($query,$unidad_medica_id = null){
+        return $query->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
+                                'unidad_medica_catalogo_articulos.es_indispensable','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
+                                'unidad_medica_catalogo_articulos.id AS en_catalogo_unidad')
+                        ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
+                        ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
+                        ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
+                            return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
+                                ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                                ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
+                        })
+                        ->orderBy('bienes_servicios.especificaciones');
+    }
+
     public function partidaEspecifica(){
         return $this->belongsTo('App\Models\PartidaEspecifica','clave_partida_especifica','clave');
     }

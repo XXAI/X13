@@ -113,10 +113,9 @@ export class EntradaComponent implements OnInit {
     });
 
     this.verBoton = {
-      generar_folio:true,
-      concluir:true,
-      guardar:true,
-      agregar_articulos:true
+      concluir:false,
+      guardar:false,
+      agregar_articulos:false
     };
 
     this.clavesTotales = {articulos:0};
@@ -160,6 +159,11 @@ export class EntradaComponent implements OnInit {
               if(response.data.estatus == 'ME-BR'){
                 this.estatusMovimiento = 'BOR';
                 this.puedeEditarElementos = true;
+                this.verBoton = {
+                  concluir:true,
+                  guardar:true,
+                  agregar_articulos:true
+                };
               }else if(response.data.estatus == 'ME-FI'){
                 this.estatusMovimiento = 'CON';
               }else if(response.data.estatus == 'ME-CA'){
@@ -413,6 +417,15 @@ export class EntradaComponent implements OnInit {
               this.estatusMovimiento = 'CON';
             }else if(response.data.estatus == 'ME-CA'){ //Cancelado
               this.estatusMovimiento = 'CAN';
+            }
+
+            if(this.estatusMovimiento != 'BOR'){
+              this.puedeEditarElementos = false;
+                this.verBoton = {
+                  concluir:false,
+                  guardar:false,
+                  agregar_articulos:false
+                };
             }
             console.log(response);
           }

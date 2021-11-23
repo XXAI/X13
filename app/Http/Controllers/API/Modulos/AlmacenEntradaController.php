@@ -14,6 +14,7 @@ use Validator;
 use DB;
 
 use App\Models\Movimiento;
+use App\Models\Stock;
 
 class AlmacenEntradaController extends Controller
 {
@@ -69,7 +70,10 @@ class AlmacenEntradaController extends Controller
      */
     public function show($id){
         try{
-            $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos){ return $listaArticulos->with('articulo','stock'); },'listaArticulosBorrador.articulo'])->find($id);
+            $loggedUser = auth()->userOrFail();
+            $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos){ return $listaArticulos->with('articulo','stock'); },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
+                $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+            }])->find($id);
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -187,7 +191,7 @@ class AlmacenEntradaController extends Controller
                     for($j=0; $j < count($articulo['lotes']); $j++){
                         $lote = $articulo['lotes'][$j];
 
-                        $stock_lote[] = [
+                        $stock_lote = [
                             'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
                             'almacen_id' => $parametros['almacen_id'],
                             'bienes_servicios_id' => $articulo['id'],
@@ -200,7 +204,7 @@ class AlmacenEntradaController extends Controller
                             'user_id' => $loggedUser->id,
                         ];
 
-                        $lote_guardado = Stock::where("almacen_id",$stock_lote['almacen_id'])
+                        $lote_guardado = Stock::where("almacen_id",$parametros['almacen_id'])
                                                 ->where("bienes_servicios_id",$stock_lote['bienes_servicios_id'])
                                                 ->where("programa_id",$stock_lote['programa_id'])
                                                 ->where("lote",$stock_lote['lote'])
@@ -230,13 +234,13 @@ class AlmacenEntradaController extends Controller
                             $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id] = NULL;
                         }else{
                             $lista_articulos_agregar[] = [
-                                ['stock_id'] => $lote_guardado->id,
-                                ['bien_servicio_id'] => $articulo['id'],
-                                ['direccion_movimiento'] => 'ENT',
-                                ['modo_movimiento'] => 'NRM',
-                                ['cantidad'] => $lote['cantidad'],
-                                ['cantidad_anterior'] => $lote_guardado->existencia - $lote['cantidad'],
-                                ['user_id'] => $loggedUser->id,
+                                'stock_id' => $lote_guardado->id,
+                                'bien_servicio_id' => $articulo['id'],
+                                'direccion_movimiento' => 'ENT',
+                                'modo_movimiento' => 'NRM',
+                                'cantidad' => $lote['cantidad'],
+                                'cantidad_anterior' => $lote_guardado->existencia - $lote['cantidad'],
+                                'user_id' => $loggedUser->id,
                             ];
                         }
                     }
