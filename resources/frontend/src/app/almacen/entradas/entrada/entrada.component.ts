@@ -234,6 +234,11 @@ export class EntradaComponent implements OnInit {
         this.dataSourceArticulos = new MatTableDataSource<any>([]);
         this.dataSourceArticulos.paginator = this.articulosPaginator;
         this.puedeEditarElementos = true;
+        this.verBoton = {
+          concluir:true,
+          guardar:true,
+          agregar_articulos:true
+        };
       }
     });
   }
