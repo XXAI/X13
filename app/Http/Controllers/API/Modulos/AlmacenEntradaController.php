@@ -73,7 +73,9 @@ class AlmacenEntradaController extends Controller
             $loggedUser = auth()->userOrFail();
             $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos){ return $listaArticulos->with('articulo','stock'); },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
                 $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-            }])->find($id);
+            },
+            'almacen',
+            'programa'])->find($id);
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
