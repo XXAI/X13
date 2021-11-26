@@ -4,20 +4,16 @@ import { SharedModule } from '../../shared/shared.module';
 import { EntradasRoutingModule } from './entradas-routing.module';
 import { ListaComponent } from './lista/lista.component';
 import { EntradaComponent } from './entrada/entrada.component';
-import { InsumoLoteDialogoComponent } from './insumo-lote-dialogo/insumo-lote-dialogo.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { DialogoLotesArticuloComponent } from './dialogo-lotes-articulo/dialogo-lotes-articulo.component';
 
 @NgModule({
-  declarations: [ListaComponent, EntradaComponent, InsumoLoteDialogoComponent, DialogoLotesArticuloComponent],
+  declarations: [ListaComponent, EntradaComponent, DialogoLotesArticuloComponent],
   imports: [
     CommonModule,
     SharedModule,
     EntradasRoutingModule,
     ScrollingModule
-  ],
-  entryComponents:[
-    InsumoLoteDialogoComponent
   ]
 })
 export class EntradasModule { }

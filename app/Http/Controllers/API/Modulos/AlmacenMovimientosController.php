@@ -13,6 +13,8 @@ use DB;
 
 use App\Models\Almacen;
 use App\Models\Programa;
+use App\Models\Proveedor;
+use App\Models\TipoMovimiento;
 
 class AlmacenMovimientosController extends Controller{
     
@@ -21,8 +23,10 @@ class AlmacenMovimientosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
             $catalogos = [
-                'programas' => Programa::get(),
-                'almacenes' => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get(),
+                'programas'   => Programa::get(),
+                'almacenes'   => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get(),
+                'proveedores' => Proveedor::get(),
+                'tipos_movimiento' => TipoMovimiento::where('movimiento','ENT')->get(),
             ];
             
             return response()->json(['data'=>$catalogos],HttpResponse::HTTP_OK);
