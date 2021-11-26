@@ -12,17 +12,29 @@ import { ActivatedRoute } from '@angular/router';
 import { DialogoLotesArticuloComponent } from '../dialogo-lotes-articulo/dialogo-lotes-articulo.component';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DatePipe } from '@angular/common';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
+import { MatSort } from '@angular/material/sort';
+import {animate, state, style, transition, trigger} from '@angular/animations';
 
 @Component({
   selector: 'app-entrada',
   templateUrl: './entrada.component.html',
-  styleUrls: ['./entrada.component.css']
+  styleUrls: ['./entrada.component.css'],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({height: '0px', minHeight: '0'})),
+      state('expanded', style({height: '*'})),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ],
 })
 export class EntradaComponent implements OnInit {
   @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
   @ViewChild(MatTable) articulosTable: MatTable<any>;
+  @ViewChild(MatSort) sort: MatSort;
 
-  @ViewChild(MatDrawer) articulosDrawer: MatDrawer;
+  @ViewChild(MatDrawer) entradaDrawer: MatDrawer;
   @ViewChild(MatInput) busquedaArticuloQuery: MatInput;
 
   constructor(
@@ -55,8 +67,10 @@ export class EntradaComponent implements OnInit {
   selectedItemIndex:number;
 
   filtroArticulos:string;
-  filtroTipoArticulo:string;
   filtroAplicado:boolean;
+
+  filteredProveedores: Observable<any[]>;
+  filteredProgramas: Observable<any[]>;
 
   totalClavesRecibidas:number;
   totalArticulosRecibidos:number;
@@ -68,7 +82,8 @@ export class EntradaComponent implements OnInit {
   pageSizeOptions: number[] = [10, 20, 30, 50];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['clave','nombre','no_lotes','cantidad','actions']; //'monto',
+  displayedColumns: string[] = ['clave','nombre','no_lotes','total_piezas','total_monto','actions'];
+  expandedElement: any | null;
 
   editable: boolean;
   puedeEditarElementos: boolean;
@@ -85,6 +100,7 @@ export class EntradaComponent implements OnInit {
   ngOnInit() {
     this.isLoading = true;
 
+    this.editable = false;
     this.puedeEditarElementos = false;
     this.listadoArticulos = [];
     this.listadoArticulosEliminados = [];
@@ -96,21 +112,43 @@ export class EntradaComponent implements OnInit {
     this.catalogos = {
       'almacenes':[],
       'programas':[],
+      'proveedores':[],
+      'tipos_movimiento':[],
     };
 
     this.maxFechaMovimiento = new Date();
     
     this.formMovimiento = this.formBuilder.group({
       id:[''],
-      fecha_movimiento: [new Date(),Validators.required],
-      folio: [''],
-      descripcion: ['',Validators.required],
-      entrega: ['',Validators.required],
-      recibe: ['',Validators.required],
-      programa_id: [''],
+      tipo_movimiento_id:[''],
+      fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
       almacen_id: ['',Validators.required],
-      observaciones: ['']
+      programa: [''],
+      programa_id: [''],
+      pedido_folio:[''],
+      //Datos de adquisición
+      proveedor:[''],
+      proveedor_id: [''],
+      referencia_folio:[''],
+      referencia_fecha:[''],
+      //nombre completo 
+      entrega: [''],
+      recibe: [''],
+      //
+      observaciones: [''],
+      //
+      descripcion: ['',Validators.required],
+      almacen_desc: [''],
+      programa_desc: [''],
+      proveedor_desc: [''],
     });
+
+    this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : value.nombre),
+                                  map(nombre => nombre ? this._filter('proveedores',nombre) : this.catalogos['proveedores'].slice())
+                                );
+    this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : value.descripcion),
+                                map(descripcion => descripcion ? this._filter('programas',descripcion) : this.catalogos['programas'].slice())
+                              );
 
     this.verBoton = {
       concluir:false,
@@ -128,11 +166,14 @@ export class EntradaComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          if(response.data.almacenes.length == 1){
-            this.formMovimiento.get('almacen_id').patchValue(response.data.almacenes[0].id);
-          }
           this.catalogos['almacenes'] = response.data.almacenes;
           this.catalogos['programas'] = response.data.programas;
+          this.catalogos['proveedores'] = response.data.proveedores;
+          this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
+
+          if(this.catalogos['almacenes'].length == 1){
+            this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
+          }
         }
         this.isLoading = false;
       },
@@ -154,10 +195,12 @@ export class EntradaComponent implements OnInit {
               let errorMessage = response.error.message;
               this.sharedService.showSnackBar(errorMessage, null, 3000);
             } else {
+              response.data.fecha_movimiento = new Date(response.data.fecha_movimiento+'T12:00:00');
               this.formMovimiento.patchValue(response.data);
 
               if(response.data.estatus == 'ME-BR'){
                 this.estatusMovimiento = 'BOR';
+                this.editable = true;
                 this.puedeEditarElementos = true;
                 this.verBoton = {
                   concluir:true,
@@ -170,8 +213,21 @@ export class EntradaComponent implements OnInit {
                 this.estatusMovimiento = 'CAN';
               }
 
+              if(this.estatusMovimiento != 'BOR'){
+                this.formMovimiento.get('programa_desc').patchValue((response.data.programa)?response.data.programa.descripcion:'Sin Programa');
+                this.formMovimiento.get('proveedor_desc').patchValue((response.data.proveedor)?response.data.proveedor.nombre:'Sin Proveedor');
+                this.formMovimiento.get('almacen_desc').patchValue((response.data.almacen)?response.data.almacen.nombre:'Sin Almacén');
+              }
+
               let articulos_temp = [];
-              let lista_articulos = response.data.lista_articulos_borrador;
+              let lista_articulos;
+
+              if(this.estatusMovimiento == 'BOR'){
+                lista_articulos = response.data.lista_articulos_borrador;
+              }else{
+                lista_articulos = response.data.lista_articulos;
+              }
+
               for(let i in lista_articulos){
                 if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
                   let articulo:any = {
@@ -188,12 +244,13 @@ export class EntradaComponent implements OnInit {
                   };
 
                   articulo.lotes = [{
-                    lote:lista_articulos[i].lote,
-                    cantidad:lista_articulos[i].cantidad,
-                    fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:lista_articulos[i].codigo_barras,
+                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
+                    cantidad:         lista_articulos[i].cantidad,
+                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
                   }];
-
+                  
+                  articulo.no_lotes = 1;
                   articulo.total_piezas = lista_articulos[i].cantidad;
                   articulos_temp.push(articulo);
 
@@ -204,12 +261,13 @@ export class EntradaComponent implements OnInit {
                   let articulo:any = articulos_temp[index];
 
                   articulo.lotes.push({
-                    lote:lista_articulos[i].lote,
-                    cantidad:lista_articulos[i].cantidad,
-                    fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:lista_articulos[i].codigo_barras,
+                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
+                    cantidad:         lista_articulos[i].cantidad,
+                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
                   });
-
+                  
+                  articulo.no_lotes += 1;
                   articulo.total_piezas += lista_articulos[i].cantidad;
                 }
                 this.totalArticulosRecibidos += lista_articulos[i].cantidad;
@@ -217,6 +275,7 @@ export class EntradaComponent implements OnInit {
 
               this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
               this.dataSourceArticulos.paginator = this.articulosPaginator;
+              this.dataSourceArticulos.sort = this.sort;
             }
             this.isLoading = false;
           },
@@ -233,6 +292,8 @@ export class EntradaComponent implements OnInit {
         this.estatusMovimiento = 'NV';
         this.dataSourceArticulos = new MatTableDataSource<any>([]);
         this.dataSourceArticulos.paginator = this.articulosPaginator;
+        this.dataSourceArticulos.sort = this.sort;
+        this.editable = true;
         this.puedeEditarElementos = true;
         this.verBoton = {
           concluir:true,
@@ -243,16 +304,12 @@ export class EntradaComponent implements OnInit {
     });
   }
 
-  abrirBuscadorArticulos(){
-    this.articuloQuery = '';
-    this.articulosDrawer.open().finally(() => this.busquedaArticuloQuery.focus() );
+  abrirDrawer(){
+    this.entradaDrawer.open();//.finally(() => this.busquedaArticuloQuery.focus() );
   }
 
-  cerrarBuscadorArticulos(){
-    this.articulosDrawer.close();
-    this.cleanSearch();
-    this.listadoArticulos = [];
-    this.idArticuloSeleccionado = 0;
+  cerrarDrawer(){
+    this.entradaDrawer.close();
   }
 
   cleanSearch(){
@@ -319,7 +376,7 @@ export class EntradaComponent implements OnInit {
       articulo = this.dataSourceArticulos.data[index];
     }
     
-    configDialog.data = {articulo: articulo, editar: true};
+    configDialog.data = {articulo: articulo, editar: this.puedeEditarElementos};
     
     const dialogRef = this.dialog.open(DialogoLotesArticuloComponent, configDialog);
 
@@ -356,6 +413,7 @@ export class EntradaComponent implements OnInit {
         this.dataSourceArticulos.data.unshift(response);
         this.articulosTable.renderRows();
         this.dataSourceArticulos.paginator = this.articulosPaginator;
+        this.dataSourceArticulos.sort = this.sort;
       }else{
         console.log('Cancelar');
       }
@@ -383,10 +441,11 @@ export class EntradaComponent implements OnInit {
         this.dataSourceArticulos.data.splice(index,1);
         this.articulosTable.renderRows();
         this.dataSourceArticulos.paginator = this.articulosPaginator;
+        this.dataSourceArticulos.sort = this.sort;
       }
     });
   }
-
+  
   concluirMovimiento(){
     const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
       width: '500px',
@@ -416,6 +475,7 @@ export class EntradaComponent implements OnInit {
             this.sharedService.showSnackBar(errorMessage, null, 3000);
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
+
             if(response.data.estatus == 'ME-BR'){ //Borrador
               this.estatusMovimiento = 'BOR';
             }else if(response.data.estatus == 'ME-FI'){ //Finalizado
@@ -425,6 +485,7 @@ export class EntradaComponent implements OnInit {
             }
 
             if(this.estatusMovimiento != 'BOR'){
+              this.editable = false;
               this.puedeEditarElementos = false;
                 this.verBoton = {
                   concluir:false,
@@ -432,7 +493,8 @@ export class EntradaComponent implements OnInit {
                   agregar_articulos:false
                 };
             }
-            console.log(response);
+            this.controlArticulosModificados = {};
+            this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
           }
           this.isSaving = false;
         },
@@ -466,6 +528,17 @@ export class EntradaComponent implements OnInit {
     this.filtroAplicado = false;
   }
 
-  generarFolio(){ console.log('generarFolio'); }
-  cargarPaginaArticulos(event?){ console.log('cargarPaginaArticulos'); return event;}
+  getDisplayFn(label: string){
+    return (val) => this.displayFn(val,label);
+  }
+
+  displayFn(value: any, valueLabel: string){
+    return value ? value[valueLabel] : '';
+  }
+
+  private _filter(catalogo: string, nombre: string): any[] {
+    const filterValue = nombre.toLowerCase();
+
+    return this.catalogos[catalogo].filter(option => option.nombre.toLowerCase().includes(filterValue));
+  }
 }

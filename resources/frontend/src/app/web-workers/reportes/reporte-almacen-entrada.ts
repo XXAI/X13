@@ -18,7 +18,8 @@ export class ReporteAlmacenEntrada{
             12: 'Diciembre',
         };
         let contadorLineasHorizontalesV = 0;
-        let fecha_hoy =  Date.now();
+        //let fecha_hoy =  Date.now();
+        let fecha_hoy =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'long', day: '2-digit'}).format(new Date());
         let datos = {
           pageOrientation: 'portrait',
           pageSize: 'LETTER',
@@ -48,7 +49,7 @@ export class ReporteAlmacenEntrada{
               margin: [30, 20, 30, 0],
               columns: [
                   {
-                      text:'http://ssadii.saludchiapas.gob.mx/',
+                      text:'Carretera Chicoasen S/N, Plan de Ayala, Tuxtla Gutiérrez, Chis.',
                       alignment:'left',
                       fontSize: 8,
                   },
@@ -76,7 +77,7 @@ export class ReporteAlmacenEntrada{
               alignment:"center"
             },
             subcabecera:{
-              fontSize: 5,
+              fontSize: 8,
               bold:true,
               fillColor:"#DEDEDE",
               alignment:"right"
@@ -91,7 +92,11 @@ export class ReporteAlmacenEntrada{
               fontSize: 8
             },
             tabla_datos:{
-              fontSize: 5
+              fontSize: 8
+            },
+            tabla_datos_center:{
+              fontSize: 8,
+              alignment: "center"
             },
             entrada_title:{
               alignment:"right",
@@ -102,11 +107,19 @@ export class ReporteAlmacenEntrada{
             entrada_datos:{
               fontSize: 8
             },
-            datos_encabezado_izquierda:
-            {
+            datos_encabezado_izquierda:{
               fontSize: 10,
               color:"black",
-              
+            },
+            tabla_encabezado_firmas:
+            {
+              fontSize: 10,
+              alignment:"center",
+              bold:true
+            },
+            tabla_encabezado_datos:{
+              fontSize: 10,
+              alignment:"center",
             },
           }
         };
@@ -134,8 +147,8 @@ export class ReporteAlmacenEntrada{
                 {text: entrada.programa?.nombre,                                                style: "entrada_datos", colSpan: 3 },
                 {text: ""},
                 {text: ""},
-                {text: "Pedido:",                                                           style: "entrada_title"},
-                {text: "GHT-1212",                                                           style: "entrada_datos"},
+                {text: "Pedido:",                                                               style: "entrada_title"},
+                {text: "GHT-1212",                                                              style: "entrada_datos"},
               ],
               [
                 {text: "N° Referencia:",                                                        style: "entrada_title" },
@@ -168,43 +181,82 @@ export class ReporteAlmacenEntrada{
           }
         });
 
+        datos.content.push({
+          table: {
+            headerRows:1,
+            dontBreakRows: true,
+            keepWithHeaderRows: 1,
+            widths: [ 10, 35, 50, 60, '*', 30],
+            margin: [0,0,0,0],
+            body: [
+              [
+                {text: "#",                   style: 'cabecera'},
+                {text: "LOTE",                style: 'cabecera'},
+                {text: "FECHA/CADUCIDAD",     style: 'cabecera'},
+                {text: "CLAVE",               style: 'cabecera'},
+                {text: "PRODUCTO",            style: 'cabecera'},
+                {text: "CANTIDAD",            style: 'cabecera'},
+              ]
+            ]
+          }
+        });
 
-        // datos.content.push({
-        //   table: {
-        //     headerRows:1,
-        //     dontBreakRows: true,
-        //     keepWithHeaderRows: 1,
-        //     widths: [ 10, 45, '*', 30],
-        //     margin: [0,0,0,0],
-        //     body: [
-        //       [
-        //         {text: "#",               style: 'cabecera'},
-        //         {text: "CLAVE",           style: 'cabecera'},
-        //         {text: "DESCRIPCION",     style: 'cabecera'},
-        //         {text: "CANTIDAD",        style: 'cabecera'},
-        //       ]
-        //     ]
-        //   }
-        // });
+        let total_pedido = 0;
+        for(let i = 0; i < entrada.lista_articulos_borrador.length; i++){
+          let item            = entrada.lista_articulos_borrador[i];
+          let fecha_caducidad = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(item.fecha_caducidad));
+          datos.content[1].table.body.push([  
+            { text: (i+1),                                                                          style: 'tabla_datos_center'},
+            { text: item.lote,                                                                      style: 'tabla_datos_center'},
+            { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
+            { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
+            { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
+            { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
+          ]);
+          total_pedido += item.cantidad;
+        }
 
-        // let total_pedido = 0;
-        // for(let i = 0; i < reportData.lista_articulos.length; i++){
-        //   let item = reportData.lista_articulos[i];
-        //   datos.content[1].table.body.push([  
-        //     { text: (i+1),                                                                          style: 'tabla_datos_center'},
-        //     { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
-        //     { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-        //     { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
-        //   ]);
-        //   total_pedido += item.cantidad;
-        // }
+        datos.content[1].table.body.push([  
+          { text: '', colSpan: 4, border: [false, false, false, false]},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: 'Total:',         style: 'subcabecera'},
+          { text: total_pedido,   style: 'tabla_datos_center'},
+        ]);
 
-        // datos.content[1].table.body.push([  
-        //   { text: '', colSpan: 2, border: [false, false, false, false]},
-        //   { text: ''},
-        //   { text: 'Total:',         style: 'subcabecera'},
-        //   { text: total_pedido,   style: 'tabla_datos_center'},
-        // ]);
+        datos.content.push({
+          layout: 'noBorders',
+          table: {
+          widths: ['*'],
+            margin: [0,0,0,0],
+            body: [
+              [
+                { text: "\n\n\n\n\n\n", style: "tabla_datos"}
+              ]
+            ]
+          }
+        });
+
+        datos.content.push({
+          layout: 'noBorders',
+          table: {
+           widths: [170, 170, 170],
+            margin: [0,0,0,0],
+            body: [
+              [
+                {text: "R E C I B I O\n\n\n", style: "tabla_encabezado_firmas"},
+                {text: "R E V I S Ó\n\n\n",  style:'tabla_encabezado_firmas'},
+                {text: "V o. B o.\n\n\n", style:'tabla_encabezado_firmas'},
+              ],
+              [
+                {text:  entrada.recibe, style: "tabla_encabezado_datos"},
+                {text:  entrada.recibe, style: "tabla_encabezado_datos"},
+                {text:  entrada.recibe, style: "tabla_encabezado_datos"}
+              ]
+            ]
+          }
+        });
 
         return datos;
     }

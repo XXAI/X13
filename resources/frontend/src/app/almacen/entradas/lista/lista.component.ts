@@ -46,7 +46,7 @@ export class ListaComponent implements OnInit {
   listaEstatusClaves: any = { 'ME-BR':'borrador',       'ME-FI':'concluido',   'ME-CA':'cancelado' };
   listaEstatusLabels: any = { 'ME-BR':'Borrador',       'ME-FI':'Concluido',   'ME-CA':'Cancelado' };
 
-  displayedColumns: string[] = ['id','almacen','programa','descripcion','fecha_movimiento','totales_claves_articulos','actions'];
+  displayedColumns: string[] = ['id','proveedor','descripcion','fecha_movimiento','totales_claves_articulos','actions']; //'almacen','programa',
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 

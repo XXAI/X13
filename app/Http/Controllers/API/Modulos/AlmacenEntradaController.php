@@ -29,11 +29,13 @@ class AlmacenEntradaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa')
+            $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','proveedores.nombre as proveedor')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('programas','programas.id','=','movimientos.programa_id')
+                                    ->leftJoin('proveedores','proveedores.id','=','movimientos.proveedor_id')
                                     ->where('movimientos.direccion_movimiento','ENT')
-                                    ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id);
+                                    ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
+                                    ->orderBy('updated_at','DESC');
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -71,11 +73,24 @@ class AlmacenEntradaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
+<<<<<<< HEAD
             $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos){ return $listaArticulos->with('articulo','stock'); },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
                 $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
             },
             'almacen',
             'programa'])->find($id);
+=======
+            $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos)use($loggedUser){ 
+                                                    return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
+                                                                $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                                            },'stock']);
+                                            },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
+                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                            }])->find($id);
+            if($movimiento->estatus != 'ME-BR'){
+                $movimiento->load(['proveedor','programa','almacen']);
+            }
+>>>>>>> 288138014decb4935fe462d6166337ac0338df20
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -262,6 +277,8 @@ class AlmacenEntradaController extends Controller
                 if(count($lista_articulos_agregar)){
                     $movimiento->listaArticulos()->createMany($lista_articulos_agregar);
                 }
+
+                $movimiento->listaArticulosBorrador()->delete();
             }
 
             $movimiento->total_claves = $total_claves;
