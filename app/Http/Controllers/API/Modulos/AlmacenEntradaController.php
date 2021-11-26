@@ -73,13 +73,6 @@ class AlmacenEntradaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
-<<<<<<< HEAD
-            $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos){ return $listaArticulos->with('articulo','stock'); },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
-                $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-            },
-            'almacen',
-            'programa'])->find($id);
-=======
             $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos)use($loggedUser){ 
                                                     return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
                                                                 $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
@@ -90,7 +83,6 @@ class AlmacenEntradaController extends Controller
             if($movimiento->estatus != 'ME-BR'){
                 $movimiento->load(['proveedor','programa','almacen']);
             }
->>>>>>> 288138014decb4935fe462d6166337ac0338df20
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
