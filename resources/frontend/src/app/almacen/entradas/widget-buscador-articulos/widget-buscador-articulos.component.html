@@ -1,0 +1,55 @@
+<div class="small-search-input agregar-articulos">
+    <mat-form-field appearance="outline" style="width: 100%;" [floatLabel]="'always'">
+        <mat-label>Buscador de Articulos</mat-label>
+        <input matInput #inputQuery [formControl]="inputBuscadorArticulos" placeholder="Buscar Articulo..." type="text" [matAutocomplete]="articulosAutocomplete">
+        <span matSuffix *ngIf="!inputQuery.value"><mat-icon>manage_search</mat-icon></span>
+        <button class="small-icon-button" mat-icon-button matSuffix *ngIf="inputQuery.value" (click)="inputQuery.value  = ''" [attr.aria-label]="'Limpiar Busqueda'" [attr.aria-pressed]="inputQuery.value">
+            <mat-icon>clear</mat-icon>
+        </button>
+        <mat-autocomplete #articulosAutocomplete="matAutocomplete" [displayWith]="displayTerminoFn" (optionSelected)="itemSeleccionado($event.option.value)" [panelWidth]="'50%'">
+            <mat-option *ngIf="terminoBusqueda && inputQuery.value.length > 3 && resultadoArticulos.length == 0" style="text-align: center;" disabled>
+                No se encontraron resultados para <span style="font-style: italic; font-weight: bold;">"{{inputQuery.value}}"</span>
+            </mat-option>
+            <mat-option class="loading-data" *ngIf="isLoadingArticulos" disabled>
+                Buscando.....
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </mat-option>
+            <ng-container *ngIf="!isLoadingArticulos">
+                <mat-option class="item-resultados-busqueda" *ngFor="let articulo of resultadoArticulos" [value]="articulo">
+                    <div fxLayout="column" class="articulo-container">
+                        <div fxFlex fxLayout="row" class="articulo-header">
+                            <div fxFlex="none" class="articulo-titulo">
+                                <span style="font-weight: bold;">Partida:</span><br>
+                                <span [matTooltip]="articulo.partida_descripcion" [matTooltipPosition]="'above'">{{articulo.partida_clave}}</span>
+                            </div>
+                            <div fxFlex></div>
+                            <div fxFlex="none" class="articulo-titulo">
+                                {{articulo.familia}}
+                            </div>
+                        </div>
+                        <div fxFlex fxLayout="column" class="articulo-descripcion">
+                            <div fxFlex fxLayout="column" class="articulo-informacion">
+                                <div fxFlex class="articulo-clave">{{articulo.clave}}</div>
+                                <div fxFlex class="articulo-nombre">{{articulo.nombre}}</div>
+                            </div>
+                            <div fxFlex class="articulo-texto">
+                                {{articulo.descripcion}}
+                            </div>
+                        </div>
+                        <div fxFlex="none" fxLayout="row" class="articulo-footer">
+                            <div fxFlex="none">
+                                <mat-icon matTooltip="En Catalogo"   *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
+                                <mat-icon matTooltip="Indispensable" *ngIf="articulo.indispensable" style="color:green;">notification_important</mat-icon>
+                                <mat-icon matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">report_problem</mat-icon>
+                            </div>
+                            <div fxFlex></div>
+                            <div fxFlex="none" class="articulo-info" *ngIf="mostrarExistencias">
+                                Existencias ( {{ articulo.exsitencias||0 | number }} <span *ngIf="articulo.cantidad_minima">/ {{articulo.cantidad_minima||0 | number}}</span> )
+                            </div>
+                        </div>
+                    </div>
+                </mat-option>
+            </ng-container>
+        </mat-autocomplete>
+    </mat-form-field>
+</div>

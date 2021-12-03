@@ -2,8 +2,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    bottom: 0;
-    right: 0;
+    width:100%;
+    height:100%;
     background: rgba(0, 0, 0, 0.35);
     z-index: 999;
     display: flex;
@@ -95,106 +95,9 @@ table td {
     padding-right:5px;
 }
 
-.lista-articulos-item{
-    height: 205px;
-    overflow: hidden;
-    padding:8px;
-    background-color:whitesmoke;
-}
-
-
-/*.lista-articulos-item-contenido{
-    padding: 0px 8px 8px 8px;
-}*/
-
-.lista-articulo-item-acciones{
-    /* flex-direction: row;
-    box-sizing: border-box;
-    display: flex;
-    display: block; */
-    margin: 0px -8px -8px -8px;
-    padding: 9px 8px;
-    background-color: lightgray;
-    filter: brightness(1.1);
-}
-
-.lista-articulos-item:hover{
-    /*background-color: lightgoldenrodyellow;*/
-    border: dashed thin black;
-    background-color: white;
-    cursor: default;
-}
-
-.lista-articulos-item.selected{
-    background-color: lightblue;
-}
-
-.lista-articulos-item.selected:hover{
-    background-color: none !important;
-}
-
-.lista-articulos-item .lista-articulos-item-etiqueta{
-    height: 49px;
-    width: 100%;
-    display: table;
-    color: whitesmoke;
-    margin: -8px -8px 0px -8px;
-    padding: 0px 8px 0px 8px;
-}
-
-.lista-articulos-item .lista-articulos-item-etiqueta-icono{
-    height: 35px;
-    width: 35px;
-    text-align: center;
-    border-radius: 25%;
-    flex-shrink: 0;
-    object-fit: cover;
-    padding:5px;
-    display: table-cell;
-}
-
-.lista-articulos-item .lista-articulos-item-etiqueta-texto{
-    padding:5px;
-    display: table-cell;
-    vertical-align: top;
-    text-align: right;
-    height: 18px;
-}
-
-.lista-articulos-item-cabecera{
-    display: flex;
-    flex-direction: column;
-}
-
-.lista-articulos-item-cabecera-titulo{
-    height: 24px;
-    display: block;
-    font-weight: 450;
-    font-size: 20px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: justify;
-    text-justify: inter-word;
-}
-
-.lista-articulos-item-cabecera-subtitulo{
-    height: 94px;
-    display: block;
-    font-size: 14px;
-    color: rgba(0,0,0,.54);
-    text-overflow: ellipsis;
-    text-align: justify;
-    text-justify: inter-word;
-}
-
-.lista-articulos-item-texto{
-    height: 112px;
-    display: block;
-    font-size: 14px;
-    padding: 5px 0;
-    text-overflow: ellipsis;
-    text-align: justify;
-    text-justify: inter-word;
+.entrada-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
 }
 
 .insumo-lotes-tile:hover {
@@ -224,11 +127,6 @@ table td {
     padding: 0px 5px 5px 5px;
 }
 
-.agregar-articulos{
-    padding:20px 8px 8px 8px;
-    margin-bottom:5px;
-}
-
 :host ::ng-deep .small-search-input.agregar-articulos > .mat-form-field{
     background-color: rgb(213, 213, 255);
 }
@@ -254,6 +152,10 @@ table td {
 :host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
     padding: 0.8em 0em 0.5em 0em !important;
     border-top:none;
+}
+
+:host ::ng-deep .mat-list-base[dense] .mat-list-item{
+    height: 25px;
 }
 
 .no-items-found{
@@ -371,43 +273,7 @@ tr.tabla-row-articulo-detalle{
     padding: 0 10px 10px 10px;
 }
 
-.contenido-tabla-lotes table{
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.contenido-tabla-lotes table thead{
-    background-color: black;
-    color:whitesmoke;
-}
-
-.contenido-tabla-lotes table tbody  {
-    background-color:whitesmoke;
-    color: black;
-    border: 1px solid black;
-}
-
-.contenido-tabla-lotes table tbody tr:nth-child(odd) {
-    background-color:white;
-}
-
-.contenido-tabla-lotes table tbody tr td{
-    text-align: center;
-    border: 1px solid rgb(181, 179, 179);
-}
-
-.contenido-tabla-lotes table tfoot{
-    background-color:rgb(95, 204, 255);
-    color: whitesmoke;
-    border: 1px solid rgb(95, 204, 255);;
-}
-
-.contenido-tabla-lotes table tfoot tr td{
-    text-align: center;
-}
-
 .medium-button{
-    width: 100% !important;
     line-height: 30px !important;
 }
 
@@ -421,18 +287,14 @@ tr.tabla-row-articulo-detalle{
     font-size: 22px !important;
 }
 
-.small-icon-button {
-    width: 24px !important;
-    height: 24px !important;
-    line-height: 24px !important;
+.estatus-articulo-verde{
+    color:#1e7c41;
 }
 
-.small-icon-button .mat-icon {
-    width: 16px !important;
-    height: 16px !important;
-    line-height: 16px !important;
+.estatus-articulo-ambar{
+    color:#ff9900;
 }
 
-.small-icon-button .material-icons {
-    font-size: 16px !important;
+.estatus-articulo-rojo{
+    color:#ff2a2a;
 }

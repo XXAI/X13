@@ -10,7 +10,7 @@ class MovimientoArticulo extends Model{
     
     use SoftDeletes;
     protected $table = 'movimientos_articulos';  
-    protected $fillable = ['id','movimiento_id','stock_id','bien_servicio_id','direccion_movimiento','modo_movimiento','cantidad','cantidad_anterior','user_id'];
+    protected $fillable = ['id','movimiento_id','stock_id','bien_servicio_id','direccion_movimiento','modo_movimiento','cantidad','cantidad_anterior','user_id','precio_unitario','iva','total_monto'];
 
     public function articulo(){
         return $this->belongsTo('App\Models\BienServicio','bien_servicio_id');

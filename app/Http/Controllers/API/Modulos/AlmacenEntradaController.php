@@ -46,9 +46,12 @@ class AlmacenEntradaController extends Controller
                 });
             }
 
-            if(!(isset($parametros['mostrar_todo']) && $parametros['mostrar_todo'])){
-                $entradas = $entradas->where('estatus','like','ME-%');
+            if(isset($parametros['tipo_movimiento']) && $parametros['tipo_movimiento']){
+                $entradas = $entradas->where('tipo_movimiento_id',$parametros['tipo_movimiento']);
             }
+            /*if(!(isset($parametros['mostrar_todo']) && $parametros['mostrar_todo'])){
+                $entradas = $entradas->where('estatus','like','ME-%');
+            }*/
 
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
@@ -109,10 +112,11 @@ class AlmacenEntradaController extends Controller
             $reglas = [
                 'almacen_id' => 'required',
                 'fecha_movimiento' => 'required',
+                'tipo_movimiento_id' => 'required'
                 //'folio' => 'required',
-                'descripcion' => 'required',
-                'entrega' => 'required',
-                'recibe' => 'required',
+                //'descripcion' => 'required',
+                //'entrega' => 'required',
+                //'recibe' => 'required',
                 //'observaciones' => 'required',
                 //'programa_id' => 'required',
                 //'id' => 'required',
@@ -132,31 +136,38 @@ class AlmacenEntradaController extends Controller
                 'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
                 'almacen_id' => $parametros['almacen_id'],
                 'direccion_movimiento' => 'ENT',
-                'estatus' => ($concluir)?'ME-FI':'ME-BR',
+                'tipo_movimiento_id' => $parametros['tipo_movimiento_id'],
+                'estatus' => ($concluir)?'FIN':'BOR',
                 'fecha_movimiento' => $parametros['fecha_movimiento'],
                 'programa_id' => (isset($parametros['programa_id']) && $parametros['programa_id'])?$parametros['programa_id']:null,
-                'proveedor_id' => (isset($parametros['proveedor_id']) && $parametros['proveedor_id'])?$parametros['proveedor_id']:null, //agregar proveedor
-                'clues' => null, //en salida? clues a la que va?
-                'folio' => $parametros['folio'],
-                'descripcion' => $parametros['descripcion'],
-                'entrega' => $parametros['entrega'],
-                'recibe' => $parametros['recibe'],
+                'proveedor_id' => (isset($parametros['proveedor_id']) && $parametros['proveedor_id'])?$parametros['proveedor_id']:null,
+                'descripcion' => 'Entrada Manual',
+                'pedido_folio' => $parametros['pedido_folio'],
+                'referencia_folio' => $parametros['referencia_folio'],
+                'referencia_fecha' => $parametros['referencia_fecha'],
                 'observaciones' => $parametros['observaciones'],
                 'total_claves' => 0,
                 'total_articulos' => 0,
                 'total_monto' => 0,
-                'user_id' => $loggedUser->id,
             ];
 
             if(isset($parametros['id']) && $parametros['id']){
                 $movimiento = Movimiento::with('listaArticulos','listaArticulosBorrador')->find($parametros['id']);
+                if($concluir){
+                    $datos_movimiento['concluido_por_usuario_id'] = $loggedUser->id;
+                }else{
+                    $datos_movimiento['modificado_por_usuario_id'] = $loggedUser->id;
+                }
                 $movimiento->update($datos_movimiento);
             }else{
+                $datos_movimiento['creado_por_usuario_id'] = $loggedUser->id;
+                $datos_movimiento['modificado_por_usuario_id'] = $loggedUser->id;
                 $movimiento = Movimiento::create($datos_movimiento);
             }
 
             $total_claves = count($parametros['lista_articulos']);
             $total_articulos = 0;
+            $total_monto = 0;
 
             if(!$concluir){
                 $lista_articulos_borrador = [];
@@ -164,6 +175,8 @@ class AlmacenEntradaController extends Controller
                 for ($i=0; $i < $total_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
+                    $total_monto += $articulo['total_monto'];
+                    
                     for($j=0; $j < count($articulo['lotes']); $j++){
                         $lote = $articulo['lotes'][$j];
                         $lista_articulos_borrador[] = [
@@ -175,6 +188,9 @@ class AlmacenEntradaController extends Controller
                             'lote' => $lote['lote'],
                             'codigo_barras' => $lote['codigo_barras'],
                             'fecha_caducidad' => $lote['fecha_caducidad'],
+                            'precio_unitario' => $lote['precio_unitario'],
+                            'iva' => $lote['iva'],
+                            'total_monto' => $lote['total_monto'],
                             'user_id' => $loggedUser->id,
                         ];
                     }
@@ -196,6 +212,7 @@ class AlmacenEntradaController extends Controller
                 for ($i=0; $i < $total_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
+                    $total_monto += $articulo['total_monto'];
 
                     for($j=0; $j < count($articulo['lotes']); $j++){
                         $lote = $articulo['lotes'][$j];
@@ -236,6 +253,9 @@ class AlmacenEntradaController extends Controller
                             $articulo_guardado->direccion_movimiento = 'ENT';
                             $articulo_guardado->modo_movimiento = 'NRM';
                             $articulo_guardado->cantidad = $lote['cantidad'];
+                            $articulo_guardado->precio_unitario = $lote['precio_unitario'];
+                            $articulo_guardado->iva = $lote['iva'];
+                            $articulo_guardado->total_monto = $lote['total_monto'];
                             $articulo_guardado->cantidad_anterior = $lote_guardado->existencia - $lote['cantidad'];
                             $articulo_guardado->user_id = $loggedUser->id;
                             $articulo_guardado->save();
@@ -248,6 +268,9 @@ class AlmacenEntradaController extends Controller
                                 'direccion_movimiento' => 'ENT',
                                 'modo_movimiento' => 'NRM',
                                 'cantidad' => $lote['cantidad'],
+                                'precio_unitario' => $lote['precio_unitario'],
+                                'iva' => $lote['iva'],
+                                'total_monto' => $lote['total_monto'],
                                 'cantidad_anterior' => $lote_guardado->existencia - $lote['cantidad'],
                                 'user_id' => $loggedUser->id,
                             ];
@@ -275,6 +298,7 @@ class AlmacenEntradaController extends Controller
 
             $movimiento->total_claves = $total_claves;
             $movimiento->total_articulos = $total_articulos;
+            $movimiento->total_monto = $total_monto;
             $movimiento->save();
             
             DB::commit();

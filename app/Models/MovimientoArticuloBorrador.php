@@ -8,7 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 class MovimientoArticuloBorrador extends Model{
     
     protected $table = 'movimientos_articulos_borrador';  
-    protected $fillable = ['movimiento_id','bien_servicio_id','direccion_movimiento','modo_movimiento','cantidad','marca_id','lote','fecha_caducidad','codigo_barras','user_id'];
+    protected $fillable = [
+        'movimiento_id',
+        'bien_servicio_id',
+        'direccion_movimiento',
+        'modo_movimiento',
+        'cantidad',
+        'marca_id',
+        'lote',
+        'fecha_caducidad',
+        'codigo_barras',
+        'user_id',
+        'precio_unitario',
+        'iva',
+        'total_monto'
+    ];
 
     public function articulo(){
         return $this->belongsTo('App\Models\BienServicio','bien_servicio_id');

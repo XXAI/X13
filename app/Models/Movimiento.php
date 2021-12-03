@@ -10,8 +10,17 @@ class Movimiento extends Model{
     
     use SoftDeletes;
     protected $table = 'movimientos';  
-    protected $fillable = ['unidad_medica_id','almacen_id','direccion_movimiento','estatus','fecha_movimiento','programa_id','folio','descripcion','entrega','recibe','observaciones','cancelado','fecha_cancelacion','motivo_cancelacion','user_id','proveedor_id','clues'];
+    protected $fillable = [
+        'unidad_medica_id','almacen_id','folio','consecutivo','direccion_movimiento','tipo_movimiento_id','estatus','fecha_movimiento',
+        'pedido_folio','programa_id','proveedor_id','clues','descripcion','entrega','recibe','observaciones',
+        'total_claves','total_articulos','total_monto','referencia_folio','referencia_fecha','cancelado','fecha_cancelacion','motivo_cancelacion',
+        'creado_por_usuario_id','modificado_por_usuario_id','concluido_por_usuario_id','cancelado_por_usuario_id','eliminado_por_usuario_id'
+    ];
 
+    public function unidadMedica(){
+        return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_id');
+    }
+    
     public function almacen(){
         return $this->belongsTo('App\Models\Almacen','almacen_id');
     }
@@ -27,6 +36,27 @@ class Movimiento extends Model{
     public function listaArticulos(){
         return $this->hasMany('App\Models\MovimientoArticulo','movimiento_id');
     }
+
+    public function creadoPor(){
+        return $this->belongsTo('App\Models\Usuario','creado_por_usuario_id');
+    }
+
+    public function modificadoPor(){
+        return $this->belongsTo('App\Models\Usuario','modificado_por_usuario_id');
+    }
+
+    public function concluidoPor(){
+        return $this->belongsTo('App\Models\Usuario','concluido_por_usuario_id');
+    }
+
+    public function canceladoPor(){
+        return $this->belongsTo('App\Models\Usuario','cancelado_por_usuario_id');
+    }
+
+    public function eliminadoPor(){
+        return $this->belongsTo('App\Models\Usuario','eliminado_por_usuario_id');
+    }
+
 
     public function listaArticulosBorrador(){
         return $this->hasMany('App\Models\MovimientoArticuloBorrador','movimiento_id');

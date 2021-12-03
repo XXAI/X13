@@ -93,14 +93,13 @@
 
             <mat-menu #menuAccionesEntradas="matMenu">
                 <ng-template matMenuContent let-id="id" let-estatus="estatus">
-                        <button mat-menu-item color="warn" matTooltip="Descargar" (click)="obtenerEntrada(id)">
-                            <mat-icon color="warn">picture_as_pdf</mat-icon>
-                            <span>Generar PDF</span>
-                        </button>
-                        <mat-divider></mat-divider>
                         <button mat-menu-item [routerLink]="'/almacen/entradas/editar/'+id">
-                            <mat-icon color="primary">{{(estatus != 'ME-BR')?'visibility':'edit'}}</mat-icon>
-                            <span>{{(estatus != 'ME-BR')?'Ver Detalles':'Editar'}}</span>
+                            <mat-icon color="primary">{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
+                            <span>{{(estatus != 'BOR')?'Ver Detalles':'Editar'}}</span>
+                        </button>
+                        <button mat-menu-item color="warn" (click)="obtenerEntrada(id)">
+                            <mat-icon color="accent">picture_as_pdf</mat-icon>
+                            <span>Generar PDF</span>
                         </button>
                         <mat-divider></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus != 'ME-BR'">

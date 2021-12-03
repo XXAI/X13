@@ -42,9 +42,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'ME-BR':'content_paste',  'ME-FI':'description', 'ME-CA':'cancel'  };
-  listaEstatusClaves: any = { 'ME-BR':'borrador',       'ME-FI':'concluido',   'ME-CA':'cancelado' };
-  listaEstatusLabels: any = { 'ME-BR':'Borrador',       'ME-FI':'Concluido',   'ME-CA':'Cancelado' };
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CANCL':'cancel'  };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CANCL':'cancelado' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CANCL':'Cancelado' };
 
   displayedColumns: string[] = ['id','proveedor','descripcion','fecha_movimiento','totales_claves_articulos','actions']; //'almacen','programa',
   listadoMovimientos: any = [];
