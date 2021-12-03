@@ -416,6 +416,9 @@ export class EntradaComponent implements OnInit {
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
 
+      formData.proveedor_id = (formData.proveedor)?formData.proveedor.id:null;
+      formData.programa_id = (formData.programa)?formData.programa.id:null;
+
       formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
       if(formData.referencia_fecha){
         formData.referencia_fecha = this.datepipe.transform(formData.referencia_fecha, 'yyyy-MM-dd');

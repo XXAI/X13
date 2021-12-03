@@ -56,10 +56,30 @@
                                 <input matInput formControlName="precio_unitario" (keydown.enter)="guardarCambiosLote()" type="number" autocomplete="off">
                                 <span matPrefix>$&nbsp;</span>
                             </mat-form-field>
-                            <mat-form-field fxFlex>
+                            <mat-form-field fxFlex="none">
                                 <mat-label>IVA</mat-label>
                                 <input matInput formControlName="iva" (keydown.enter)="guardarCambiosLote()" type="number" autocomplete="off">
                             </mat-form-field>
+                            <div fxFlex="100" fxLayout="row" fxLayoutGap="5px" *ngIf="estatusCaducidad > 1" class="carta-canje">
+                                <div fxFlex="fill"></div>
+                                <div fxFlex="18" class="cc-campo cc-etiqueta">
+                                    <span>Carta de Canje: </span>
+                                </div>
+                                <mat-form-field fxFlex="20" class="cc-campo">
+                                    <mat-label>Folio Referencia</mat-label>
+                                    <input matInput formControlName="iva" (keydown.enter)="guardarCambiosLote()" type="text" autocomplete="off">
+                                </mat-form-field>
+                                <mat-form-field  fxFlex="20" class="cc-campo">
+                                    <mat-label>Fecha Referencia</mat-label>
+                                    <input matInput formControlName="iva" (keydown.enter)="guardarCambiosLote()" type="text" autocomplete="off">
+                                </mat-form-field >
+                                <mat-form-field fxFlex="15" class="cc-campo">
+                                    <mat-label>Vigencia</mat-label>
+                                    <input matInput formControlName="iva" (keydown.enter)="guardarCambiosLote()" type="number" autocomplete="off">
+                                    <span matSuffix>Meses</span>
+                                </mat-form-field>
+                                <div fxFlex="fill"></div>
+                            </div>
                             <div fxFlex="100" fxLayout="row" fxLayoutGap="5px">
                                 <div fxFlex></div>
                                 <button fxFlex="none" mat-button (click)="cancelarEdicion()">Cancelar</button>

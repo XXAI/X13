@@ -1,4 +1,4 @@
-<section fxLayout="column" style="height: 100%; overflow: auto; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
+<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
     <section fxFlex="none" class="entrada-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
             <button fxFlex="none" mat-button [routerLink]="'/almacen/entradas'"><mat-icon>backspace</mat-icon> Volver</button>
@@ -105,6 +105,7 @@
                     <mat-label>Proveedor</mat-label>
                     <input #proveedorInput type="text" matInput formControlName="proveedor" [matAutocomplete]="autoProveedores">
                     <mat-autocomplete #autoProveedores="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
+                        <mat-option *ngIf="catalogos['proveedores'].length == 0" value="">No hay proveedores capturados</mat-option>
                         <mat-option *ngFor="let proveedor of filteredProveedores | async" [value]="proveedor">
                             {{proveedor.nombre}} <mat-hint>[{{proveedor.rfc}}]</mat-hint>
                         </mat-option>
