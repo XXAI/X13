@@ -98,6 +98,10 @@ export class ReporteAlmacenEntrada{
               fontSize: 8,
               alignment: "center"
             },
+            tabla_datos_right:{
+              fontSize: 8,
+              alignment: "right"
+            },
             entrada_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
@@ -125,7 +129,16 @@ export class ReporteAlmacenEntrada{
         };
 
         let entrada = reportData.items;
+        let total_entrada = parseFloat(entrada.total_monto);
         let fecha_entrada  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.fecha_movimiento));
+
+        function numberFormat(num) {
+          //return '$' + num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+          var str = num.toString().split(".");
+          str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          return '$ ' +str.join(".");
+        }
+        let monto_total = numberFormat(total_entrada);
 
 
 
@@ -186,16 +199,19 @@ export class ReporteAlmacenEntrada{
             headerRows:1,
             dontBreakRows: true,
             keepWithHeaderRows: 1,
-            widths: [ 10, 35, 50, 60, '*', 30],
+            widths: [ 10, 20, 35, 45, 63, 'auto', 50, 50],
             margin: [0,0,0,0],
             body: [
               [
                 {text: "#",                   style: 'cabecera'},
+                {text: "CANT",                style: 'cabecera'},
                 {text: "LOTE",                style: 'cabecera'},
                 {text: "FECHA/CADUCIDAD",     style: 'cabecera'},
                 {text: "CLAVE",               style: 'cabecera'},
                 {text: "PRODUCTO",            style: 'cabecera'},
-                {text: "CANTIDAD",            style: 'cabecera'},
+                {text: "PRECIO UNITARIO",     style: 'cabecera'},
+                {text: "IMPORTE",             style: 'cabecera'},
+                
               ]
             ]
           }
@@ -207,22 +223,49 @@ export class ReporteAlmacenEntrada{
           let fecha_caducidad = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(item.fecha_caducidad));
           datos.content[1].table.body.push([  
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
+            { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
             { text: item.lote,                                                                      style: 'tabla_datos_center'},
             { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
             { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
             { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-            { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
+            { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
+            { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
+            
           ]);
-          total_pedido += item.cantidad;
+          //total_pedido += item.cantidad;
         }
 
         datos.content[1].table.body.push([  
-          { text: '', colSpan: 4, border: [false, false, false, false]},
+          { text: '', colSpan: 6, border: [false, false, false, false,]},
           { text: ''},
           { text: ''},
           { text: ''},
-          { text: 'Total:',         style: 'subcabecera'},
-          { text: total_pedido,   style: 'tabla_datos_center'},
+          { text: ''},
+          { text: ''},
+          { text: 'Subtotal:',      style: 'subcabecera'},
+          { text: monto_total,   style: 'tabla_datos_right'},
+        ]);
+
+        datos.content[1].table.body.push([  
+          { text: '', colSpan: 6, border: [false, false, false, false,]},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: 'IVA:',        style: 'subcabecera'},
+          { text: 0.0000,   style: 'tabla_datos_right'},
+        ]);
+
+        datos.content[1].table.body.push([  
+          { text: '', colSpan: 6, border: [false, false, false, false,]},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: ''},
+          { text: 'Total:',        style: 'subcabecera'},
+          { text: monto_total,   style: 'tabla_datos_right'},
         ]);
 
         datos.content.push({
