@@ -134,8 +134,12 @@ export class ListaComponent implements OnInit {
   }
 
   obtenerEntrada(id){
-    this.isLoading = true;
 
+    //this.isLoadingPDF = true;
+    this.showMyStepper = true;
+    this.showReportForm = true;
+    this.showReportForm = false;
+    
     this.objetoMovimiento = "";
     this.entradasService.verEntrada(id).subscribe(
       response =>{
@@ -152,10 +156,11 @@ export class ListaComponent implements OnInit {
             this.objetoMovimiento = response.data;
             console.log(this.objetoMovimiento);
             this.generarEntradaPDF(this.objetoMovimiento);
+            
           }
   
         }
-        this.isLoading = false;
+
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -163,7 +168,7 @@ export class ListaComponent implements OnInit {
           errorMessage = errorResponse.error.error.message;
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
-        this.isLoading = false;
+        //this.isLoadingPDF = false;
       }
     );
 
@@ -177,10 +182,10 @@ export class ListaComponent implements OnInit {
 
     //this.selectedItemIndex = index;
 
-      this.showMyStepper = true;
       this.isLoadingPDF = true;
       this.showMyStepper = true;
       this.showReportForm = false;
+
 
       let params:any = {};
       let countFilter = 0;

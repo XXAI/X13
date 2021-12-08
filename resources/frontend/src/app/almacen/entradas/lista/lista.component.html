@@ -21,7 +21,33 @@
                     </section>
                 </div>
             </div>
+
+            <div *ngIf="showReportForm || showMyStepper && isLoadingPDF" fxLayout="column" fxLayoutAlign="center stretch">
+                <!-- <div *ngIf="showReportForm">
+                    <section fxLayout="column" fxLayoutAlign="center stretch">
+                        <button mat-stroked-button (click)="reportePacientes()" color="info"><mat-icon class="material-icons-outlined">picture_as_pdf</mat-icon> Descargar Archivo PDF</button>
+                    </section>
+                </div> -->
+                &nbsp;
+                <div class="my-stepper" *ngIf="showMyStepper">
+                    <ng-container *ngFor="let step of stepperConfig.steps; let i = index">
+                        <div class="my-step" [class.my-step-active]="step.status == 2" [class.my-step-done]="step.status == 3" [class.my-step-error]="step.status == 0">
+                            <mat-icon>{{step.icon}}</mat-icon>
+                            <div class="my-step-label">
+                                {{(step.status < 2)?step.label.standBy:((step.status == 2)?step.label.active:step.label.done)}} <mat-progress-bar *ngIf="step.status == 2" mode="indeterminate"></mat-progress-bar>
+                                <small *ngIf="step.status == 0" class="my-step-error-message">{{step.errorMessage}}</small>
+                            </div>
+                            <mat-icon *ngIf="step.status == 3">done</mat-icon>
+                            <mat-icon *ngIf="step.status == 0">error</mat-icon>
+                        </div>
+                        <div *ngIf="(i+1) < stepperConfig.steps.length" class="my-step-separator"></div>
+                    </ng-container>
+                </div>
+                
+            </div>
+            
         </mat-card>
+        
     </section>
     <section fxFlex fxLayout="row">
         <mat-card fxFlex fxLayout="column" >
