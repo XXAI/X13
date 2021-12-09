@@ -1,74 +1,95 @@
 .data-container {
-    position: relative;
-    min-height: 200px;
+  position: relative;
+  min-height: 200px;
 }
 
 .data-table-container {
-    position: relative;
-    max-height: 400px;
-    min-height:200px;
-    overflow: auto;
+  position: relative;
+  max-height: 400px;
+  min-height:200px;
+  overflow: auto;
 }
 
 .data-loading-shade {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.15);
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 table {
-  width: 100%;
+width: 100%;
 }
-  
+
+table th {
+padding:0 5px;
+text-align: center;
+}
+
+table td {
+padding:0 5px;
+}
+
 .mat-form-field {
-  font-size: 14px;
-  width: 100%;
+font-size: 14px;
+width: 100%;
 }
 
 /* Column Widths */
 .mat-column-actions{
-  max-width: 75px;
-  min-width: 60px;
+max-width: 75px;
+min-width: 60px;
 }
 
 .selected-item{
-  background-color: lightskyblue;
+background-color: lightskyblue;
 }
 
 .not-results-found{
-  text-align: center;
-  font-style: italic;
+text-align: center;
+font-style: italic;
 }
 
 .loading-results{
-  width: 100%;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.15);
-  text-align: center;
-  font-style: italic;
+width: 100%;
+top: 0;
+left: 0;
+right: 0;
+background: rgba(0, 0, 0, 0.15);
+text-align: center;
+font-style: italic;
 }
 
 .loading-results mat-spinner{
-  margin:0 auto;
+margin:0 auto;
 }
 
 .hide{
-  display: none;
+display: none;
 }
 
 .search-button {
-  display: flex;
-  align-content: center;
-  align-items: center;
-  height: 60px;
-  margin: 0 10px;
+display: flex;
+align-content: center;
+align-items: center;
+height: 60px;
+margin: 0 10px;
+}
+
+.borrador-color{
+color:#6b6767;
+}
+
+.concluido-color{
+color:#07a8ff;
+}
+
+.cancelado-color{
+color:#ff2a2a;
 }

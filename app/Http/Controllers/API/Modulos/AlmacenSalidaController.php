@@ -18,7 +18,7 @@ use App\Models\Movimiento;
 use App\Models\Stock;
 use App\Models\CartaCanje;
 
-class AlmacenEntradaController extends Controller
+class AlmacenSalidaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,7 +35,7 @@ class AlmacenEntradaController extends Controller
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('programas','programas.id','=','movimientos.programa_id')
                                     ->leftJoin('proveedores','proveedores.id','=','movimientos.proveedor_id')
-                                    ->where('movimientos.direccion_movimiento','ENT')
+                                    ->where('movimientos.direccion_movimiento','SAL')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->orderBy('updated_at','DESC');
             
@@ -132,7 +132,9 @@ class AlmacenEntradaController extends Controller
                 throw new \Exception("Hacen falta campos obligatorios", 1);
             }
 
-            $concluir = $parametros['concluir'];
+            $movimiento = 'SUP';
+
+            /*$concluir = $parametros['concluir'];
 
             $datos_movimiento = [
                 'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
@@ -329,7 +331,7 @@ class AlmacenEntradaController extends Controller
             $movimiento->total_monto = $total_monto;
             $movimiento->save();
             
-            DB::commit();
+            DB::commit();*/
             
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

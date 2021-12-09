@@ -1,3 +1,68 @@
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width:100%;
+    height:100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.readonly-wrapper {
+    cursor: not-allowed;
+}
+
+.readonly-wrapper .readonly-block {
+    pointer-events: none;
+}
+
+.data-table{
+    width: 100%;
+}
+
+.data-table th {
+    text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+table td {
+    padding:0 2px;
+}
+
+.hide{
+    display: none;
+}
+
+.articulo-bg-color{
+    background-color: cornflowerblue !important;
+}
+
+.articulo-color{
+    color: cornflowerblue !important;
+}
+
+.articulo-row-color{
+    background-color: #d9e6ff !important;
+}
+
+.icono-tipo-insumo{
+    height: 25px;
+}
+
+:host ::ng-deep .filtro-tipo-insumo .mat-button-toggle-button{
+    text-shadow: 1px 1px black !important;
+    font-size: small;
+}
+
 .mat-button-toggle {
     color: rgba(0,0,0,1);
 }
@@ -5,4 +70,231 @@
 .mat-button-toggle-checked {
     background-color: lightskyblue;
     color: rgba(0,0,0,.54);
+}
+
+:host ::ng-deep .mat-radio-container{
+    height: 12px;
+    width: 12px;
+}
+:host ::ng-deep .mat-radio-outer-circle{
+    height: 12px;
+    width: 12px;
+}
+:host ::ng-deep .mat-radio-inner-circle{
+    height: 12px;
+    width: 12px;
+}
+:host ::ng-deep .mat-radio-button .mat-radio-ripple{
+    height: 24px; /*double of your required circle radius*/
+    width: 24px;  /*double of your required circle radius*/
+    left: calc(50% - 12px); /*'12px'-same as your required circle radius*/
+    top: calc(50% - 12px); /*'12px'-same as your required circle radius*/
+}
+
+:host ::ng-deep .mat-radio-label-content{
+    padding-right:5px;
+}
+
+.salida-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.insumo-lotes-tile:hover {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border: dashed thin black;
+    z-index: 99999;
+
+    filter: brightness(125%);
+}
+
+.unidad-entrega{
+    text-align: center;
+    font-weight: 400;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+
+.label-unidad-entrega{
+    font-weight: 300;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.small-search-input{
+    padding: 0px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos > .mat-form-field{
+    background-color: rgb(213, 213, 255);
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: whitesmoke;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos .mat-form-field-label { 
+    font-weight: bolder !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+:host ::ng-deep .mat-list-base[dense] .mat-list-item{
+    height: 25px;
+}
+
+.no-items-found{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+    text-align: center;
+    color:#a9a9a9;
+    font-size: 16px;
+    padding-top: 15px;
+}
+
+.unidad-seleccionada{
+    background-color: #daf7e7;
+}
+
+.unidad-medica-item{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+    cursor: default;
+}
+
+.seleccionable{
+    cursor: pointer;
+}
+
+.unidad-medica-item .datos-unidad .titulo{
+    font-weight: 450; 
+    font-size: 16px; 
+    padding-top:5px;
+}
+
+.unidad-medica-item .datos-unidad .descripcion{
+    font-size: 14px;
+    font-size: 1vw;
+    color:#8c8c8c;
+}
+
+.unidad-medica-item .datos-unidad .detalles{
+    font-size: 14px;
+    color:#575757;
+}
+
+.estatus-pedido{
+    padding:5px;
+    text-align: center;
+    background-color: #dddddd;
+    font-weight: bold;
+}
+
+.nuevo-color{
+    color:#8f8787;
+}
+
+.borrador-color{
+    color:#6b6767;
+}
+
+.concluido-color{
+    color:#07a8ff;
+}
+
+.validado-color{
+    color:#03fc5e;
+}
+
+.cancelado-color{
+    color:#ff2a2a;
+}
+
+.expirado-color{
+    color:#fdcd2f;
+}
+
+tr.tabla-row-articulo{
+    cursor: pointer;
+}
+
+tr.tabla-row-articulo td{
+    border-bottom-width: 0;
+}
+
+tr.tabla-row-articulo:not(.tabla-row-articulo-expandido):hover{
+    background-color: whitesmoke;
+}
+
+tr.tabla-row-articulo:not(.tabla-row-articulo-expandido):active {
+    background: #efefef;
+}
+
+tr.tabla-row-articulo.tabla-row-articulo-expandido{
+    background-color: #c7dfd2;
+    font-weight: bold;
+}
+
+tr.tabla-row-articulo-detalle{
+    background-color: #daf7e7;
+    height: 0;
+}
+
+.articulo-detalle-listado-lotes {
+    overflow: hidden;
+    display: flex;
+}
+
+.articulo-listado-lotes{
+    width: 100%;
+    padding: 0 10px 10px 10px;
+}
+
+.medium-button{
+    line-height: 30px !important;
+}
+
+.medium-button .mat-icon {
+    width: 22px !important;
+    height: 22px !important;
+    line-height: 22px !important;
+}
+
+.medium-button .material-icons {
+    font-size: 22px !important;
+}
+
+.estatus-articulo-verde{
+    color:#1e7c41;
+}
+
+.estatus-articulo-ambar{
+    color:#ff9900;
+}
+
+.estatus-articulo-rojo{
+    color:#ff2a2a;
 }

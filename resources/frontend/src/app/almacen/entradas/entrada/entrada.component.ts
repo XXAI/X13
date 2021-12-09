@@ -155,7 +155,9 @@ export class EntradaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    this.almacenService.obtenerMovimientoCatalogos().subscribe(
+    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',tipos_movimiento:'movimiento.ENT'};
+
+    this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
@@ -248,6 +250,9 @@ export class EntradaComponent implements OnInit {
                     precio_unitario:  lista_articulos[i].precio_unitario,
                     iva:              lista_articulos[i].iva,
                     total_monto:      lista_articulos[i].total_monto,
+                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                    vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
                   }];
                   
                   articulo.no_lotes = 1;
@@ -268,6 +273,9 @@ export class EntradaComponent implements OnInit {
                     precio_unitario:  lista_articulos[i].precio_unitario,
                     iva:              lista_articulos[i].iva,
                     total_monto:      lista_articulos[i].total_monto,
+                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                    vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
                   });
                   
                   articulo.no_lotes += 1;

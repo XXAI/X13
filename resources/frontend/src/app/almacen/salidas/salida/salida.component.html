@@ -1,77 +1,282 @@
-<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
-    <section fxFlex="none" fxLayout="row">
-        <div fxFlex="none">
-            <button mat-raised-button color="primary"><mat-icon>save_alt</mat-icon> Finalizar</button>
+<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
+    <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
+        <div fxLayout="row">
+            <button fxFlex="none" mat-button [routerLink]="'/almacen/salidas'"><mat-icon>backspace</mat-icon> Volver</button>
+            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuMovimiento" aria-label="Menu de salida" *ngIf="estatusMovimiento != 'NV'">
+                <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
+            </button>
+            <button fxFlex="none" mat-button *ngIf="verBoton['guardar']" [matTooltip]="'Guardar'" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
+                <mat-icon>save</mat-icon>
+            </button>
+            <div fxFlex>
+            </div>
+            <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
+                <div fxFlex fxLayout="row" class="estatus-pedido {{listaEstatusClaves[estatusMovimiento]}}-color">
+                    <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
+                    <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[estatusMovimiento]}}</span>
+                </div>
+            </div>
         </div>
-        <div fxFlex></div>
-        <div fxFlex="none">
-            <button [routerLink]="'/almacen/salidas'" mat-button>Cancelar</button>
-            &nbsp;
-            <button mat-raised-button color="accent"><mat-icon>save</mat-icon> Guardar</button>
-        </div>
-    </section>
-    <section fxFlex fxLayout="row" fxLayoutGap="10px">
-        <mat-card fxFlex="30" fxLayout="column">
-            <div fxFlex="none" fxLayout="row raw" [formGroup]="formSalida">
-                <mat-form-field fxFlex="100">
-                    <mat-label>Fecha Entrada (aaaa-mm-dd)</mat-label>
-                    <input matInput mascaraFecha formControlName="fecha_movimiento" required>
-                    <mat-hint>Ejemplo: 1985-08-15</mat-hint>
-                    <mat-error *ngIf="formSalida.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+        <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
+        <mat-menu #menuMovimiento="matMenu">
+            <!--button mat-menu-item *ngIf="verBoton['guardar']" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
+                <mat-icon>save</mat-icon>
+                <span>Guardar</span>
+                height:10px; padding-top: 15px;
+            </button>
+            <mat-divider></mat-divider-->
+            <button mat-menu-item *ngIf="verBoton['enviar_revision'] && estatusMovimiento == 'BOR'">
+                <mat-icon>outbox</mat-icon>
+                <span>Enviar a Revisión</span>
+            </button>
+            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+                <mat-icon>all_inbox</mat-icon>
+                <span>Concluir Movimiento</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'">
+                <mat-icon color="warn">delete</mat-icon>
+                <span>Eliminar Salida</span>
+            </button>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'CON'">
+                <mat-icon color="warn">cancel</mat-icon>
+                <span>Cancelar Salida</span>
+            </button>
+            <mat-divider *ngIf="estatusMovimiento == 'CON' || estatusMovimiento == 'BOR'"></mat-divider>
+            <button mat-menu-item *ngIf="estatusMovimiento == 'CON'">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir</span>
+            </button>
+        </mat-menu>
+    </section> <!-- <<<<<<< Toolbar Menu -->
+
+    <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: auto;"> <!-- Module Body <<<<<<< -->
+        <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
+        <section fxFlex="none" fxLayout="column">
+            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" fxLayoutAlign="space-between center" [formGroup]="formMovimiento" [style.fontSize.px]="15">
+                <mat-form-field fxFlex="none">
+                    <mat-label>Fecha Salida</mat-label>
+                    <input matInput formControlName="fecha_movimiento" [max]="maxFechaMovimiento" [matDatepicker]="picker" required readonly>
+                    <mat-datepicker-toggle matPrefix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker [disabled]="!editable"></mat-datepicker>
+                    <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
+                    <mat-error *ngIf="formMovimiento.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
-                <mat-form-field fxFlex="100">
-                    <mat-label>Folio</mat-label>
-                    <input matInput formControlName="folio">
-                    <mat-hint>En caso de ser necesario</mat-hint>
-                </mat-form-field>
-                <mat-form-field fxFlex="100">
-                    <mat-label>Descripcion</mat-label>
-                    <input matInput formControlName="descripcion" required>
-                    <mat-error *ngIf="formSalida.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
-                </mat-form-field>
-                <mat-form-field fxFlex="100">
-                    <mat-label>Persona que Entrega</mat-label>
-                    <input matInput formControlName="actor" required>
-                    <mat-error *ngIf="formSalida.get('actor').hasError('required')">Este campo es obligatorio</mat-error>
-                </mat-form-field>
-                <mat-form-field fxFlex="100">
-                    <mat-label>Programa</mat-label>
-                    <mat-select formControlName="programa_id">
-                        <mat-option *ngIf="catalogos['programas'].length == 0">Sin Programas</mat-option>
-                        <mat-option *ngFor="let item of catalogos['programas']" [value]="item.id">
+
+                <mat-form-field fxFlex>
+                    <mat-label>Tipo de Salida</mat-label>
+                    <mat-select formControlName="tipo_movimiento_id" required>
+                        <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0">Sin Tipos de Movimiento</mat-option>
+                        <mat-option *ngFor="let item of catalogos['tipos_movimiento']" [value]="item.id">
                             {{item.descripcion}}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
-                <mat-form-field  fxFlex="100">
-                    <mat-label>Observaciones</mat-label>
-                    <textarea matInput formControlName="observaciones" rows="2"></textarea>
+
+                <mat-form-field fxFlex>
+                    <mat-label>Almacen</mat-label>
+                    <mat-select formControlName="almacen_id" required>
+                        <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
+                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
+                            {{item.nombre}}
+                        </mat-option>
+                    </mat-select>
                 </mat-form-field>
-            </div>
-            <div fxFlex></div>
-            <div fxFlex="none">
-                <button fxFlex mat-raised-button color="info"><mat-icon>settings</mat-icon> Lista de Insumos</button>
-            </div>
-        </mat-card>
-        <mat-card fxFlex fxLayout="column" fxLayoutGap="5px">
-            <div fxFlex="none" fxLayout="row">
-                <div fxFlex></div>
-                <div fxFlex="none">
-                    <mat-button-toggle-group appearance="legacy" name="fontStyle" aria-label="Font Style">
-                        <mat-button-toggle [checked]="true" value="*">Insumos: {{totales.insumos | number}}</mat-button-toggle>
-                        <mat-button-toggle value="MED">Medicamentos: {{totales.medicamentos | number}}</mat-button-toggle>
-                        <mat-button-toggle value="MTC">Material de Curación: {{totales.mat_curacion | number}}</mat-button-toggle>
-                    </mat-button-toggle-group>
-                </div>
-                <div fxFlex></div>
-            </div>
-            <mat-divider [inset]="true"></mat-divider>
-            <div fxFlex>lista</div>
-        </mat-card>
-    </section>
-    
-    <section fxFlex="none" fxLayout="row">
-        <div fxFlex></div>
+                
+                <mat-form-field fxFlex>
+                    <mat-label>Programa</mat-label>
+                    <input type="text" matInput formControlName="programa" [matAutocomplete]="autoProgramas">
+                    <mat-autocomplete #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                        <mat-option *ngIf="catalogos['programas'].length == 0" value="">No hay programas capturados</mat-option>
+                        <mat-option *ngFor="let programa of filteredProgramas | async" [value]="programa">
+                            {{programa.descripcion}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formMovimiento.get('programa').value"><mat-icon>{{(formMovimiento.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                </mat-form-field>
+
+                <!--mat-form-field fxFlex="none">
+                    <mat-label>No de Referencia</mat-label>
+                    <input matInput formControlName="referencia_folio">
+                    <mat-hint>Folio de Referencia o Factura</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field fxFlex="none">
+                    <mat-label>Fecha de Referencia</mat-label>
+                    <input matInput formControlName="referencia_fecha" [max]="maxFechaMovimiento" [matDatepicker]="pickerReferencia" readonly>
+                    <mat-datepicker-toggle matPrefix [for]="pickerReferencia"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerReferencia [disabled]="!editable" startView="year"></mat-datepicker>
+                    <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
+                </mat-form-field-->
+
+                <mat-form-field fxFlex>
+                    <mat-label>Observaciones</mat-label>
+                    <textarea matInput formControlName="observaciones" rows="1" [readonly]="!editable"></textarea>
+                </mat-form-field>
+            </mat-card>
+        </section>
+
+        <section fxFlex fxLayout="row" fxLayoutGap="10px">
+            <section fxFlex="25" fxLayout="column">
+                <mat-card fxFlex="none" fxLayout="column" *ngIf="verBoton['agregar_articulos']" style="padding:0px; margin-bottom: 5px;">
+                    <widget-buscador-stock fxFlex="none" [mostrarExistencias]="true" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-stock>
+                </mat-card>
+                <mat-card fxFlex fxLayout="column" style="overflow: auto;">
+                    <div fxFlex="none" fxLayout="column">
+                        <mat-list role="list" dense *ngIf="totalesSalida">
+                            <mat-divider></mat-divider>
+                            <h3 matSubheader>Totales</h3>
+                            <mat-divider></mat-divider>
+                            <mat-list-item role="listitem">
+                                Claves: {{ totalesSalida.claves | number }}
+                            </mat-list-item>
+                            <mat-list-item role="listitem">
+                                Articulos: {{ totalesSalida.articulos | number}}
+                            </mat-list-item>
+                            <mat-list-item role="listitem">
+                                Monto: $ {{ totalesSalida.monto | number:'1.2-2'}}
+                            </mat-list-item>
+                            <ng-template *ngIf="totalesSalida.por_caducar.claves > 0">
+                                <mat-divider></mat-divider>
+                                <h3 matSubheader>Por Caducar</h3>
+                                <mat-divider></mat-divider>
+                                <mat-list-item role="listitem">
+                                    Claves: {{ totalesSalida.por_caducar.claves | number }}
+                                </mat-list-item>
+                                <mat-list-item role="listitem">
+                                    Articulos: {{ totalesSalida.por_caducar.articulos | number}}
+                                </mat-list-item>
+                                <mat-list-item role="listitem">
+                                    Monto: $ {{ totalesSalida.por_caducar.monto | number:'1.2-2'}}
+                                </mat-list-item>
+                            </ng-template>
+                            <ng-template *ngIf="totalesSalida.caducados.claves > 0">
+                                <mat-divider></mat-divider>
+                                <h3 matSubheader>Caducados</h3>
+                                <mat-divider></mat-divider>
+                                <mat-list-item role="listitem">
+                                    Claves: {{ totalesSalida.caducados.claves | number }}
+                                </mat-list-item>
+                                <mat-list-item role="listitem">
+                                    Articulos: {{ totalesSalida.caducados.articulos | number}}
+                                </mat-list-item>
+                                <mat-list-item role="listitem">
+                                    Monto: $ {{ totalesSalida.caducados.monto | number:'1.2-2'}}
+                                </mat-list-item>
+                            </ng-template>
+                        </mat-list>
+                    </div>
+                    <div fxFlex fxLayout="column"></div>
+                </mat-card>
+            </section>
+            <section fxFlex fxLayout="column">
+                <mat-card fxFlex="100" fxLayout="column">
+                    <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
+                        <div fxFlex class="small-search-input">
+                            <mat-form-field fxFlex appearance="outline">
+                                <input matInput [(ngModel)]="filtroArticulos" (keyup)="aplicarFiltroArticulos($event)" placeholder="Filtrar">
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="none">
+                            <button mat-stroked-button (click)="limpiarFiltroArticulos()" [disabled]="!filtroAplicado">
+                                <mat-icon>filter_alt_off</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex style="overflow: auto;">
+                        <table mat-table [dataSource]="dataSourceArticulos" class="data-table" matSort multiTemplateDataRows>
+                            
+                            <ng-container matColumnDef="estatus" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Estatus </th>
+                                <td mat-cell *matCellDef="let row" style="text-align: center;">
+                                    <mat-icon class="estatus-articulo-{{estatusArticulosColores[row.estatus]}}">{{estatusArticulosIconos[row.estatus]}}</mat-icon>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="clave">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
+                                <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                                    {{row.clave}}
+                                </td>
+                            </ng-container>
+                            
+                            <ng-container matColumnDef="nombre" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Nombre </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre}} </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="no_lotes" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> # Lotes </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.no_lotes | number:'1.0-0'}} </td>
+                            </ng-container>
+                            
+                            <ng-container matColumnDef="total_piezas" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> Cantidad </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_piezas | number:'1.0-0'}} </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="total_monto" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="text-align: center; white-space: nowrap;"> Monto </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> ${{row.total_monto | number:'1.2-2'}} </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="actions">
+                                <th mat-header-cell width="1" *matHeaderCellDef></th>
+                                <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
+                                    <mat-icon>{{(idArticuloSeleccionado == row.id)?'expand_less':'expand_more'}}</mat-icon>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="expandedDetail">
+                                <td mat-cell *matCellDef="let articulo" [attr.colspan]="displayedColumns.length">
+                                    <div class="articulo-detalle-listado-lotes" [@detailExpand]="articulo.id == idArticuloSeleccionado ? 'expanded' : 'collapsed'">
+                                    <div class="articulo-listado-lotes">
+                                        <div fxLayout="column">
+                                            <div fxFlex="none">
+                                                {{articulo.descripcion}}
+                                            </div>
+                                            <div fxFlex="none" fxLayout="row">
+                                                <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Indispensable" *ngIf="articulo.indispensable" style="color:green;">notification_important</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
+                                                <div fxFlex></div>
+                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos">
+                                                    <mat-icon>delete</mat-icon> Eliminar Articulo
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <!--inner-articulo-admin-lista-lotes   [articulo]="articulo" 
+                                                                            [edicionActiva]="puedeEditarElementos" 
+                                                                            [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
+                                                                            (cambiosEnLotes)="aplicarCambios($event)">
+                                        </inner-articulo-admin-lista-lotes-->
+                                    </div>
+                                    </div>
+                                </td>
+                            </ng-container>
         
-    </section>
-</section>
+                            <ng-container matColumnDef="noResultsFound">
+                                <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron articulos </td>
+                            </ng-container>
+                            
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                            <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;" 
+                                (click)="expandirRow(row)" [class.tabla-row-articulo-expandido]="idArticuloSeleccionado === row.id" >
+                            <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="tabla-row-articulo-detalle"></tr>
+        
+                            <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide': dataSourceArticulos && dataSourceArticulos.filteredData.length > 0}"></tr>
+                        </table>
+                    </div>
+                    <div fxFlex="none" fxLayout="row">
+                        <div fxFlex="none" style="padding-top: 10px;">
+                        </div>
+                        <div fxFlex>
+                            <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
+                        </div>
+                    </div>
+                </mat-card>
+            </section>
+        </section>
+    </section> <!-- <<<<<<< Module Body -->
+</section> <!-- <<<<<<< Main Body -->

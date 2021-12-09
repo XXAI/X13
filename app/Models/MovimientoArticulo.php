@@ -19,4 +19,8 @@ class MovimientoArticulo extends Model{
     public function stock(){
         return $this->belongsTo('App\Models\Stock','stock_id');
     }
+
+    public function cartaCanje(){
+        return $this->hasOne('App\Models\CartaCanje','movimiento_articulo_id');
+    }
 }

@@ -138,11 +138,11 @@
                             <span>Generar PDF</span>
                         </button>
                         <mat-divider></mat-divider>
-                        <button mat-menu-item color="warn" *ngIf="estatus != 'ME-BR'">
+                        <button mat-menu-item color="warn" *ngIf="estatus != 'BOR'">
                             <mat-icon color="warn">cancel</mat-icon>
                             <span>Cancelar</span>
                         </button>
-                        <button mat-menu-item color="warn" *ngIf="estatus == 'ME-BR'" (click)="eliminarEntrada(id)">
+                        <button mat-menu-item color="warn" *ngIf="estatus == 'BOR'" (click)="eliminarEntrada(id)">
                             <mat-icon color="warn">delete</mat-icon>
                             <span>Eliminar</span>
                         </button>

@@ -90,3 +90,35 @@
     color:#ff2a2a;
 }
 
+.carta-canje .cc-campo{
+    background-color: rgb(255, 253, 210);
+    padding: 0 2px;
+    border-top: 2px solid rgb(84, 22, 0);
+    border-bottom: 2px solid rgb(84, 22, 0);
+}
+
+.carta-canje .cc-etiqueta{
+    text-align: center;
+    color: whitesmoke;
+    display: table;
+    height: 100%;
+}
+
+.carta-canje .cc-etiqueta > div{
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.carta-canje > div:first-of-type{
+    background-color: rgb(99, 99, 99) !important;
+    padding: 5px;
+    border: 2px solid rgb(84, 22, 0);
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;    
+}
+
+.carta-canje > div:last-of-type{
+    border-right: 2px solid rgb(84, 22, 0);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;    
+}

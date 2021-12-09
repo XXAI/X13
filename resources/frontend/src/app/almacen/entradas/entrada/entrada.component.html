@@ -2,7 +2,7 @@
     <section fxFlex="none" class="entrada-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
             <button fxFlex="none" mat-button [routerLink]="'/almacen/entradas'"><mat-icon>backspace</mat-icon> Volver</button>
-            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuMovimiento" aria-label="Menu de entrada">
+            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuMovimiento" aria-label="Menu de entrada" *ngIf="estatusMovimiento != 'NV'">
                 <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
             </button>
             <button fxFlex="none" mat-button *ngIf="verBoton['guardar']" [matTooltip]="'Guardar'" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
@@ -138,7 +138,7 @@
         <section fxFlex fxLayout="row" fxLayoutGap="10px">
             <section fxFlex="25" fxLayout="column">
                 <mat-card fxFlex="none" fxLayout="column" *ngIf="verBoton['agregar_articulos']" style="padding:0px; margin-bottom: 5px;">
-                    <widget-buscador-articulos fxFlex="none" [mostrarExistencias]="true" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-articulos>
+                    <widget-buscador-articulos fxFlex="none" [mostrarExistencias]="false" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-articulos>
                 </mat-card>
                 <mat-card fxFlex fxLayout="column" style="overflow: auto;">
                     <div fxFlex="none" fxLayout="column">

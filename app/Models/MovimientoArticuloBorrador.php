@@ -21,7 +21,8 @@ class MovimientoArticuloBorrador extends Model{
         'user_id',
         'precio_unitario',
         'iva',
-        'total_monto'
+        'total_monto',
+        'memo_folio','memo_fecha','vigencia_meses'
     ];
 
     public function articulo(){
