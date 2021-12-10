@@ -44,7 +44,8 @@ export class ReporteAlmacenEntrada{
               }
             ]
           },
-          footer: function(currentPage, pageCount) { 
+          
+          footer: function(currentPage, pageCount) {
             return {
               margin: [30, 20, 30, 0],
               columns: [
@@ -125,8 +126,17 @@ export class ReporteAlmacenEntrada{
               fontSize: 10,
               alignment:"center",
             },
+            marca_de_agua:{
+              color: 'black',
+              opacity: 0.3,
+              bold: true,
+              italics: true,
+              fontSize: 55,
+              alignment:"center",
+            }
           }
         };
+
 
         let entrada = reportData.items;
         let total_entrada = parseFloat(entrada.total_monto);
@@ -139,6 +149,7 @@ export class ReporteAlmacenEntrada{
           return '$ ' +str.join(".");
         }
         let monto_total = numberFormat(total_entrada);
+        let IVA = parseFloat((entrada?.iva)?entrada?.iva:0.00);
 
 
 
@@ -211,31 +222,55 @@ export class ReporteAlmacenEntrada{
                 {text: "PRODUCTO",            style: 'cabecera'},
                 {text: "PRECIO UNITARIO",     style: 'cabecera'},
                 {text: "IMPORTE",             style: 'cabecera'},
-                
+
               ]
             ]
           }
         });
 
         let total_pedido = 0;
-        for(let i = 0; i < entrada.lista_articulos_borrador.length; i++){
-          let item            = entrada.lista_articulos_borrador[i];
-          let fecha_caducidad = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(item.fecha_caducidad));
-          datos.content[1].table.body.push([  
+        let tabla_articulos = [];
+        let borrador = {};
+
+        switch (entrada.estatus) {
+
+          case 'FIN':
+            tabla_articulos = entrada.lista_articulos;
+            borrador = { text: '\n\n\n\n\n\n'};
+              break;
+          case 'BOR':
+            tabla_articulos = entrada.lista_articulos_borrador;
+            borrador = { text: '\nBORRADOR\n\n\n', style: 'marca_de_agua',};
+              break;
+          case 'CANCL':
+            tabla_articulos = entrada.lista_articulos;
+            borrador = { text: '\n\n\n\n\n\n', style: 'marca_de_agua',};
+              break;
+
+          default:0
+
+        }
+
+        for(let i = 0; i < tabla_articulos.length; i++){
+          let item            = tabla_articulos[i];
+          let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
+          let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
+
+          datos.content[1].table.body.push([
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
             { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
-            { text: item.lote,                                                                      style: 'tabla_datos_center'},
+            { text: (item.stock?.lote)?item.stock?.lote:'S/L',                                      style: 'tabla_datos_center'},
             { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
             { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
             { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
             { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
             { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
-            
+
           ]);
           //total_pedido += item.cantidad;
         }
 
-        datos.content[1].table.body.push([  
+        datos.content[1].table.body.push([
           { text: '', colSpan: 6, border: [false, false, false, false,]},
           { text: ''},
           { text: ''},
@@ -246,7 +281,7 @@ export class ReporteAlmacenEntrada{
           { text: monto_total,   style: 'tabla_datos_right'},
         ]);
 
-        datos.content[1].table.body.push([  
+        datos.content[1].table.body.push([
           { text: '', colSpan: 6, border: [false, false, false, false,]},
           { text: ''},
           { text: ''},
@@ -254,10 +289,10 @@ export class ReporteAlmacenEntrada{
           { text: ''},
           { text: ''},
           { text: 'IVA:',        style: 'subcabecera'},
-          { text: 0.0000,   style: 'tabla_datos_right'},
+          { text: IVA,   style: 'tabla_datos_right'},
         ]);
 
-        datos.content[1].table.body.push([  
+        datos.content[1].table.body.push([
           { text: '', colSpan: 6, border: [false, false, false, false,]},
           { text: ''},
           { text: ''},
@@ -275,7 +310,7 @@ export class ReporteAlmacenEntrada{
             margin: [0,0,0,0],
             body: [
               [
-                { text: "\n\n\n\n\n\n", style: "tabla_datos"}
+                borrador
               ]
             ]
           }
