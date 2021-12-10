@@ -9,9 +9,9 @@
     <span class="spacer"></span>
 
     <ng-template [ngIf]="isAuthenticated">
-      <!--button mat-icon-button color="white" [matMenuTriggerFor]="menuApps" fxHide.xs>
+      <button mat-icon-button color="white" [matMenuTriggerFor]="menuApps" fxHide.xs>
         <mat-icon aria-label="Apps">apps</mat-icon>
-      </button-->
+      </button>
 
       <button mat-icon-button aria-label="Mostrar Sidenav" (click)="toggleSidenav()" fxShow.xs fxHide>
         <img src="{{user.avatar}}" alt="" style="width:auto; margin:auto">
@@ -23,10 +23,10 @@
         <img src="{{user.avatar}}" alt="" style="width:auto; margin:auto">
       </button>
 
-      <!--mat-menu #menuApps="matMenu">
+      <mat-menu #menuApps="matMenu">
         <div class="apps" fxLayout="row" fxLayoutAlign="center center">
           <ng-container *ngFor="let app of apps; let i = index">
-              <figure [routerLink]="['/'+app.route]" *ngIf="i<12" matTooltip="{{app.name}}">
+              <figure [routerLink]="['/'+app.route]">
                   <img src="{{ app.icon }}" alt="Icon">
                   <figcaption class="ellipsis">{{ app.name }}</figcaption>
               </figure>
@@ -34,9 +34,9 @@
         </div>
         <mat-divider></mat-divider>
         <button mat-menu-item style="text-align:center" routerLink="/apps">
-          <mat-icon>more_horiz</mat-icon>
+          <mat-icon>home</mat-icon>
         </button>
-      </mat-menu-->
+      </mat-menu>
 
       <mat-menu #menuAccount="matMenu">
         <div style="width:280px;" style="display:flex; justify-content: start center">
@@ -57,7 +57,7 @@
             <mat-icon>settings</mat-icon> Configuración de Usuario
           </button>
         </div>
-        <mat-divider></mat-divider>
+        <!--mat-divider></mat-divider>
         <div>
           <div class="apps" fxLayout="row" fxLayoutAlign="center center">
             <ng-container *ngFor="let app of apps; let i = index">
@@ -70,7 +70,7 @@
           <button mat-menu-item style="text-align:center" routerLink="/apps">
             <mat-icon>apps</mat-icon>
           </button>
-        </div>
+        </div-->
 
         <mat-divider></mat-divider>
         <button mat-menu-item (click)="logout()">

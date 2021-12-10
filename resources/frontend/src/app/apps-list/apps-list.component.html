@@ -1,1 +1,12 @@
-<app-hub [appsList]="apps"></app-hub>
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <div fxFlex></div>
+    <div fxFlex="none" fxLayout="row">
+        <div fxFlex="10"></div>
+        <mat-card fxFlex>
+            <app-hub [appsList]="apps"></app-hub>
+        </mat-card>
+        <div fxFlex="10"></div>
+    </div>
+    <div fxFlex></div>
+</section>
+

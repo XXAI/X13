@@ -223,8 +223,8 @@ export class ListaComponent implements OnInit {
 
 
       this.stepperConfig.steps[0].status = 2;
-
       this.stepperConfig.steps[0].status = 3;
+      
       this.stepperConfig.steps[1].status = 2;
       this.stepperConfig.currentIndex = 1;
 

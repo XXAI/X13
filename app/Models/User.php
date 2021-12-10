@@ -18,7 +18,7 @@ class User extends Authenticatable implements JWTSubject{
      * @var array
      */
     protected $fillable = [
-        'username', 'password', 'name', 'email', 'is_superuser', 'avatar' 
+        'username', 'password', 'name', 'email', 'is_superuser', 'avatar', 'unidad_medica_asignada_id'
     ];
 
     /**
@@ -60,6 +60,10 @@ class User extends Authenticatable implements JWTSubject{
 
     public function permissions(){
         return $this->belongsToMany('App\Models\Permission')->withPivot('status');
+    }
+
+    public function unidadMedicaAsginada(){
+        return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_asignada_id');
     }
 
     //Funciones para validación y obtención de permisos del usuario.

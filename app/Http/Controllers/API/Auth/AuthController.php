@@ -81,7 +81,7 @@ class AuthController extends Controller{
         ];
 
         if($credentials){
-            $usuario = User::where('username',$credentials['username'])->first();
+            $usuario = User::where('username',$credentials['username'])->with('unidadMedicaAsginada')->first();
             $permisos = [];
 
             if($usuario->is_superuser){

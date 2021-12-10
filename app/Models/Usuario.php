@@ -10,7 +10,7 @@ class Usuario extends Model{
     
     use SoftDeletes;
     protected $table = 'users';  
-    protected $fillable = ['username', 'password', 'name', 'email', 'is_superuser', 'avatar' ];
+    protected $fillable = ['username', 'password', 'name', 'email', 'is_superuser', 'avatar', 'unidad_medica_asignada_id' ];
     
     public function roles(){
         return $this->belongsToMany('App\Models\Role');

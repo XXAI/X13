@@ -317,18 +317,9 @@ export class EntradaComponent implements OnInit {
       }
     });
   }
-
-  abrirDrawer(){
-    this.entradaDrawer.open();//.finally(() => this.busquedaArticuloQuery.focus() );
-  }
-
-  cerrarDrawer(){
-    this.entradaDrawer.close();
-  }
   
   agregarArticulo(articulo){ 
-    console.log(articulo);
-
+    //console.log(articulo);
     if(this.controlArticulosAgregados[articulo.id]){
       let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
       articulo = this.dataSourceArticulos.data[index];
@@ -349,8 +340,8 @@ export class EntradaComponent implements OnInit {
       this.controlArticulosModificados[articulo.id] = '*';
     }
 
+    this.idArticuloSeleccionado = null;
     this.dataSourceArticulos.data.unshift(articulo);
-    
     
     this.articulosTable.renderRows();
     this.dataSourceArticulos.paginator = this.articulosPaginator;

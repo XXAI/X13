@@ -32,12 +32,15 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   coloresCaducidad: any;
   listaIconosEstatus: any;
   etiquetaEstatus: string;
+
+  mostrarCartaCanje: boolean;
   
   ngOnInit(): void {
     this.coloresCaducidad = {1:'verde', 2:'ambar', 3:'rojo'};
     this.listaIconosEstatus = {1:'task_alt', 2:'notification_important', 3:'warning'};
     this.fechaActual = new Date();
     this.loteEditIndex = -1;
+    this.mostrarCartaCanje = false;
 
     let formConfig:any = {
       id:[''],
@@ -120,6 +123,12 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     item.memo_fecha = new Date(item.memo_fecha + 'T00:00:00');
     item.fecha_caducidad = new Date(item.fecha_caducidad + 'T00:00:00');
 
+    if(item.memo_folio){
+      this.toggleCartaCanje(true);
+    }else{
+      this.toggleCartaCanje(false);
+    }
+
     this.formLote.patchValue(item);
     this.formLote.markAllAsTouched();
     setTimeout(() => {
@@ -135,6 +144,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     this.formLote.reset();
     this.estatusCaducidad = 1;
     this.etiquetaEstatus = '';
+    this.mostrarCartaCanje = false;
   }
 
   checarCaducidadFormulario(){
@@ -174,7 +184,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         estatus_caducidad.label = 'Por caducar';
       }
 
-      if(estatus_caducidad.estatus > 1){
+      /*if(estatus_caducidad.estatus > 1){
         this.formLote.addControl('memo_folio',new FormControl(''));
         this.formLote.addControl('memo_fecha',new FormControl(''));
         this.formLote.addControl('vigencia_meses',new FormControl(''));
@@ -184,10 +194,28 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
           this.formLote.removeControl('memo_fecha');
           this.formLote.removeControl('vigencia_meses');
         }
-      }
+      }*/
     }
 
     return estatus_caducidad;
+  }
+
+  toggleCartaCanje(mostrar:boolean){
+    this.mostrarCartaCanje = mostrar;
+
+    if(this.mostrarCartaCanje){
+      if(!this.formLote.get('memo_folio')){
+        this.formLote.addControl('memo_folio',new FormControl('',Validators.required));
+        this.formLote.addControl('memo_fecha',new FormControl('',Validators.required));
+        this.formLote.addControl('vigencia_meses',new FormControl('',Validators.required));
+      }
+    }else{
+      if(this.formLote.get('memo_folio')){
+        this.formLote.removeControl('memo_folio');
+        this.formLote.removeControl('memo_fecha');
+        this.formLote.removeControl('vigencia_meses');
+      }
+    }
   }
 
   guardarCambiosLote(addNew:boolean = false){

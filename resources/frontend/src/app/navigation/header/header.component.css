@@ -14,7 +14,7 @@ a:active {
 }
 
 a + a::before {
-    content: " > ";
+    content: "| ";
 }
 
 

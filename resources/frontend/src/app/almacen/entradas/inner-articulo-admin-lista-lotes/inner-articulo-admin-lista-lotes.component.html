@@ -69,7 +69,7 @@
                                 <mat-label>IVA</mat-label>
                                 <input matInput formControlName="iva" (keydown.enter)="guardarCambiosLote()" type="number" autocomplete="off">
                             </mat-form-field>
-                            <div fxFlex="100" fxLayout="row" *ngIf="estatusCaducidad > 1" class="carta-canje">
+                            <div fxFlex="100" fxLayout="row" *ngIf="mostrarCartaCanje" class="carta-canje">
                                 <span fxFlex="fill"></span>
                                 <div fxFlex="18" class="cc-campo">
                                     <div class="cc-etiqueta">
@@ -99,6 +99,9 @@
                                 <span fxFlex="fill"></span>
                             </div>
                             <div fxFlex="100" fxLayout="row" fxLayoutGap="5px" style="padding-top: 2px;">
+                                <button fxFlex="none" mat-button (click)="toggleCartaCanje(!mostrarCartaCanje)" *ngIf="estatusCaducidad > 1" color="accent">
+                                    <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> Carta de Canje
+                                </button>
                                 <div fxFlex></div>
                                 <button fxFlex="none" mat-button (click)="cancelarEdicion()">Cancelar</button>
                                 <button fxFlex="none" color="success" mat-stroked-button (click)="guardarCambiosLote()">Guardar</button>

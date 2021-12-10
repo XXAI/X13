@@ -84,9 +84,9 @@ class AlmacenEntradaController extends Controller
                                                             },'stock','cartaCanje']);
                                             },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
                                                     $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                            }])->find($id);
+                                            },'proveedor'])->find($id);
             if($movimiento->estatus != 'BOR'){
-                $movimiento->load(['proveedor','programa','almacen']);
+                $movimiento->load(['programa','almacen']);
             }
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -193,9 +193,9 @@ class AlmacenEntradaController extends Controller
                             'precio_unitario' => $lote['precio_unitario'],
                             'iva' => $lote['iva'],
                             'total_monto' => $lote['total_monto'],
-                            'memo_folio' => $lote['memo_folio'],
-                            'memo_fecha' => $lote['memo_fecha'],
-                            'vigencia_meses' => $lote['vigencia_meses'],
+                            'memo_folio' => (isset($lote['memo_folio']))?$lote['memo_folio']:null,
+                            'memo_fecha' => (isset($lote['memo_fecha']))?$lote['memo_fecha']:null,
+                            'vigencia_meses' => (isset($lote['vigencia_meses']))?$lote['vigencia_meses']:null,
                             'user_id' => $loggedUser->id,
                         ];
                     }
