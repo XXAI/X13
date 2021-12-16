@@ -67,7 +67,7 @@ export class SalidaComponent implements OnInit {
   pageSizeOptions: number[] = [10, 20, 30, 50];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['estatus','clave','nombre','no_lotes','total_piezas','total_monto','actions'];
+  displayedColumns: string[] = ['estatus','clave','nombre','existencias','total_piezas','existencias_restantes','actions'];//'no_lotes',
   
   editable: boolean;
   puedeEditarElementos: boolean;
@@ -126,11 +126,12 @@ export class SalidaComponent implements OnInit {
       id:[''],
       tipo_movimiento_id:['',Validators.required],
       fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
-      unidad_medica_destino: [''],
-      unidad_medica_destino_id: ['',Validators.required],
+      unidad_medica_movimiento: ['',Validators.required],
+      unidad_medica_movimiento_id: [''],
       almacen_id: ['',Validators.required],
       programa: [''],
       programa_id: [''],
+      documento_folio: [''],
       observaciones: [''],
     });
 
@@ -138,7 +139,7 @@ export class SalidaComponent implements OnInit {
                                 map(descripcion => descripcion ? this._filter('programas',descripcion) : this.catalogos['programas'].slice())
                               );
 
-    this.filteredUnidades = this.formMovimiento.get('unidad_medica_destino').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
+    this.filteredUnidades = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
                                 map(descripcion => descripcion ? this._filter('unidades_medicas',descripcion) : this.catalogos['unidades_medicas'].slice())
                               );
 
@@ -237,7 +238,11 @@ export class SalidaComponent implements OnInit {
                     en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
                     indispensable: (lista_articulos[i].articulo.es_indispensable)?true:false,
                     descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
+                    total_piezas: 0,
                     total_monto: lista_articulos[i].total_monto,
+                    total_lotes: 0,
+                    existencias: 0,
+                    programa_lotes: []
                   };
 
                   /*articulo.lotes = [{
@@ -317,7 +322,35 @@ export class SalidaComponent implements OnInit {
   }
 
   agregarArticulo(articulo){
-    console.log(articulo);
+    //console.log(articulo);
+    if(this.controlArticulosAgregados[articulo.id]){
+      let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
+      articulo = this.dataSourceArticulos.data[index];
+      this.dataSourceArticulos.data.splice(index,1);
+    }else{
+      this.controlArticulosAgregados[articulo.id] = true;
+      //this.controlArticulosModificados[articulo.id] = '+';
+      this.totalesSalida.claves += 1;
+
+      articulo.estatus = 1;
+      articulo.total_monto = parseFloat('0');
+      articulo.no_lotes = 0;
+      articulo.total_piezas = 0;
+      articulo.lotes = [];
+    }
+
+    /*if(!this.controlArticulosModificados[articulo.id]){
+      this.controlArticulosModificados[articulo.id] = '*';
+    }*/
+
+    this.idArticuloSeleccionado = null;
+    this.dataSourceArticulos.data.unshift(articulo);
+    
+    this.articulosTable.renderRows();
+    this.dataSourceArticulos.paginator = this.articulosPaginator;
+    this.dataSourceArticulos.sort = this.sort;
+
+    this.expandirRow(articulo);
   }
 
   quitarArticulo(articulo){ 
@@ -338,7 +371,7 @@ export class SalidaComponent implements OnInit {
 
         //Guardar para papelera
         let articulo_copia = JSON.parse(JSON.stringify(this.dataSourceArticulos.data[index]));
-        this.listadoArticulosEliminados.push(articulo_copia);
+        //this.listadoArticulosEliminados.push(articulo_copia);
 
         this.dataSourceArticulos.data.splice(index,1);
         this.articulosTable.renderRows();
@@ -364,7 +397,57 @@ export class SalidaComponent implements OnInit {
   }
 
   guardarMovimiento(concluir:boolean = false){
-    //
+    if(this.formMovimiento.valid){
+      this.isSaving = true;
+      let formData:any = this.formMovimiento.value;
+      formData.lista_articulos = this.dataSourceArticulos.data;
+      formData.concluir = concluir;
+
+      formData.programa_id = (formData.programa)?formData.programa.id:null;
+      formData.unidad_medica_movimiento_id = (formData.unidad_medica_movimiento)?formData.unidad_medica_movimiento.id:null;
+
+      formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
+      
+      this.salidasService.guardarSalida(formData).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error.message;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          }else{
+            this.formMovimiento.get('id').patchValue(response.data.id);
+
+            if(response.data.estatus == 'BOR'){ //Borrador
+              this.estatusMovimiento = 'BOR';
+            }else if(response.data.estatus == 'FIN'){ //Finalizado
+              this.estatusMovimiento = 'CON';
+            }else if(response.data.estatus == 'CANCL'){ //Cancelado
+              this.estatusMovimiento = 'CAN';
+            }
+
+            if(this.estatusMovimiento != 'BOR'){
+              this.editable = false;
+              this.puedeEditarElementos = false;
+                this.verBoton = {
+                  concluir:false,
+                  guardar:false,
+                  agregar_articulos:false
+                };
+            }
+            this.controlArticulosModificados = {};
+            this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
+          }
+          this.isSaving = false;
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isSaving = false;
+        }
+      );
+    }
   }
 
   aplicarFiltroArticulos(event: Event){ 
@@ -374,6 +457,14 @@ export class SalidaComponent implements OnInit {
       this.filtroAplicado = false;
     }else{
       this.filtroAplicado = true;
+    }
+  }
+
+  aplicarCambios(config: any){
+    if(config.accion == 'ActualizarCantidades'){
+      let articulo = this.dataSourceArticulos.data.find(x => x.id == config.value.id);
+      this.totalesSalida.articulos -= config.value.total_piezas;
+      this.totalesSalida.articulos += articulo.total_piezas;
     }
   }
 

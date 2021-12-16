@@ -95,13 +95,26 @@
                     <mat-hint *ngIf="formMovimiento.get('programa').value"><mat-icon>{{(formMovimiento.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                 </mat-form-field>
 
-                <!--mat-form-field fxFlex="none">
-                    <mat-label>No de Referencia</mat-label>
-                    <input matInput formControlName="referencia_folio">
-                    <mat-hint>Folio de Referencia o Factura</mat-hint>
+                <mat-form-field fxFlex="none">
+                    <mat-label>Folio - Documento</mat-label>
+                    <input matInput formControlName="documento_folio">
+                    <mat-hint>En caso de ser necesario</mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex="none">
+                <mat-form-field fxFlex>
+                    <mat-label>Unidad Destino</mat-label>
+                    <input type="text" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas">
+                    <mat-autocomplete #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
+                        <mat-option *ngIf="catalogos['unidades_medicas'].length == 0" value="">No hay Unidades Medicas capturadas</mat-option>
+                        <mat-option *ngFor="let unidad of filteredUnidades | async" [value]="unidad">
+                            {{unidad.nombre}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formMovimiento.get('unidad_medica_movimiento').value" align="end">[{{formMovimiento.get('unidad_medica_movimiento').value.clues}}]</mat-hint>
+                    <mat-hint *ngIf="formMovimiento.get('unidad_medica_movimiento').value"><mat-icon>{{(formMovimiento.get('unidad_medica_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                </mat-form-field>
+
+                <!--mat-form-field fxFlex="none">
                     <mat-label>Fecha de Referencia</mat-label>
                     <input matInput formControlName="referencia_fecha" [max]="maxFechaMovimiento" [matDatepicker]="pickerReferencia" readonly>
                     <mat-datepicker-toggle matPrefix [for]="pickerReferencia"></mat-datepicker-toggle>
@@ -133,9 +146,6 @@
                             <mat-list-item role="listitem">
                                 Articulos: {{ totalesSalida.articulos | number}}
                             </mat-list-item>
-                            <mat-list-item role="listitem">
-                                Monto: $ {{ totalesSalida.monto | number:'1.2-2'}}
-                            </mat-list-item>
                             <ng-template *ngIf="totalesSalida.por_caducar.claves > 0">
                                 <mat-divider></mat-divider>
                                 <h3 matSubheader>Por Caducar</h3>
@@ -145,9 +155,6 @@
                                 </mat-list-item>
                                 <mat-list-item role="listitem">
                                     Articulos: {{ totalesSalida.por_caducar.articulos | number}}
-                                </mat-list-item>
-                                <mat-list-item role="listitem">
-                                    Monto: $ {{ totalesSalida.por_caducar.monto | number:'1.2-2'}}
                                 </mat-list-item>
                             </ng-template>
                             <ng-template *ngIf="totalesSalida.caducados.claves > 0">
@@ -159,9 +166,6 @@
                                 </mat-list-item>
                                 <mat-list-item role="listitem">
                                     Articulos: {{ totalesSalida.caducados.articulos | number}}
-                                </mat-list-item>
-                                <mat-list-item role="listitem">
-                                    Monto: $ {{ totalesSalida.caducados.monto | number:'1.2-2'}}
                                 </mat-list-item>
                             </ng-template>
                         </mat-list>
@@ -206,19 +210,26 @@
                                 <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre}} </td>
                             </ng-container>
 
+                            <ng-container matColumnDef="existencias" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> Existencias </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> 
+                                    {{row.existencias | number:'1.0-0'}} <span class="extras" *ngIf="row.existencias_extras > 0">(+{{row.existencias_extras | number}})</span>
+                                </td>
+                            </ng-container>
+
                             <ng-container matColumnDef="no_lotes" >
                                 <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> # Lotes </th>
                                 <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.no_lotes | number:'1.0-0'}} </td>
                             </ng-container>
                             
                             <ng-container matColumnDef="total_piezas" >
-                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> Cantidad </th>
-                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_piezas | number:'1.0-0'}} </td>
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: center; white-space: nowrap;"> Cantidad </th>
+                                <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_piezas | number:'1.0-0'}} </td>
                             </ng-container>
 
-                            <ng-container matColumnDef="total_monto" >
-                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="text-align: center; white-space: nowrap;"> Monto </th>
-                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> ${{row.total_monto | number:'1.2-2'}} </td>
+                            <ng-container matColumnDef="existencias_restantes" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: center; white-space: nowrap;"> Restante </th>
+                                <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap; text-align: center;"> {{row.existencias_restantes | number:'1.0-0'}} </td>
                             </ng-container>
 
                             <ng-container matColumnDef="actions">
@@ -242,15 +253,15 @@
                                                 <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
                                                 <div fxFlex></div>
                                                 <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos">
-                                                    <mat-icon>delete</mat-icon> Eliminar Articulo
+                                                    <mat-icon>delete</mat-icon> Quitar Articulo
                                                 </button>
                                             </div>
                                         </div>
-                                        <!--inner-articulo-admin-lista-lotes   [articulo]="articulo" 
+                                        <inner-articulo-lista-lotes   [articulo]="articulo" 
                                                                             [edicionActiva]="puedeEditarElementos" 
                                                                             [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
                                                                             (cambiosEnLotes)="aplicarCambios($event)">
-                                        </inner-articulo-admin-lista-lotes-->
+                                        </inner-articulo-lista-lotes>
                                     </div>
                                     </div>
                                 </td>

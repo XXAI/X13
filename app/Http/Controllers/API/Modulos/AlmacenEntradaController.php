@@ -13,10 +13,13 @@ use App\Http\Requests;
 use Carbon\Carbon;
 use Validator;
 use DB;
+use DateTime;
 
 use App\Models\Movimiento;
 use App\Models\Stock;
 use App\Models\CartaCanje;
+use App\Models\TipoMovimiento;
+use App\Models\UnidadMedica;
 
 class AlmacenEntradaController extends Controller
 {
@@ -144,7 +147,7 @@ class AlmacenEntradaController extends Controller
                 'programa_id' => (isset($parametros['programa_id']) && $parametros['programa_id'])?$parametros['programa_id']:null,
                 'proveedor_id' => (isset($parametros['proveedor_id']) && $parametros['proveedor_id'])?$parametros['proveedor_id']:null,
                 'descripcion' => 'Entrada Manual',
-                'pedido_folio' => $parametros['pedido_folio'],
+                'documento_folio' => $parametros['documento_folio'],
                 'referencia_folio' => $parametros['referencia_folio'],
                 'referencia_fecha' => $parametros['referencia_fecha'],
                 'observaciones' => $parametros['observaciones'],
@@ -153,15 +156,43 @@ class AlmacenEntradaController extends Controller
                 'total_monto' => 0,
             ];
 
+            $consecutivo = 0;
+            $folio = '';
+            if($concluir){
+                //Generar Folio
+                $tipo_movimiento = TipoMovimiento::find($parametros['tipo_movimiento_id']);
+                $unidad_medica = UnidadMedica::find($loggedUser->unidad_medica_asignada_id);
+                $fecha = DateTime::createFromFormat("Y-m-d", $parametros['fecha_movimiento']);
+
+                $consecutivo = Movimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->where('almacen_id',$parametros['almacen_id'])
+                                            ->where('direccion_movimiento',$tipo_movimiento->movimiento)->where('tipo_movimiento_id',$parametros['tipo_movimiento_id'])->max('consecutivo');
+                if($consecutivo){
+                    $consecutivo++;
+                }else{
+                    $consecutivo = 1;
+                }
+
+                $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+            }
+
             if(isset($parametros['id']) && $parametros['id']){
                 $movimiento = Movimiento::with('listaArticulos','listaArticulosBorrador')->find($parametros['id']);
                 if($concluir){
+                    if(!$movimiento->folio){
+                        $datos_movimiento['consecutivo'] = $consecutivo;
+                        $datos_movimiento['folio'] = $folio;
+                    }
                     $datos_movimiento['concluido_por_usuario_id'] = $loggedUser->id;
                 }else{
                     $datos_movimiento['modificado_por_usuario_id'] = $loggedUser->id;
                 }
                 $movimiento->update($datos_movimiento);
             }else{
+                if($concluir){
+                    $datos_movimiento['consecutivo'] = $consecutivo;
+                    $datos_movimiento['folio'] = $folio;
+                    $datos_movimiento['concluido_por_usuario_id'] = $loggedUser->id;
+                }
                 $datos_movimiento['creado_por_usuario_id'] = $loggedUser->id;
                 $datos_movimiento['modificado_por_usuario_id'] = $loggedUser->id;
                 $movimiento = Movimiento::create($datos_movimiento);

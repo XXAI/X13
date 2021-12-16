@@ -105,6 +105,8 @@ class AlmacenSalidaController extends Controller
             $parametros = $request->all();
             $loggedUser = auth()->userOrFail();
 
+            return response()->json(['data'=>$parametros],HttpResponse::HTTP_OK);
+
             $mensajes = [
                 'required'      => "required",
                 'email'         => "email",
@@ -132,27 +134,22 @@ class AlmacenSalidaController extends Controller
                 throw new \Exception("Hacen falta campos obligatorios", 1);
             }
 
-            $movimiento = 'SUP';
-
-            /*$concluir = $parametros['concluir'];
+            $concluir = $parametros['concluir'];
 
             $datos_movimiento = [
                 'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
                 'almacen_id' => $parametros['almacen_id'],
-                'direccion_movimiento' => 'ENT',
+                'direccion_movimiento' => 'SAL',
                 'tipo_movimiento_id' => $parametros['tipo_movimiento_id'],
                 'estatus' => ($concluir)?'FIN':'BOR',
                 'fecha_movimiento' => $parametros['fecha_movimiento'],
                 'programa_id' => (isset($parametros['programa_id']) && $parametros['programa_id'])?$parametros['programa_id']:null,
-                'proveedor_id' => (isset($parametros['proveedor_id']) && $parametros['proveedor_id'])?$parametros['proveedor_id']:null,
-                'descripcion' => 'Entrada Manual',
-                'pedido_folio' => $parametros['pedido_folio'],
-                'referencia_folio' => $parametros['referencia_folio'],
-                'referencia_fecha' => $parametros['referencia_fecha'],
+                'unidad_medica_movimiento_id' => (isset($parametros['unidad_medica_movimiento_id']) && $parametros['unidad_medica_movimiento_id'])?$parametros['unidad_medica_movimiento_id']:null,
+                'descripcion' => 'Salida Manual Enviado a Unidad Medica',
+                'documento_folio' => $parametros['documento_folio'],
                 'observaciones' => $parametros['observaciones'],
                 'total_claves' => 0,
                 'total_articulos' => 0,
-                'total_monto' => 0,
             ];
 
             if(isset($parametros['id']) && $parametros['id']){
@@ -171,7 +168,6 @@ class AlmacenSalidaController extends Controller
 
             $total_claves = count($parametros['lista_articulos']);
             $total_articulos = 0;
-            $total_monto = 0;
 
             if(!$concluir){
                 $lista_articulos_borrador = [];
@@ -179,33 +175,36 @@ class AlmacenSalidaController extends Controller
                 for ($i=0; $i < $total_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
-                    $total_monto += $articulo['total_monto'];
                     
-                    for($j=0; $j < count($articulo['lotes']); $j++){
-                        $lote = $articulo['lotes'][$j];
-                        $lista_articulos_borrador[] = [
-                            'bien_servicio_id' => $articulo['id'],
-                            'direccion_movimiento' => 'ENT',
-                            'modo_movimiento' => 'NRM',
-                            'cantidad' => $lote['cantidad'],
-                            'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
-                            'lote' => $lote['lote'],
-                            'codigo_barras' => $lote['codigo_barras'],
-                            'fecha_caducidad' => $lote['fecha_caducidad'],
-                            'precio_unitario' => $lote['precio_unitario'],
-                            'iva' => $lote['iva'],
-                            'total_monto' => $lote['total_monto'],
-                            'memo_folio' => $lote['memo_folio'],
-                            'memo_fecha' => $lote['memo_fecha'],
-                            'vigencia_meses' => $lote['vigencia_meses'],
-                            'user_id' => $loggedUser->id,
-                        ];
+                    for($j=0; $j < count($articulo['programas_lotes']); $j++){
+                        $programa = $articulo['programas_lotes'][$j];
+
+                        for($k=0; $k < count($programa['lotes']); $k++){
+                            $lista_articulos_borrador[] = [
+                                'bien_servicio_id' => $articulo['id'],
+                                'direccion_movimiento' => 'SAL',
+                                'modo_movimiento' => 'NRM',
+                                'cantidad' => $lote['salida'],
+                                'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
+                                'lote' => $lote['lote'],
+                                'codigo_barras' => $lote['codigo_barras'],
+                                'fecha_caducidad' => $lote['fecha_caducidad'],
+                                'precio_unitario' => $lote['precio_unitario'],
+                                'iva' => $lote['iva'],
+                                'total_monto' => $lote['total_monto'],
+                                'user_id' => $loggedUser->id,
+                            ];
+                        }
                     }
                 }
 
                 $movimiento->listaArticulosBorrador()->delete();
                 $movimiento->listaArticulosBorrador()->createMany($lista_articulos_borrador);
-            }else{
+            }
+
+            /*
+            
+            else{
                 $lista_articulos_agregar = [];
                 $lista_articulos_eliminar = [];
 

@@ -127,6 +127,11 @@ table td {
     padding: 0px 5px 5px 5px;
 }
 
+.extras{
+    font-size: smaller;
+    color:green;
+}
+
 :host ::ng-deep .small-search-input.agregar-articulos > .mat-form-field{
     background-color: rgb(213, 213, 255);
 }

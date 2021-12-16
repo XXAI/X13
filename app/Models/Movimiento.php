@@ -12,7 +12,7 @@ class Movimiento extends Model{
     protected $table = 'movimientos';  
     protected $fillable = [
         'unidad_medica_id','almacen_id','folio','consecutivo','direccion_movimiento','tipo_movimiento_id','estatus','fecha_movimiento',
-        'pedido_folio','programa_id','proveedor_id','clues','descripcion','entrega','recibe','observaciones',
+        'documento_folio','programa_id','proveedor_id','clues','descripcion','entrega','recibe','observaciones','unidad_medica_movimiento_id',
         'total_claves','total_articulos','total_monto','referencia_folio','referencia_fecha','cancelado','fecha_cancelacion','motivo_cancelacion',
         'creado_por_usuario_id','modificado_por_usuario_id','concluido_por_usuario_id','cancelado_por_usuario_id','eliminado_por_usuario_id'
     ];

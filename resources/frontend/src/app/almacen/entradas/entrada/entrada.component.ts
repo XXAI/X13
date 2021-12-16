@@ -129,7 +129,7 @@ export class EntradaComponent implements OnInit {
       tipo_movimiento_id:['',Validators.required],
       fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
       almacen_id: ['',Validators.required],
-      pedido_folio:[''],
+      documento_folio:[''],
       programa: [''],
       programa_id: [''],
       proveedor:[''],

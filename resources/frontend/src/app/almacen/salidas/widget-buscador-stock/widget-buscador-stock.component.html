@@ -19,12 +19,12 @@
                     <div fxLayout="column" class="articulo-container">
                         <div fxFlex fxLayout="row" class="articulo-header">
                             <div fxFlex="none" class="articulo-titulo">
-                                <span style="font-weight: bold;">LOTE:</span><br>
-                                <span [matTooltip]="articulo.partida_descripcion" [matTooltipPosition]="'above'">{{articulo.lote}}</span>
+                                <span style="font-weight: bold;">Partida:</span><br>
+                                <span [matTooltip]="articulo.partida_descripcion" [matTooltipPosition]="'above'">{{articulo.partida_clave}}</span>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-titulo">
-                                Caducidad: {{articulo.fecha_caducidad | date:'dd-MM-yyyy'}}
+                                {{articulo.familia}}
                             </div>
                         </div>
                         <div fxFlex fxLayout="column" class="articulo-descripcion">
@@ -44,7 +44,7 @@
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-info" *ngIf="mostrarExistencias">
-                                Existencias ( {{ articulo.existencia | number }} <span *ngIf="articulo.cantidad_minima">/ {{articulo.cantidad_minima||0 | number}}</span> )
+                                #Lotes: {{ articulo.total_lotes | number }} | Existencias: {{ articulo.existencias | number }} <span *ngIf="articulo.cantidad_minima">/ {{articulo.cantidad_minima||0 | number}}</span>
                             </div>
                         </div>
                     </div>

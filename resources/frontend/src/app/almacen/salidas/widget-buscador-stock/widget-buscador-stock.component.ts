@@ -82,7 +82,6 @@ export class WidgetBuscadorStockComponent implements OnInit {
           for(let i in response.data){
             let stock:any = {
               id: response.data[i].id,
-              articulo_id: response.data[i].articulo_id,
               clave: (response.data[i].clave_cubs)?response.data[i].clave_cubs:response.data[i].clave_local,
               nombre: response.data[i].articulo,
               descripcion: response.data[i].especificaciones,
@@ -93,10 +92,11 @@ export class WidgetBuscadorStockComponent implements OnInit {
               descontinuado: (response.data[i].descontinuado)?true:false,
               indispensable: (response.data[i].es_indispensable)?true:false,
               en_catalogo: (response.data[i].en_catalogo_unidad)?true:false,
-              existencia: response.data[i].existencia,
-              lote: response.data[i].lote,
-              fecha_caducidad: response.data[i].fecha_caducidad,
-              codigo_barras: response.data[i].codigo_barras,
+              total_lotes: response.data[i].total_lotes,
+              existencias: response.data[i].existencias,
+              existencias_restantes: response.data[i].existencias,
+              existencias_extras: 0,
+              programa_lotes: response.data[i].programa_lotes
             };
             articulos_temp.push(stock);
           }
