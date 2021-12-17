@@ -84,7 +84,7 @@ class AlmacenSalidaController extends Controller
                                                             },'stock','cartaCanje']);
                                             },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
                                                     $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                            }])->find($id);
+                                            },'unidadMedicaMovimiento'])->find($id);
             if($movimiento->estatus != 'BOR'){
                 $movimiento->load(['proveedor','programa','almacen']);
             }
@@ -105,7 +105,7 @@ class AlmacenSalidaController extends Controller
             $parametros = $request->all();
             $loggedUser = auth()->userOrFail();
 
-            return response()->json(['data'=>$parametros],HttpResponse::HTTP_OK);
+            //return response()->json(['data'=>$parametros],HttpResponse::HTTP_OK);
 
             $mensajes = [
                 'required'      => "required",
@@ -176,24 +176,29 @@ class AlmacenSalidaController extends Controller
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
                     
-                    for($j=0; $j < count($articulo['programas_lotes']); $j++){
-                        $programa = $articulo['programas_lotes'][$j];
+                    for($j=0; $j < count($articulo['programa_lotes']); $j++){
+                        $programa = $articulo['programa_lotes'][$j];
 
                         for($k=0; $k < count($programa['lotes']); $k++){
-                            $lista_articulos_borrador[] = [
-                                'bien_servicio_id' => $articulo['id'],
-                                'direccion_movimiento' => 'SAL',
-                                'modo_movimiento' => 'NRM',
-                                'cantidad' => $lote['salida'],
-                                'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
-                                'lote' => $lote['lote'],
-                                'codigo_barras' => $lote['codigo_barras'],
-                                'fecha_caducidad' => $lote['fecha_caducidad'],
-                                'precio_unitario' => $lote['precio_unitario'],
-                                'iva' => $lote['iva'],
-                                'total_monto' => $lote['total_monto'],
-                                'user_id' => $loggedUser->id,
-                            ];
+                            $lote = $programa['lotes'][$k];
+
+                            if($lote['salida']){
+                                $lista_articulos_borrador[] = [
+                                    'bien_servicio_id' => $articulo['id'],
+                                    'stock_id' => $lote['id'],
+                                    'direccion_movimiento' => 'SAL',
+                                    'modo_movimiento' => 'NRM',
+                                    'cantidad' => $lote['salida'],
+                                    //'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
+                                    //'lote' => $lote['lote'],
+                                    //'codigo_barras' => $lote['codigo_barras'],
+                                    //'fecha_caducidad' => $lote['fecha_caducidad'],
+                                    //'precio_unitario' => $lote['precio_unitario'],
+                                    //'iva' => $lote['iva'],
+                                    //'total_monto' => $lote['total_monto'],
+                                    'user_id' => $loggedUser->id,
+                                ];
+                            }
                         }
                     }
                 }
@@ -325,12 +330,13 @@ class AlmacenSalidaController extends Controller
                             array('idMovimiento' => $movimiento->id));
             }
 
+            */
+
             $movimiento->total_claves = $total_claves;
             $movimiento->total_articulos = $total_articulos;
-            $movimiento->total_monto = $total_monto;
             $movimiento->save();
             
-            DB::commit();*/
+            DB::commit();
             
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

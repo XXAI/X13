@@ -7,7 +7,7 @@ import { SalidaComponent } from './salida/salida.component';
 const routes: Routes = [
   { path: 'almacen/salidas', component: ListaComponent, canActivate: [AuthGuard] },
   { path: 'almacen/salidas/nueva',      component: SalidaComponent, canActivate: [AuthGuard] },
-  { path: 'almacen/salidas/editar/id:', component: SalidaComponent, canActivate: [AuthGuard] },
+  { path: 'almacen/salidas/editar/:id', component: SalidaComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

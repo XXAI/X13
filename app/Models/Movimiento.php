@@ -20,6 +20,10 @@ class Movimiento extends Model{
     public function unidadMedica(){
         return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_id');
     }
+
+    public function unidadMedicaMovimiento(){
+        return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_movimiento_id');
+    }
     
     public function almacen(){
         return $this->belongsTo('App\Models\Almacen','almacen_id');

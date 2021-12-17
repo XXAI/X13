@@ -11,6 +11,7 @@ class MovimientoArticuloBorrador extends Model{
     protected $fillable = [
         'movimiento_id',
         'bien_servicio_id',
+        'stock_id',
         'direccion_movimiento',
         'modo_movimiento',
         'cantidad',
