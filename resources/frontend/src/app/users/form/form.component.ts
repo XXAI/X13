@@ -2,7 +2,7 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { SharedService } from 'src/app/shared/shared.service';
 import { UsersService } from '../users.service';
-import { ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmPasswordDialogComponent } from '../confirm-password-dialog/confirm-password-dialog.component';
 import { Observable, combineLatest, of, forkJoin } from 'rxjs';
@@ -25,7 +25,8 @@ export class FormComponent implements OnInit {
     private authService: AuthService, 
     private route: ActivatedRoute, 
     private fb: FormBuilder,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    public router: Router
   ) { }
 
   isLoading:boolean = false;
@@ -42,9 +43,12 @@ export class FormComponent implements OnInit {
     'password': ['',[Validators.minLength(6)]],
     'is_superuser': [false],
     'avatar': [''],
+    'unidad_medica_asignada':[''],
+    'unidad_medica_asignada_id':['',Validators.required],
     'roles': [[]],
     'permissions': [[]],
-    'groups': [[]]
+    'groups': [[]],
+    'programas': [[]]
   });
 
   avatarList: any[] = [];
@@ -72,7 +76,7 @@ export class FormComponent implements OnInit {
   filteredPermissions$: Observable<any[]>;
   selectedPermissions: any[] = [];
 
-  //Para el filtro de Permisos
+  //Para el filtro de Grupos
   assignedGroups: any[] = [];
   catalogGroups: any[] = [];
   listOfGroups$: Observable<any[]>;
@@ -80,6 +84,19 @@ export class FormComponent implements OnInit {
   filterInputGroups$: Observable<string> = this.filterInputGroups.valueChanges.pipe(startWith(''));
   filteredGroups$: Observable<any[]>;
   selectedGroups: any[] = [];
+
+
+  //Para el filtro de Programas
+  assignedProgramas: any[] = [];
+  catalogProgramas: any[] = [];
+  listOfProgramas$: Observable<any[]>;
+  filterInputProgramas: FormControl = new FormControl('');
+  filterInputProgramas$: Observable<string> = this.filterInputProgramas.valueChanges.pipe(startWith(''));
+  filteredProgramas$: Observable<any[]>;
+  selectedProgramas: any[] = [];
+
+  catalogos: any = {};
+  filteredCatalogs:any = {};
 
 
   ngOnInit() {
@@ -90,6 +107,8 @@ export class FormComponent implements OnInit {
     let callRolesCatalog = this.usersService.getAllRoles();
     let callPermissionsCatalog = this.usersService.getAllPermissions();
     let callGroupsCatalog = this.usersService.getCatalogs();
+    this.catalogos = this.usersService.getCatalogs();
+    this.IniciarCatalogos(null);
 
     let httpCalls = [callRolesCatalog, callPermissionsCatalog, callGroupsCatalog];
 
@@ -99,6 +118,8 @@ export class FormComponent implements OnInit {
         let id = params.get('id');
 
         let callUserData = this.usersService.getUser(id);
+
+        console.log("asd",callUserData);
 
         httpCalls.push(callUserData);
       }else{
@@ -148,10 +169,24 @@ export class FormComponent implements OnInit {
           );
           //Ends: Groups
 
+          //Starts: Groups
+          this.catalogProgramas = results[2].data.programas;
+          this.listOfProgramas$ = of(this.catalogProgramas);
+          this.filteredProgramas$ = combineLatest([this.listOfProgramas$,this.filterInputProgramas$]).pipe(
+            map(
+              ([programs,filterString]) => programs.filter(
+                program => (program.descripcion.toLowerCase().indexOf(filterString.toLowerCase()) !== -1)
+              )
+            )
+          );
+          //Ends: Groups
+
           //Starts: User
           if(results[3]){
             this.usuario = results[3];
+            console.log("usuario", this.usuario);
             this.usuarioForm.patchValue(this.usuario);
+            this.IniciarCatalogos(this.usuario.unidad_medica_asginada);
 
             this.selectedAvatar = this.usuario.avatar;
             //Load Roles
@@ -184,6 +219,16 @@ export class FormComponent implements OnInit {
               this.assignedGroups[group.id] = {
                 active: true,
                 description: group.descripcion
+              };
+            }
+
+            //Load Programs
+            for(let i in this.usuario.programas){
+              let program = this.usuario.programas[i];
+              this.selectedProgramas.push(program);
+              this.assignedProgramas[program.id] = {
+                active: true,
+                description: program.descripcion
               };
             }
           }
@@ -336,6 +381,81 @@ export class FormComponent implements OnInit {
     }
   }
 
+  selectPrograma(program){
+    if(this.assignedProgramas[program.id]){
+      let programIndex = this.selectedProgramas.findIndex(item => item.id == program.id);
+      this.removeProgramas(programIndex);
+    }else{
+      this.selectedProgramas.push(program);
+      this.assignedProgramas[program.id] = {
+        active: true,
+        description: program.descripcion
+      };
+    }
+  }
+
+  removeProgramas(index){
+    let programa = this.selectedProgramas[index];
+
+    if(this.assignedProgramas[programa.id]){
+      this.selectedProgramas.splice(index,1);
+      this.assignedProgramas[programa.id] = null;
+    }
+  }
+
+  clearProgramasFilter(){
+    this.filterInputProgramas.setValue('');
+  }
+
+  public IniciarCatalogos(obj:any)
+  {
+
+    this.isLoading = true;    
+    
+    // let carga_catalogos = [
+    //   {nombre:'unidades_medicas',orden:'id'},
+    // ];
+
+    this.usersService.getCatalogs().subscribe(
+      response => {
+
+        this.catalogos = response.data;
+        this.filteredCatalogs['unidades_medicas'] = this.usuarioForm.get('unidad_medica_asignada_id').valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
+
+        if(obj){
+            this.usuarioForm.get('unidad_medica_asignada_id').setValue(obj);
+        }
+        this.isLoading = false; 
+
+      } 
+    );
+
+  }
+
+  private _filter(value: any, catalog: string, valueField: string): string[] {
+    if(this.catalogos[catalog]){
+      let filterValue = '';
+      if(value){
+        if(typeof(value) == 'object'){
+          filterValue = value[valueField].toLowerCase();
+        }else{
+          filterValue = value.toLowerCase();
+        }
+      }
+      return this.catalogos[catalog].filter(option => option[valueField].toLowerCase().includes(filterValue));
+    }
+  }
+
+  
+  getDisplayFn(label: string){
+    return (val) => this.displayFn(val,label);
+  }
+
+  displayFn(value: any, valueLabel: string){
+    return value ? value[valueLabel] : value;
+  }
+
+
   accionGuardar(){
     if(this.usuarioForm.valid){
       if(this.usuarioForm.get('password').value){
@@ -388,9 +508,17 @@ export class FormComponent implements OnInit {
       }
     }
 
+    let programs = [];
+    for(let i in this.assignedProgramas){
+      if(this.assignedProgramas[i]){
+        programs.push(+i);
+      }
+    }
+
     this.usuarioForm.get('permissions').patchValue(permissions);
     this.usuarioForm.get('roles').patchValue(roles);
     this.usuarioForm.get('groups').patchValue(groups);
+    this.usuarioForm.get('programas').patchValue(programs);
 
     this.usuarioForm.get('avatar').patchValue(this.selectedAvatar);
 
@@ -399,7 +527,7 @@ export class FormComponent implements OnInit {
         response=>{
           if(response.guardado){
             this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
-            
+            this.router.navigate(['/usuarios']);
             if(this.authUser.id == response.usuario.id){
               this.authService.updateUserData(response.usuario);
             }
@@ -411,7 +539,9 @@ export class FormComponent implements OnInit {
     }else{
       this.usersService.createUser(this.usuarioForm.value).subscribe(
         response =>{
+          console.log(response);
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
+          this.router.navigate(['/usuarios']);
           this.usuario = response.data;
           this.isLoading = false;
         }

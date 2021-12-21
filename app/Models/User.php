@@ -54,6 +54,10 @@ class User extends Authenticatable implements JWTSubject{
         return $this->belongsToMany('App\Models\Grupo','grupos_usuarios','usuario_id','grupo_id');
     }
 
+    public function programas(){
+        return $this->belongsToMany('App\Models\Programa','user_programa','usuario_id','programa_id');
+    }
+
     public function roles(){
         return $this->belongsToMany('App\Models\Role');
     }

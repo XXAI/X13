@@ -12,6 +12,8 @@ use Validator;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Grupo;
+use App\Models\Programa;
+use App\Models\UnidadMedica;
 
 use DB;
 
@@ -26,6 +28,8 @@ class UserController extends Controller
 
             //if(isset($parametros['grupos']) && $parametros['grupos']){
             $return_data['grupos'] = Grupo::all();
+            $return_data['programas'] = Programa::all();
+            $return_data['unidades_medicas'] = UnidadMedica::all();
             //}
 
             return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
@@ -106,6 +110,7 @@ class UserController extends Controller
                 $usuario->password = Hash::make($parametros['password']);
                 $usuario->is_superuser = $parametros['is_superuser'];
                 $usuario->avatar = $parametros['avatar'];
+                $usuario->unidad_medica_asignada_id = $parametros['unidad_medica_asignada_id']['id'];
                 
                 $usuario->save();
 
@@ -113,15 +118,18 @@ class UserController extends Controller
                     $roles = $parametros['roles'];
                     $permisos = $parametros['permissions'];
                     $grupos = $parametros['groups'];
+                    $programas = $parametros['programas'];
                 }else{
                     $roles = [];
                     $permisos = [];
                     $grupos = [];
+                    $programas = [];
                 }
                 
                 $usuario->roles()->sync($roles);
                 $usuario->permissions()->sync($permisos);
                 $usuario->grupos()->sync($grupos);
+                $usuario->programas()->sync($programas);
 
                 DB::commit();
 
@@ -144,7 +152,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        return response()->json(['data'=>User::with('roles','permissions','grupos')->find($id)],HttpResponse::HTTP_OK);
+        return response()->json(['data'=>User::with('roles','permissions','grupos','unidadMedicaAsginada','programas')->find($id)],HttpResponse::HTTP_OK);
     }
 
     /**
@@ -167,7 +175,7 @@ class UserController extends Controller
                 'email.required' => 'Es correo electronico es obligatorio'
             ];
 
-            $usuario = User::find($id);
+            $usuario = User::with('roles','permissions','grupos','unidadMedicaAsginada')->find($id);
 
             $parametros = $request->all();
 
@@ -181,6 +189,7 @@ class UserController extends Controller
                 $usuario->username = $parametros['username'];
                 $usuario->is_superuser = $parametros['is_superuser'];
                 $usuario->avatar = $parametros['avatar'];
+                $usuario->unidad_medica_asignada_id = $parametros['unidad_medica_asignada_id']['id'];
                 
                 if($parametros['password']){
                     $usuario->password = Hash::make($parametros['password']);

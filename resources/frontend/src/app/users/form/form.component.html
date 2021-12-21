@@ -55,6 +55,29 @@
                                 <mat-checkbox #isSuperUser formControlName="is_superuser" (change)="(isSuperUser.checked)?(metaData.selectedIndex = 2):(metaData.selectedIndex = 0)">Es super-usuario</mat-checkbox>
                             </section>
                         </div>
+
+                        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
+
+                            <mat-form-field fxFlex *ngIf="!catalogos['unidades_medicas']">
+                                <mat-label>Unidad Medica:</mat-label>
+                                <input matInput formControlName="unidad_medica_asignada">
+                                <mat-hint>Escribe el nombre de la Unidad Medica</mat-hint>
+                            </mat-form-field>
+        
+                            <mat-form-field fxFlex *ngIf="catalogos['unidades_medicas']">
+                                <mat-label>Unidad Medica:</mat-label>
+                                <input type="text" aria-label="unidad_medica_asignada_id" matInput formControlName="unidad_medica_asignada_id" [matAutocomplete]="unidadMedicaAutocomplete">
+                                <mat-autocomplete #unidadMedicaAutocomplete="matAutocomplete" [displayWith]="getDisplayFn('nombre')">
+                                    <mat-option *ngFor="let item of filteredCatalogs['unidades_medicas'] | async" [value]="item">
+                                        ({{ item.clues }}) - {{ item.nombre }}
+                                    </mat-option>
+                                </mat-autocomplete>
+                                <mat-hint *ngIf="!usuarioForm.get('unidad_medica_asignada_id').value">Selecciona una Unidad Medica de la lista</mat-hint>
+                                <mat-hint align="start" *ngIf="usuarioForm.get('unidad_medica_asignada_id').value">Clave Clues: [{{usuarioForm.get('unidad_medica_asignada_id').value.clues}}]</mat-hint>
+                                <mat-error *ngIf="usuarioForm.get('unidad_medica_asignada_id').hasError('required')">Este campo es obligatorio</mat-error>
+                            </mat-form-field>
+
+                        </div>
                         
                         <br>
                         <mat-tab-group #metaData [color]="'primary'" [backgroundColor]="'accent'" [selectedIndex]="(usuarioForm.get('is_superuser').value)?(2):(0)" dynamicHeight >
@@ -176,6 +199,7 @@
                                     </div>
                                 </div>
                             </mat-tab>
+
                             <mat-tab [disabled]="(usuarioForm.get('is_superuser').value == true)">
                                 <ng-template mat-tab-label>
                                         <span matBadge="{{selectedGroups.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedGroups.length <= 0">Grupos</span>
@@ -219,6 +243,51 @@
                                     </div>
                                 </div>
                             </mat-tab>
+
+                            <mat-tab [disabled]="(usuarioForm.get('is_superuser').value == true)">
+                                <ng-template mat-tab-label>
+                                        <span matBadge="{{selectedProgramas.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedProgramas.length <= 0">Programas</span>
+                                </ng-template>
+                                <div fxLayout="row" class="edit-container">
+                                    <div fxFlex="49" fxFlex.xs="100">
+                                        <div fxLayout="row">
+                                            <mat-form-field fxFlex>
+                                                <input matInput placeholder="Filtrar Programas" aria-label="filtrar" [formControl]="filterInputProgramas">
+                                                <mat-icon *ngIf="!filterInputProgramas.value" matSuffix>filter_list</mat-icon>
+                                                <button mat-icon-button matSuffix *ngIf="filterInputProgramas.value"  (click)="clearProgramasFilter()">
+                                                    <mat-icon>clear</mat-icon>
+                                                </button>
+                                            </mat-form-field>
+                                        </div>
+                                        <div fxLayout="row">
+                                            <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
+                                                <button mat-list-item *ngFor="let programa of filteredProgramas$ | async" (click)="selectPrograma(programa)">
+                                                    <p matLine>
+                                                        <span> {{programa.descripcion}} </span>
+                                                    </p>
+                                                    <button mat-icon-button  >
+                                                        <mat-icon>{{(assignedProgramas[programa.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                    </button>
+                                                    <mat-divider></mat-divider>
+                                                </button>
+                                            </mat-action-list>
+                                        </div>
+                                    </div>
+                                    <div fxFlex fxHide.xs="true"></div>
+                                    <div fxFlex="49" fxHide.xs="true">
+                                        <mat-form-field fxFlex>
+                                            <mat-chip-list #chipList aria-label="Programas Seleccionados">
+                                                <mat-chip [color]="'accent'" *ngFor="let programa of selectedProgramas; let i = index" [removable]="true" (removed)="removeProgramas(i)">
+                                                    {{programa.descripcion}}
+                                                    <mat-icon matChipRemove>cancel</mat-icon>
+                                                </mat-chip>
+                                            </mat-chip-list>
+                                            <mat-hint align="end">{{selectedProgramas.length}}</mat-hint>
+                                        </mat-form-field>
+                                    </div>
+                                </div>
+                            </mat-tab>
+
                         </mat-tab-group>
                     </div>
                 </mat-card-content>
