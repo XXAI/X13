@@ -75,6 +75,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('almacen-existencias/catalogos/',        'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');
     Route::get('partidas-bienes-servicios/',            'API\Modulos\PartidasController@partidas');
     Route::get('familias-bienes-servicios/',            'API\Modulos\FamiliasController@familias');
+    Route::apiResource('catalogo-almacenes',            'API\Catalogos\AlmacenesController');
 
     /**
      * Modulos Pedidos
@@ -103,6 +104,7 @@ Route::group(['middleware'=>'auth'],function($router){
     */
     Route::apiResource('insumos-medicos',          'API\Modulos\InsumosMedicosController');
     Route::get('cargar-catalogos',                 'API\Modulos\CatalogosController@getCatalogos');
+    Route::post('catalogos-generales',             'API\Catalogos\BusquedaCatalogosController@getCatalogs');
     //De forma temporal, mientras se trabaja modulo de subir archivos
     Route::post('subir-lista-meds-tmp',            'API\Modulos\CapturaReporteAbastoSurtimientoController@subirListaMedicamentos');
     Route::get('ver-lista-meds-tmp',               'API\Modulos\CapturaReporteAbastoSurtimientoController@descargarArchivo');

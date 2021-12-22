@@ -1,0 +1,66 @@
+<h1 mat-dialog-title><span *ngIf="almacenes.id">Editar</span> <span *ngIf="!almacenes.id">Nuevo</span> Almacen</h1>
+<div mat-dialog-content>
+    <div class="form-container" [formGroup]="almacenForm">
+        <div class="form-loading-shade" *ngIf="isLoading"><mat-spinner *ngIf="isLoading"></mat-spinner></div>
+
+        <div class="form-loading-shade" *ngIf="!isLoading && !almacenes">No se encontraron los datos del Almacen</div>
+        <br>
+        
+        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
+
+            <mat-form-field fxFlex>
+                <input matInput id="nombre" formControlName="nombre" placeholder="Nombre del Almacen" required>
+                <mat-error *ngIf="almacenForm.get('nombre').invalid && (almacenForm.get('nombre').dirty || almacenForm.get('nombre').touched)">
+                    <span *ngIf="almacenForm.get('nombre').errors.required">El campo es obligatorio</span>
+                </mat-error>
+            </mat-form-field>
+
+        </div>
+
+
+        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
+
+            <mat-form-field fxFlex>
+                <mat-select id="externo" formControlName="externo" placeholder="¿El Almacen es Externo?" required>
+                    <mat-option [value]="1">Si</mat-option>
+                    <mat-option [value]="0">No</mat-option>
+                </mat-select>
+                <mat-error *ngIf="almacenForm.get('externo').invalid && (almacenForm.get('externo').dirty || almacenForm.get('externo').touched)">
+                    <span *ngIf="almacenForm.get('externo').errors.required">El campo es obligatorio</span>
+                </mat-error>
+            </mat-form-field>
+    
+            <mat-form-field fxFlex>
+                <mat-select id="unidosis" formControlName="unidosis" placeholder="¿Es un Almacen de Unidosis?" required>
+                    <mat-option [value]="1">Si</mat-option>
+                    <mat-option [value]="0">No</mat-option>
+                </mat-select>
+                <mat-error *ngIf="almacenForm.get('unidosis').invalid && (almacenForm.get('unidosis').dirty || almacenForm.get('unidosis').touched)">
+                    <span *ngIf="almacenForm.get('unidosis').errors.required">El campo es obligatorio</span>
+                </mat-error>
+            </mat-form-field>
+
+        </div>
+
+        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
+
+            <mat-form-field fxFlex>
+                <input matInput id="responsable" formControlName="responsable" placeholder="Nombre del Responsable del Almacen" required>
+                <mat-error *ngIf="almacenForm.get('responsable').invalid && (almacenForm.get('responsable').dirty || almacenForm.get('responsable').touched)">
+                    <span *ngIf="almacenForm.get('responsable').errors.required">El campo es obligatorio</span>
+                </mat-error>
+            </mat-form-field>
+
+        </div>
+
+
+
+
+    </div>
+</div>
+<mat-divider></mat-divider>
+<div mat-dialog-actions>
+    <span fxFlex></span>
+    <button mat-button (click)='onNoClick()'>Cancelar</button>
+    <button mat-raised-button (click)="saveAlmacen()" color="primary" [disabled]="almacenForm.invalid || isLoading"><mat-icon>save</mat-icon> Guardar</button>
+</div>

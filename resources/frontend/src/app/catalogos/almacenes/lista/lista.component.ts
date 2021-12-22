@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MediaObserver } from '@angular/flex-layout';
+import { MatDialog } from '@angular/material/dialog';
+import { AlmacenesService } from '../almacenes.service';
+import { FormComponent } from '../form/form.component';
 
 @Component({
   selector: 'app-lista',
@@ -9,7 +12,11 @@ import { MediaObserver } from '@angular/flex-layout';
 })
 export class ListaComponent implements OnInit {
 
-  constructor(public mediaObserver: MediaObserver) { }
+  constructor(
+    public mediaObserver: MediaObserver,
+    public almacenesService: AlmacenesService,
+    public dialog: MatDialog
+  ) { }
 
   isLoading: boolean = false;
   mediaSize: string;
@@ -32,8 +39,19 @@ export class ListaComponent implements OnInit {
     });
   }
 
-  mostrarFormAlmacen(){
-    //
+  mostrarFormAlmacen(id:number = 0){
+
+    const dialogRef = this.dialog.open(FormComponent, {
+      width: '800px',
+      data: {id: id}
+    });
+
+    dialogRef.afterClosed().subscribe(reponse => {
+      if(reponse){
+        this.applyFilter();
+      }
+    });
+
   }
 
   applyFilter(){
