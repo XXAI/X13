@@ -63,12 +63,13 @@ export class FormComponent implements OnInit {
     //console.log(this.authClues.id);
 
     let id = this.data.id;
+    console.log("asdasd",this.data);
     if(id){
 
       this.isLoading = true;
       this.almacenesService.getAlmacen(id).subscribe(
         response => {
-          this.almacenes = response.servicio;
+          this.almacenes = response.data;
           this.almacenForm.patchValue(this.almacenes);
           this.isLoading = false;
         },
@@ -85,6 +86,7 @@ export class FormComponent implements OnInit {
   public cargarCatalogos(){
 
     this.isLoading = true;
+
     let carga_catalogos = [
 
       {nombre:'unidades_medicas',orden:'nombre'},
@@ -97,8 +99,10 @@ export class FormComponent implements OnInit {
 
         this.catalogos = response.data;
 
-        this.filteredCatalogs['municipios']      = this.almacenForm.controls['unidad_medica_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
-        this.filteredCatalogs['localidades']     = this.almacenForm.controls['tipo_almacen_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'tipos_almacenes','descripcion')));
+        this.filteredCatalogs['unidades_medicas']      = this.almacenForm.controls['unidad_medica_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
+        this.filteredCatalogs['tipos_almacenes']     = this.almacenForm.controls['tipo_almacen_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'tipos_almacenes','descripcion')));
+
+        this.isLoading = false;
 
       },
       errorResponse =>{
@@ -108,8 +112,9 @@ export class FormComponent implements OnInit {
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
       }
+      
     );
-    this.isLoading = false;
+
   }
 
   private _filter(value: any, catalog: string, valueField: string): string[] {
@@ -124,6 +129,14 @@ export class FormComponent implements OnInit {
       }
       return this.catalogos[catalog].filter(option => option[valueField].toLowerCase().includes(filterValue));
     }
+  }
+  
+  getDisplayFn(label: string){
+    return (val) => this.displayFn(val,label);
+  }
+
+  displayFn(value: any, valueLabel: string){
+    return value ? value[valueLabel] : value;
   }
 
   saveAlmacen(){
