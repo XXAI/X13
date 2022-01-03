@@ -11,4 +11,13 @@ class Almacen extends Model{
     use SoftDeletes;
     protected $table = 'almacenes';  
     protected $fillable = ['unidad_medica_id','nombre','tipo_almacen_id','externo','unidosis','responsable','user_id'];
+
+    public function unidad_medica(){   
+        return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_id','id');
+    }
+
+    public function tipo_almacen(){   
+        return $this->belongsTo('App\Models\TipoAlmacen','tipo_almacen_id','id');
+    }
+
 }

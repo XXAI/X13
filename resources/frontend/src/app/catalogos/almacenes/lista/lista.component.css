@@ -57,6 +57,11 @@
     padding-top:3px;
 }
 
+.not-results-found{
+  text-align: center;
+  font-style: italic;
+}
+
 table {
   width: 100%;
 }
@@ -67,6 +72,11 @@ table th {
 
 table td {
     padding:0 5px;
+}
+
+.no-results-found{
+  text-align: center;
+  font-style: italic;
 }
   
 .mat-form-field {
@@ -82,11 +92,6 @@ table td {
 
 .selected-item{
   background-color: lightskyblue;
-}
-
-.not-results-found{
-  text-align: center;
-  font-style: italic;
 }
 
 .loading-results{

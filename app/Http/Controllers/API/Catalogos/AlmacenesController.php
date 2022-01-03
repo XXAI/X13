@@ -37,7 +37,7 @@ class AlmacenesController extends Controller
                 ->orderBy('id');
                 
             }else{
-                $almacenes = Almacen::orderBy('id')->with('clues');
+                $almacenes = Almacen::orderBy('id')->with('unidad_medica', 'tipo_almacen');
             }
 
             //Filtros, busquedas, ordenamiento
@@ -72,37 +72,38 @@ class AlmacenesController extends Controller
         $datos = $request->all();
         $almacen = new Almacen();
 
-        $reglas = [
-            'unidad_medica_id'     => 'required:almacenes',
-            'nombre'               => 'required:almacenes',
-            'tipo_almacen_id'      => 'required:almacenes',
-            'responsable'          => 'required:almacenes',
-        ];
-
-        $mensajes = [
-            'unidad_medica_id'              => 'La Unidad Medica es Obligatoria',
-            'nombre.required'               => 'El nombre del Almacen es Obligatorio',
-            'tipo_almacen_id.required'      => 'El tipo de Almacen es Obligatorio',
-            'responsable.required'          => 'La nombre del Responsable del Almacen es Obligatorio',
-        ];
-
-        $almacen->unidad_medica_id     = $datos['unidad_medica_id'];
-        $almacen->nombre               = $datos['nombre'];
-        $almacen->tipo_almacen_id      = $datos['tipo_almacen_id'];
-        $almacen->externo              = $datos['externo'];
-        $almacen->unidosis             = $datos['unidosis'];
-        $almacen->responsable          = $datos['responsable'];
-        $almacen->user_id              = $datos['user_id'];
-
-        
-
-        $v = Validator::make($datos, $reglas, $mensajes);
-        
-        if ($v->fails()) {
-            return Response::json(array($v->errors(), 409));
-        }
-
         try {
+            $reglas = [
+                'unidad_medica_id'     => 'required:almacenes',
+                'nombre'               => 'required:almacenes',
+                'tipo_almacen_id'      => 'required:almacenes',
+                'responsable'          => 'required:almacenes',
+            ];
+
+            $mensajes = [
+                'unidad_medica_id'              => 'La Unidad Medica es Obligatoria',
+                'nombre.required'               => 'El nombre del Almacen es Obligatorio',
+                'tipo_almacen_id.required'      => 'El tipo de Almacen es Obligatorio',
+                'responsable.required'          => 'La nombre del Responsable del Almacen es Obligatorio',
+            ];
+
+            $almacen->unidad_medica_id     = $datos['unidad_medica_id'];
+            $almacen->nombre               = $datos['nombre'];
+            $almacen->tipo_almacen_id      = $datos['tipo_almacen_id'];
+            $almacen->externo              = $datos['externo'];
+            $almacen->unidosis             = $datos['unidosis'];
+            $almacen->responsable          = $datos['responsable'];
+            $almacen->user_id              = $datos['user_id'];
+
+            
+
+            $v = Validator::make($datos, $reglas, $mensajes);
+            
+            if ($v->fails()) {
+                return Response::json(array($v->errors(), 409));
+            }
+
+        
             $almacen = Almacen::create($datos);
             
             return response()->json(['data'=>$almacen],HttpResponse::HTTP_OK);
@@ -120,7 +121,7 @@ class AlmacenesController extends Controller
      */
     public function show($id)
     {
-        $almacen = Almacen::find($id);
+        $almacen = Almacen::with('unidad_medica', 'tipo_almacen')->find($id);
 
         if(!$almacen){
             return response()->json(['No se encuentra el recurso que esta buscando.'], HttpResponse::HTTP_CONFLICT);
@@ -180,7 +181,7 @@ class AlmacenesController extends Controller
             $almacen->responsable          = $datos['responsable'];
             $almacen->user_id              = $datos['user_id'];
 
-            $servicio->save();
+            $almacen->save();
 
             return response()->json(['data'=>$almacen],HttpResponse::HTTP_OK);
 

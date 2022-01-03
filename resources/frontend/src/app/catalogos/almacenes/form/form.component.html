@@ -39,22 +39,22 @@
             </mat-form-field>
 
             <mat-form-field fxFlex *ngIf="!catalogos['tipos_almacenes']">
-                <mat-label>Unidad Medica del Almacen: </mat-label>
+                <mat-label>Tipo de Almacen: </mat-label>
                 <input matInput formControlName="tipo_almacen_id">
-                <mat-hint>Escribe el nombre de la Unidad Medica</mat-hint>
+                <mat-hint>Escribe el Tipo de Almacen</mat-hint>
                 <mat-error *ngIf="almacenForm.get('tipo_almacen_id').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
 
             <mat-form-field fxFlex *ngIf="catalogos['tipos_almacenes']">
-                <mat-label>Unidad Medica del Almacen: </mat-label>
+                <mat-label>Tipo de Almacen: </mat-label>
                 <input type="text" aria-label="tipo_almacen_id" matInput formControlName="tipo_almacen_id" [matAutocomplete]="tiposAlmacenesAutocomplete" required>
                 <mat-autocomplete #tiposAlmacenesAutocomplete="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" >
                     <mat-option *ngFor="let item of filteredCatalogs['tipos_almacenes'] | async" [value]="item">
                         {{item.descripcion}}
                     </mat-option>
                 </mat-autocomplete>
-                <mat-hint *ngIf="!almacenForm.get('tipo_almacen_id').value">Selecciona una Unidad Medica de la lista</mat-hint>
-                <mat-hint align="end" *ngIf="almacenForm.get('tipo_almacen_id').value">Clave Clues: [{{almacenForm.get('tipo_almacen_id').value.descripcion}}]</mat-hint>
+                <mat-hint *ngIf="!almacenForm.get('tipo_almacen_id').value">Selecciona un Tipo de Almacen de la lista</mat-hint>
+                <mat-hint align="end" *ngIf="almacenForm.get('tipo_almacen_id').value">Clave: [{{almacenForm.get('tipo_almacen_id').value.clave}}]</mat-hint>
                 <mat-error *ngIf="almacenForm.get('tipo_almacen_id').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
 

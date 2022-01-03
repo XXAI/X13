@@ -70,6 +70,8 @@ export class FormComponent implements OnInit {
       this.almacenesService.getAlmacen(id).subscribe(
         response => {
           this.almacenes = response.data;
+          console.log("acaaa",this.almacenes);
+          this.cargarCatalogos(this.almacenes);
           this.almacenForm.patchValue(this.almacenes);
           this.isLoading = false;
         },
@@ -79,11 +81,11 @@ export class FormComponent implements OnInit {
         });
     }
 
-    this.cargarCatalogos();
+    this.cargarCatalogos(null);
 
   }
 
-  public cargarCatalogos(){
+  public cargarCatalogos(obj){
 
     this.isLoading = true;
 
@@ -101,6 +103,18 @@ export class FormComponent implements OnInit {
 
         this.filteredCatalogs['unidades_medicas']      = this.almacenForm.controls['unidad_medica_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
         this.filteredCatalogs['tipos_almacenes']     = this.almacenForm.controls['tipo_almacen_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'tipos_almacenes','descripcion')));
+
+
+        if(obj)
+        {
+          if(obj.tipo_almacen){
+            this.almacenForm.get('tipo_almacen_id').setValue(obj.tipo_almacen);
+          }
+
+          if(obj.unidad_medica){
+            this.almacenForm.get('unidad_medica_id').setValue(obj.unidad_medica);
+          }
+        }
 
         this.isLoading = false;
 
@@ -141,9 +155,18 @@ export class FormComponent implements OnInit {
 
   saveAlmacen(){
 
+    let formData =  JSON.parse(JSON.stringify(this.almacenForm.value));
+
+    if(formData.tipo_almacen_id){
+      formData.tipo_almacen_id = formData.tipo_almacen_id.id;
+    }
+    if(formData.unidad_medica_id){
+      formData.unidad_medica_id = formData.unidad_medica_id.id;
+    }
+
     this.isLoading = true;
     if(this.almacenes.id){
-      this.almacenesService.updateAlmacen(this.almacenes.id,this.almacenForm.value).subscribe(
+      this.almacenesService.updateAlmacen(this.almacenes.id, formData).subscribe(
         response =>{
           this.dialogRef.close(true);
           this.isLoading = false;
@@ -153,7 +176,7 @@ export class FormComponent implements OnInit {
           this.isLoading = false;
       });
     }else{
-      this.almacenesService.createAlmacen(this.almacenForm.value).subscribe(
+      this.almacenesService.createAlmacen(formData).subscribe(
         response =>{
           this.dialogRef.close(true);
           console.log(response);
