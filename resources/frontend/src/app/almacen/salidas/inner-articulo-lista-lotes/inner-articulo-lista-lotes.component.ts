@@ -78,8 +78,10 @@ export class InnerArticuloListaLotesComponent implements OnInit {
         }
 
         //loteData.aplicado = false;
-        loteData.restante = loteData.existencia;
-        loteData.salida = null;
+        if(!loteData.salida){
+          loteData.restante = loteData.existencia;
+          loteData.salida = null;  
+        }
       });
     });
     this.articulo.estatus = estatus_articulo;
