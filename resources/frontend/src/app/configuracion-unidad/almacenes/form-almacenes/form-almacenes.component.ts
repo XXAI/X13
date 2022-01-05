@@ -13,17 +13,17 @@ export interface FormDialogData {
 }
 
 @Component({
-  selector: 'catalogo-almacenes',
-  templateUrl: './form.component.html',
-  styleUrls: ['./form.component.css']
+  selector: 'form-almacenes',
+  templateUrl: './form-almacenes.component.html',
+  styleUrls: ['./form-almacenes.component.css']
 })
-export class FormComponent implements OnInit {
+export class FormAlmacenesComponent implements OnInit {
 
   constructor(
     private almacenesService: AlmacenesService,
     private authService: AuthService,
     private sharedService: SharedService,
-    public dialogRef: MatDialogRef<FormComponent>,
+    public dialogRef: MatDialogRef<FormAlmacenesComponent>,
     private fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public data: FormDialogData
   ) {}
@@ -52,18 +52,14 @@ export class FormComponent implements OnInit {
   ngOnInit() {
 
     this.authUser = this.authService.getUserData();
+    //console.log("asd",this.authUser.unidad_medica_asginada['clues']);
 
     this.almacenForm.get('user_id').patchValue(this.authUser?.id);
+    this.almacenForm.get('unidad_medica_id').patchValue(this.authUser?.unidad_medica_asignada_id);
 
-    console.log(this.authUser);
-    console.log(this.almacenForm.get('user_id').value);
-
-    //this.servicioForm.get('clues_id').patchValue(this.authClues.id);
-
-    //console.log(this.authClues.id);
+    console.log("usuario",this.authUser);
 
     let id = this.data.id;
-    console.log("asdasd",this.data);
     if(id){
 
       this.isLoading = true;
@@ -160,7 +156,7 @@ export class FormComponent implements OnInit {
     if(formData.tipo_almacen_id){
       formData.tipo_almacen_id = formData.tipo_almacen_id.id;
     }
-    if(formData.unidad_medica_id){
+    if (typeof formData.unidad_medica_id === 'object'){
       formData.unidad_medica_id = formData.unidad_medica_id.id;
     }
 

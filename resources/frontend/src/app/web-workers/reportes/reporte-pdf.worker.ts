@@ -12,7 +12,8 @@ const reportes = {
   'empleados/personal-activo':    new ReportePersonalActivo(),
   'pedidos/recepcion-pedido':     new ReporteRecepcionPedido(),
   'pedidos/pedido':               new ReportePedido(),
-  'almacen/entrada':              new ReporteAlmacenEntrada()
+  'almacen/entrada':              new ReporteAlmacenEntrada(),
+  'almacen/salida':               new ReporteAlmacenEntrada()
 };
 
 addEventListener('message', ({ data }) => {

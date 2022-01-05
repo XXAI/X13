@@ -6,19 +6,19 @@ import { AlmacenesRoutingModule } from './almacenes-routing.module';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { getEspPaginatorIntl } from 'src/app/esp-paginator-intl';
 
-import { ListaComponent } from './lista/lista.component';
-import { FormComponent } from './form/form.component';
+import { ListaAlmacenesComponent } from './lista-almacenes/lista-almacenes.component';
+import { FormAlmacenesComponent } from './form-almacenes/form-almacenes.component';
 
 
 @NgModule({
-  declarations: [ListaComponent, FormComponent],
+  declarations: [ListaAlmacenesComponent, FormAlmacenesComponent],
   imports: [
     CommonModule,
     SharedModule,
     AlmacenesRoutingModule
   ],
   entryComponents:[
-    FormComponent,
+    FormAlmacenesComponent,
   ],
   providers:[
     { provide: MatPaginatorIntl, useValue: getEspPaginatorIntl() }

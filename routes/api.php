@@ -75,7 +75,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('almacen-existencias/catalogos/',        'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');
     Route::get('partidas-bienes-servicios/',            'API\Modulos\PartidasController@partidas');
     Route::get('familias-bienes-servicios/',            'API\Modulos\FamiliasController@familias');
-    Route::apiResource('catalogo-almacenes',            'API\Catalogos\AlmacenesController');
+    Route::apiResource('catalogo-almacenes',            'API\ConfiguracionUnidad\AlmacenesController');
 
     /**
      * Modulos Pedidos
@@ -113,9 +113,9 @@ Route::group(['middleware'=>'auth'],function($router){
     * Módulos de importacion de insumos a existencias
     */
     //Route::post('importar-catalogos',                 'API\Modulos\ExcelImportInsumosController@catalogos');
-    Route::post('importar-entradas-excel',                 'API\Modulos\ExcelImportInsumosController@importarEntradasLayout');
+    Route::post('importar-entradas-excel',                'API\Modulos\ExcelImportInsumosController@importarEntradasLayout');
     Route::post('importar-salidas-excel',                 'API\Modulos\ExcelImportInsumosController@importarSalidasLayout');
-    Route::post('importar-existencias-excel',                 'API\Modulos\ExcelImportInsumosController@importarExistenciasLayout');
+    Route::post('importar-existencias-excel',             'API\Modulos\ExcelImportInsumosController@importarExistenciasLayout');
     
 });
 

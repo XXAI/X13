@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { ConfiguracionUnidadRoutingModule } from './configuracion-unidad-routing.module';
 import { CatalogoArticulosModule } from './catalogo-articulos/catalogo-articulos.module';
+import { AlmacenesModule } from './almacenes/almacenes.module';
 
 @NgModule({
   declarations: [],
@@ -11,7 +12,8 @@ import { CatalogoArticulosModule } from './catalogo-articulos/catalogo-articulos
     ConfiguracionUnidadRoutingModule
   ],
   exports:[
-    CatalogoArticulosModule
+    CatalogoArticulosModule,
+    AlmacenesModule
   ]
 })
 export class ConfiguracionUnidadModule { }

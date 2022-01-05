@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\Catalogos;
+namespace App\Http\Controllers\API\ConfiguracionUnidad;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -26,14 +26,15 @@ class AlmacenesController extends Controller
 
             //$parametros = Input::all();
             $parametros = $request->all();
+            $usuario = auth()->userOrFail();
 
             //$servicios = Almacen::orderBy('id')->with('clues');
             //SI NO TRAE CLUES MOSTRAR TODOS LOS SERVICIOS
 
-            if(isset($parametros['unidad_medica_asignada_id'], $parametros['unidad_medica_asignada_id'])){
+            if(isset($usuario->unidad_medica_asignada_id, $usuario->unidad_medica_asignada_id)){
 
-                $almacenes = Almacen::select('almacenes.*')->with('almacenes')
-                ->where('unidad_medica_asignada_id', $parametros['unidad_medica_asignada_id'])
+                $almacenes = Almacen::select('almacenes.*')->with('unidad_medica', 'tipo_almacen')
+                ->where('unidad_medica_id', $usuario->unidad_medica_asignada_id)
                 ->orderBy('id');
                 
             }else{

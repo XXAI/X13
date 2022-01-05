@@ -3,17 +3,17 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MediaObserver } from '@angular/flex-layout';
 import { MatDialog } from '@angular/material/dialog';
 import { AlmacenesService } from '../almacenes.service';
-import { FormComponent } from '../form/form.component';
+import { FormAlmacenesComponent } from '../form-almacenes/form-almacenes.component';
 
 import { SharedService } from '../../../shared/shared.service';
 import { AuthService } from '../../../auth/auth.service';
 
 @Component({
-  selector: 'app-lista',
-  templateUrl: './lista.component.html',
-  styleUrls: ['./lista.component.css']
+  selector: 'lista-almacenes',
+  templateUrl: './lista-almacenes.component.html',
+  styleUrls: ['./lista-almacenes.component.css']
 })
-export class ListaComponent implements OnInit {
+export class ListaAlmacenesComponent implements OnInit {
 
   constructor(
     private sharedService: SharedService,
@@ -82,7 +82,7 @@ export class ListaComponent implements OnInit {
 
   mostrarFormAlmacen(id:number = 0){
 
-    const dialogRef = this.dialog.open(FormComponent, {
+    const dialogRef = this.dialog.open(FormAlmacenesComponent, {
       width: '800px',
       data: {id: id}
     });

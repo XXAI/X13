@@ -140,7 +140,7 @@ export class ListaComponent implements OnInit {
 
     this.objetoMovimiento = "";
 
-    /*this.salidasService.verSalida(id).subscribe(
+    this.salidasService.verSalida(id).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
@@ -154,7 +154,7 @@ export class ListaComponent implements OnInit {
               lista_items.estatus_icono = this.listaEstatusIconos[lista_items.estatus];
             this.objetoMovimiento = response.data;
             console.log(this.objetoMovimiento);
-            this.generarEntradaPDF(this.objetoMovimiento);
+            this.generarSalidaPDF(this.objetoMovimiento);
           }
   
         }
@@ -168,7 +168,7 @@ export class ListaComponent implements OnInit {
         this.sharedService.showSnackBar(errorMessage, null, 3000);
         this.isLoading = false;
       }
-    );*/
+    );
 
   }
 
@@ -191,7 +191,7 @@ export class ListaComponent implements OnInit {
 
       let appStoredData = this.sharedService.getArrayDataFromCurrentApp(['searchQuery','filter']);
       
-      params.reporte = 'almacen-entrada';
+      params.reporte = 'almacen-salida';
       if(appStoredData['searchQuery']){
         params.query = appStoredData['searchQuery'];
       }
@@ -233,7 +233,7 @@ export class ListaComponent implements OnInit {
           this.stepperConfig.steps[2].status = 2;
           this.stepperConfig.currentIndex = 2;
 
-          FileSaver.saveAs(data.data,'Almacen-Entrada '+'('+fecha_reporte+')');
+          FileSaver.saveAs(data.data,'Almacen-Salida '+'('+fecha_reporte+')');
           reportWorker.terminate();
 
           this.stepperConfig.steps[2].status = 3;
@@ -251,10 +251,10 @@ export class ListaComponent implements OnInit {
       );
       
       let config = {
-        title: "ENTRADA DE ALMACEN",
+        title: "SALIDA DE ALMACEN",
         showSigns: this.reportIncludeSigns, 
       };
-      reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/entrada'});
+      reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/salida'});
       this.isLoading = false;
   }
 

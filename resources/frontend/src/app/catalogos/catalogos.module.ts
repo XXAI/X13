@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 
 import { SharedModule } from '../shared/shared.module';
 
-import { AlmacenesModule } from './almacenes/almacenes.module';
 import { CatalogosRoutingModule } from './catalogos-routing.module';
 import { CatalogosAppsComponent } from './catalogos-apps/catalogos-apps.component';
 
@@ -13,7 +12,6 @@ import { CatalogosAppsComponent } from './catalogos-apps/catalogos-apps.componen
   imports: [
     CommonModule,
     SharedModule,
-    AlmacenesModule,
     CatalogosRoutingModule
   ]
 })

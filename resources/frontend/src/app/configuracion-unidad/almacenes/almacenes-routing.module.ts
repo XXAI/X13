@@ -2,10 +2,10 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { AuthGuard } from '../../auth/auth.guard';
 
-import { ListaComponent } from './lista/lista.component';
+import { ListaAlmacenesComponent } from './lista-almacenes/lista-almacenes.component';
 
 const routes: Routes = [
-    { path: 'catalogos/almacenes',            component: ListaComponent, canActivate: [AuthGuard] },
+    { path: 'configuracion-unidad/almacenes', component: ListaAlmacenesComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({
