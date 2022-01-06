@@ -17,6 +17,7 @@ use DB;
 use App\Models\Movimiento;
 use App\Models\Stock;
 use App\Models\CartaCanje;
+use App\Models\BienServicio;
 
 class AlmacenSalidaController extends Controller
 {
@@ -78,15 +79,39 @@ class AlmacenSalidaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
-            $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos)use($loggedUser){ 
-                                                    return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
-                                                                $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                            },'stock','cartaCanje']);
-                                            },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
-                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                            },'unidadMedicaMovimiento'])->find($id);
+            $movimiento = Movimiento::with('unidadMedicaMovimiento','programa')->find($id);
+            $extras = [];
+
             if($movimiento->estatus != 'BOR'){
-                $movimiento->load(['proveedor','programa','almacen']);
+                $movimiento->load(['almacen','listaArticulos'=>function($listaArticulos)use($loggedUser){ 
+                                                                return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
+                                                                            $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                                                        },'stock']);
+                                                        }]);
+            }else{
+                $almacen_id = $movimiento->almacen_id;
+                $programa_id = $movimiento->programa_id;
+                $movimiento_id = $movimiento->id;
+
+                $movimiento->load('listaArticulosBorrador.articulo');
+
+                $articulos_ids = $movimiento->listaArticulosBorrador()->pluck('bien_servicio_id');
+                //$cantidades_stocks = $movimiento->listaArticulosBorrador()->pluck('cantidad','stock_id');
+
+                $articulos_borrador = BienServicio::whereIn('id',$articulos_ids)->with(['stocks'=>function($stocks)use($almacen_id,$programa_id,$movimiento_id){
+                                                                                            $stocks->select('stocks.*','movimientos_articulos_borrador.cantidad')
+                                                                                                    ->where('almacen_id',$almacen_id)
+                                                                                                    ->where('programa_id',$programa_id)
+                                                                                                    ->leftjoin('movimientos_articulos_borrador',function($join)use($movimiento_id){
+                                                                                                        $join->on('movimientos_articulos_borrador.stock_id','stocks.id')
+                                                                                                            ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
+                                                                                                    });
+                                                                                        }])->get();
+                //
+                $movimiento = $movimiento->toArray();
+                $movimiento['lista_articulos_borrador'] = $articulos_borrador;
+                //$extras['articulos_borrador'] = $articulos_borrador;
+                //$extras['cantidades_stocks'] = $cantidades_stocks;
             }
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -205,6 +230,8 @@ class AlmacenSalidaController extends Controller
 
                 $movimiento->listaArticulosBorrador()->delete();
                 $movimiento->listaArticulosBorrador()->createMany($lista_articulos_borrador);
+            }else{
+                //
             }
 
             /*

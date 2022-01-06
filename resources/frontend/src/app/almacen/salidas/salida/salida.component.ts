@@ -217,77 +217,145 @@ export class SalidaComponent implements OnInit {
 
               if(this.estatusMovimiento == 'BOR'){
                 lista_articulos = response.data.lista_articulos_borrador;
+                for(let i in lista_articulos){
+                  if(!this.controlArticulosAgregados[lista_articulos[i].id]){
+                    let articulo:any = {
+                      id: lista_articulos[i].id,
+                      estatus: 1,
+                      clave: (lista_articulos[i].clave_cubs)?lista_articulos[i].clave_cubs:lista_articulos[i].clave_local,
+                      nombre: lista_articulos[i].articulo,
+                      descripcion: lista_articulos[i].especificaciones,
+                      partida_clave: lista_articulos[i].clave_partida_especifica,
+                      partida_descripcion: lista_articulos[i].partida_especifica,
+                      familia: lista_articulos[i].familia,
+                      tiene_fecha_caducidad: (lista_articulos[i].tiene_fecha_caducidad)?true:false,
+                      en_catalogo: (lista_articulos[i].en_catalogo_unidad)?true:false,
+                      indispensable: (lista_articulos[i].es_indispensable)?true:false,
+                      descontinuado: (lista_articulos[i].descontinuado)?true:false,
+                      total_piezas: 0,
+                      total_monto: 0,
+                      total_lotes: 0,
+                      existencias: 0,
+                      existencias_restantes: 0,
+                      existencias_extras: 0,
+                      programa_lotes: []
+                    };
+
+                    if(response.data.programa){
+                      articulo.programa_lotes.push({
+                        id: response.data.programa.id,
+                        nombre: response.data.programa.descripcion,
+                        lotes:[]
+                      });
+                    }else{
+                      articulo.programa_lotes.push({
+                        id: "S/P",
+                        nombre: "Sin Programa",
+                        lotes:[]
+                      });
+                    }
+
+                    lista_articulos[i].stocks.forEach(stock => {
+                      if(stock.cantidad){
+                        articulo.total_piezas += stock.cantidad;
+                        articulo.total_lotes++;
+                      }
+                      articulo.existencias += stock.existencia;
+                      articulo.programa_lotes[0].lotes.push({
+                        id: stock.id,
+                        lote: stock.lote,
+                        codigo_barras: stock.codigo_barras,
+                        existencia: stock.existencia,
+                        fecha_caducidad: stock.fecha_caducidad,
+                        salida: stock.cantidad,
+                        restante: stock.existencia - stock.cantidad,
+                        //memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                        //memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                        //vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
+                      });
+                    });
+
+                    articulo.existencias_restantes = articulo.existencias - articulo.total_piezas;
+
+                    articulos_temp.push(articulo);
+  
+                    this.controlArticulosAgregados[articulo.id] = true;
+                    this.totalesSalida.claves += 1;
+                    this.totalesSalida.articulos += articulo.total_piezas;
+                  }
+                }
               }else{
                 lista_articulos = response.data.lista_articulos;
-              }
+                for(let i in lista_articulos){
+                  //lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
+  
+                  if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
+                    let articulo:any = {
+                      id: lista_articulos[i].articulo.id,
+                      estatus: 1,
+                      clave: (lista_articulos[i].articulo.clave_cubs)?lista_articulos[i].articulo.clave_cubs:lista_articulos[i].articulo.clave_local,
+                      nombre: lista_articulos[i].articulo.articulo,
+                      descripcion: lista_articulos[i].articulo.especificaciones,
+                      partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
+                      partida_descripcion: lista_articulos[i].articulo.partida_especifica,
+                      familia: lista_articulos[i].articulo.familia,
+                      tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
+                      en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
+                      indispensable: (lista_articulos[i].articulo.es_indispensable)?true:false,
+                      descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
+                      total_piezas: 0,
+                      total_monto: lista_articulos[i].total_monto,
+                      total_lotes: 0,
+                      existencias: 0,
+                      existencias_restantes: 0,
+                      existencias_extras: 0,
+                      programa_lotes: [],
+                    };
 
-              for(let i in lista_articulos){
-                lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
+                    if(response.data.programa){
+                      articulo.programa_lotes.push({
+                        id: response.data.programa.id,
+                        nombre: response.data.programa.descripcion,
+                        lotes:[]
+                      });
+                    }else{
+                      articulo.programa_lotes.push({
+                        id: "S/P",
+                        nombre: "Sin Programa",
+                        lotes:[]
+                      });
+                    }
 
-                if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
-                  let articulo:any = {
-                    id: lista_articulos[i].articulo.id,
-                    estatus: 1,
-                    clave: (lista_articulos[i].articulo.clave_cubs)?lista_articulos[i].articulo.clave_cubs:lista_articulos[i].articulo.clave_local,
-                    nombre: lista_articulos[i].articulo.articulo,
-                    descripcion: lista_articulos[i].articulo.especificaciones,
-                    partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
-                    partida_descripcion: lista_articulos[i].articulo.partida_especifica,
-                    familia: lista_articulos[i].articulo.familia,
-                    tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
-                    en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
-                    indispensable: (lista_articulos[i].articulo.es_indispensable)?true:false,
-                    descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
-                    total_piezas: 0,
-                    total_monto: lista_articulos[i].total_monto,
-                    total_lotes: 0,
-                    existencias: 0,
-                    programa_lotes: []
-                  };
+                    articulos_temp.push(articulo);
 
-                  /*articulo.lotes = [{
-                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                    cantidad:         lista_articulos[i].cantidad,
-                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                    precio_unitario:  lista_articulos[i].precio_unitario,
-                    iva:              lista_articulos[i].iva,
-                    total_monto:      lista_articulos[i].total_monto,
-                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                  }];*/
-                  
-                  /*articulo.no_lotes = 1;
-                  articulo.total_piezas = lista_articulos[i].cantidad;*/
-                  articulos_temp.push(articulo);
+                    this.controlArticulosAgregados[articulo.id] = true;
+                    this.totalesSalida.claves += 1;
+                    
+                    /*articulo.no_lotes = 1;*/
+                  }//else{
 
-                  this.controlArticulosAgregados[articulo.id] = true;
-                  this.totalesSalida.claves += 1;
-                }else{
                   let index = articulos_temp.findIndex(x => x.id == lista_articulos[i].articulo.id);
                   let articulo:any = articulos_temp[index];
 
-                  /*articulo.lotes.push({
-                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                    cantidad:         lista_articulos[i].cantidad,
-                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                    precio_unitario:  lista_articulos[i].precio_unitario,
-                    iva:              lista_articulos[i].iva,
-                    total_monto:      lista_articulos[i].total_monto,
-                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                  });*/
-                  
-                  /*articulo.no_lotes += 1;
-                  articulo.total_piezas += lista_articulos[i].cantidad;
-                  articulo.total_monto += lista_articulos[i].total_monto;*/
+                  //articulo.existencias += stock.existencia;
+                  articulo.programa_lotes[0].lotes.push({
+                    id: lista_articulos[i].stock.id,
+                    lote: lista_articulos[i].stock.lote,
+                    codigo_barras: lista_articulos[i].stock.codigo_barras,
+                    existencia: lista_articulos[i].cantidad_anterior,
+                    fecha_caducidad: lista_articulos[i].stock.fecha_caducidad,
+                    salida: lista_articulos[i].cantidad,
+                    restante: lista_articulos[i].stock.existencia - lista_articulos[i].stock.cantidad,
+                    //memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                    //memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                    //vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
+                  });
+                  //}
+  
+                  this.totalesSalida.articulos += lista_articulos[i].cantidad;
+                  articulo.total_piezas = lista_articulos[i].cantidad;
+                  articulo.total_lotes++;
                 }
-
-                this.totalesSalida.articulos += lista_articulos[i].cantidad;
-                this.totalesSalida.monto += lista_articulos[i].total_monto;
               }
 
               this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);

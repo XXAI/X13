@@ -26,6 +26,10 @@ class BienServicio extends Model{
                         ->orderBy('bienes_servicios.especificaciones');
     }
 
+    public function stocks(){
+        return $this->hasMany('App\Models\Stock','bienes_servicios_id');
+    }
+
     public function partidaEspecifica(){
         return $this->belongsTo('App\Models\PartidaEspecifica','clave_partida_especifica','clave');
     }
