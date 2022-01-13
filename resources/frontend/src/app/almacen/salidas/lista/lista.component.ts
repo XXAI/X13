@@ -142,6 +142,7 @@ export class ListaComponent implements OnInit {
 
     this.salidasService.verSalida(id).subscribe(
       response =>{
+        console.log("get api",response);
         if(response.error) {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);

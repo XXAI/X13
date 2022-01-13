@@ -2,7 +2,6 @@ import { LOGOS } from "../../logos";
 export class ReporteAlmacenSalida{
 
     getDocumentDefinition(reportData:any) {
-      console.log("consolaReporte",reportData);
         let catalogo_meses = {
             1: 'Enero',
             2: 'Febrero',
@@ -240,6 +239,7 @@ export class ReporteAlmacenSalida{
               break;
           case 'BOR':
             tabla_articulos = salida.lista_articulos_borrador;
+            console.log("consolaReporte",tabla_articulos);
             borrador = { text: '\nBORRADOR\n\n\n', style: 'marca_de_agua',};
               break;
           case 'CANCL':
@@ -253,21 +253,27 @@ export class ReporteAlmacenSalida{
 
         for(let i = 0; i < tabla_articulos.length; i++){
           let item            = tabla_articulos[i];
-          let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
-          let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
+          for(let s = 0; s < item.stocks.length; s++){
 
-          datos.content[1].table.body.push([
-            { text: (i+1),                                                                          style: 'tabla_datos_center'},
-            { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
-            { text: (item.stock?.lote)?item.stock?.lote:'S/L',                                      style: 'tabla_datos_center'},
-            { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
-            { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
-            { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-            { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
-            { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
+            let stock = item.stocks[s];
 
-          ]);
+          
+            let fecha = (stock?.fecha_caducidad)?stock?.fecha_caducidad:'S/F/C';
+            let fecha_caducidad = (stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
+
+            datos.content[1].table.body.push([
+              { text: (i+1),                                                                          style: 'tabla_datos_center'},
+              { text: stock?.cantidad,                                                                style: 'tabla_datos_center'},
+              { text: (stock?.lote != null)?stock?.lote:'S/L',                                        style: 'tabla_datos_center'},
+              { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
+              { text: (item.clave_cubs != null)?item.clave_cubs:item.clave_local,                     style: 'tabla_datos'},
+              { text: item.especificaciones,                                                          style: 'tabla_datos'},
+              { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
+              { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
+
+            ]);
           //total_pedido += item.cantidad;
+          }
         }
 
         datos.content[1].table.body.push([

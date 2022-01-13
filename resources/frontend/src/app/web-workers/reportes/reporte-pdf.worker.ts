@@ -5,6 +5,7 @@ import { ReportePersonalActivo } from './reporte-personal-activo';
 import { ReporteRecepcionPedido } from './reporte-recepcion-pedido';
 import { ReportePedido } from './reporte-pedido';
 import { ReporteAlmacenEntrada } from './reporte-almacen-entrada';
+import { ReporteAlmacenSalida } from './reporte-almacen-salida';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -13,7 +14,7 @@ const reportes = {
   'pedidos/recepcion-pedido':     new ReporteRecepcionPedido(),
   'pedidos/pedido':               new ReportePedido(),
   'almacen/entrada':              new ReporteAlmacenEntrada(),
-  'almacen/salida':               new ReporteAlmacenEntrada()
+  'almacen/salida':               new ReporteAlmacenSalida()
 };
 
 addEventListener('message', ({ data }) => {
