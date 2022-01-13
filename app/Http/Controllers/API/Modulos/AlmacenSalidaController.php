@@ -177,15 +177,43 @@ class AlmacenSalidaController extends Controller
                 'total_articulos' => 0,
             ];
 
+            $consecutivo = 0;
+            $folio = '';
+            if($concluir){
+                //Generar Folio
+                $tipo_movimiento = TipoMovimiento::find($parametros['tipo_movimiento_id']);
+                $unidad_medica = UnidadMedica::find($loggedUser->unidad_medica_asignada_id);
+                $fecha = DateTime::createFromFormat("Y-m-d", $parametros['fecha_movimiento']);
+
+                $consecutivo = Movimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->where('almacen_id',$parametros['almacen_id'])
+                                            ->where('direccion_movimiento',$tipo_movimiento->movimiento)->where('tipo_movimiento_id',$parametros['tipo_movimiento_id'])->max('consecutivo');
+                if($consecutivo){
+                    $consecutivo++;
+                }else{
+                    $consecutivo = 1;
+                }
+
+                $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+            }
+
             if(isset($parametros['id']) && $parametros['id']){
                 $movimiento = Movimiento::with('listaArticulos','listaArticulosBorrador')->find($parametros['id']);
                 if($concluir){
+                    if(!$movimiento->folio){
+                        $datos_movimiento['consecutivo'] = $consecutivo;
+                        $datos_movimiento['folio'] = $folio;
+                    }
                     $datos_movimiento['concluido_por_usuario_id'] = $loggedUser->id;
                 }else{
                     $datos_movimiento['modificado_por_usuario_id'] = $loggedUser->id;
                 }
                 $movimiento->update($datos_movimiento);
             }else{
+                if($concluir){
+                    $datos_movimiento['consecutivo'] = $consecutivo;
+                    $datos_movimiento['folio'] = $folio;
+                    $datos_movimiento['concluido_por_usuario_id'] = $loggedUser->id;
+                }
                 $datos_movimiento['creado_por_usuario_id'] = $loggedUser->id;
                 $datos_movimiento['modificado_por_usuario_id'] = $loggedUser->id;
                 $movimiento = Movimiento::create($datos_movimiento);
@@ -231,12 +259,6 @@ class AlmacenSalidaController extends Controller
                 $movimiento->listaArticulosBorrador()->delete();
                 $movimiento->listaArticulosBorrador()->createMany($lista_articulos_borrador);
             }else{
-                //
-            }
-
-            /*
-            
-            else{
                 $lista_articulos_agregar = [];
                 $lista_articulos_eliminar = [];
 
@@ -250,87 +272,51 @@ class AlmacenSalidaController extends Controller
                 for ($i=0; $i < $total_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
-                    $total_monto += $articulo['total_monto'];
+                    //$total_monto += $articulo['total_monto'];
 
-                    for($j=0; $j < count($articulo['lotes']); $j++){
-                        $lote = $articulo['lotes'][$j];
+                    $articulos_lotes = $articulo['programa_lotes'][0]['lotes'];
+                    for($j=0; $j < count($articulos_lotes); $j++){
+                        $lote = $articulos_lotes[$j];
 
-                        $stock_lote = [
-                            'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
-                            'almacen_id' => $parametros['almacen_id'],
-                            'bienes_servicios_id' => $articulo['id'],
-                            'programa_id' => $parametros['programa_id'],
-                            'existencia' => $lote['cantidad'],
-                            'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
-                            'lote' => $lote['lote'],
-                            'codigo_barras' => $lote['codigo_barras'],
-                            'fecha_caducidad' => $lote['fecha_caducidad'],
-                            'user_id' => $loggedUser->id,
-                        ];
+                        if($lote['salida']){
+                            $lote_guardado = Stock::find($lote['id']);
+                            $existencia_anterior = $lote_guardado->existencia;
 
-                        $lote_guardado = Stock::where("almacen_id",$parametros['almacen_id'])
-                                                ->where("bienes_servicios_id",$stock_lote['bienes_servicios_id'])
-                                                ->where("programa_id",$stock_lote['programa_id'])
-                                                ->where("lote",$stock_lote['lote'])
-                                                ->where("fecha_caducidad",$stock_lote['fecha_caducidad'])
-                                                ->where("codigo_barras",$stock_lote['codigo_barras'])
-                                                ->where("marca_id",$stock_lote['marca_id'])
-                                                ->first();
-                        if($lote_guardado){
-                            $lote_guardado->existencia += $stock_lote['existencia'];
-                            $lote_guardado->user_id = $loggedUser->id;
-                            $lote_guardado->save();
-                        }else{
-                            $lote_guardado = Stock::create($stock_lote);
-                        }
+                            if($lote_guardado){
+                                $lote_guardado->existencia -= $lote['salida'];
+                                $lote_guardado->user_id = $loggedUser->id;
+                                $lote_guardado->save();
+                            }
 
-                        if(isset($lote['memo_folio']) && $lote['memo_folio']){
-                            $vigencia_fecha = Carbon::createFromFormat('Y-m-d', $movimiento->fecha_movimiento);
+                            if(isset($lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id])){
+                                $articulo_guardado = $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id];
+                                $articulo_guardado->stock_id = $lote_guardado->id;
+                                $articulo_guardado->bien_servicio_id = $articulo['id'];
+                                $articulo_guardado->direccion_movimiento = 'SAL';
+                                $articulo_guardado->modo_movimiento = 'NRM';
+                                $articulo_guardado->cantidad = $lote['salida'];
+                                //$articulo_guardado->precio_unitario = $lote['precio_unitario'];
+                                //$articulo_guardado->iva = $lote['iva'];
+                                //$articulo_guardado->total_monto = $lote['total_monto'];
+                                $articulo_guardado->cantidad_anterior = $existencia_anterior;
+                                $articulo_guardado->user_id = $loggedUser->id;
+                                $articulo_guardado->save();
 
-                            $carta_canje = [
-                                'movimiento_id'         => $movimiento->id,
-                                'stock_id'              => $lote_guardado->id,
-                                'bien_servicio_id'      => $articulo['id'],
-                                'cantidad'              => $lote['cantidad'],
-                                'memo_folio'            => $lote['memo_folio'],
-                                'memo_fecha'            => $lote['memo_fecha'],
-                                'vigencia_meses'        => $lote['vigencia_meses'],
-                                'vigencia_fecha'        => $vigencia_fecha->addMonths($lote['vigencia_meses']),
-                                'estatus'               => 'PEN',
-                                'creado_por_usuario_id' => $loggedUser->id
-                            ];
-
-                            CartaCanje::create($carta_canje);
-                        }
-
-                        if(isset($lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id])){
-                            $articulo_guardado = $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id];
-                            $articulo_guardado->stock_id = $lote_guardado->id;
-                            $articulo_guardado->bien_servicio_id = $articulo['id'];
-                            $articulo_guardado->direccion_movimiento = 'ENT';
-                            $articulo_guardado->modo_movimiento = 'NRM';
-                            $articulo_guardado->cantidad = $lote['cantidad'];
-                            $articulo_guardado->precio_unitario = $lote['precio_unitario'];
-                            $articulo_guardado->iva = $lote['iva'];
-                            $articulo_guardado->total_monto = $lote['total_monto'];
-                            $articulo_guardado->cantidad_anterior = $lote_guardado->existencia - $lote['cantidad'];
-                            $articulo_guardado->user_id = $loggedUser->id;
-                            $articulo_guardado->save();
-
-                            $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id] = NULL;
-                        }else{
-                            $lista_articulos_agregar[] = [
-                                'stock_id' => $lote_guardado->id,
-                                'bien_servicio_id' => $articulo['id'],
-                                'direccion_movimiento' => 'ENT',
-                                'modo_movimiento' => 'NRM',
-                                'cantidad' => $lote['cantidad'],
-                                'precio_unitario' => $lote['precio_unitario'],
-                                'iva' => $lote['iva'],
-                                'total_monto' => $lote['total_monto'],
-                                'cantidad_anterior' => $lote_guardado->existencia - $lote['cantidad'],
-                                'user_id' => $loggedUser->id,
-                            ];
+                                $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id] = NULL;
+                            }else{
+                                $lista_articulos_agregar[] = [
+                                    'stock_id' => $lote_guardado->id,
+                                    'bien_servicio_id' => $articulo['id'],
+                                    'direccion_movimiento' => 'SAL',
+                                    'modo_movimiento' => 'NRM',
+                                    'cantidad' => $lote['salida'],
+                                    //'precio_unitario' => $lote['precio_unitario'],
+                                    //'iva' => $lote['iva'],
+                                    //'total_monto' => $lote['total_monto'],
+                                    'cantidad_anterior' => $existencia_anterior,
+                                    'user_id' => $loggedUser->id,
+                                ];
+                            }
                         }
                     }
                 }
@@ -351,13 +337,7 @@ class AlmacenSalidaController extends Controller
                 }
 
                 $movimiento->listaArticulosBorrador()->delete();
-
-                DB::statement("UPDATE cartas_canje A, movimientos_articulos B set A.movimiento_articulo_id = B.id
-                                where A.movimiento_id = B.movimiento_id AND A.stock_id = B.stock_id AND A.bien_servicio_id = B.bien_servicio_id AND A.movimiento_id = :idMovimiento", 
-                            array('idMovimiento' => $movimiento->id));
             }
-
-            */
 
             $movimiento->total_claves = $total_claves;
             $movimiento->total_articulos = $total_articulos;

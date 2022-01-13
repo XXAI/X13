@@ -1,10 +1,11 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { AuthGuard } from 'src/app/auth/auth.guard';
-import { ListaComponent } from './lista/lista.component';
+import { IndexComponent } from './index/index.component';
+
 
 const routes: Routes = [
-  { path: 'almacen/existencias',            component: ListaComponent, canActivate: [AuthGuard] },
+  { path: 'almacen/existencias',            component: IndexComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

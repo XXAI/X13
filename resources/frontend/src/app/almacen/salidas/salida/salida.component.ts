@@ -136,11 +136,11 @@ export class SalidaComponent implements OnInit {
     });
 
     this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                map(descripcion => descripcion ? this._filter('programas',descripcion) : this.catalogos['programas'].slice())
+                                map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
                               );
 
     this.filteredUnidades = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                map(descripcion => descripcion ? this._filter('unidades_medicas',descripcion) : this.catalogos['unidades_medicas'].slice())
+                                map(descripcion => descripcion ? this._filter('unidades_medicas',descripcion,'nombre') : this.catalogos['unidades_medicas'].slice())
                               );
 
     this.verBoton = {
@@ -554,9 +554,9 @@ export class SalidaComponent implements OnInit {
     return value ? value[valueLabel] : '';
   }
 
-  private _filter(catalogo: string, nombre: string): any[] {
-    const filterValue = nombre.toLowerCase();
-    return this.catalogos[catalogo].filter(option => option.nombre.toLowerCase().includes(filterValue));
+  private _filter(catalogo: string, value: string, field: string): any[] {
+    const filterValue = value.toLowerCase();
+    return this.catalogos[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
   }
 
 }

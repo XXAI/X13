@@ -1,0 +1,74 @@
+<div fxLayout="column" fxLayoutAlign="start" fxFlexFill  >
+    <h1 mat-dialog-title>Detalles</h1>
+    <!--<div mat-dialog-content style="background-color: #F0F0F0;  border-radius: 10px;">-->
+    <div mat-dialog-content style="padding-top: 5px; padding-bottom: 5px;">
+        <mat-accordion  >
+            <mat-expansion-panel  [expanded]="true" style="background-color: #F7F7F7;">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>Artículo</mat-panel-title>
+                    <mat-panel-description>
+                        {{data.articulo}}
+                    </mat-panel-description>
+                </mat-expansion-panel-header>
+                <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
+                <p><small><strong>Especificaciones</strong></small><br>{{data.especificaciones}}</p>
+                </div>
+                <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
+                    <p><small><strong>Partida</strong></small><br>{{ data.clave_partida_generica }}{{ data.clave_partida_especifica }} {{ data.partida_especifica_descripcion }}</p>
+                </div>
+            </mat-expansion-panel>
+        </mat-accordion>
+    </div>
+
+    <table mat-table [dataSource]="dataSource" matSort >
+        <ng-container matColumnDef="lote">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> LOTE </th>
+            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.lote}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="folio">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> FOLIO </th>
+            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.folio}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="estatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> ESTATUS </th>
+            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.estatus}} </td>
+        </ng-container>
+        <ng-container matColumnDef="direccion_movimiento">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> TIPO </th>
+            <td mat-cell *matCellDef="let element"> {{element.direccion_movimiento}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha_movimiento">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> FECHA </th>
+            <td mat-cell *matCellDef="let element">{{element.fecha_movimiento | date: 'dd/MM/yyyy'}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> CANT </th>
+            <td mat-cell *matCellDef="let element"> {{element.cantidad | number}}</td>
+        </ng-container>
+        <ng-container matColumnDef="user">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-sm> USUARIO </th>
+            <td mat-cell *matCellDef="let element" fxHide.lt-sm> {{element.user }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;">
+        </tr>
+    </table>
+    <div class="spinner-container" *ngIf="dataSource.loading$ | async">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
+    <div class="flex-spacer"></div>
+    
+    <div mat-dialog-actions fxLayout.gt-sm="row" fxLayout="column" fxLayoutAlign="end center">
+        <mat-paginator [length]="dataSource.length" [pageSizeOptions]="[20, 50, 100]" showFirstLastButtons>
+        </mat-paginator>
+        <div>
+            <button mat-button (click)="cerrar()">Cerrar</button>
+        </div>
+        
+    </div>
+</div>

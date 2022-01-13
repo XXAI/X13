@@ -143,10 +143,10 @@ export class EntradaComponent implements OnInit {
     });
 
     this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
-                                  map(nombre => nombre ? this._filter('proveedores',nombre) : this.catalogos['proveedores'].slice())
+                                  map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
                                 );
     this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                map(descripcion => descripcion ? this._filter('programas',descripcion) : this.catalogos['programas'].slice())
+                                map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
                               );
 
     this.verBoton = {
@@ -495,9 +495,9 @@ export class EntradaComponent implements OnInit {
     return value ? value[valueLabel] : '';
   }
 
-  private _filter(catalogo: string, nombre: string): any[] {
-    const filterValue = nombre.toLowerCase();
+  private _filter(catalogo: string, value: string, field: string): any[] {
+    const filterValue = value.toLowerCase();
 
-    return this.catalogos[catalogo].filter(option => option.nombre.toLowerCase().includes(filterValue));
+    return this.catalogos[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
   }
 }

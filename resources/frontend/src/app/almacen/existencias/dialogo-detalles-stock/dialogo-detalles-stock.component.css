@@ -1,0 +1,42 @@
+table {
+    
+   
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  th,
+  td {
+    overflow: hidden;
+    width: auto;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: default;
+    padding: 0 0.5em !important;
+  }
+  td {
+      font-family: "Roboto Mono" , "Roboto" !important;
+      font-size: 0.8em;
+      font-weight: 300;
+      
+      /*font-size: 0.7em;*/
+  }
+  .flex-spacer {
+    flex: 1 1 auto;
+}
+
+.mat-column-direccion_movimiento {
+    width: 45px;
+}
+.mat-column-estatus {
+    width: 60px;
+}
+.mat-column-fecha_movimiento {
+    width: 90px;
+}
+.mat-column-cantidad {
+    width: 90px;
+}
+.mat-column-user {
+    width: 120px;
+}

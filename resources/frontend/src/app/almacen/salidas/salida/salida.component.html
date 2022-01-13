@@ -103,7 +103,7 @@
 
                 <mat-form-field fxFlex>
                     <mat-label>Unidad Destino</mat-label>
-                    <input type="text" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas">
+                    <input type="text" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas" required>
                     <mat-autocomplete #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
                         <mat-option *ngIf="catalogos['unidades_medicas'].length == 0" value="">No hay Unidades Medicas capturadas</mat-option>
                         <mat-option *ngFor="let unidad of filteredUnidades | async" [value]="unidad">
@@ -132,7 +132,12 @@
         <section fxFlex fxLayout="row" fxLayoutGap="10px">
             <section fxFlex="25" fxLayout="column">
                 <mat-card fxFlex="none" fxLayout="column" *ngIf="verBoton['agregar_articulos']" style="padding:0px; margin-bottom: 5px;">
-                    <widget-buscador-stock fxFlex="none" [mostrarExistencias]="true" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-stock>
+                    <widget-buscador-stock fxFlex="none" 
+                            [mostrarExistencias]="true" 
+                            [almacenId]="formMovimiento.get('almacen_id').value" 
+                            [programaId]="formMovimiento.get('programa').value.id" 
+                            (articuloSeleccionado)="agregarArticulo($event)">
+                    </widget-buscador-stock>
                 </mat-card>
                 <mat-card fxFlex fxLayout="column" style="overflow: auto;">
                     <div fxFlex="none" fxLayout="column">

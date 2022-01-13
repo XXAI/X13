@@ -39,9 +39,9 @@
                         <td mat-cell *matCellDef="let row" class="{{row.estatus_clave}}-color" style="text-align: center;"> <mat-icon matTooltip="{{row.estatus_label}}">{{row.estatus_icono}}</mat-icon> </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="proveedor">
-                        <th mat-header-cell *matHeaderCellDef> Proveedor </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"> {{(row.proveedor)?row.proveedor:'Sin Proveedor'}} </td>
+                    <ng-container matColumnDef="folio">
+                        <th mat-header-cell *matHeaderCellDef> Folio </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"> {{(row.folio)?row.folio:'S/F'}} </td>
                     </ng-container>
                     
                     <ng-container matColumnDef="almacen">
@@ -72,11 +72,6 @@
                     <ng-container matColumnDef="total_articulos" >
                         <th mat-header-cell *matHeaderCellDef fxHide.xs="true" style="white-space: nowrap;"> Total Articulos </th>
                         <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_articulos | number:'1.0-0'}} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="total_monto" >
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" style="white-space: nowrap;"> Total Monto </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> ${{row.total_monto | number:'1.0-0'}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="actions">

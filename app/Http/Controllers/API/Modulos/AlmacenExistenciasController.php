@@ -42,35 +42,54 @@ class AlmacenExistenciasController extends Controller
     {        
         $params = $request->input();
         if(isset($params["all"])){
-            
             return response()->json(["data"=>Stock::all()]);
         } else {
             if(!isset($params['pageSize'])){
                 $params['pageSize'] = 1;
             }
             
-           
-            $items = Stock::select(
-                "stocks.id as id", 
-                "stocks.bienes_servicios_id as bienes_servicios_id", 
-               // "insumos_medicos.clave as clave", 
-                "bienes_servicios.articulo as articulo",
-                "bienes_servicios.especificaciones as especificaciones",
-                "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
-                "cog_partidas_especificas.clave as clave_partida_especifica",
-                "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
-               // "insumos_medicos.tipo_insumo as tipo_insumo",
-                //"insumos_medicos.es_unidosis as es_unidosis",
-                "stocks.existencia as existencia",
-                "stocks.existencia_unidosis as existencia_unidosis",
-                "stocks.fecha_caducidad as fecha_caducidad",
-                "stocks.lote as lote",
-                "stocks.codigo_barras as codigo_barras",
-                DB::raw("(CASE WHEN stocks.fecha_caducidad  < NOW() THEN '1' ELSE '0' END) as caducado"))
-            ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bienes_servicios_id")
-            ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica");
-            
+            $loggedUser = auth()->userOrFail();
 
+            $items = Stock::leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bienes_servicios_id")
+                            ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica")
+                            ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
+                            ->leftJoin("programas","programas.id","=","stocks.programa_id")
+                            ->where('stocks.unidad_medica_id',$loggedUser->unidad_medica_asignada_id);
+
+            if(isset($params['groupBy']) && trim($params['groupBy']) != ""){
+                if($params['groupBy'] == 'articulo'){
+                    $items = $items->select(
+                        "almacenes.nombre as almacen",
+                        "programas.descripcion as programa",
+                        "stocks.bienes_servicios_id as id", 
+                        "bienes_servicios.articulo as articulo",
+                        "bienes_servicios.especificaciones as especificaciones",
+                        "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
+                        "cog_partidas_especificas.clave as clave_partida_especifica",
+                        "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
+                        DB::raw("SUM(stocks.existencia) as existencia"),
+                        DB::raw("SUM(stocks.existencia_unidosis) as existencia_unidosis"),
+                        DB::raw("COUNT(distinct stocks.id) as total_lotes"))
+                        ->groupBy('stocks.bienes_servicios_id');
+                }
+            }else{
+                $items = $items->select(
+                    "almacenes.nombre as almacen",
+                    "programas.descripcion as programa",
+                    "stocks.id as id", 
+                    "stocks.bienes_servicios_id as bienes_servicios_id", 
+                    "bienes_servicios.articulo as articulo",
+                    "bienes_servicios.especificaciones as especificaciones",
+                    "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
+                    "cog_partidas_especificas.clave as clave_partida_especifica",
+                    "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
+                    "stocks.existencia as existencia",
+                    "stocks.existencia_unidosis as existencia_unidosis",
+                    "stocks.fecha_caducidad as fecha_caducidad",
+                    "stocks.lote as lote",
+                    "stocks.codigo_barras as codigo_barras",
+                    DB::raw("(CASE WHEN stocks.fecha_caducidad  < NOW() THEN '1' ELSE '0' END) as caducado"));
+            }
 
             if(isset($params['orderBy']) && trim($params['orderBy'])!= ""){
                 $sortOrder = 'asc';
@@ -104,8 +123,6 @@ class AlmacenExistenciasController extends Controller
 
             if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){
                 $items = $items->where("stocks.almacen_id","=", $params['almacen_id']);
-            } else {
-                $items = $items->where("stocks.almacen_id","=", "");
             }
 
             if(isset($params['programa_id']) && trim($params['programa_id'])!= ""){
@@ -123,7 +140,6 @@ class AlmacenExistenciasController extends Controller
             }
             
             $items = $items->paginate($params['pageSize']);
-            
 
             return response()->json($items);
         }
@@ -179,17 +195,32 @@ class AlmacenExistenciasController extends Controller
      */
     public function movimientos($id, Request $request)
     {
+        $loggedUser = auth()->userOrFail();
         $params = $request->input();
-        $items = MovimientoArticulo::select(
-            "movimientos_articulos.movimiento_id as id", 
-            "movimientos.folio as folio", 
-            "movimientos.estatus as estatus", 
-            "movimientos_articulos.direccion_movimiento as direccion_movimiento",
-            "movimientos.fecha_movimiento as fecha_movimiento",
-            "movimientos_articulos.cantidad as cantidad",
-            "movimientos_articulos.user_id",
-            "users.username as user")
-        ->leftJoin("movimientos", "movimientos.id","=","movimientos_articulos.movimiento_id")->leftJoin("users", "users.id","=","movimientos_articulos.user_id")->where("stock_id",$id);
+
+        $items = Stock::select(
+                        "almacenes.nombre as almacen",
+                        "movimientos_articulos.movimiento_id as id", 
+                        "movimientos.folio as folio", 
+                        "movimientos.estatus as estatus", 
+                        "movimientos_articulos.direccion_movimiento as direccion_movimiento",
+                        "movimientos.fecha_movimiento as fecha_movimiento",
+                        "movimientos_articulos.cantidad as cantidad",
+                        "movimientos_articulos.user_id",
+                        "stocks.lote",
+                        "users.username as user")
+                    ->leftjoin("movimientos_articulos","movimientos_articulos.stock_id","stocks.id")
+                    ->leftJoin("movimientos", "movimientos.id","=","movimientos_articulos.movimiento_id")
+                    ->leftJoin("users", "users.id","=","movimientos_articulos.user_id")
+                    ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
+                    ->where("stocks.bienes_servicios_id",$id)
+                    ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
+                    ->orderBy("movimientos.fecha_movimiento","DESC")
+                    ->orderBy("stocks.lote");
+
+        if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){
+            $items = $items->where('stocks.almacen_id',$params['almacen_id']);
+        }
 
         if(isset($params['orderBy']) && trim($params['orderBy'])!= ""){
             $sortOrder = 'asc';

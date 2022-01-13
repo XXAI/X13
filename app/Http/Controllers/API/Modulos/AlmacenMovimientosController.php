@@ -70,6 +70,7 @@ class AlmacenMovimientosController extends Controller{
                                         ->leftjoin('programas','programas.id','=','stocks.programa_id')
                                         ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
                                         ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                        ->where('stocks.existencia','>',0)
                                         //->groupBy('stocks.bienes_servicios_id')
                                         ->orderBy('bienes_servicios.especificaciones');
 

@@ -29,7 +29,9 @@ export class Service {
   styleUrls: ['./widget-buscador-stock.component.css']
 })
 export class WidgetBuscadorStockComponent implements OnInit {
-  @Input() mostrarExistencias: boolean ;
+  @Input() mostrarExistencias: boolean;
+  @Input() almacenId: boolean;
+  @Input() programaId: boolean;
   
   @Output() articuloSeleccionado = new EventEmitter<any>();
 
@@ -56,8 +58,8 @@ export class WidgetBuscadorStockComponent implements OnInit {
       switchMap(value => {
           this.isLoadingArticulos = true; 
           if(!(typeof value === 'object')){
-            if( value && value.length > 3 ){
-              let resultado = this.service.buscar({query: value}).pipe(finalize(() => {this.isLoadingArticulos = false; this.terminoBusqueda = true;} ));
+            if( value && value.length > 3 && (this.almacenId && this.programaId)){
+              let resultado = this.service.buscar({query: value, programa_id: this.programaId, almacen_id: this.almacenId}).pipe(finalize(() => {this.isLoadingArticulos = false; this.terminoBusqueda = true;} ));
               return resultado;
             }else{
               this.terminoBusqueda = false;

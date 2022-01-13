@@ -1,0 +1,85 @@
+<mat-drawer-container class="example-container" style="height: 100%; overflow: auto; flex: 1 1 0%;">
+    <mat-drawer #filtrosDrawer [mode]="'side'" style="min-width: 300px;">
+        <mat-card fxFlex="100" fxLayout="column">
+            <div fxFlex="none" fxLayout="row">
+                <div fxFlex>Filtros</div>
+                <div fxFlex="none">
+                    <button mat-icon-button (click)="cerrarFiltros()">
+                        <mat-icon>clear</mat-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider [inset]="true"></mat-divider>
+            <div fxFlex fxLayout="column">
+                <section fxFlex="none">
+                    <div fxLayout="column">
+                        
+                    </div>
+                </section>
+            </div>
+        </mat-card>
+    </mat-drawer>
+    <mat-drawer-content>
+        <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+            <section fxFlex="none" fxLayout="row">
+                <div fxFlex="none" style="padding: 10px 5px;">
+                    <button mat-mini-fab [color]="(filtroAplicado)?'accent':''" (click)="abrirFiltros()" [disabled]="filtrosDrawer.opened"><mat-icon>tune</mat-icon></button>
+                </div>
+                <div fxFlex fxLayout="row">
+                    <mat-form-field appearance="fill" class="search-bar" fxFlex>
+                        <mat-label>Buscar</mat-label>
+                        <input matInput [(ngModel)]="filter.search" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Nombre, codigo de barras o lote">
+                        <button matSuffix *ngIf="filter.search" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                        <mat-hint>Presione la tecla "enter" para buscar.</mat-hint>
+                    </mat-form-field>
+                </div>
+            </section>
+            <div class="spinner-container" *ngIf="dataSource.loading$ | async">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
+            <mat-card fxFlex fxLayout="column">
+                <div fxFlex style="overflow: auto;">
+                    <table mat-table [dataSource]="dataSource" matSort >
+                        <ng-container matColumnDef="almacen">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Almacen </th>
+                            <td mat-cell *matCellDef="let element" > {{element.almacen}} </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="articulo">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Articulo </th>
+                            <td mat-cell *matCellDef="let element" matTooltip="{{ element.especificaciones }}" style="white-space: normal;" > {{element.articulo}} </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="programa">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-md> Programa </th>
+                            <td mat-cell *matCellDef="let element"  fxHide.lt-md > {{(element.programa)?element.programa:'Sin Programa'}} </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="partida">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-md> Partida </th>
+                            <td mat-cell *matCellDef="let element"  fxHide.lt-md matTooltip="{{ element.partida_especifica_descripcion }}" > {{element.clave_partida_generica}}{{element.clave_partida_especifica}} </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="total_lotes">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-sm> #Lotes </th>
+                            <td mat-cell *matCellDef="let element" fxHide.lt-sm> {{element.total_lotes}} </td>
+                        </ng-container>
+                        
+                        <ng-container matColumnDef="existencia">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Cantidad </th>
+                            <td mat-cell *matCellDef="let element"> {{element.existencia | number}} <span *ngIf="element.es_unidosis">({{element.existencia_unidosis | number}})</span></td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="verDetallesStock(row)"></tr>
+                    </table>
+                </div>
+                <div fxFlex="none">
+                    <mat-paginator  [length]="dataSource.length" [pageSize]="20" [pageSizeOptions]="[20, 50, 100]" showFirstLastButtons></mat-paginator>
+                </div>
+            </mat-card>
+        </section>
+    </mat-drawer-content>
+</mat-drawer-container>

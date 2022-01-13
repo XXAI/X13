@@ -1,0 +1,46 @@
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+td {
+  font-family: "Roboto Mono" , "Roboto" !important;
+  font-size: 0.8em;
+  font-weight: 300;
+  
+  /*font-size: 0.7em;*/
+}
+
+th,
+td {
+  /*overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;*/
+  width: auto;
+  cursor: pointer;
+  padding: 0 0.5em !important;
+}
+
+tr.mat-row:hover {
+  background-color: #F5F5F5;
+}
+
+.mat-column-almacen {
+  width: 180px;
+}
+
+.mat-column-partida {
+  width: 80px;
+}
+
+.mat-column-programa {
+  width: 180px;
+}
+
+.mat-column-total_lotes{
+  width: 80px;
+}
+
+.mat-column-existencia{
+  width: 100px;
+}
