@@ -11,6 +11,8 @@ import { ReportWorker } from '../../../web-workers/report-worker';
 import * as FileSaver from 'file-saver';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
+import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -42,9 +44,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CANCL':'cancel'  };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CANCL':'cancelado' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CANCL':'Cancelado' };
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
 
   displayedColumns: string[] = ['id','folio','almacen','programa','fecha_movimiento','total_claves','total_articulos','total_monto','actions']; //,'descripcion','proveedor','programa'
   listadoMovimientos: any = [];
@@ -119,7 +121,72 @@ export class ListaComponent implements OnInit {
   }
 
   eliminarEntrada(id){
-    console.log('eliminar : '+id);
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Movimiento?',dialogMessage:'Esta seguro de eliminar esta entrada?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.entradasService.eliminarEntrada(id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
+              this.loadListadoMovimientos();
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
+  }
+
+  cancelarEntrada(id){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta entrada? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.entradasService.cancelarEntrada(id).subscribe(
+          response =>{
+            if(response.error) {
+              let configDialog = {
+                width: '50%',
+                maxHeight: '90vh',
+                height: '343px',
+                data:{error:response.error, data:response.data},
+                panelClass: 'no-padding-dialog'
+              };
+          
+              const dialogRef = this.dialog.open(DialogoCancelarResultadoComponent, configDialog);
+            }else{
+              this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              this.loadListadoMovimientos();
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
   }
 
   applyFilter(){

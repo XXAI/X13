@@ -68,11 +68,14 @@ export class ListaComponent implements OnInit {
   }
 
   cleanSearch(){
-    //
+    this.filter.search = '';
+    this.paginator.pageIndex = 0;
+    this.loadData();
   }
 
   applySearch(){
-    //
+    this.paginator.pageIndex = 0;
+    this.loadData();
   }
 
   verDetallesStock(articulo){

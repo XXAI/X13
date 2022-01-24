@@ -30,7 +30,7 @@ export class DialogoDetallesStockComponent implements OnInit {
 
   filter: string = "";
   private orderBy:string;
-  displayedColumns: string[] = ['lote','folio','estatus','direccion_movimiento','fecha_movimiento', 'cantidad','user'];
+  displayedColumns: string[] = ['direccion_movimiento','fecha_movimiento','folio','lote','fecha_caducidad','cantidad'];
 
   dataSource: MovimientosStockDataSource;
   panelOpenState:boolean = true;

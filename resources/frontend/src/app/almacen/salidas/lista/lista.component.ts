@@ -11,6 +11,7 @@ import { ReportWorker } from '../../../web-workers/report-worker';
 import * as FileSaver from 'file-saver';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -44,9 +45,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CANCL':'cancel'  };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CANCL':'cancelado' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CANCL':'Cancelado' };
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
 
   displayedColumns: string[] = ['id','folio','almacen','programa','fecha_movimiento','total_claves','total_articulos','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
@@ -131,8 +132,66 @@ export class ListaComponent implements OnInit {
     this.searchQuery = '';
   }
 
+  cancelarSalida(id){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta salida? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.salidasService.cancelarSalida(id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              this.loadListadoMovimientos();
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
+  }
+
   eliminarSalida(id){
-    //
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Movimiento?',dialogMessage:'Esta seguro de eliminar esta salida?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.salidasService.eliminarSalida(id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
+              this.loadListadoMovimientos();
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
   }
 
   obtenerSalida(id){

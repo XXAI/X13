@@ -7,7 +7,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DatePipe } from '@angular/common';
 import { Observable } from 'rxjs';
@@ -40,7 +40,8 @@ export class SalidaComponent implements OnInit {
     private salidasService: SalidasService, 
     private sharedService: SharedService, 
     private dialog: MatDialog, 
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   formMovimiento:FormGroup;
@@ -78,9 +79,9 @@ export class SalidaComponent implements OnInit {
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'CON':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'CON':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'CON':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
   
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
@@ -207,8 +208,8 @@ export class SalidaComponent implements OnInit {
                   agregar_articulos:true
                 };
               }else if(response.data.estatus == 'FIN'){
-                this.estatusMovimiento = 'CON';
-              }else if(response.data.estatus == 'CANCL'){
+                this.estatusMovimiento = 'FIN';
+              }else if(response.data.estatus == 'CAN'){
                 this.estatusMovimiento = 'CAN';
               }
 
@@ -487,8 +488,8 @@ export class SalidaComponent implements OnInit {
             if(response.data.estatus == 'BOR'){ //Borrador
               this.estatusMovimiento = 'BOR';
             }else if(response.data.estatus == 'FIN'){ //Finalizado
-              this.estatusMovimiento = 'CON';
-            }else if(response.data.estatus == 'CANCL'){ //Cancelado
+              this.estatusMovimiento = 'FIN';
+            }else if(response.data.estatus == 'CAN'){ //Cancelado
               this.estatusMovimiento = 'CAN';
             }
 
@@ -516,6 +517,71 @@ export class SalidaComponent implements OnInit {
         }
       );
     }
+  }
+
+  cancelarSalida(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta salida? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        let id = this.formMovimiento.get('id').value;
+
+        this.salidasService.cancelarSalida(id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              this.estatusMovimiento = 'CAN';
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
+  }
+
+  eliminarSalida(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Movimiento?',dialogMessage:'Esta seguro de eliminar esta salida?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        let id = this.formMovimiento.get('id').value;
+        this.salidasService.eliminarSalida(id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
+              this.router.navigateByUrl('/almacen/salidas');
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
   }
 
   aplicarFiltroArticulos(event: Event){ 

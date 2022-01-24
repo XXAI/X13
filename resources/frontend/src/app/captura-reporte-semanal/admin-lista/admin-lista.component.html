@@ -8,7 +8,7 @@
                         <mat-label>Semanas de Captura</mat-label>
                         <mat-select [(ngModel)]="semanaSeleccionada" (selectionChange)="loadListadoRegistros()">
                           <mat-option *ngFor="let semana of semanas" [value]="semana.id">
-                            Semana #{{semana.no_semana}}
+                            {{semana.ejercicio}}: Semana #{{semana.no_semana}}
                           </mat-option>
                         </mat-select>
                     </mat-form-field>

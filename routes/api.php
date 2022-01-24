@@ -69,7 +69,9 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('almacen-buscar-stock',                  'API\Modulos\AlmacenMovimientosController@buscarStock');
     Route::get('almacen-movimientos-catalogos',         'API\Modulos\AlmacenMovimientosController@obtenerCatalogos');
     Route::apiResource('almacen-entradas',              'API\Modulos\AlmacenEntradaController');
+    Route::put('almacen-entradas-cancelar/{id}',        'API\Modulos\AlmacenEntradaController@cancelarMovimiento');
     Route::apiResource('almacen-salidas',               'API\Modulos\AlmacenSalidaController');
+    Route::put('almacen-salidas-cancelar/{id}',         'API\Modulos\AlmacenSalidaController@cancelarMovimiento');
     Route::get('almacen-existencias',                   'API\Modulos\AlmacenExistenciasController@index');
     Route::get('almacen-existencias/movimientos/{id}',  'API\Modulos\AlmacenExistenciasController@movimientos');
     Route::get('almacen-existencias/catalogos/',        'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');

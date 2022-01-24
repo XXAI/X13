@@ -9,7 +9,7 @@ import { map } from 'rxjs/operators';
 })
 export class EntradasService {
   url_entradas = `${environment.base_url}/almacen-entradas`;
-  url_insumos = `${environment.base_url}/insumos-medicos`;
+  url_cancelar = `${environment.base_url}/almacen-entradas-cancelar/`;
 
   constructor(private http: HttpClient) { }
 
@@ -37,11 +37,20 @@ export class EntradasService {
     ));
   }
 
-  buscarArticulos(payload):Observable<any> {
-    return this.http.get<any>(this.url_insumos,{params:payload}).pipe(
+  eliminarEntrada(id):Observable<any>{
+    return this.http.delete<any>(this.url_entradas+'/'+id).pipe(
       map( response => {
         return response;
       })
     );
   }
+
+  cancelarEntrada(id):Observable<any>{
+    return this.http.put<any>(this.url_cancelar+id,{}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+  
 }

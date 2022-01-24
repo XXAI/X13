@@ -5,12 +5,12 @@ import { EntradasRoutingModule } from './entradas-routing.module';
 import { ListaComponent } from './lista/lista.component';
 import { EntradaComponent } from './entrada/entrada.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { DialogoLotesArticuloComponent } from './dialogo-lotes-articulo/dialogo-lotes-articulo.component';
 import { InnerArticuloAdminListaLotesComponent } from './inner-articulo-admin-lista-lotes/inner-articulo-admin-lista-lotes.component';
 import { WidgetBuscadorArticulosComponent } from './widget-buscador-articulos/widget-buscador-articulos.component';
+import { DialogoCancelarResultadoComponent } from './dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 
 @NgModule({
-  declarations: [ListaComponent, EntradaComponent, DialogoLotesArticuloComponent, InnerArticuloAdminListaLotesComponent, WidgetBuscadorArticulosComponent],
+  declarations: [ListaComponent, EntradaComponent, InnerArticuloAdminListaLotesComponent, WidgetBuscadorArticulosComponent, DialogoCancelarResultadoComponent],
   imports: [
     CommonModule,
     SharedModule,

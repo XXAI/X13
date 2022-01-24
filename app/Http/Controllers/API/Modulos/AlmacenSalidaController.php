@@ -13,11 +13,14 @@ use App\Http\Requests;
 use Carbon\Carbon;
 use Validator;
 use DB;
+use DateTime;
 
 use App\Models\Movimiento;
 use App\Models\Stock;
 use App\Models\CartaCanje;
 use App\Models\BienServicio;
+use App\Models\TipoMovimiento;
+use App\Models\UnidadMedica;
 
 class AlmacenSalidaController extends Controller
 {
@@ -371,6 +374,37 @@ class AlmacenSalidaController extends Controller
             $movimiento->listaArticulos()->delete();
             $movimiento->listaArticulosBorrador()->delete();
             $movimiento->delete();
+
+            DB::commit();
+
+            return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function cancelarMovimiento($id){
+        try{
+            DB::beginTransaction();
+
+            $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
+
+            if($movimiento->estatus != 'FIN'){
+                throw new Exception("No se puede cancelar este movimiento", 1);
+            }
+            
+            $control_stocks = [];
+            foreach ($movimiento->listaArticulos as $articulo) {
+                $stock = $articulo->stock;
+                $stock->existencia = $stock->existencia + $articulo->cantidad;
+                $stock->save();
+            }
+
+            $movimiento->estatus = 'CAN';
+            $movimiento->save();
+
+            DB::commit();
 
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

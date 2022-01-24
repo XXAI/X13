@@ -126,6 +126,8 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
                 if($parametros['activo']){
                     ConfigCapturaAbastoSurtimiento::where('activo',true)->update(['activo'=>false]);
                 }
+
+                $parametros['ejercicio'] = substr($parametros['fecha_fin'],0,4);
                 
                 $registro = ConfigCapturaAbastoSurtimiento::create($parametros);
 
@@ -188,6 +190,8 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
                 if(!$registro){
                     throw new \Exception("Registro no encontrado", 1);
                 }
+
+                $parametros['ejercicio'] = substr($parametros['fecha_fin'],0,4);
 
                 $registro->update($parametros);
 

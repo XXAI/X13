@@ -106,8 +106,8 @@
                             <mat-icon color="accent">picture_as_pdf</mat-icon>
                             <span>Generar PDF</span>
                         </button>
-                        <mat-divider></mat-divider>
-                        <button mat-menu-item color="warn" *ngIf="estatus != 'BOR'">
+                        <mat-divider *ngIf="estatus == 'FIN' || estatus == 'BOR'"></mat-divider>
+                        <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarSalida(id)">
                             <mat-icon color="warn">cancel</mat-icon>
                             <span>Cancelar</span>
                         </button>

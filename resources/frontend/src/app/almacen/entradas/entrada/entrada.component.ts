@@ -7,13 +7,16 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DatePipe } from '@angular/common';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { MatSort } from '@angular/material/sort';
 import {animate, state, style, transition, trigger} from '@angular/animations';
+import { ReportWorker } from 'src/app/web-workers/report-worker';
+import * as FileSaver from 'file-saver';
+import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 
 @Component({
   selector: 'app-entrada',
@@ -42,7 +45,8 @@ export class EntradaComponent implements OnInit {
     private entradasService: EntradasService, 
     private sharedService: SharedService, 
     private dialog: MatDialog, 
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   formMovimiento:FormGroup;
@@ -80,9 +84,9 @@ export class EntradaComponent implements OnInit {
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'CON':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'CON':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'CON':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
   
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
@@ -208,8 +212,8 @@ export class EntradaComponent implements OnInit {
                   agregar_articulos:true
                 };
               }else if(response.data.estatus == 'FIN'){
-                this.estatusMovimiento = 'CON';
-              }else if(response.data.estatus == 'CANCL'){
+                this.estatusMovimiento = 'FIN';
+              }else if(response.data.estatus == 'CAN'){
                 this.estatusMovimiento = 'CAN';
               }
 
@@ -434,8 +438,8 @@ export class EntradaComponent implements OnInit {
             if(response.data.estatus == 'BOR'){ //Borrador
               this.estatusMovimiento = 'BOR';
             }else if(response.data.estatus == 'FIN'){ //Finalizado
-              this.estatusMovimiento = 'CON';
-            }else if(response.data.estatus == 'CANCL'){ //Cancelado
+              this.estatusMovimiento = 'FIN';
+            }else if(response.data.estatus == 'CAN'){ //Cancelado
               this.estatusMovimiento = 'CAN';
             }
 
@@ -499,5 +503,129 @@ export class EntradaComponent implements OnInit {
     const filterValue = value.toLowerCase();
 
     return this.catalogos[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
+  }
+
+  cancelarEntrada(){
+    let id = this.formMovimiento.get('id').value;
+
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta entrada? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.entradasService.cancelarEntrada(id).subscribe(
+          response =>{
+            if(response.error) {
+              let configDialog = {
+                width: '50%',
+                maxHeight: '90vh',
+                height: '343px',
+                data:{error:response.error, data:response.data},
+                panelClass: 'no-padding-dialog'
+              };
+          
+              const dialogRef = this.dialog.open(DialogoCancelarResultadoComponent, configDialog);
+            }else{
+              this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              this.estatusMovimiento = 'CAN';
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
+  }
+
+  eliminarEntrada(){
+    let id = this.formMovimiento.get('id').value;
+
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Movimiento?',dialogMessage:'Esta seguro de eliminar esta entrada?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.isLoading = true;
+        this.entradasService.eliminarEntrada(id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
+              this.router.navigateByUrl('/almacen/entradas');
+            }
+            this.isLoading = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isLoading = false;
+          }
+        );
+      }
+    });
+  }
+
+  generarPDF(){
+      this.isLoading = true;
+      let id = this.formMovimiento.get('id').value;
+      
+      this.entradasService.verEntrada(id).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error.message;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          }else{
+            if(response.data){
+              let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
+
+              const reportWorker = new ReportWorker();
+              reportWorker.onmessage().subscribe(
+                data => {
+                  FileSaver.saveAs(data.data,'Almacen-Entrada '+'('+fecha_reporte+')');
+                  reportWorker.terminate();
+                  this.isLoading = false;
+              });
+
+              reportWorker.onerror().subscribe(
+                (data) => {
+                  this.sharedService.showSnackBar(data.message, null, 3000);
+                  this.isLoading = false;
+                  reportWorker.terminate();
+                }
+              );
+              
+              let config = {
+                title: "ENTRADA DE ALMACEN",
+              };
+
+              reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/entrada'});
+              //this.isLoading = false;
+            }
+          }
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          //this.isLoadingPDF = false;
+        }
+      );
   }
 }

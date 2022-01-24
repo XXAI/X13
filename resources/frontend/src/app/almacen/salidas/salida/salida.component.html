@@ -25,6 +25,14 @@
                 height:10px; padding-top: 15px;
             </button>
             <mat-divider></mat-divider-->
+            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
+                <mat-icon>settings_applications</mat-icon>
+                <span>Configurar Firmantes</span>
+            </button>
+            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
+                <mat-icon>border_color</mat-icon>
+                <span>Firmar</span>
+            </button>
             <button mat-menu-item *ngIf="verBoton['enviar_revision'] && estatusMovimiento == 'BOR'">
                 <mat-icon>outbox</mat-icon>
                 <span>Enviar a Revisión</span>
@@ -33,12 +41,12 @@
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Movimiento</span>
             </button>
-            <mat-divider></mat-divider>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'">
+            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarSalida()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Salida</span>
             </button>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'CON'">
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarSalida()">
                 <mat-icon color="warn">cancel</mat-icon>
                 <span>Cancelar Salida</span>
             </button>

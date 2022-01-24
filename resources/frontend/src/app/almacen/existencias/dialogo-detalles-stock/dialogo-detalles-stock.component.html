@@ -26,18 +26,19 @@
             <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.lote}} </td>
         </ng-container>
 
+        <ng-container matColumnDef="fecha_caducidad">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> CADUCIDAD </th>
+            <td mat-cell *matCellDef="let element">{{element.fecha_caducidad | date: 'dd/MM/yyyy'}}</td>
+        </ng-container>
+
         <ng-container matColumnDef="folio">
             <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> FOLIO </th>
             <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.folio}} </td>
         </ng-container>
 
-        <ng-container matColumnDef="estatus">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> ESTATUS </th>
-            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.estatus}} </td>
-        </ng-container>
         <ng-container matColumnDef="direccion_movimiento">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> TIPO </th>
-            <td mat-cell *matCellDef="let element"> {{element.direccion_movimiento}} </td>
+            <td mat-cell *matCellDef="let element"><mat-icon [matTooltip]="(element.direccion_movimiento == 'ENT')?'Entrada':'Salida'">{{(element.direccion_movimiento == 'ENT')?'exit_to_app':'launch'}}</mat-icon></td>
         </ng-container>
 
         <ng-container matColumnDef="fecha_movimiento">
@@ -49,11 +50,7 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header> CANT </th>
             <td mat-cell *matCellDef="let element"> {{element.cantidad | number}}</td>
         </ng-container>
-        <ng-container matColumnDef="user">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-sm> USUARIO </th>
-            <td mat-cell *matCellDef="let element" fxHide.lt-sm> {{element.user }}</td>
-        </ng-container>
-
+        
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;">
         </tr>

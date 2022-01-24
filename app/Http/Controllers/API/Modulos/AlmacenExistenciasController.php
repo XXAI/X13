@@ -208,6 +208,7 @@ class AlmacenExistenciasController extends Controller
                         "movimientos_articulos.cantidad as cantidad",
                         "movimientos_articulos.user_id",
                         "stocks.lote",
+                        "stocks.fecha_caducidad",
                         "users.username as user")
                     ->leftjoin("movimientos_articulos","movimientos_articulos.stock_id","stocks.id")
                     ->leftJoin("movimientos", "movimientos.id","=","movimientos_articulos.movimiento_id")
@@ -215,6 +216,7 @@ class AlmacenExistenciasController extends Controller
                     ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
                     ->where("stocks.bienes_servicios_id",$id)
                     ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
+                    ->where("movimientos.estatus","FIN")
                     ->orderBy("movimientos.fecha_movimiento","DESC")
                     ->orderBy("stocks.lote");
 

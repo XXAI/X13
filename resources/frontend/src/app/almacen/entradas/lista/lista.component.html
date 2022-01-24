@@ -67,7 +67,7 @@
 
                     <ng-container matColumnDef="folio">
                         <th mat-header-cell *matHeaderCellDef> Folio </th>
-                        <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap;"> {{ row.folio }} </td>
+                        <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap;"> {{ (row.folio)?row.folio:'S/F' }} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="proveedor">
@@ -142,8 +142,8 @@
                             <mat-icon color="accent">picture_as_pdf</mat-icon>
                             <span>Generar PDF</span>
                         </button>
-                        <mat-divider></mat-divider>
-                        <button mat-menu-item color="warn" *ngIf="estatus != 'BOR'">
+                        <mat-divider *ngIf="estatus == 'FIN' || estatus == 'BOR'"></mat-divider>
+                        <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">
                             <mat-icon color="warn">cancel</mat-icon>
                             <span>Cancelar</span>
                         </button>

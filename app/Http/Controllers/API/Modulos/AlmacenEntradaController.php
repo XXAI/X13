@@ -369,6 +369,45 @@ class AlmacenEntradaController extends Controller
         }
     }
 
+    public function cancelarMovimiento($id){
+        try{
+            DB::beginTransaction();
+
+            $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
+
+            if($movimiento->estatus != 'FIN'){
+                throw new Exception("No se puede cancelar este movimiento", 1);
+            }
+            
+            $control_stocks = [];
+            foreach ($movimiento->listaArticulos as $articulo) {
+                $stock = $articulo->stock;
+                $stock->existencia = $stock->existencia - $articulo->cantidad;
+                if($stock->existencia < 0){
+                    $stock->load('articulo');
+                    $control_stocks[] = $stock;
+                }else{
+                    $stock->save();
+                }
+            }
+
+            if(count($control_stocks) > 0){
+                DB::rollback();
+                return response()->json(['error'=>'Uno o mas elementos resultan con valores negativos','data'=>$control_stocks],HttpResponse::HTTP_OK);
+            }
+
+            $movimiento->estatus = 'CAN';
+            $movimiento->save();
+
+            DB::commit();
+
+            return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -388,6 +427,8 @@ class AlmacenEntradaController extends Controller
             $movimiento->listaArticulos()->delete();
             $movimiento->listaArticulosBorrador()->delete();
             $movimiento->delete();
+
+            DB::commit();
 
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

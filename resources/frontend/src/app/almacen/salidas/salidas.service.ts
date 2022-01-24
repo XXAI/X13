@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 })
 export class SalidasService {
   url_salidas = `${environment.base_url}/almacen-salidas`;
+  url_cancelar = `${environment.base_url}/almacen-salidas-cancelar`;
 
   constructor(private http: HttpClient) { }
 
@@ -35,5 +36,21 @@ export class SalidasService {
         return response;
       }
     ));
+  }
+
+  eliminarSalida(id):Observable<any>{
+    return this.http.delete<any>(this.url_salidas+'/'+id).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  cancelarSalida(id):Observable<any>{
+    return this.http.put<any>(this.url_cancelar+id,{}).pipe(
+      map( response => {
+        return response;
+      })
+    );
   }
 }

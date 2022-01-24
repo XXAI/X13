@@ -10,5 +10,5 @@ class ConfigCapturaAbastoSurtimiento extends Model{
     
     use SoftDeletes;
     protected $table = 'config_captura_abasto_surtimiento';  
-    protected $fillable = ['fecha_inicio','fecha_fin','no_semana','activo'];
+    protected $fillable = ['fecha_inicio','fecha_fin','ejercicio','no_semana','activo'];
 }

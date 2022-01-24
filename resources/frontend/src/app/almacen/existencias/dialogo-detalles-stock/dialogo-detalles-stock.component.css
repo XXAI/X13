@@ -34,6 +34,12 @@ table {
 .mat-column-fecha_movimiento {
     width: 90px;
 }
+.mat-column-lote {
+    width: 150px;
+}
+.mat-column-fecha_caducidad {
+    width: 90px;
+}
 .mat-column-cantidad {
     width: 90px;
 }

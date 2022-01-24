@@ -15,6 +15,7 @@ use App\Exports\DevReportExport;
 use Illuminate\Support\Facades\Storage;
 
 use App\Models\ConfigCapturaAbastoSurtimiento;
+use App\Models\ConfigUnidadMedicaAbasto;
 use App\Models\CorteReporteAbastoSurtimiento;
 use App\Models\ControlSubidaArchivos;
 use App\Models\UnidadMedica;
@@ -28,7 +29,7 @@ class CapturaReporteAbastoSurtimientoController extends Controller
 
             if(isset($parametros['admin']) && $parametros['admin']){
                 $data = [
-                    'semanas_capturadas' => ConfigCapturaAbastoSurtimiento::orderBy('no_semana','desc')->get(),
+                    'semanas_capturadas' => ConfigCapturaAbastoSurtimiento::orderBy('ejercicio','desc')->orderBy('no_semana','desc')->get(),
                     'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first()
                 ];
             }else{
@@ -36,7 +37,8 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                     'unidad_medica' => UnidadMedica::find($loggedUser->unidad_medica_asignada_id),
                     'archivo_subido' => ControlSubidaArchivos::where('usuario_id',$loggedUser->id)->where('clave_solicitud','LISTA-MEDS-ACTIVOS')->first(),
                     'semana_activa' => ConfigCapturaAbastoSurtimiento::where('activo',true)->first(),
-                    'totales_claves_catalogo' => CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->select(DB::raw('MAX(claves_medicamentos_catalogo) as claves_medicamentos_catalogo'), DB::raw('MAX(claves_material_curacion_catalogo) as claves_material_curacion_catalogo'))->groupBy('unidad_medica_id')->first()
+                    //'totales_claves_catalogo' => CorteReporteAbastoSurtimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->select(DB::raw('MAX(claves_medicamentos_catalogo) as claves_medicamentos_catalogo'), DB::raw('MAX(claves_material_curacion_catalogo) as claves_material_curacion_catalogo'))->groupBy('unidad_medica_id')->first()
+                    'totales_claves_catalogo' => ConfigUnidadMedicaAbasto::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->select(DB::raw('total_claves_medicamentos_catalogo as claves_medicamentos_catalogo'), DB::raw('total_claves_material_curacion_catalogo as claves_material_curacion_catalogo'))->first()
                 ];
             }
             
