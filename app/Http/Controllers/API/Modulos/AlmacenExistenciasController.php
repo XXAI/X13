@@ -54,7 +54,8 @@ class AlmacenExistenciasController extends Controller
                             ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica")
                             ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
                             ->leftJoin("programas","programas.id","=","stocks.programa_id")
-                            ->where('stocks.unidad_medica_id',$loggedUser->unidad_medica_asignada_id);
+                            ->where('stocks.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
+                            ->where('stocks.existencia','>',0);
 
             if(isset($params['groupBy']) && trim($params['groupBy']) != ""){
                 if($params['groupBy'] == 'articulo'){

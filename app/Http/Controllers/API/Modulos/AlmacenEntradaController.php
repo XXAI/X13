@@ -45,9 +45,10 @@ class AlmacenEntradaController extends Controller
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
                 $entradas = $entradas->where(function($query)use($parametros){
-                    return $query//->where('nombre','LIKE','%'.$parametros['query'].'%')
-                                ->whereRaw('CONCAT_WS(" ",personas.apellido_paterno, personas.apellido_materno, personas.nombre) like "%'.$parametros['query'].'%"' )
-                                ->orWhere('formularios.descripcion','LIKE','%'.$parametros['query'].'%');
+                    return $query->where('movimientos.folio','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('almacenes.nombre','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('programas.descripcion','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('proveedores.nombre','LIKE','%'.$parametros['query'].'%');
                 });
             }
 

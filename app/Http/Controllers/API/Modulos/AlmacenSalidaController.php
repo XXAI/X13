@@ -35,39 +35,38 @@ class AlmacenSalidaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','proveedores.nombre as proveedor')
+            $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('programas','programas.id','=','movimientos.programa_id')
-                                    ->leftJoin('proveedores','proveedores.id','=','movimientos.proveedor_id')
                                     ->where('movimientos.direccion_movimiento','SAL')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->orderBy('updated_at','DESC');
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
-                $entradas = $entradas->where(function($query)use($parametros){
-                    return $query//->where('nombre','LIKE','%'.$parametros['query'].'%')
-                                ->whereRaw('CONCAT_WS(" ",personas.apellido_paterno, personas.apellido_materno, personas.nombre) like "%'.$parametros['query'].'%"' )
-                                ->orWhere('formularios.descripcion','LIKE','%'.$parametros['query'].'%');
+                $salidas = $salidas->where(function($query)use($parametros){
+                    return $query->where('movimientos.folio','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('almacenes.nombre','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('programas.descripcion','LIKE','%'.$parametros['query'].'%');
                 });
             }
 
             if(isset($parametros['tipo_movimiento']) && $parametros['tipo_movimiento']){
-                $entradas = $entradas->where('tipo_movimiento_id',$parametros['tipo_movimiento']);
+                $salidas = $salidas->where('tipo_movimiento_id',$parametros['tipo_movimiento']);
             }
             /*if(!(isset($parametros['mostrar_todo']) && $parametros['mostrar_todo'])){
-                $entradas = $entradas->where('estatus','like','ME-%');
+                $salidas = $salidas->where('estatus','like','ME-%');
             }*/
 
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
-                $entradas = $entradas->paginate($resultadosPorPagina);
+                $salidas = $salidas->paginate($resultadosPorPagina);
 
             } else {
-                $entradas = $entradas->get();
+                $salidas = $salidas->get();
             }
 
-            return response()->json(['data'=>$entradas],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>$salidas],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }

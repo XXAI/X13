@@ -19,7 +19,7 @@ export class ReporteAlmacenSalida{
         let contadorLineasHorizontalesV = 0;
         //let fecha_hoy =  Date.now();
         let fecha_hoy =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'long', day: '2-digit'}).format(new Date());
-        let datos = {
+        let datos: any = {
           pageOrientation: 'portrait',
           pageSize: 'LETTER',
           pageMargins: [ 40, 60, 40, 60 ],
@@ -141,6 +141,11 @@ export class ReporteAlmacenSalida{
         let total_salida = parseFloat(salida.total_monto);
         let fecha_salida  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(salida.fecha_movimiento));
 
+        let fecha_referencia = '';
+        if(salida.referencia_fecha){
+          fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(salida.referencia_fecha));
+        }
+
         function numberFormat(num) {
           //return '$' + num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
           var str = num.toString().split(".");
@@ -155,35 +160,35 @@ export class ReporteAlmacenSalida{
         datos.content.push({
           table: {
             margin: [0,0,0,0],
-            widths: [ 60, '*', 70, '*', 60, 65],
+            widths: [ 60, '*', 70, '*', 60, 155],
             body: [
               [
                 {text: "Almacen:",                                                             style: "salida_title"},
-                {text: salida.almacen?.nombre,                                                style: "salida_datos", colSpan: 3 },
+                {text: salida.almacen?.nombre,                                                 style: "salida_datos", colSpan: 3 },
                 {text: ""},
                 {text: ""},
-                {text: "N° salida:",                                                           style: "salida_title"},
+                {text: "N° Salida:",                                                           style: "salida_title"},
                 {text: salida.folio,                                                           style: "salida_datos"},
               ],
               [
                 {text: "Programa:",                                                             style: "salida_title"},
-                {text: salida.programa?.nombre,                                                style: "salida_datos", colSpan: 3 },
+                {text: salida.programa?.nombre,                                                 style: "salida_datos", colSpan: 3 },
                 {text: ""},
                 {text: ""},
                 {text: "Pedido:",                                                               style: "salida_title"},
-                {text: "GHT-1212",                                                              style: "salida_datos"},
+                {text: salida.documento_folio,                                                  style: "salida_datos"},
               ],
               [
                 {text: "N° Referencia:",                                                        style: "salida_title" },
-                {text: "",                                                                      style: "salida_datos" },
+                {text: salida.referencia_folio,                                                 style: "salida_datos" },
                 {text: "Fecha Referencia:",                                                     style: "salida_title" },
-                {text: fecha_salida,                                                           style: "salida_datos" },
-                {text: "Fecha salida:",                                                        style: "salida_title" },
-                {text: fecha_salida,                                                           style: "salida_datos" },
+                {text: fecha_referencia,                                                        style: "salida_datos" },
+                {text: "Fecha salida:",                                                         style: "salida_title" },
+                {text: fecha_salida,                                                            style: "salida_datos" },
               ],
               [
                 {text: "Observaciones:",                                                        style: "salida_title"},
-                {text: salida.observaciones,                                                   style: "salida_datos", colSpan: 5 },
+                {text: salida.observaciones,                                                    style: "salida_datos", colSpan: 5 },
                 {text: ""},
                 {text: ""},
                 {text: ""},
@@ -230,50 +235,44 @@ export class ReporteAlmacenSalida{
         let total_pedido = 0;
         let tabla_articulos = [];
         let borrador = {};
+        let watermark = '';
 
         switch (salida.estatus) {
-
           case 'FIN':
             tabla_articulos = salida.lista_articulos;
-            borrador = { text: '\n\n\n\n\n\n'};
               break;
           case 'BOR':
             tabla_articulos = salida.lista_articulos_borrador;
-            console.log("consolaReporte",tabla_articulos);
-            borrador = { text: '\nBORRADOR\n\n\n', style: 'marca_de_agua',};
+            watermark = 'BORRADOR';
               break;
-          case 'CANCL':
+          case 'CAN':
             tabla_articulos = salida.lista_articulos;
-            borrador = { text: '\n\n\n\n\n\n', style: 'marca_de_agua',};
+            watermark = 'CANCELADO';
               break;
-
           default:0
-
         }
 
+        if(watermark){
+          datos.watermark = { text: watermark, opacity: 0.3, bold: true, italics: true };
+        }
+        
         for(let i = 0; i < tabla_articulos.length; i++){
-          let item            = tabla_articulos[i];
-          for(let s = 0; s < item.stocks.length; s++){
-
-            let stock = item.stocks[s];
-
+          let item  = tabla_articulos[i];
           
-            let fecha = (stock?.fecha_caducidad)?stock?.fecha_caducidad:'S/F/C';
-            let fecha_caducidad = (stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
+          let stock = item.stock;
+          let fecha = (stock?.fecha_caducidad)?stock?.fecha_caducidad:'S/F/C';
+          let fecha_caducidad = (stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
 
-            datos.content[1].table.body.push([
-              { text: (i+1),                                                                          style: 'tabla_datos_center'},
-              { text: stock?.cantidad,                                                                style: 'tabla_datos_center'},
-              { text: (stock?.lote != null)?stock?.lote:'S/L',                                        style: 'tabla_datos_center'},
-              { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
-              { text: (item.clave_cubs != null)?item.clave_cubs:item.clave_local,                     style: 'tabla_datos'},
-              { text: item.especificaciones,                                                          style: 'tabla_datos'},
-              { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
-              { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
-
-            ]);
-          //total_pedido += item.cantidad;
-          }
+          datos.content[1].table.body.push([
+            { text: (i+1),                                                                          style: 'tabla_datos_center'},
+            { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
+            { text: (stock?.lote != null)?stock?.lote:'S/L',                                        style: 'tabla_datos_center'},
+            { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
+            { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
+            { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
+            { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
+            { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
+          ]);
         }
 
         datos.content[1].table.body.push([
@@ -308,20 +307,7 @@ export class ReporteAlmacenSalida{
           { text: 'Total:',        style: 'subcabecera'},
           { text: monto_total,   style: 'tabla_datos_right'},
         ]);
-
-        datos.content.push({
-          layout: 'noBorders',
-          table: {
-          widths: ['*'],
-            margin: [0,0,0,0],
-            body: [
-              [
-                borrador
-              ]
-            ]
-          }
-        });
-
+        
         datos.content.push({
           layout: 'noBorders',
           table: {

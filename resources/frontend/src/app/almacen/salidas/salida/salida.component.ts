@@ -14,6 +14,8 @@ import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { MatSort } from '@angular/material/sort';
 import {animate, state, style, transition, trigger} from '@angular/animations';
+import { ReportWorker } from 'src/app/web-workers/report-worker';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-salida',
@@ -346,7 +348,8 @@ export class SalidaComponent implements OnInit {
                     existencia: lista_articulos[i].cantidad_anterior,
                     fecha_caducidad: lista_articulos[i].stock.fecha_caducidad,
                     salida: lista_articulos[i].cantidad,
-                    restante: lista_articulos[i].stock.existencia - lista_articulos[i].stock.cantidad,
+                    //restante: lista_articulos[i].stock.existencia - lista_articulos[i].stock.cantidad,
+                    restante: +lista_articulos[i].cantidad_anterior - +lista_articulos[i].cantidad,
                     //memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
                     //memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
                     //vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
@@ -354,7 +357,9 @@ export class SalidaComponent implements OnInit {
                   //}
   
                   this.totalesSalida.articulos += lista_articulos[i].cantidad;
-                  articulo.total_piezas = lista_articulos[i].cantidad;
+                  articulo.total_piezas += lista_articulos[i].cantidad;
+                  articulo.existencias += lista_articulos[i].cantidad_anterior;
+                  articulo.existencias_restantes = articulo.existencias - articulo.total_piezas;
                   articulo.total_lotes++;
                 }
               }
@@ -582,6 +587,56 @@ export class SalidaComponent implements OnInit {
         );
       }
     });
+  }
+
+  generarPDF(){
+    this.isLoading = true;
+    let id = this.formMovimiento.get('id').value;
+    
+    this.salidasService.verSalida(id).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        }else{
+          if(response.data){
+            let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
+
+            const reportWorker = new ReportWorker();
+            reportWorker.onmessage().subscribe(
+              data => {
+                FileSaver.saveAs(data.data,'Almacen-Salida '+'('+fecha_reporte+')');
+                reportWorker.terminate();
+                this.isLoading = false;
+            });
+
+            reportWorker.onerror().subscribe(
+              (data) => {
+                this.sharedService.showSnackBar(data.message, null, 3000);
+                console.log(data);
+                this.isLoading = false;
+                reportWorker.terminate();
+              }
+            );
+            
+            let config = {
+              title: "SALIDA DE ALMACEN",
+            };
+
+            reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/salida'});
+            //this.isLoading = false;
+          }
+        }
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.isLoadingPDF = false;
+      }
+    );
   }
 
   aplicarFiltroArticulos(event: Event){ 

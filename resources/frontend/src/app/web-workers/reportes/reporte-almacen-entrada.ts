@@ -20,7 +20,7 @@ export class ReporteAlmacenEntrada{
         let contadorLineasHorizontalesV = 0;
         //let fecha_hoy =  Date.now();
         let fecha_hoy =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'long', day: '2-digit'}).format(new Date());
-        let datos = {
+        let datos:any  = {
           pageOrientation: 'portrait',
           pageSize: 'LETTER',
           pageMargins: [ 40, 60, 40, 60 ],
@@ -142,6 +142,11 @@ export class ReporteAlmacenEntrada{
         let total_entrada = parseFloat(entrada.total_monto);
         let fecha_entrada  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.fecha_movimiento));
 
+        let fecha_referencia = '';
+        if(entrada.referencia_fecha){
+          fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.referencia_fecha));
+        }
+
         function numberFormat(num) {
           //return '$' + num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
           var str = num.toString().split(".");
@@ -156,7 +161,7 @@ export class ReporteAlmacenEntrada{
         datos.content.push({
           table: {
             margin: [0,0,0,0],
-            widths: [ 60, '*', 70, '*', 60, 65],
+            widths: [ 60, '*', 70, '*', 60, 155],
             body: [
               [
                 {text: "Almacen:",                                                             style: "entrada_title"},
@@ -172,13 +177,13 @@ export class ReporteAlmacenEntrada{
                 {text: ""},
                 {text: ""},
                 {text: "Pedido:",                                                               style: "entrada_title"},
-                {text: "GHT-1212",                                                              style: "entrada_datos"},
+                {text: entrada.documento_folio,                                                 style: "entrada_datos"},
               ],
               [
                 {text: "N° Referencia:",                                                        style: "entrada_title" },
-                {text: "",                                                                      style: "entrada_datos" },
+                {text: entrada.referencia_folio,                                                style: "entrada_datos" },
                 {text: "Fecha Referencia:",                                                     style: "entrada_title" },
-                {text: fecha_entrada,                                                           style: "entrada_datos" },
+                {text: fecha_referencia,                                                        style: "entrada_datos" },
                 {text: "Fecha Entrada:",                                                        style: "entrada_title" },
                 {text: fecha_entrada,                                                           style: "entrada_datos" },
               ],
@@ -231,31 +236,32 @@ export class ReporteAlmacenEntrada{
         let total_pedido = 0;
         let tabla_articulos = [];
         let borrador = {};
+        let watermark = '';
 
         switch (entrada.estatus) {
-
           case 'FIN':
             tabla_articulos = entrada.lista_articulos;
-            borrador = { text: '\n\n\n\n\n\n'};
-              break;
+            break;
           case 'BOR':
             tabla_articulos = entrada.lista_articulos_borrador;
-            borrador = { text: '\nBORRADOR\n\n\n', style: 'marca_de_agua',};
-              break;
-          case 'CANCL':
+            watermark = 'BORRADOR';
+            break;
+          case 'CAN':
             tabla_articulos = entrada.lista_articulos;
-            borrador = { text: '\n\n\n\n\n\n', style: 'marca_de_agua',};
+            watermark = 'CANCELADO';
               break;
-
           default:0
+        }
 
+        if(watermark){
+          datos.watermark = { text: watermark, opacity: 0.3, bold: true, italics: true };
         }
 
         for(let i = 0; i < tabla_articulos.length; i++){
-          let item            = tabla_articulos[i];
+          let item  = tabla_articulos[i];
           let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
           let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
-
+          
           datos.content[1].table.body.push([
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
             { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
@@ -302,20 +308,7 @@ export class ReporteAlmacenEntrada{
           { text: 'Total:',        style: 'subcabecera'},
           { text: monto_total,   style: 'tabla_datos_right'},
         ]);
-
-        datos.content.push({
-          layout: 'noBorders',
-          table: {
-          widths: ['*'],
-            margin: [0,0,0,0],
-            body: [
-              [
-                borrador
-              ]
-            ]
-          }
-        });
-
+        
         datos.content.push({
           layout: 'noBorders',
           table: {

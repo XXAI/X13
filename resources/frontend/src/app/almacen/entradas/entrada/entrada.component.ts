@@ -581,51 +581,51 @@ export class EntradaComponent implements OnInit {
   }
 
   generarPDF(){
-      this.isLoading = true;
-      let id = this.formMovimiento.get('id').value;
-      
-      this.entradasService.verEntrada(id).subscribe(
-        response =>{
-          if(response.error) {
-            let errorMessage = response.error.message;
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
-          }else{
-            if(response.data){
-              let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
-
-              const reportWorker = new ReportWorker();
-              reportWorker.onmessage().subscribe(
-                data => {
-                  FileSaver.saveAs(data.data,'Almacen-Entrada '+'('+fecha_reporte+')');
-                  reportWorker.terminate();
-                  this.isLoading = false;
-              });
-
-              reportWorker.onerror().subscribe(
-                (data) => {
-                  this.sharedService.showSnackBar(data.message, null, 3000);
-                  this.isLoading = false;
-                  reportWorker.terminate();
-                }
-              );
-              
-              let config = {
-                title: "ENTRADA DE ALMACEN",
-              };
-
-              reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/entrada'});
-              //this.isLoading = false;
-            }
-          }
-        },
-        errorResponse =>{
-          var errorMessage = "Ocurrió un error.";
-          if(errorResponse.status == 409){
-            errorMessage = errorResponse.error.error.message;
-          }
+    this.isLoading = true;
+    let id = this.formMovimiento.get('id').value;
+    
+    this.entradasService.verEntrada(id).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
-          //this.isLoadingPDF = false;
+        }else{
+          if(response.data){
+            let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
+
+            const reportWorker = new ReportWorker();
+            reportWorker.onmessage().subscribe(
+              data => {
+                FileSaver.saveAs(data.data,'Almacen-Entrada '+'('+fecha_reporte+')');
+                reportWorker.terminate();
+                this.isLoading = false;
+            });
+
+            reportWorker.onerror().subscribe(
+              (data) => {
+                this.sharedService.showSnackBar(data.message, null, 3000);
+                this.isLoading = false;
+                reportWorker.terminate();
+              }
+            );
+            
+            let config = {
+              title: "ENTRADA DE ALMACEN",
+            };
+
+            reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/entrada'});
+            //this.isLoading = false;
+          }
         }
-      );
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.isLoadingPDF = false;
+      }
+    );
   }
 }

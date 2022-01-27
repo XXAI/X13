@@ -50,8 +50,8 @@
                 <mat-icon color="warn">cancel</mat-icon>
                 <span>Cancelar Salida</span>
             </button>
-            <mat-divider *ngIf="estatusMovimiento == 'CON' || estatusMovimiento == 'BOR'"></mat-divider>
-            <button mat-menu-item *ngIf="estatusMovimiento == 'CON'">
+            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
+            <button mat-menu-item (click)="generarPDF()">
                 <mat-icon>print</mat-icon>
                 <span>Imprimir</span>
             </button>

@@ -10,7 +10,7 @@ import { map } from 'rxjs/operators';
 })
 export class SalidasService {
   url_salidas = `${environment.base_url}/almacen-salidas`;
-  url_cancelar = `${environment.base_url}/almacen-salidas-cancelar`;
+  url_cancelar = `${environment.base_url}/almacen-salidas-cancelar/`;
 
   constructor(private http: HttpClient) { }
 
