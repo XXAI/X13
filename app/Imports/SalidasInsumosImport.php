@@ -106,7 +106,7 @@ class SalidasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows /
                     if($bienServicio != null)
                     {
                         $stock = Stock::where("almacen_id",$this->almacen_id)
-                        ->where("bienes_servicios_id",$bienServicio->id)
+                        ->where("bien_servicio_id",$bienServicio->id)
                         ->where("lote",$insumo["lote"])
                         ->where("fecha_caducidad",$insumo["fecha_caducidad"])->first();
                         
@@ -126,7 +126,7 @@ class SalidasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows /
                                     [
                                         "movimiento_id" => $movimiento->id,
                                         "stock_id" => $stock->id,
-                                        "bienes_servicios_id"=>$bienServicio->id,
+                                        "bien_servicio_id"=>$bienServicio->id,
                                         "direccion_movimiento" => "SAL",
                                         "modo_movimiento" => "NRM",
                                         "cantidad" => $insumo["cantidad"],

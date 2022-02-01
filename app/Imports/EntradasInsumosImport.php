@@ -167,7 +167,7 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                         }
 
                         $stock = Stock::where("almacen_id",$this->almacen_id)
-                        ->where("bienes_servicios_id",$bienServicio->id)
+                        ->where("bien_servicio_id",$bienServicio->id)
                         ->where("programa_id",$programa_id)
                         ->where("lote",$insumo["lote"])
                         ->where("fecha_caducidad",$insumo["fecha_caducidad"])
@@ -183,7 +183,7 @@ class EntradasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRows 
                             $stock = Stock::create(
                                 [
                                     "almacen_id"            => $this->almacen_id,
-                                    "bienes_servicios_id"   => $bienServicio->id,
+                                    "bien_servicio_id"      => $bienServicio->id,
                                     "programa_id"           => $programa_id,
                                     "lote"                  => $insumo["lote"],
                                     "fecha_caducidad"       => $insumo["fecha_caducidad"],

@@ -85,12 +85,14 @@ class AlmacenEntradaController extends Controller
             $movimiento = Movimiento::with(['listaArticulos'=>function($listaArticulos)use($loggedUser){ 
                                                     return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
                                                                 $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                            },'stock','cartaCanje']);
-                                            },'listaArticulosBorrador.articulo'=>function($articulos)use($loggedUser){
-                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                            },'proveedor'])->find($id);
+                                                            },'stock.marca','cartaCanje']);
+                                            },'listaArticulosBorrador'=>function($listaBorrador)use($loggedUser){ 
+                                                return $listaBorrador->with(['articulo'=>function($articulos)use($loggedUser){
+                                                            $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                                        },'marca']);
+                                            },'proveedor','programa'])->find($id);
             if($movimiento->estatus != 'BOR'){
-                $movimiento->load(['programa','almacen']);
+                $movimiento->load(['almacen']);
             }
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -218,10 +220,15 @@ class AlmacenEntradaController extends Controller
                             'direccion_movimiento' => 'ENT',
                             'modo_movimiento' => 'NRM',
                             'cantidad' => $lote['cantidad'],
+
                             'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
-                            'lote' => $lote['lote'],
-                            'codigo_barras' => $lote['codigo_barras'],
-                            'fecha_caducidad' => $lote['fecha_caducidad'],
+                            'modelo' => (isset($lote['modelo']))?$lote['modelo']:null,
+                            'no_serie' => (isset($lote['no_serie']))?$lote['no_serie']:null,
+
+                            'lote' => (isset($lote['lote']))?$lote['lote']:null,
+                            'codigo_barras' => (isset($lote['codigo_barras']))?$lote['codigo_barras']:null,
+                            'fecha_caducidad' => (isset($lote['fecha_caducidad']))?$lote['fecha_caducidad']:null,
+
                             'precio_unitario' => $lote['precio_unitario'],
                             'iva' => $lote['iva'],
                             'total_monto' => $lote['total_monto'],
@@ -257,18 +264,23 @@ class AlmacenEntradaController extends Controller
                         $stock_lote = [
                             'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
                             'almacen_id' => $parametros['almacen_id'],
-                            'bienes_servicios_id' => $articulo['id'],
+                            'bien_servicio_id' => $articulo['id'],
                             'programa_id' => $parametros['programa_id'],
                             'existencia' => $lote['cantidad'],
+
                             'marca_id' => (isset($lote['marca_id']))?$lote['marca_id']:null,
-                            'lote' => $lote['lote'],
-                            'codigo_barras' => $lote['codigo_barras'],
-                            'fecha_caducidad' => $lote['fecha_caducidad'],
+                            'modelo' => (isset($lote['modelo']))?$lote['modelo']:null,
+                            'no_serie' => (isset($lote['no_serie']))?$lote['no_serie']:null,
+
+                            'lote' => (isset($lote['lote']))?$lote['lote']:null,
+                            'codigo_barras' => (isset($lote['codigo_barras']))?$lote['codigo_barras']:null,
+                            'fecha_caducidad' => (isset($lote['fecha_caducidad']))?$lote['fecha_caducidad']:null,
+
                             'user_id' => $loggedUser->id,
                         ];
 
                         $lote_guardado = Stock::where("almacen_id",$parametros['almacen_id'])
-                                                ->where("bienes_servicios_id",$stock_lote['bienes_servicios_id'])
+                                                ->where("bien_servicio_id",$stock_lote['bien_servicio_id'])
                                                 ->where("programa_id",$stock_lote['programa_id'])
                                                 ->where("lote",$stock_lote['lote'])
                                                 ->where("fecha_caducidad",$stock_lote['fecha_caducidad'])

@@ -101,7 +101,7 @@ class EstatusAvanceRecepcionPedidoController extends Controller{
                                                 ->leftjoin('movimientos_insumos',function($join){
                                                     $join->on('movimientos_insumos.movimiento_id','=','rel_movimientos_pedidos.movimiento_id')
                                                             ->whereNull('movimientos_insumos.deleted_at')
-                                                            ->on('movimientos_insumos.bienes_servicios_id','=','pedidos_lista_articulos.bien_servicio_id');
+                                                            ->on('movimientos_insumos.bien_servicio_id','=','pedidos_lista_articulos.bien_servicio_id');
                                                 })
                                                 ->groupBy('pedidos_lista_articulos.bien_servicio_id')
                                                 ->orderBy('pedidos_lista_articulos.id');

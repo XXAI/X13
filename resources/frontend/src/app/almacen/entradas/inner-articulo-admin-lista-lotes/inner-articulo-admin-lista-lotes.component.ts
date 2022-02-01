@@ -2,6 +2,8 @@ import { DatePipe } from '@angular/common';
 import { Component, OnInit, Input, SimpleChange, Output, EventEmitter, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
+import { Observable } from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
 import { CustomValidator } from 'src/app/utils/classes/custom-validator';
 
 @Component({
@@ -11,11 +13,12 @@ import { CustomValidator } from 'src/app/utils/classes/custom-validator';
 })
 
 export class InnerArticuloAdminListaLotesComponent implements OnInit {
-  @ViewChild(MatInput) inputFormLote: MatInput;
+  @ViewChild(MatInput) inputFormField: MatInput;
 
   @Input() articulo: any;
   @Input() edicionActiva: boolean;
   @Input() fechaMovimiento: Date;
+  @Input() catalogoMarcas: any[];
 
   @Output() cambiosEnLotes = new EventEmitter<any>();
 
@@ -23,6 +26,8 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     private formBuilder: FormBuilder,
     private datePipe: DatePipe
   ) { }
+
+  filteredMarcas: Observable<string[]>;
 
   loteEditIndex: number;
   formLote: FormGroup;
@@ -41,28 +46,52 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     this.fechaActual = new Date();
     this.loteEditIndex = -1;
     this.mostrarCartaCanje = false;
+    let formConfig:any;
 
-    let formConfig:any = {
-      id:[''],
-      lote:['',Validators.required],
-      codigo_barras:[''],
-      cantidad:['',Validators.required],
-      precio_unitario:[''],
-      iva:[''],
-    };
-    
-    if(this.articulo.tiene_fecha_caducidad){
-      formConfig.fecha_caducidad = ['',[Validators.required,CustomValidator.isValidDate()]];
-    }else{
-      formConfig.fecha_caducidad = ['',CustomValidator.isValidDate()];
+    if(this.articulo.tipo_formulario == 'MEDS'){
+      formConfig = {
+        id:[''],
+        lote:['',Validators.required],
+        codigo_barras:[''],
+        cantidad:['',Validators.required],
+        precio_unitario:[''],
+        iva:[''],
+      };
+      
+      if(this.articulo.tiene_fecha_caducidad){
+        formConfig.fecha_caducidad = ['',[Validators.required,CustomValidator.isValidDate()]];
+      }else{
+        formConfig.fecha_caducidad = ['',CustomValidator.isValidDate()];
+      }
+    }else if(this.articulo.tipo_formulario == 'ACTVO'){
+      formConfig = {
+        id:[''],
+        marca:[''],
+        marca_id:[''],
+        modelo:['',],
+        no_serie:['',Validators.required],
+        cantidad:['',Validators.required],
+        precio_unitario:[''],
+        iva:[''],
+      };
     }
     
     this.formLote = this.formBuilder.group(formConfig);
     this.formLote.reset();
 
+    if(this.formLote.get('marca_id')){
+      this.filteredMarcas = this.formLote.get('marca').valueChanges.pipe(
+        startWith(''),
+        map(marca => typeof marca === 'string' ? marca : (marca)?marca.nombre : ''),
+        map(nombre => nombre ? this._filter(nombre) : this.catalogoMarcas.slice())
+        //startWith(''),
+        //map(value => this._filter(value))
+      );
+    }
+
     let estatus_articulo = 1;
     this.articulo.lotes.forEach(loteData => {
-      loteData.hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
+      loteData.hash = this.generarHashLote(loteData);
       
       let result = this.verificarFechaCaducidad(loteData.fecha_caducidad);
       loteData.estatus_caducidad = result.estatus;
@@ -132,7 +161,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     this.formLote.patchValue(item);
     this.formLote.markAllAsTouched();
     setTimeout(() => {
-      this.inputFormLote.focus();  
+      this.inputFormField.focus();  
     }, 10);
   }
 
@@ -148,12 +177,14 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   }
 
   checarCaducidadFormulario(){
-    let fecha = this.formLote.get('fecha_caducidad').value;
-    fecha = this.datePipe.transform(fecha, 'yyyy-MM-dd');
+    if(this.formLote.get('fecha_caducidad')){
+      let fecha = this.formLote.get('fecha_caducidad').value;
+      fecha = this.datePipe.transform(fecha, 'yyyy-MM-dd');
 
-    let result = this.verificarFechaCaducidad(fecha);
-    this.estatusCaducidad = result.estatus; //Caducado
-    this.etiquetaEstatus = result.label;
+      let result = this.verificarFechaCaducidad(fecha);
+      this.estatusCaducidad = result.estatus; //Caducado
+      this.etiquetaEstatus = result.label;
+    }
   }
 
   verificarFechaCaducidad(fecha_caducidad):any{
@@ -183,18 +214,6 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         estatus_caducidad.estatus = 2;
         estatus_caducidad.label = 'Por caducar';
       }
-
-      /*if(estatus_caducidad.estatus > 1){
-        this.formLote.addControl('memo_folio',new FormControl(''));
-        this.formLote.addControl('memo_fecha',new FormControl(''));
-        this.formLote.addControl('vigencia_meses',new FormControl(''));
-      }else{
-        if(this.formLote.get('memo_folio')){
-          this.formLote.removeControl('memo_folio');
-          this.formLote.removeControl('memo_fecha');
-          this.formLote.removeControl('vigencia_meses');
-        }
-      }*/
     }
 
     return estatus_caducidad;
@@ -225,14 +244,21 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       let monto_iva = 0;
       let loteData = this.formLote.value;
 
-      loteData.fecha_caducidad = this.datePipe.transform(loteData.fecha_caducidad, 'yyyy-MM-dd');
-      if(loteData.memo_fecha){
-        loteData.memo_fecha = this.datePipe.transform(loteData.memo_fecha, 'yyyy-MM-dd');
+      if(loteData.marca){
+        loteData.marca_id = loteData.marca.id;
       }
 
-      loteData.estatus_caducidad = this.estatusCaducidad;
-      loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
-      loteData.hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
+      if(loteData.fecha_caducidad){
+        loteData.fecha_caducidad = this.datePipe.transform(loteData.fecha_caducidad, 'yyyy-MM-dd');
+        if(loteData.memo_fecha){
+          loteData.memo_fecha = this.datePipe.transform(loteData.memo_fecha, 'yyyy-MM-dd');
+        }
+
+        loteData.estatus_caducidad = this.estatusCaducidad;
+        loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
+      }
+      
+      loteData.hash = this.generarHashLote(loteData);
       loteData.precio_unitario = parseFloat(loteData.precio_unitario||0);
 
       if(+loteData.iva > 0){
@@ -260,14 +286,15 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         }
       }
 
-      let estatus_articulo = 1;
-      this.articulo.lotes.forEach(loteData => {
-        if(estatus_articulo < loteData.estatus_caducidad){
-          estatus_articulo = loteData.estatus_caducidad;
-        }
-      });
-      this.articulo.estatus = estatus_articulo;
-      
+      if(loteData.fecha_caducidad){
+        let estatus_articulo = 1;
+        this.articulo.lotes.forEach(loteData => {
+          if(estatus_articulo < loteData.estatus_caducidad){
+            estatus_articulo = loteData.estatus_caducidad;
+          }
+        });
+        this.articulo.estatus = estatus_articulo;
+      }
       this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
 
       this.cancelarEdicion();
@@ -305,11 +332,36 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     return estado;
   }
 
+  generarHashLote(loteData){
+    let hash: string;
+
+    if(this.articulo.tipo_formulario == 'MEDS'){
+      hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
+    }else if(this.articulo.tipo_formulario == 'ACTVO'){
+      hash = loteData.no_serie + loteData.modelo + loteData.marca;
+    }
+
+    return hash;
+  }
+
+  displayFn(marca: any): string {
+    return marca && marca.nombre ? marca.nombre : '';
+  }
+
+  private _filter(value: string): any[] {
+    if(this.catalogoMarcas){
+      const filterValue = value.toLowerCase();
+      return this.catalogoMarcas.filter(marca => marca.nombre.toLowerCase().includes(filterValue));
+    }else{
+      return [];
+    }
+  }
+
   agregarLote(){
     this.articulo.lotes.push({});
     this.loteEditIndex = this.articulo.lotes.length-1;
     setTimeout(() => {
-      this.inputFormLote.focus();  
+      this.inputFormField.focus();  
     }, 10);
   }
 

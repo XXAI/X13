@@ -17,6 +17,7 @@ use App\Models\Proveedor;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
 use App\Models\Stock;
+use App\Models\Marca;
 
 class AlmacenMovimientosController extends Controller{
     
@@ -31,6 +32,7 @@ class AlmacenMovimientosController extends Controller{
                 'unidades_medicas'  => UnidadMedica::getModel(),
                 'proveedores'       => Proveedor::getModel(),
                 'tipos_movimiento'  => TipoMovimiento::getModel(),
+                'marcas'            => Marca::getModel(),
             ];
 
             $catalogos = [];
@@ -56,22 +58,29 @@ class AlmacenMovimientosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
+            if($loggedUser->is_superuser){
+                $parametros['buscar_catalogo_completo'] = true;
+            }
+
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 
             $stock_existencias = Stock::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
                                                 'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
                                                 'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                 'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_indispensable',
-                                                'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad')
+                                                'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
+                                                'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
                                                 //DB::raw('count(distinct stocks.id) as total_lotes'), DB::raw('SUM(stocks.existencia) as existencias'))
-                                        ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bienes_servicios_id')
+                                        ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
+                                        ->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
                                         ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
                                         ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
                                         ->leftjoin('programas','programas.id','=','stocks.programa_id')
                                         ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
                                         ->where('stocks.unidad_medica_id',$unidad_medica_id)
                                         ->where('stocks.existencia','>',0)
-                                        //->groupBy('stocks.bienes_servicios_id')
+                                        ->with('marca')
+                                        //->groupBy('stocks.bien_servicio_id')
                                         ->orderBy('bienes_servicios.especificaciones');
 
             if(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo']){
@@ -162,6 +171,8 @@ class AlmacenMovimientosController extends Controller{
                         'especificaciones' => $value->especificaciones,
                         'descontinuado' => $value->descontinuado,
                         'tiene_fecha_caducidad' => $value->tiene_fecha_caducidad,
+                        'tipo_bien_servicio' => $value->tipo_bien_servicio,
+                        'clave_form' => $value->clave_form,
                         'partida_especifica'=>$value->partida_especifica,
                         'familia' => $value->familia,
                         //'programa' => $value->programa,
@@ -191,6 +202,10 @@ class AlmacenMovimientosController extends Controller{
                     'lote' => $value->lote,
                     'fecha_caducidad' => $value->fecha_caducidad,
                     'codigo_barras' => $value->codigo_barras,
+                    'no_serie' => $value->no_serie,
+                    'modelo' => $value->modelo,
+                    'marca_id' => $value->marca_id,
+                    'marca' => $value->marca,
                     'existencia' => $value->existencia,
                 ];
 

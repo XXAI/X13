@@ -98,7 +98,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
 
                     // This is to avoid duplicate stock
                     $stock = Stock::where("almacen_id",$this->almacen_id)
-                    ->where("bienes_servicios_id",$bienServicio->id)
+                    ->where("bien_servicio_id",$bienServicio->id)
                     ->where("lote",$insumo["lote"])
                     ->where("fecha_caducidad",$insumo["fecha_caducidad"])->first();
                     
@@ -114,7 +114,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                         $stock = Stock::create(
                             [
                                 "almacen_id"=>$this->almacen_id,
-                                "bienes_servicios_id"=>$bienServicio->id,
+                                "bien_servicio_id"=>$bienServicio->id,
                                 "lote"=>$insumo["lote"],
                                 "fecha_caducidad" => $insumo["fecha_caducidad"],
                                 "existencia" => $insumo["cantidad"]
@@ -126,7 +126,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                         [
                             "movimiento_id" => $movimiento->id,
                             "stock_id" => $stock->id,
-                            "bienes_servicios_id"=>$bienServicio->id,
+                            "bien_servicio_id"=>$bienServicio->id,
                             "direccion_movimiento" => "INI",
                             "modo_movimiento" => "NRM",
                             "cantidad" => $insumo["cantidad"],

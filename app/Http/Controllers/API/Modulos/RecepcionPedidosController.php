@@ -249,7 +249,7 @@ class RecepcionPedidosController extends Controller
                     }
 
                     $stock = Stock::where('almacen_id',$recepcion_actual->almacen_id)
-                                    ->where('bienes_servicios_id',$articulo['bien_servicio_id'])
+                                    ->where('bien_servicio_id',$articulo['bien_servicio_id'])
                                     ->where('programa_id',$recepcion_actual->programa_id)
                                     ->where('marca_id',$articulo['marca_id'])
                                     ->where('lote',$articulo['lote'])
@@ -263,7 +263,7 @@ class RecepcionPedidosController extends Controller
                     }else{
                         $stock = Stock::create([
                             'almacen_id'    => $recepcion_actual->almacen_id,
-                            'bienes_servicios_id'  => $articulo['bien_servicio_id'],
+                            'bien_servicio_id'  => $articulo['bien_servicio_id'],
                             'programa_id'   => $recepcion_actual->programa_id,
                             'marca_id'  => $articulo['marca_id'],
                             'lote'  => $articulo['lote'],

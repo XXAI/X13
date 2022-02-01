@@ -124,6 +124,7 @@ export class EntradaComponent implements OnInit {
       'programas':[],
       'proveedores':[],
       'tipos_movimiento':[],
+      'marcas':[],
     };
 
     this.maxFechaMovimiento = new Date();
@@ -159,7 +160,7 @@ export class EntradaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',tipos_movimiento:'movimiento.ENT'};
+    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',tipos_movimiento:'movimiento.ENT'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -171,6 +172,7 @@ export class EntradaComponent implements OnInit {
           this.catalogos['programas'] = response.data.programas;
           this.catalogos['proveedores'] = response.data.proveedores;
           this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
+          this.catalogos['marcas'] = response.data.marcas;
 
           if(this.catalogos['almacenes'].length == 1){
             this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
@@ -228,9 +230,10 @@ export class EntradaComponent implements OnInit {
 
               for(let i in lista_articulos){
                 lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
+                let articulo:any;
 
                 if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
-                  let articulo:any = {
+                  articulo = {
                     id: lista_articulos[i].articulo.id,
                     estatus: 1,
                     clave: (lista_articulos[i].articulo.clave_cubs)?lista_articulos[i].articulo.clave_cubs:lista_articulos[i].articulo.clave_local,
@@ -240,52 +243,46 @@ export class EntradaComponent implements OnInit {
                     partida_descripcion: lista_articulos[i].articulo.partida_especifica,
                     familia: lista_articulos[i].articulo.familia,
                     tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
+                    tipo_articulo: lista_articulos[i].articulo.tipo_bien_servicio,
+                    tipo_formulario: lista_articulos[i].articulo.clave_form,
                     en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
                     indispensable: (lista_articulos[i].articulo.es_indispensable)?true:false,
                     descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
                     total_monto: lista_articulos[i].total_monto,
+                    no_lotes: 1,
+                    total_piezas: lista_articulos[i].cantidad,
+                    lotes: [],
                   };
-
-                  articulo.lotes = [{
-                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                    cantidad:         lista_articulos[i].cantidad,
-                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                    precio_unitario:  lista_articulos[i].precio_unitario,
-                    iva:              lista_articulos[i].iva,
-                    total_monto:      lista_articulos[i].total_monto,
-                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                  }];
                   
-                  articulo.no_lotes = 1;
-                  articulo.total_piezas = lista_articulos[i].cantidad;
                   articulos_temp.push(articulo);
 
                   this.controlArticulosAgregados[articulo.id] = true;
                   this.totalesRecibidos.claves += 1;
                 }else{
                   let index = articulos_temp.findIndex(x => x.id == lista_articulos[i].articulo.id);
-                  let articulo:any = articulos_temp[index];
+                  articulo = articulos_temp[index];
 
-                  articulo.lotes.push({
-                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                    cantidad:         lista_articulos[i].cantidad,
-                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                    precio_unitario:  lista_articulos[i].precio_unitario,
-                    iva:              lista_articulos[i].iva,
-                    total_monto:      lista_articulos[i].total_monto,
-                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                  });
-                  
                   articulo.no_lotes += 1;
                   articulo.total_piezas += lista_articulos[i].cantidad;
                   articulo.total_monto += lista_articulos[i].total_monto;
                 }
+
+                articulo.lotes.push({
+                  lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
+                  fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                  codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
+                  no_serie:         (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
+                  modelo:           (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
+                  marca_id:         (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
+                  marca:            (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
+                  cantidad:         lista_articulos[i].cantidad,
+                  precio_unitario:  lista_articulos[i].precio_unitario,
+                  iva:              lista_articulos[i].iva,
+                  total_monto:      lista_articulos[i].total_monto,
+                  memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                  memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                  vigencia_meses:   (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
+                });
 
                 this.totalesRecibidos.articulos += lista_articulos[i].cantidad;
                 this.totalesRecibidos.monto += lista_articulos[i].total_monto;

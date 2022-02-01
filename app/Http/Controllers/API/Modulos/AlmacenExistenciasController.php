@@ -50,7 +50,7 @@ class AlmacenExistenciasController extends Controller
             
             $loggedUser = auth()->userOrFail();
 
-            $items = Stock::leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bienes_servicios_id")
+            $items = Stock::leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
                             ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica")
                             ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
                             ->leftJoin("programas","programas.id","=","stocks.programa_id")
@@ -62,7 +62,7 @@ class AlmacenExistenciasController extends Controller
                     $items = $items->select(
                         "almacenes.nombre as almacen",
                         "programas.descripcion as programa",
-                        "stocks.bienes_servicios_id as id", 
+                        "stocks.bien_servicio_id as id", 
                         "bienes_servicios.articulo as articulo",
                         "bienes_servicios.especificaciones as especificaciones",
                         "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
@@ -71,14 +71,14 @@ class AlmacenExistenciasController extends Controller
                         DB::raw("SUM(stocks.existencia) as existencia"),
                         DB::raw("SUM(stocks.existencia_unidosis) as existencia_unidosis"),
                         DB::raw("COUNT(distinct stocks.id) as total_lotes"))
-                        ->groupBy('stocks.bienes_servicios_id');
+                        ->groupBy('stocks.bien_servicio_id');
                 }
             }else{
                 $items = $items->select(
                     "almacenes.nombre as almacen",
                     "programas.descripcion as programa",
                     "stocks.id as id", 
-                    "stocks.bienes_servicios_id as bienes_servicios_id", 
+                    "stocks.bien_servicio_id as bien_servicio_id", 
                     "bienes_servicios.articulo as articulo",
                     "bienes_servicios.especificaciones as especificaciones",
                     "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
@@ -215,7 +215,7 @@ class AlmacenExistenciasController extends Controller
                     ->leftJoin("movimientos", "movimientos.id","=","movimientos_articulos.movimiento_id")
                     ->leftJoin("users", "users.id","=","movimientos_articulos.user_id")
                     ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
-                    ->where("stocks.bienes_servicios_id",$id)
+                    ->where("stocks.bien_servicio_id",$id)
                     ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
                     ->where("movimientos.estatus","FIN")
                     ->orderBy("movimientos.fecha_movimiento","DESC")

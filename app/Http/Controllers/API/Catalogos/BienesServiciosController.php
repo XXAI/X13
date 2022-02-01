@@ -24,11 +24,17 @@ class BienesServiciosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
+            if($loggedUser->is_superuser){
+                $parametros['buscar_catalogo_completo'] = true;
+            }
+
             $catalogo_articulos = BienServicio::select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                         'unidad_medica_catalogo_articulos.es_indispensable','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
-                                                        'unidad_medica_catalogo_articulos.id AS en_catalogo_unidad')
+                                                        'unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio',
+                                                        'catalogo_tipos_bien_servicio.clave_form')
                                                 ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
                                                 ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                                ->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
                                                 ->orderBy('bienes_servicios.especificaciones');
 
             if(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo']){

@@ -276,6 +276,7 @@
                                         <inner-articulo-admin-lista-lotes   [articulo]="articulo" 
                                                                             [edicionActiva]="puedeEditarElementos" 
                                                                             [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
+                                                                            [catalogoMarcas]="catalogos['marcas']"
                                                                             (cambiosEnLotes)="aplicarCambios($event)">
                                         </inner-articulo-admin-lista-lotes>
                                     </div>

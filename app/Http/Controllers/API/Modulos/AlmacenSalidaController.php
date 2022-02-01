@@ -88,7 +88,7 @@ class AlmacenSalidaController extends Controller
                 $movimiento->load(['almacen','listaArticulos'=>function($listaArticulos)use($loggedUser){ 
                                                                 return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
                                                                             $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                                        },'stock']);
+                                                                        },'stock.marca']);
                                                         }]);
             }else{
                 $almacen_id = $movimiento->almacen_id;
@@ -100,14 +100,14 @@ class AlmacenSalidaController extends Controller
                 $articulos_ids = $movimiento->listaArticulosBorrador()->pluck('bien_servicio_id');
                 //$cantidades_stocks = $movimiento->listaArticulosBorrador()->pluck('cantidad','stock_id');
 
-                $articulos_borrador = BienServicio::whereIn('id',$articulos_ids)->with(['stocks'=>function($stocks)use($almacen_id,$programa_id,$movimiento_id){
+                $articulos_borrador = BienServicio::datosDescripcion()->whereIn('bienes_servicios.id',$articulos_ids)->with(['stocks'=>function($stocks)use($almacen_id,$programa_id,$movimiento_id){
                                                                                             $stocks->select('stocks.*','movimientos_articulos_borrador.cantidad')
                                                                                                     ->where('almacen_id',$almacen_id)
                                                                                                     ->where('programa_id',$programa_id)
                                                                                                     ->leftjoin('movimientos_articulos_borrador',function($join)use($movimiento_id){
                                                                                                         $join->on('movimientos_articulos_borrador.stock_id','stocks.id')
                                                                                                             ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
-                                                                                                    });
+                                                                                                    })->with('marca');
                                                                                         }])->get();
                 //
                 $movimiento = $movimiento->toArray();
