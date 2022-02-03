@@ -72,16 +72,6 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex>
-                    <mat-label>Tipo de Salida</mat-label>
-                    <mat-select formControlName="tipo_movimiento_id" required>
-                        <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0">Sin Tipos de Movimiento</mat-option>
-                        <mat-option *ngFor="let item of catalogos['tipos_movimiento']" [value]="item.id">
-                            {{item.descripcion}}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field fxFlex>
                     <mat-label>Almacen</mat-label>
                     <mat-select formControlName="almacen_id" required>
                         <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
@@ -90,11 +80,25 @@
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
-                
+
+                <mat-form-field fxFlex>
+                    <mat-label>Tipo de Salida</mat-label>
+                    <mat-select formControlName="tipo_movimiento_id" (selectionChange)="cambiarTipoSalida()" required>
+                        <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0">Sin Tipos de Movimiento</mat-option>
+                        <mat-option *ngFor="let item of catalogos['tipos_movimiento']" [value]="item.id">
+                            {{item.descripcion}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
                 <mat-form-field fxFlex>
                     <mat-label>Programa</mat-label>
-                    <input type="text" matInput formControlName="programa" [matAutocomplete]="autoProgramas">
-                    <mat-autocomplete #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-error *ngIf="formMovimiento.get('programa').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-autocomplete autoActiveFirstOption #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
                         <mat-option *ngIf="catalogos['programas'].length == 0" value="">No hay programas capturados</mat-option>
                         <mat-option *ngFor="let programa of filteredProgramas | async" [value]="programa">
                             {{programa.descripcion}}
@@ -105,14 +109,18 @@
 
                 <mat-form-field fxFlex="none">
                     <mat-label>Folio - Documento</mat-label>
-                    <input matInput formControlName="documento_folio">
-                    <mat-hint>En caso de ser necesario</mat-hint>
+                    <input matInput formControlName="documento_folio" autocomplete="off" [required]="this.formMovimiento.get('documento_folio').validator">
+                    <mat-hint *ngIf="!this.formMovimiento.get('documento_folio').validator">En caso de ser necesario</mat-hint>
+                    <mat-error *ngIf="formMovimiento.get('documento_folio').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('unidad_medica_movimiento')">
                     <mat-label>Unidad Destino</mat-label>
-                    <input type="text" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas" required>
-                    <mat-autocomplete #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
+                    <input type="text" matInput placeholder="Teclee para buscar una unidad" formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas" required  autocomplete="off">
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-autocomplete autoActiveFirstOption #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
                         <mat-option *ngIf="catalogos['unidades_medicas'].length == 0" value="">No hay Unidades Medicas capturadas</mat-option>
                         <mat-option *ngFor="let unidad of filteredUnidades | async" [value]="unidad">
                             {{unidad.nombre}}
@@ -120,6 +128,31 @@
                     </mat-autocomplete>
                     <mat-hint *ngIf="formMovimiento.get('unidad_medica_movimiento').value" align="end">[{{formMovimiento.get('unidad_medica_movimiento').value.clues}}]</mat-hint>
                     <mat-hint *ngIf="formMovimiento.get('unidad_medica_movimiento').value"><mat-icon>{{(formMovimiento.get('unidad_medica_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('almacen_movimiento_id')">
+                    <mat-label>Almacen Destino</mat-label>
+                    <mat-select formControlName="almacen_movimiento_id" required>
+                        <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
+                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
+                            {{item.nombre}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('area_servicio_movimiento')">
+                    <mat-label>Area/Servicio Destino</mat-label>
+                    <input type="text" matInput aria-label="Area-Servicio" placeholder="Teclee para buscar un area/servicio" formControlName="area_servicio_movimiento" [matAutocomplete]="autoAreasServicios" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-autocomplete autoActiveFirstOption #autoAreasServicios="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                        <mat-option *ngIf="catalogos['areas_servicios'].length == 0" value="">No hay Areas/Servicios asignados</mat-option>
+                        <mat-option *ngFor="let area of filteredAreasServicios | async" [value]="area">
+                            {{area.descripcion}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formMovimiento.get('area_servicio_movimiento').value"><mat-icon>{{(formMovimiento.get('area_servicio_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                 </mat-form-field>
 
                 <!--mat-form-field fxFlex="none">

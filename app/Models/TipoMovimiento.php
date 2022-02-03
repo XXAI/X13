@@ -10,5 +10,5 @@ class TipoMovimiento extends Model{
     
     use SoftDeletes;
     protected $table = 'catalogo_tipos_movimiento';
-    protected $fillable = ['clave','descripcion','movimiento','captura_independiente'];
+    protected $fillable = ['clave','descripcion','movimiento','captura_independiente','acepta_ceros'];
 }

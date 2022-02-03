@@ -142,17 +142,7 @@ export class EntradaComponent implements OnInit {
       referencia_folio:[''],
       referencia_fecha:[''],
       observaciones: [''],
-      //entrega: [''],
-      //recibe: [''],
-      //descripcion: [''],
     });
-
-    this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
-                                  map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
-                                );
-    this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
-                              );
 
     this.verBoton = {
       concluir:false,
@@ -177,6 +167,13 @@ export class EntradaComponent implements OnInit {
           if(this.catalogos['almacenes'].length == 1){
             this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
           }
+
+          this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
+                                  map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
+                                );
+          this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
+                                map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
+                              );
         }
         this.isLoading = false;
       },
@@ -427,8 +424,8 @@ export class EntradaComponent implements OnInit {
       this.entradasService.guardarEntrada(formData).subscribe(
         response =>{
           if(response.error) {
-            let errorMessage = response.error.message;
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            let errorMessage = response.error;
+            this.sharedService.showSnackBar(errorMessage, null, 4000);
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
 

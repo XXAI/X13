@@ -243,6 +243,12 @@ class AlmacenEntradaController extends Controller
                 $movimiento->listaArticulosBorrador()->delete();
                 $movimiento->listaArticulosBorrador()->createMany($lista_articulos_borrador);
             }else{
+
+                if($total_claves <= 0){
+                    DB::rollback();
+                    return response()->json(['error'=>'No se encontraron claves asignadas al movimiento'],HttpResponse::HTTP_OK);
+                }
+
                 $lista_articulos_agregar = [];
                 $lista_articulos_eliminar = [];
 
@@ -279,13 +285,15 @@ class AlmacenEntradaController extends Controller
                             'user_id' => $loggedUser->id,
                         ];
 
-                        $lote_guardado = Stock::where("almacen_id",$parametros['almacen_id'])
+                        $lote_guardado = Stock::where("almacen_id",$stock_lote['almacen_id'])
                                                 ->where("bien_servicio_id",$stock_lote['bien_servicio_id'])
                                                 ->where("programa_id",$stock_lote['programa_id'])
                                                 ->where("lote",$stock_lote['lote'])
                                                 ->where("fecha_caducidad",$stock_lote['fecha_caducidad'])
                                                 ->where("codigo_barras",$stock_lote['codigo_barras'])
                                                 ->where("marca_id",$stock_lote['marca_id'])
+                                                ->where("no_serie",$stock_lote['no_serie'])
+                                                ->where("modelo",$stock_lote['modelo'])
                                                 ->first();
                         if($lote_guardado){
                             $lote_guardado->existencia += $stock_lote['existencia'];

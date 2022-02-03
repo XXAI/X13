@@ -67,7 +67,7 @@
 
                     <ng-container matColumnDef="folio">
                         <th mat-header-cell *matHeaderCellDef> Folio </th>
-                        <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap;"> {{ (row.folio)?row.folio:'S/F' }} </td>
+                        <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap;"> {{ (row.folio)?row.folio:'Sin Folio (en Borrador)' }} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="proveedor">
@@ -126,7 +126,7 @@
                     </ng-container>
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                    <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex,'cancelado':row.estatus_clave == 'cancelado'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
 
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoMovimientos!=null && listadoMovimientos.length==0)}"></tr>
                 </table>

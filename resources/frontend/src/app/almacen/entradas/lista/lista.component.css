@@ -94,6 +94,10 @@ table td {
   color:#ff2a2a;
 }
 
+.cancelado{
+  text-decoration: line-through;
+}
+
 .my-stepper{
   white-space: nowrap;
   display: flex;

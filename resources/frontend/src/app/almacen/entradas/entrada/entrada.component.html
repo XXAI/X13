@@ -72,6 +72,16 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex>
+                    <mat-label>Almacen</mat-label>
+                    <mat-select formControlName="almacen_id" required>
+                        <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
+                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
+                            {{item.nombre}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field fxFlex>
                     <mat-label>Tipo de Entrada</mat-label>
                     <mat-select formControlName="tipo_movimiento_id" required>
                         <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0">Sin Tipos de Movimiento</mat-option>
@@ -82,19 +92,12 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex>
-                    <mat-label>Almacen</mat-label>
-                    <mat-select formControlName="almacen_id" required>
-                        <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
-                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
-                            {{item.nombre}}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-                
-                <mat-form-field fxFlex>
                     <mat-label>Programa</mat-label>
-                    <input type="text" matInput formControlName="programa" [matAutocomplete]="autoProgramas">
-                    <mat-autocomplete #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off">
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-autocomplete autoActiveFirstOption #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
                         <mat-option *ngIf="catalogos['programas'].length == 0" value="">No hay programas capturados</mat-option>
                         <mat-option *ngFor="let programa of filteredProgramas | async" [value]="programa">
                             {{programa.descripcion}}
@@ -105,13 +108,16 @@
 
                 <mat-form-field fxFlex>
                     <mat-label>No de Pedido</mat-label>
-                    <input matInput formControlName="documento_folio">
+                    <input matInput formControlName="documento_folio" autocomplete="off" [readonly]="!editable">
                     <mat-hint align="end">En caso de ser necesario</mat-hint>
                 </mat-form-field>
 
                 <mat-form-field fxFlex>
                     <mat-label>Proveedor</mat-label>
-                    <input #proveedorInput type="text" matInput formControlName="proveedor" [matAutocomplete]="autoProveedores">
+                    <input #proveedorInput type="text" placeholder="Teclee para buscar un proveedor" matInput formControlName="proveedor" [matAutocomplete]="autoProveedores">
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
                     <mat-autocomplete #autoProveedores="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
                         <mat-option *ngIf="catalogos['proveedores'].length == 0" value="">No hay proveedores capturados</mat-option>
                         <mat-option *ngFor="let proveedor of filteredProveedores | async" [value]="proveedor">
@@ -124,7 +130,7 @@
 
                 <mat-form-field fxFlex="none">
                     <mat-label>No de Referencia</mat-label>
-                    <input matInput formControlName="referencia_folio">
+                    <input matInput formControlName="referencia_folio" [readonly]="!editable" autocomplete="off">
                     <mat-hint>Folio de Referencia o Factura</mat-hint>
                 </mat-form-field>
 

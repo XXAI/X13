@@ -66,7 +66,7 @@ class User extends Authenticatable implements JWTSubject{
         return $this->belongsToMany('App\Models\Permission')->withPivot('status');
     }
 
-    public function unidadMedicaAsginada(){
+    public function unidadMedicaAsignada(){
         return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_asignada_id');
     }
 

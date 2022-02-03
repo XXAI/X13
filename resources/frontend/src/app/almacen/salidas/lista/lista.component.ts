@@ -49,7 +49,7 @@ export class ListaComponent implements OnInit {
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
 
-  displayedColumns: string[] = ['id','folio','almacen','programa','fecha_movimiento','total_claves','total_articulos','actions']; //,'descripcion','proveedor'
+  displayedColumns: string[] = ['id','folio','almacen','tipo_movimiento','fecha_movimiento','total_claves','total_articulos','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 
@@ -98,7 +98,6 @@ export class ListaComponent implements OnInit {
               element.estatus_icono = this.listaEstatusIconos[element.estatus];
             });
             this.listadoMovimientos = response.data.data;
-            console.log(this.listadoMovimientos);
             this.resultsLength = response.data.total;
           }
         }

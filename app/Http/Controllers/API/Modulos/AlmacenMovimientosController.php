@@ -18,6 +18,7 @@ use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
 use App\Models\Stock;
 use App\Models\Marca;
+use App\Models\AreaServicio;
 
 class AlmacenMovimientosController extends Controller{
     
@@ -33,6 +34,7 @@ class AlmacenMovimientosController extends Controller{
                 'proveedores'       => Proveedor::getModel(),
                 'tipos_movimiento'  => TipoMovimiento::getModel(),
                 'marcas'            => Marca::getModel(),
+                'areas_servicios'   => AreaServicio::getModel(),
             ];
 
             $catalogos = [];

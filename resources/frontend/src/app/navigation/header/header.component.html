@@ -52,11 +52,21 @@
           </div>
         </div>
         <mat-divider></mat-divider>
+        <div fxLayout="column" class="data-card" *ngIf="user.unidad_medica_asignada">
+          <div fxFlex class="title">Unidad Medica Asignada</div>
+          <div fxFlex class="content" fxLayout="column">
+            <div fxFlex class="label">CLUES:</div>
+            <div fxFlex class="data">{{user.unidad_medica_asignada.clues}}</div>
+            <div fxFlex class="label">Nombre:</div>
+            <div fxFlex class="data">{{user.unidad_medica_asignada.nombre}}</div>
+          </div>
+        </div>
+        <!--mat-divider></mat-divider>
         <div>
           <button mat-menu-item style="text-align:center" routerLink="/apps">
             <mat-icon>settings</mat-icon> Configuración de Usuario
           </button>
-        </div>
+        </div-->
         <!--mat-divider></mat-divider>
         <div>
           <div class="apps" fxLayout="row" fxLayoutAlign="center center">

@@ -73,3 +73,30 @@ a + a::before {
     color: #555;    
     margin-bottom:15px;  
 }
+
+.data-card{
+    background-color: whitesmoke;
+    padding:3px 2px;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.data-card .title{
+    text-align: center;
+    font-weight: bold;
+    color: rgba(0,0,0,.54);
+}
+.data-card .content{
+    padding-top: 2px;
+    font-family: "Roboto Mono" , "Roboto" !important;
+    font-weight: 400;
+    font-size: 0.9em;
+}
+.data-card .label{
+    text-align: left;
+    font-weight: bold;
+}
+.data-card .data{
+    text-align: left;
+}

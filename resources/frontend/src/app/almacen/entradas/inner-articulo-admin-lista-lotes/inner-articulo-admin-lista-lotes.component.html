@@ -89,10 +89,12 @@
                                     <mat-label>Modelo</mat-label>
                                     <input matInput formControlName="modelo" (keydown.enter)="guardarCambiosLote()" autocomplete="off">
                                 </mat-form-field>
-                                <mat-form-field fxFlex appearance="fill">
+                                <mat-form-field fxFlex>
                                     <mat-label>Marca</mat-label>
-                                    <input type="text" placeholder="Selecciona una marca" aria-label="Marca" matInput formControlName="marca" [matAutocomplete]="listaMarcas" autocomplete="off">
-                                    <mat-icon matSuffix>arrow_drop_down</mat-icon>
+                                    <input type="text" placeholder="Seleccione una marca" aria-label="Marca" matInput formControlName="marca" [matAutocomplete]="listaMarcas" autocomplete="off">
+                                    <button mat-icon-button matPrefix>
+                                        <mat-icon>list_alt</mat-icon>
+                                    </button>
                                     <mat-autocomplete autoActiveFirstOption [displayWith]="displayFn" #listaMarcas="matAutocomplete" panelWidth="auto">
                                         <mat-option *ngIf="!formLote.get('marca').value && (!catalogoMarcas || catalogoMarcas.length == 0)" [disabled]="true">Sin marcas capturadas</mat-option>
                                         <mat-option *ngFor="let marca of filteredMarcas | async" [value]="marca">
