@@ -18,12 +18,14 @@
                 <mat-option class="item-resultados-busqueda" *ngFor="let articulo of resultadoArticulos" [value]="articulo">
                     <div fxLayout="column" class="articulo-container">
                         <div fxFlex fxLayout="row" class="articulo-header">
-                            <div fxFlex="none" class="articulo-titulo">
-                                <span style="font-weight: bold;">Partida:</span><br>
-                                <span [matTooltip]="articulo.partida_descripcion" [matTooltipPosition]="'above'">{{articulo.partida_clave}}</span>
+                            <div fxFlex="none" class="articulo-iconos">
+                                <mat-icon class="icono" matTooltip="En Catalogo"   [ngClass]="{'activo':articulo.en_catalogo}">fact_check</mat-icon>
+                                <mat-icon class="icono" matTooltip="Indispensable" [ngClass]="{'activo':articulo.indispensable}">notification_important</mat-icon>
+                                <mat-icon class="icono" matTooltip="Descontinuado" [ngClass]="{'activo':articulo.descontinuado}">report_problem</mat-icon>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-titulo">
+                                {{articulo.partida_descripcion}}<br>
                                 {{articulo.familia}}
                             </div>
                         </div>
@@ -37,12 +39,7 @@
                             </div>
                         </div>
                         <div fxFlex="none" fxLayout="row" class="articulo-footer">
-                            <div fxFlex="none">
-                                <mat-icon matTooltip="En Catalogo"   *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
-                                <mat-icon matTooltip="Indispensable" *ngIf="articulo.indispensable" style="color:green;">notification_important</mat-icon>
-                                <mat-icon matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">report_problem</mat-icon>
-                            </div>
-                            <div fxFlex></div>
+                            <div fxFlex>&nbsp;</div>
                             <div fxFlex="none" class="articulo-info" *ngIf="mostrarExistencias">
                                 Existencias ( {{ articulo.exsitencias||0 | number }} <span *ngIf="articulo.cantidad_minima">/ {{articulo.cantidad_minima||0 | number}}</span> )
                             </div>

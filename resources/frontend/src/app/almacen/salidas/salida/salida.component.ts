@@ -263,22 +263,8 @@ export class SalidaComponent implements OnInit {
                   existencias: 0,
                   existencias_restantes: 0,
                   existencias_extras: 0,
-                  programa_lotes: []
+                  lotes: []
                 };
-
-                if(response.data.programa){
-                  articulo.programa_lotes.push({
-                    id: response.data.programa.id,
-                    nombre: response.data.programa.descripcion,
-                    lotes:[]
-                  });
-                }else{
-                  articulo.programa_lotes.push({
-                    id: "S/P",
-                    nombre: "Sin Programa",
-                    lotes:[]
-                  });
-                }
 
                 lista_articulos[i].stocks.forEach(stock => {
                   if(stock.cantidad){
@@ -286,7 +272,7 @@ export class SalidaComponent implements OnInit {
                     articulo.total_lotes++;
                   }
                   articulo.existencias += stock.existencia;
-                  articulo.programa_lotes[0].lotes.push({
+                  articulo.lotes.push({
                     id: stock.id,
                     lote: stock.lote,
                     codigo_barras: stock.codigo_barras,
@@ -297,9 +283,6 @@ export class SalidaComponent implements OnInit {
                     existencia: stock.existencia,
                     salida: stock.cantidad,
                     restante: stock.existencia - stock.cantidad,
-                    //memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    //memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    //vigencia_meses:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
                   });
                 });
 
@@ -315,7 +298,6 @@ export class SalidaComponent implements OnInit {
           }else{
             lista_articulos = response.data.lista_articulos;
             for(let i in lista_articulos){
-              //lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
               let articulo:any;
 
               if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
@@ -340,22 +322,8 @@ export class SalidaComponent implements OnInit {
                   existencias: 0,
                   existencias_restantes: 0,
                   existencias_extras: 0,
-                  programa_lotes: [],
+                  lotes: [],
                 };
-
-                if(response.data.programa){
-                  articulo.programa_lotes.push({
-                    id: response.data.programa.id,
-                    nombre: response.data.programa.descripcion,
-                    lotes:[]
-                  });
-                }else{
-                  articulo.programa_lotes.push({
-                    id: "S/P",
-                    nombre: "Sin Programa",
-                    lotes:[]
-                  });
-                }
 
                 articulos_temp.push(articulo);
 
@@ -369,7 +337,7 @@ export class SalidaComponent implements OnInit {
               }
               
               if(lista_articulos[i].stock){
-                articulo.programa_lotes[0].lotes.push({
+                articulo.lotes.push({
                   id: lista_articulos[i].stock.id,
                   lote: lista_articulos[i].stock.lote,
                   codigo_barras: lista_articulos[i].stock.codigo_barras,
@@ -450,7 +418,6 @@ export class SalidaComponent implements OnInit {
   }
 
   agregarArticulo(articulo){
-    //console.log(articulo);
     if(this.controlArticulosAgregados[articulo.id]){
       let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
       articulo = this.dataSourceArticulos.data[index];
@@ -464,13 +431,8 @@ export class SalidaComponent implements OnInit {
       articulo.total_monto = parseFloat('0');
       articulo.no_lotes = 0;
       articulo.total_piezas = 0;
-      articulo.lotes = [];
     }
-
-    /*if(!this.controlArticulosModificados[articulo.id]){
-      this.controlArticulosModificados[articulo.id] = '*';
-    }*/
-
+    
     this.idArticuloSeleccionado = null;
     this.dataSourceArticulos.data.unshift(articulo);
     

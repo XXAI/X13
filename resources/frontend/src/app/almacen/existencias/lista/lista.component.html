@@ -47,6 +47,11 @@
                             <td mat-cell *matCellDef="let element" > {{element.almacen}} </td>
                         </ng-container>
 
+                        <ng-container matColumnDef="clave">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Clave </th>
+                            <td mat-cell *matCellDef="let element" style="white-space: normal;" > {{element.clave}} </td>
+                        </ng-container>
+
                         <ng-container matColumnDef="articulo">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header> Articulo </th>
                             <td mat-cell *matCellDef="let element" matTooltip="{{ element.especificaciones }}" style="white-space: normal;" > {{element.articulo}} </td>

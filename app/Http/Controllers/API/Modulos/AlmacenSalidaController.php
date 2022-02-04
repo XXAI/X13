@@ -241,22 +241,18 @@ class AlmacenSalidaController extends Controller
                     $total_articulos += $articulo['total_piezas'];
                     
                     if($articulo['total_piezas'] > 0){
-                        for($j=0; $j < count($articulo['programa_lotes']); $j++){
-                            $programa = $articulo['programa_lotes'][$j];
-    
-                            for($k=0; $k < count($programa['lotes']); $k++){
-                                $lote = $programa['lotes'][$k];
-    
-                                if($lote['salida']){
-                                    $lista_articulos_borrador[] = [
-                                        'bien_servicio_id' => $articulo['id'],
-                                        'stock_id' => $lote['id'],
-                                        'direccion_movimiento' => 'SAL',
-                                        'modo_movimiento' => 'NRM',
-                                        'cantidad' => $lote['salida'],
-                                        'user_id' => $loggedUser->id,
-                                    ];
-                                }
+                        for($j=0; $j < count($articulo['lotes']); $j++){
+                            $lote = $articulo['lotes'][$j];
+
+                            if($lote['salida']){
+                                $lista_articulos_borrador[] = [
+                                    'bien_servicio_id' => $articulo['id'],
+                                    'stock_id' => $lote['id'],
+                                    'direccion_movimiento' => 'SAL',
+                                    'modo_movimiento' => 'NRM',
+                                    'cantidad' => $lote['salida'],
+                                    'user_id' => $loggedUser->id,
+                                ];
                             }
                         }
                     }else if($tipo_movimiento->acepta_ceros){
@@ -291,7 +287,7 @@ class AlmacenSalidaController extends Controller
                     //$total_monto += $articulo['total_monto'];
 
                     if($articulo['total_piezas'] > 0){
-                        $articulos_lotes = $articulo['programa_lotes'][0]['lotes'];
+                        $articulos_lotes = $articulo['lotes'];
                         for($j=0; $j < count($articulos_lotes); $j++){
                             $lote = $articulos_lotes[$j];
 

@@ -65,30 +65,23 @@ export class InnerArticuloListaLotesComponent implements OnInit {
       this.articulo.nuevos_lotes = [];
     }
     
-    this.articulo.programa_lotes.forEach(programa => {
-      programa.lotes.forEach(loteData => {
-        loteData.hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
-      
-        let result = this.verificarFechaCaducidad(loteData.fecha_caducidad);
-        loteData.estatus_caducidad = result.estatus;
-        loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
-  
-        if(estatus_articulo < loteData.estatus_caducidad){
-          estatus_articulo = loteData.estatus_caducidad;
-        }
+    this.articulo.lotes.forEach(loteData => {
+      loteData.hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
+    
+      let result = this.verificarFechaCaducidad(loteData.fecha_caducidad);
+      loteData.estatus_caducidad = result.estatus;
+      loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
 
-        //loteData.aplicado = false;
-        if(!loteData.salida){
-          loteData.restante = loteData.existencia;
-          loteData.salida = null;  
-        }
-      });
+      if(estatus_articulo < loteData.estatus_caducidad){
+        estatus_articulo = loteData.estatus_caducidad;
+      }
+      
+      if(!loteData.salida){
+        loteData.restante = loteData.existencia;
+        loteData.salida = null;  
+      }
     });
     this.articulo.estatus = estatus_articulo;
-
-    /*if(this.articulo.lotes.length == 0){
-      this.agregarLote();
-    }*/
   }
 
   ngOnChanges(changes: SimpleChange){

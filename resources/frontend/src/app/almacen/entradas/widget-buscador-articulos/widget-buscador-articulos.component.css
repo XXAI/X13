@@ -58,7 +58,7 @@
 }
 
 .item-resultados-busqueda{
-    padding: 0px !important;
+    padding: 2px !important;
     height: auto !important;
     width: 100%;
     line-height: normal;
@@ -66,10 +66,11 @@
 }
 
 .item-resultados-busqueda:hover{
-    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-    -moz-box-sizing: border-box; /* Firefox, other Gecko */
-    box-sizing: border-box; /* Opera/IE 8+ */
-    border:1px dashed darkgrey;
+    background-color: black;
+    /*-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    /*-moz-box-sizing: border-box; /* Firefox, other Gecko */
+    /*box-sizing: border-box; /* Opera/IE 8+ */
+    /*border:1px dashed darkgrey;*/
 }
 
 .articulo-container{
@@ -92,12 +93,24 @@
 
 .articulo-titulo{
     padding: 5px;
+    text-align: right;
 }
 
-.articulo-icons{
-    background-color: whitesmoke;
-    border: 1px solid black;
-    border-radius: 5px 0px 0px 5px;
+.articulo-iconos{
+    color: #373636;
+    /*border: 1px solid black;
+    border-radius: 5px 0px 0px 5px;*/
+}
+
+.articulo-iconos > .icono{
+    height: 40px !important;
+    width: 40px !important;
+    padding: 1px;
+    font-size: 37px !important;    
+}
+
+.articulo-iconos > .icono.activo{
+    color: gainsboro;
 }
 
 .articulo-info{

@@ -16,28 +16,21 @@
             </tr>
         </thead>
         <tbody>
-            <ng-container *ngFor="let programa of articulo.programa_lotes">
-                <tr>
-                    <td colspan="6">
-                        {{programa.nombre}}
-                    </td>
-                </tr>
-                <tr *ngFor="let lote of programa.lotes; let i = index">
-                    <td *ngIf="articulo.tipo_formulario == 'MEDS'"><mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon></td>
-                    <td *ngIf="articulo.tipo_formulario == 'MEDS'">{{lote.lote}}</td>
-                    <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
+            <tr *ngFor="let lote of articulo.lotes; let i = index">
+                <td *ngIf="articulo.tipo_formulario == 'MEDS'"><mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon></td>
+                <td *ngIf="articulo.tipo_formulario == 'MEDS'">{{lote.lote}}</td>
+                <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
 
-                    <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.no_serie}}</td>
-                    <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.modelo}}</td>
-                    <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.marca?.nombre}}</td>
+                <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.no_serie}}</td>
+                <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.modelo}}</td>
+                <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.marca}}</td>
 
-                    <td>{{lote.existencia | number:'1.0-0'}}</td>
-                    <td width="1" style="white-space: nowrap;">
-                        <input type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
-                    </td>
-                    <td width="1" style="white-space: nowrap;">{{lote.restante | number:'1.0-0'}}</td>
-                </tr>
-            </ng-container>
+                <td>{{lote.existencia | number:'1.0-0'}}</td>
+                <td width="1" style="white-space: nowrap;">
+                    <input type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
+                </td>
+                <td width="1" style="white-space: nowrap;">{{lote.restante | number:'1.0-0'}}</td>
+            </tr>
             <tr *ngIf="articulo.nuevos_lotes.length > 0">
                 <td colspan="6">
                     Nuevos Lotes

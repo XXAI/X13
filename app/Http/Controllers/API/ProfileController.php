@@ -58,8 +58,8 @@ class ProfileController extends Controller
                 'name.required' => 'El nombre es obligatorio',
                 'email.required' => 'Es correo electronico es obligatorio'
             ];
-
-            $usuario = User::find($id);
+            
+            $usuario = User::with('roles','permissions','grupos','unidadMedicaAsignada')->find($id);
 
             $parametros = $request->all();
 

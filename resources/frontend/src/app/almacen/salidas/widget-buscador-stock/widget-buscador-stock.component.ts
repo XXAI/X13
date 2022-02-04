@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, Injectable, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { debounceTime, finalize, map, switchMap, tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { catchError, debounceTime, finalize, map, switchMap, tap } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { SharedService } from 'src/app/shared/shared.service';
 
@@ -39,34 +39,45 @@ export class WidgetBuscadorStockComponent implements OnInit {
 
   inputBuscadorArticulos = new FormControl();
 
-  isLoadingArticulos:boolean;
   articuloQuery: string;
   resultadoArticulos:any[];
+  isLoadingArticulos:boolean;
   terminoBusqueda: boolean;
+  mostrarError: boolean;
 
   ngOnInit(): void {
     this.resultadoArticulos = [];
     this.terminoBusqueda = false;
+    this.mostrarError = false;
 
     this.inputBuscadorArticulos.valueChanges
     .pipe(
       tap( () => {
           this.resultadoArticulos = [];
           this.terminoBusqueda = false;
+          this.mostrarError = false;
       } ),
       debounceTime(300),
       switchMap(value => {
           this.isLoadingArticulos = true; 
           if(!(typeof value === 'object')){
             if( value && value.length > 3 && (this.almacenId && this.programaId)){
-              let resultado = this.service.buscar({query: value, programa_id: this.programaId, almacen_id: this.almacenId}).pipe(finalize(() => {this.isLoadingArticulos = false; this.terminoBusqueda = true;} ));
+              let resultado = this.service.buscar({query: value, programa_id: this.programaId, almacen_id: this.almacenId}).pipe(
+                                                                                                                              finalize(() => {
+                                                                                                                                this.isLoadingArticulos = false; 
+                                                                                                                                this.terminoBusqueda = true;
+                                                                                                                              } ),
+                                                                                                                              catchError(error => {
+                                                                                                                                this.mostrarError = true;
+                                                                                                                                return EMPTY;
+                                                                                                                              })
+                                                                                                                            );
               return resultado;
             }else{
               this.terminoBusqueda = false;
               this.isLoadingArticulos = false;
               return []; 
             }
-             
           }else{
             this.terminoBusqueda = false;
             this.isLoadingArticulos = false; 
@@ -79,6 +90,8 @@ export class WidgetBuscadorStockComponent implements OnInit {
         if(response.error) {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isLoadingArticulos = false;
+          this.terminoBusqueda = true;
         } else {
           let articulos_temp = [];
           for(let i in response.data){
@@ -100,7 +113,7 @@ export class WidgetBuscadorStockComponent implements OnInit {
               existencias: response.data[i].existencias,
               existencias_restantes: response.data[i].existencias,
               existencias_extras: 0,
-              programa_lotes: response.data[i].programa_lotes
+              lotes: (response.data[i].lotes)?response.data[i].lotes:[]
             };
             articulos_temp.push(stock);
           }
@@ -113,14 +126,15 @@ export class WidgetBuscadorStockComponent implements OnInit {
           errorMessage = errorResponse.error.error.message;
         }
         this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingArticulos = false;
+        this.terminoBusqueda = true;
       }
     );
   }
 
   itemSeleccionado(item){
-    let articulo = item;
     this.inputBuscadorArticulos.reset();
-    this.articuloSeleccionado.emit(articulo);
+    this.articuloSeleccionado.emit(item);
   }
 
   displayTerminoFn(item: any) {

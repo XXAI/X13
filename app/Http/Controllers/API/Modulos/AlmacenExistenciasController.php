@@ -63,6 +63,7 @@ class AlmacenExistenciasController extends Controller
                         "almacenes.nombre as almacen",
                         "programas.descripcion as programa",
                         "stocks.bien_servicio_id as id", 
+                        DB::raw("IF(bienes_servicios.clave_local,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                         "bienes_servicios.articulo as articulo",
                         "bienes_servicios.especificaciones as especificaciones",
                         "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",

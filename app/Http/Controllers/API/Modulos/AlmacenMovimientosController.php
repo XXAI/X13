@@ -19,6 +19,7 @@ use App\Models\UnidadMedica;
 use App\Models\Stock;
 use App\Models\Marca;
 use App\Models\AreaServicio;
+use App\Models\BienServicio;
 
 class AlmacenMovimientosController extends Controller{
     
@@ -66,7 +67,44 @@ class AlmacenMovimientosController extends Controller{
 
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 
-            $stock_existencias = Stock::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
+            $stock_existencias = BienServicio::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
+                                                    'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
+                                                    'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
+                                                    'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_indispensable','catalogo_marcas.nombre AS marca',
+                                                    'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
+                                                    'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
+                                                ->orderBy('stocks.existencia','DESC')
+                                                ->orderBy('stocks.fecha_caducidad','DESC')
+                                                ->orderBy('unidad_medica_catalogo_articulos.id','DESC')
+                                                ->orderBy('bienes_servicios.especificaciones')
+                                                ;
+            
+            if(isset($parametros['buscar_solo_stock']) && $parametros['buscar_solo_stock']){
+                $stock_existencias = $stock_existencias->join('stocks',function($join)use($unidad_medica_id,$parametros){
+                                                    return $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
+                                                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                                                ->where('stocks.existencia','>',0)
+                                                                ->where('stocks.programa_id',$parametros['programa_id'])
+                                                                ->where('stocks.almacen_id',$parametros['almacen_id']);
+                                                });
+            }else{
+                $stock_existencias = $stock_existencias->leftjoin('stocks',function($join)use($unidad_medica_id,$parametros){
+                                                    return $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
+                                                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                                                ->where('stocks.existencia','>',0)
+                                                                ->where('stocks.programa_id',$parametros['programa_id'])
+                                                                ->where('stocks.almacen_id',$parametros['almacen_id']);
+                                                });
+            }
+
+            $stock_existencias = $stock_existencias->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
+                                                    ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
+                                                    ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                                    ->leftjoin('programas','programas.id','=','stocks.programa_id')
+                                                    ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                                                    ->leftjoin('catalogo_marcas','catalogo_marcas.id','=','stocks.marca_id');
+
+            /*$stock_existencias = Stock::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
                                                 'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
                                                 'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                 'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_indispensable',
@@ -83,7 +121,7 @@ class AlmacenMovimientosController extends Controller{
                                         ->where('stocks.existencia','>',0)
                                         ->with('marca')
                                         //->groupBy('stocks.bien_servicio_id')
-                                        ->orderBy('bienes_servicios.especificaciones');
+                                        ->orderBy('bienes_servicios.especificaciones');*/
 
             if(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo']){
                 $stock_existencias = $stock_existencias->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
@@ -113,13 +151,13 @@ class AlmacenMovimientosController extends Controller{
                 });
             }
 
-            if(isset($parametros['programa_id']) && $parametros['programa_id']){
+            /*if(isset($parametros['programa_id']) && $parametros['programa_id']){
                 $stock_existencias = $stock_existencias->where('stocks.programa_id',$parametros['programa_id']);
             }
 
             if(isset($parametros['almacen_id']) && $parametros['almacen_id']){
                 $stock_existencias = $stock_existencias->where('stocks.almacen_id',$parametros['almacen_id']);
-            }
+            }*/
 
             if(isset($parametros['familia_id']) && $parametros['familia_id']){
                 $stock_existencias = $stock_existencias->where('bienes_servicios.familia_id',$parametros['familia_id']);
@@ -161,9 +199,12 @@ class AlmacenMovimientosController extends Controller{
             }
 
             $resultado_stock = [];
+            $control_articulos = [];
+            $index_articulo;
             foreach ($stock_existencias as $key => $value) {
-                if(!isset($resultado_stock[$value->articulo_id])){
-                    $resultado_stock[$value->articulo_id] = [
+                if(!isset($control_articulos[$value->articulo_id])){
+                    $control_articulos[$value->articulo_id] = count($resultado_stock);
+                    $resultado_stock[] = [
                         'id' => $value->articulo_id,
                         'clave_partida_especifica' => $value->clave_partida_especifica,
                         'familia_id' => $value->familia_id,
@@ -177,48 +218,70 @@ class AlmacenMovimientosController extends Controller{
                         'clave_form' => $value->clave_form,
                         'partida_especifica'=>$value->partida_especifica,
                         'familia' => $value->familia,
-                        //'programa' => $value->programa,
-                        //'almacen' => $value->almacen,
                         'es_indispensable' => $value->es_indispensable,
                         'cantidad_minima' => $value->cantidad_minima,
                         'cantidad_maxima' => $value->cantidad_maxima,
                         'en_catalogo_unidad' => $value->en_catalogo_unidad,
                         'total_lotes' => 0,
                         'existencias' => 0,
-                        'programa_lotes' => []
                     ];
                 }
+                $index_articulo = $control_articulos[$value->articulo_id];
 
-                $programa_id = ($value->programa_id)?$value->programa_id:'S/P';
-
-                if(!isset($resultado_stock[$value->articulo_id]['programa_lotes'][$programa_id])){
-                    $resultado_stock[$value->articulo_id]['programa_lotes'][$programa_id] = [
-                        'id' => $programa_id,
-                        'nombre' => ($value->programa_id)?$value->programa:'Sin Programa',
-                        'lotes' => []
-                    ];
+                if($value->id){
+                    if(isset($parametros['programa_id']) && $parametros['programa_id']){
+                        if(!isset($resultado_stock[$index_articulo]['lotes'])){
+                            $resultado_stock[$index_articulo]['lotes'] = [];
+                        }
+    
+                        $resultado_stock[$index_articulo]['lotes'][] = [
+                            'id' => $value->id,
+                            'lote' => $value->lote,
+                            'fecha_caducidad' => $value->fecha_caducidad,
+                            'codigo_barras' => $value->codigo_barras,
+                            'no_serie' => $value->no_serie,
+                            'modelo' => $value->modelo,
+                            'marca_id' => $value->marca_id,
+                            'marca' => $value->marca,
+                            'existencia' => $value->existencia,
+                        ];
+                    }else{
+                        if(!isset($resultado_stock[$index_articulo]['programa_lotes'])){
+                            $resultado_stock[$index_articulo]['programa_lotes'] = [];
+                        }
+    
+                        $programa_id = ($value->programa_id)?$value->programa_id:'S/P';
+                        if(!isset($resultado_stock[$index_articulo]['programa_lotes'][$programa_id])){
+                            $resultado_stock[$index_articulo]['programa_lotes'][$programa_id] = [
+                                'id' => $programa_id,
+                                'nombre' => ($value->programa_id)?$value->programa:'Sin Programa',
+                                'lotes' => []
+                            ];
+                        }
+    
+                        $resultado_stock[$index_articulo]['programa_lotes'][$programa_id]['lotes'][] = [
+                            'id' => $value->id,
+                            'lote' => $value->lote,
+                            'fecha_caducidad' => $value->fecha_caducidad,
+                            'codigo_barras' => $value->codigo_barras,
+                            'no_serie' => $value->no_serie,
+                            'modelo' => $value->modelo,
+                            'marca_id' => $value->marca_id,
+                            'marca' => $value->marca,
+                            'existencia' => $value->existencia,
+                        ];
+                    }
+                    $resultado_stock[$index_articulo]['total_lotes']++;
+                    $resultado_stock[$index_articulo]['existencias'] += $value->existencia;
                 }
-
-                $resultado_stock[$value->articulo_id]['programa_lotes'][$programa_id]['lotes'][] = [
-                    'id' => $value->id,
-                    'lote' => $value->lote,
-                    'fecha_caducidad' => $value->fecha_caducidad,
-                    'codigo_barras' => $value->codigo_barras,
-                    'no_serie' => $value->no_serie,
-                    'modelo' => $value->modelo,
-                    'marca_id' => $value->marca_id,
-                    'marca' => $value->marca,
-                    'existencia' => $value->existencia,
-                ];
-
-                $resultado_stock[$value->articulo_id]['total_lotes']++;
-                $resultado_stock[$value->articulo_id]['existencias'] += $value->existencia;
             }
 
-            foreach ($resultado_stock as $key => $value) {
-                $resultado_stock[$key]['programa_lotes'] = array_values($resultado_stock[$key]['programa_lotes']);
+            if(!(isset($parametros['programa_id']) && $parametros['programa_id'])){
+                foreach ($resultado_stock as $key => $value) {
+                    $resultado_stock[$key]['programa_lotes'] = array_values($resultado_stock[$key]['programa_lotes']);
+                }
             }
-
+            
             return response()->json(['data'=>$resultado_stock],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);

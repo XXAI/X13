@@ -35,6 +35,11 @@ table th {
 table td {
   padding:0 5px;
 }
+
+table tr:hover{
+  background-color: whitesmoke;
+  cursor: default;
+}
   
 .mat-form-field {
   font-size: 14px;

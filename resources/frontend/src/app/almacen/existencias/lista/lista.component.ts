@@ -25,7 +25,7 @@ export class ListaComponent implements OnInit {
   filtroAplicado:boolean;
 
   private orderBy:string;
-  displayedColumns: string[] = ['almacen','articulo','programa', 'total_lotes', 'existencia'];
+  displayedColumns: string[] = ['almacen','clave','articulo','programa', 'total_lotes', 'existencia'];
 
   filter: any  = {
     search: "",

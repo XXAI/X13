@@ -3,30 +3,35 @@
         <mat-label>Buscador de Articulos</mat-label>
         <input matInput #inputQuery [formControl]="inputBuscadorArticulos" placeholder="Buscar Articulo..." type="text" [matAutocomplete]="articulosAutocomplete">
         <span matSuffix *ngIf="!inputQuery.value"><mat-icon>manage_search</mat-icon></span>
-        <button class="small-icon-button" mat-icon-button matSuffix *ngIf="inputQuery.value" (click)="inputQuery.value  = ''" [attr.aria-label]="'Limpiar Busqueda'" [attr.aria-pressed]="inputQuery.value">
+        <button class="small-icon-button" mat-icon-button matSuffix *ngIf="inputQuery.value" (click)="inputQuery.value=''; mostrarError=false;" [attr.aria-label]="'Limpiar Busqueda'" [attr.aria-pressed]="inputQuery.value">
             <mat-icon>clear</mat-icon>
         </button>
         <mat-autocomplete #articulosAutocomplete="matAutocomplete" [displayWith]="displayTerminoFn" (optionSelected)="itemSeleccionado($event.option.value)" [panelWidth]="'50%'">
             <mat-option *ngIf="!programaId && !almacenId" style="text-align: center;" disabled>
                 Debe seleccionar un Almacen y un Programa
             </mat-option>
-            <mat-option *ngIf="terminoBusqueda && inputQuery.value.length > 3 && resultadoArticulos.length == 0" style="text-align: center;" disabled>
+            <mat-option *ngIf="!mostrarError && terminoBusqueda && inputQuery.value.length > 3 && resultadoArticulos.length == 0" style="text-align: center;" disabled>
                 No se encontraron resultados para <span style="font-style: italic; font-weight: bold;">"{{inputQuery.value}}"</span>
             </mat-option>
             <mat-option class="loading-data" *ngIf="isLoadingArticulos" disabled>
                 Buscando.....
                 <mat-progress-bar mode="indeterminate"></mat-progress-bar>
             </mat-option>
+            <mat-option class="loading-error" *ngIf="mostrarError" disabled>
+                Ocurrió un error al intentar la busqueda
+            </mat-option>
             <ng-container *ngIf="!isLoadingArticulos">
                 <mat-option class="item-resultados-busqueda" *ngFor="let articulo of resultadoArticulos" [value]="articulo">
                     <div fxLayout="column" class="articulo-container">
                         <div fxFlex fxLayout="row" class="articulo-header">
-                            <div fxFlex="none" class="articulo-titulo">
-                                <span style="font-weight: bold;">Partida:</span><br>
-                                <span [matTooltip]="articulo.partida_descripcion" [matTooltipPosition]="'above'">{{articulo.partida_clave}}</span>
+                            <div fxFlex="none" class="articulo-iconos">
+                                <mat-icon class="icono" matTooltip="En Catalogo"   [ngClass]="{'activo':articulo.en_catalogo}">fact_check</mat-icon>
+                                <mat-icon class="icono" matTooltip="Indispensable" [ngClass]="{'activo':articulo.indispensable}">notification_important</mat-icon>
+                                <mat-icon class="icono" matTooltip="Descontinuado" [ngClass]="{'activo':articulo.descontinuado}">report_problem</mat-icon>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-titulo">
+                                {{articulo.partida_descripcion}}<br>
                                 {{articulo.familia}}
                             </div>
                         </div>
@@ -41,9 +46,6 @@
                         </div>
                         <div fxFlex="none" fxLayout="row" class="articulo-footer">
                             <div fxFlex="none">
-                                <mat-icon matTooltip="En Catalogo"   *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
-                                <mat-icon matTooltip="Indispensable" *ngIf="articulo.indispensable" style="color:green;">notification_important</mat-icon>
-                                <mat-icon matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">report_problem</mat-icon>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-info" *ngIf="mostrarExistencias">

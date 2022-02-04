@@ -119,7 +119,7 @@ export class FormComponent implements OnInit {
 
         let callUserData = this.usersService.getUser(id);
 
-        console.log("asd",callUserData);
+        //console.log("asd",callUserData);
 
         httpCalls.push(callUserData);
       }else{
@@ -186,7 +186,7 @@ export class FormComponent implements OnInit {
             this.usuario = results[3];
             console.log("usuario", this.usuario);
             this.usuarioForm.patchValue(this.usuario);
-            this.IniciarCatalogos(this.usuario.unidad_medica_asginada);
+            this.IniciarCatalogos(this.usuario.unidad_medica_asignada);
 
             this.selectedAvatar = this.usuario.avatar;
             //Load Roles
@@ -420,10 +420,10 @@ export class FormComponent implements OnInit {
       response => {
 
         this.catalogos = response.data;
-        this.filteredCatalogs['unidades_medicas'] = this.usuarioForm.get('unidad_medica_asignada_id').valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
+        this.filteredCatalogs['unidades_medicas'] = this.usuarioForm.get('unidad_medica_asignada').valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
 
         if(obj){
-            this.usuarioForm.get('unidad_medica_asignada_id').setValue(obj);
+            this.usuarioForm.get('unidad_medica_asignada').setValue(obj);
         }
         this.isLoading = false; 
 
@@ -436,10 +436,11 @@ export class FormComponent implements OnInit {
     if(this.catalogos[catalog]){
       let filterValue = '';
       if(value){
-        if(typeof(value) == 'object'){
-          filterValue = value[valueField].toLowerCase();
-        }else{
+        console.log(value);
+        if(typeof(value) == 'string'){
           filterValue = value.toLowerCase();
+        }else{
+          filterValue = value[valueField].toLowerCase();
         }
       }
       return this.catalogos[catalog].filter(option => option[valueField].toLowerCase().includes(filterValue));

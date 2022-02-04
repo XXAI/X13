@@ -58,7 +58,7 @@
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
 
-    <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: auto;"> <!-- Module Body <<<<<<< -->
+    <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: hidden;"> <!-- Module Body <<<<<<< -->
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
         <section fxFlex="none" fxLayout="column">
             <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" fxLayoutAlign="space-between center" [formGroup]="formMovimiento" [style.fontSize.px]="15">

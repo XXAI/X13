@@ -35,6 +35,8 @@ class BienesServiciosController extends Controller{
                                                 ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
                                                 ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
                                                 ->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
+                                                ->orderBy('unidad_medica_catalogo_articulos.id','DESC')
+                                                ->orderBy('unidad_medica_catalogo_articulos.es_indispensable','DESC')
                                                 ->orderBy('bienes_servicios.especificaciones');
 
             if(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo']){
