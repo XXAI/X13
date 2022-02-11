@@ -10,10 +10,11 @@ import { AdminListaComponent } from './admin-lista/admin-lista.component';
 import { DialogoDetallesRegistroComponent } from './dialogo-detalles-registro/dialogo-detalles-registro.component';
 import { DialogoConfigCapturaComponent } from './dialogo-config-captura/dialogo-config-captura.component';
 import { DialogoSubirArchivoComponent } from './dialogo-subir-archivo/dialogo-subir-archivo.component';
+import { DialogoAdminCapturaCatalogosComponent } from './dialogo-admin-captura-catalogos/dialogo-admin-captura-catalogos.component';
 
 
 @NgModule({
-  declarations: [ListaComponent, DialogoRegistroComponent, AdminListaComponent, DialogoDetallesRegistroComponent, DialogoConfigCapturaComponent, DialogoSubirArchivoComponent],
+  declarations: [ListaComponent, DialogoRegistroComponent, AdminListaComponent, DialogoDetallesRegistroComponent, DialogoConfigCapturaComponent, DialogoSubirArchivoComponent, DialogoAdminCapturaCatalogosComponent],
   imports: [
     CommonModule,
     SharedModule,

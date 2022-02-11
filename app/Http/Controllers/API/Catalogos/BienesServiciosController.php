@@ -65,6 +65,10 @@ class BienesServiciosController extends Controller{
                 });
             }
 
+            if(isset($parametros['tipo_bien_servicio_id']) && $parametros['tipo_bien_servicio_id']){
+                $catalogo_articulos = $catalogo_articulos->where('bienes_servicios.tipo_bien_servicio_id',$parametros['tipo_bien_servicio_id']);
+            }
+
             if(isset($parametros['familia_id']) && $parametros['familia_id']){
                 $catalogo_articulos = $catalogo_articulos->where('bienes_servicios.familia_id',$parametros['familia_id']);
             }

@@ -6,6 +6,7 @@ import { SharedService } from '../../shared/shared.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoDetallesRegistroComponent } from '../dialogo-detalles-registro/dialogo-detalles-registro.component';
 import { DialogoConfigCapturaComponent } from '../dialogo-config-captura/dialogo-config-captura.component';
+import { DialogoAdminCapturaCatalogosComponent } from '../dialogo-admin-captura-catalogos/dialogo-admin-captura-catalogos.component';
 import { ConfirmActionDialogComponent } from '../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import * as FileSaver from 'file-saver';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -131,6 +132,24 @@ export class AdminListaComponent implements OnInit {
     dialogRef.afterClosed().subscribe(response => {
       if(response){
         this.loadListadoRegistros();
+      }else{
+        console.log('Cancelar');
+      }
+    });
+  }
+
+  verAdminCapturaCatalogos(){
+    let configDialog:any = {
+      width: '99%',
+      height: '80vh',
+      panelClass: 'no-padding-dialog'
+    };
+
+    const dialogRef = this.dialog.open(DialogoAdminCapturaCatalogosComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        //
       }else{
         console.log('Cancelar');
       }

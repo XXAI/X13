@@ -10,11 +10,20 @@ import { map } from 'rxjs/operators';
 
 export class AdminCapturaSemanalService {
   url_semanas = `${environment.base_url}/config-cap-abasto-surtimiento`;
+  url_lista_unidades = `${environment.base_url}/config-cap-abasto-lista-unidades-catalogos`;
   
   constructor(private http: HttpClient) { }
 
   obtenerListaSemanas(payload):Observable<any> {
     return this.http.get<any>(this.url_semanas,{params: payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  obtenerListaUnidades():Observable<any> {
+    return this.http.get<any>(this.url_lista_unidades).pipe(
       map( response => {
         return response;
       })

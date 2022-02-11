@@ -12,6 +12,7 @@ export class CatalogoArticulosService {
 
   url = `${environment.base_url}/configuracion-unidad/catalogo-articulos`;
   url_catalogos = `${environment.base_url}/configuracion-unidad/catalogo-articulos-catalogos`;
+  url_cerrar_captura = `${environment.base_url}/configuracion-unidad/catalogo-articulos-cerrar-captura/`;
 
   constructor(private http: HttpClient) { }
 
@@ -21,6 +22,14 @@ export class CatalogoArticulosService {
         return response;
       })
     );
+  }
+
+  cerrarCaptura(id) {
+    return this.http.get<any>(this.url_cerrar_captura+id,{}).pipe(
+      map( (response: any) => {
+        return response;
+      }
+    ));
   }
 
   getListaArticulos(payload):Observable<any> {
@@ -47,7 +56,7 @@ export class CatalogoArticulosService {
     ));
   }
 
-  createArticulo(payload) {
+  saveArticulo(payload) {
     return this.http.post<any>(this.url,payload).pipe(
       map( (response) => {
         return response;

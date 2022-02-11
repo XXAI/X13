@@ -1,0 +1,88 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.data-table{
+    width: 100%;
+}
+
+.data-table th {
+    text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+table td {
+    padding:0 2px;
+}
+
+table tr:hover{
+    cursor: default;
+    background-color: whitesmoke;
+}
+
+.hide{
+    display: none;
+}
+
+.small-search-input{
+    padding: 0px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos > .mat-form-field{
+    background-color: rgb(213, 213, 255);
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: whitesmoke;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos .mat-form-field-label { 
+    font-weight: bolder !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.no-items-found{
+    height: 80px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border-bottom: solid thin #dddddd;
+    z-index: 99999;
+    text-align: center;
+    color:#a9a9a9;
+    font-size: 16px;
+    padding-top: 15px;
+}

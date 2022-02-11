@@ -12,8 +12,10 @@ use Illuminate\Validation\Rule;
 
 use App\Http\Controllers\Controller;
 
+use App\Models\UnidadMedicaCatalogo;
 use App\Models\UnidadMedicaCatalogoArticulo;
 use App\Models\BienServicio;
+
 use DB;
 
 class CatalogoArticulosController extends Controller
@@ -22,33 +24,28 @@ class CatalogoArticulosController extends Controller
         try{
             $loggedUser = auth()->userOrFail();
 
-            $catalogo_filtros = UnidadMedicaCatalogoArticulo::select('cog_partidas_especificas.clave','cog_partidas_especificas.descripcion as partida_especifica','familias.nombre as familia','familias.id as familia_id')
-                                                                ->leftjoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
-                                                                ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
-                                                                ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
-                                                                ->groupBy('bienes_servicios.clave_partida_especifica')
-                                                                ->groupBy('bienes_servicios.familia_id')
-                                                                ->where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
-                                                                ->get();
-            //
+            $catalogos_unidad = UnidadMedicaCatalogo::with('tipoBienServicio')->where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get();
 
-            $agrupado = [];
-            foreach ($catalogo_filtros as $item) {
-                if(!isset($agrupado[$item->clave])){
-                    $agrupado[$item->clave] = [
-                        'clave' => $item->clave,
-                        'descripcion' => $item->partida_especifica,
-                        'familias' => []
-                    ];
-                }
-                $agrupado[$item->clave]['familias'][] = ['clave'=>$item->clave,'id'=>$item->familia_id, 'nombre'=>$item->familia];
-            }
-
-            return response()->json(['data'=>array_values($agrupado)],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>$catalogos_unidad],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
+
+    public function cerrarCaptura(Request $request, $id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $catalogo = UnidadMedicaCatalogo::find($id);
+            $catalogo->puede_editar = false;
+            $catalogo->ultima_modificacion_por = $loggedUser->id;
+            $catalogo->save();
+            
+            return response()->json(['data'=>$catalogo],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -63,13 +60,19 @@ class CatalogoArticulosController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $catalogo_articulos = UnidadMedicaCatalogoArticulo::select('unidad_medica_catalogo_articulos.*','cog_partidas_especificas.clave','cog_partidas_especificas.descripcion as partida_especifica',
-                                                                'familias.nombre as familia','familias.id as familia_id','bienes_servicios.articulo','bienes_servicios.clave_cubs',
-                                                                'bienes_servicios.clave_local','bienes_servicios.especificaciones')
+            $catalogo_articulos = UnidadMedicaCatalogoArticulo::select('unidad_medica_catalogo_articulos.*','cog_partidas_especificas.descripcion as partida_especifica','familias.nombre as familia',
+                                                                'familias.id as familia_id','bienes_servicios.articulo','bienes_servicios.clave_cubs','bienes_servicios.clave_local',
+                                                                'bienes_servicios.especificaciones','bienes_servicios.descontinuado',
+                                                                DB::raw('IF(bienes_servicios.clave_local,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave'))
                                                         ->leftjoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                         ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
                                                         ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
-                                                        ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id);
+                                                        ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
+                                                        ->orderBy('unidad_medica_catalogo_articulos.updated_at','DESC');
+
+            if(isset($parametros['catalogo_id']) && $parametros['catalogo_id']){
+                $catalogo_articulos = $catalogo_articulos->where('unidad_medica_catalogo_articulos.unidad_medica_catalogo_id',$parametros['catalogo_id']);
+            }
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
                 $catalogo_articulos = $catalogo_articulos->where(function($query)use($parametros){
@@ -121,47 +124,27 @@ class CatalogoArticulosController extends Controller
     public function store(Request $request){
         //$this->authorize('has-permission',\Permissions::CREAR_ROL);
         try{
-            $validation_rules = [
-                'clave'             => 'required|unique:App\Models\TipoElementoPedido,clave,NULL,id,deleted_at,NULL',
-                'descripcion'       => 'required|unique:App\Models\TipoElementoPedido,descripcion,NULL,id,deleted_at,NULL',
-                'archivo_fuente'    => 'required',
-                'filtro_familias'   => 'required',
-            ];
-        
-            $validation_eror_messages = [
-                'required'  => 'Este campo es requerido',
-                'unique'    => 'Este campo debe ser único'
-            ];
-
+            $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
+            DB::beginTransaction();
 
-            if($resultado->passes()){
-                DB::beginTransaction();
+            $parametros['unidad_medica_id'] = $loggedUser->unidad_medica_asignada_id;
+            $parametros['modificado_por'] = $loggedUser->id;
 
-                //Creando la imagen
-                $image = $parametros['archivo_fuente'];  // your base64 encoded
-                $image = str_replace('data:image/svg+xml;base64,', '', $image);
-                $image = str_replace(' ', '+', $image);
-                $image_name = $parametros['clave'].'-ICON.svg';
-                \File::put(storage_path(). '/app/public/tipo-elementos-pedido/' . $image_name, base64_decode($image));
+            $articulo = UnidadMedicaCatalogoArticulo::create($parametros);
 
-                $parametros['icon_image'] = 'tipo-elementos-pedido/'.$image_name;
-                $parametros['origen_articulo'] = ($parametros['origen_articulo'])?$parametros['origen_articulo']:null;
-                $parametros['filtro_detalles'] = json_encode(array_values($parametros['filtro_familias']));
+            if($articulo){
+                $catalogo_unidad = UnidadMedicaCatalogo::find($parametros['unidad_medica_catalogo_id']);
+                $catalogo_unidad->ultima_modificacion_por = $loggedUser->id;
+                $catalogo_unidad->total_articulos += 1;
+                $catalogo_unidad->save();
 
-                $tipo_pedido = TipoElementoPedido::create($parametros);
-
-                if($tipo_pedido->save()){
-                    DB::commit();
-                    return response()->json(['data'=>$tipo_pedido], HttpResponse::HTTP_OK);
-                }else{
-                    DB::rollback();
-                    return response()->json(['error'=>'No se pudo crear el Tipo de Pedido'], HttpResponse::HTTP_CONFLICT);
-                }
+                DB::commit();
+                return response()->json(['data'=>$articulo], HttpResponse::HTTP_OK);
             }else{
-                return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
+                DB::rollback();
+                return response()->json(['error'=>'No se pudo crear el elemento'], HttpResponse::HTTP_CONFLICT);
             }
         }catch(\Exception $e){
             DB::rollback();
@@ -179,37 +162,24 @@ class CatalogoArticulosController extends Controller
     public function update(Request $request, $id){
         //$this->authorize('has-permission',\Permissions::EDITAR_ROL);
         try{
+            $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
             $articulo = UnidadMedicaCatalogoArticulo::find($id);
-
-            /*$validation_rules = [
-                'cantidad_minima' => ['integer'],
-                'cantidad_maxima' => ['integer'],
-                //'descripcion'       => ['required',Rule::unique('tipos_elementos_pedidos','descripcion')->ignore($tipo_elementos->id)->where(function($query){ return $query->whereNull('deleted_at'); })],
-                //'filtro_familias'   => 'required',
-            ];
-        
-            $validation_eror_messages = [
-                'integer'  => 'Este campo debe ser numerico',
-                'required'  => 'Este campo es requerido',
-                'unique'    => 'Este campo debe ser único',
-            ];
             
-            $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
-
-            if($resultado->passes()){*/
             DB::beginTransaction();
 
+            $parametros['modificado_por'] = $loggedUser->id;
+
             if($articulo->update($parametros)){
+                $catalogo_unidad = UnidadMedicaCatalogo::find($articulo->unidad_medica_catalogo_id);
+                $catalogo_unidad->ultima_modificacion_por = $loggedUser->id;
+                $catalogo_unidad->save();
                 DB::commit();
                 return response()->json(['data'=>$articulo], HttpResponse::HTTP_OK);
             }else{
                 DB::rollback();
                 return response()->json(['error'=>'No se pudo guardar el Tipo de Pedido'], HttpResponse::HTTP_CONFLICT);
             }
-            /*}else{
-                return response()->json(['mensaje' => 'Error en los datos del formulario', 'validacion'=>$resultado->passes(), 'errores'=>$resultado->errors()], HttpResponse::HTTP_CONFLICT);
-            }*/
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -225,11 +195,26 @@ class CatalogoArticulosController extends Controller
     public function destroy($id){
         //$this->authorize('has-permission',\Permissions::ELIMINAR_ROL);
         try{
-            $tipo_elementos = TipoElementoPedido::find($id);
-            $tipo_elementos->delete();
+            DB::beginTransaction();
+
+            $loggedUser = auth()->userOrFail();
+
+            $articulo = UnidadMedicaCatalogoArticulo::find($id);
+            $catalogo_unidad = UnidadMedicaCatalogo::find($articulo->unidad_medica_catalogo_id);
+
+            $articulo->modificado_por = $loggedUser->id;
+            $articulo->save();
+            $articulo->delete();
+
+            $catalogo_unidad->ultima_modificacion_por = $loggedUser->id;
+            $catalogo_unidad->total_articulos -= 1;
+            $catalogo_unidad->save();
+
+            DB::commit();
 
             return response()->json(['data'=>'Tipo de Pedido eliminado'], HttpResponse::HTTP_OK);
         }catch(\Exception $e){
+            DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }

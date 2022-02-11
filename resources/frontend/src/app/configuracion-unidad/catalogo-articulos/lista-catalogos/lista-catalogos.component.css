@@ -1,0 +1,203 @@
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.data-no-catalog-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.20);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lista-catalogos{
+    padding: 2px;
+}
+
+.catalogo-card{
+    background-color: whitesmoke;
+    cursor: pointer;
+    padding: 5px !important;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    -webkit-user-drag: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.catalogo-card.seleccionado{
+    background-color: cadetblue;
+    color:white;
+    font-weight: normal !important;
+}
+
+.catalogo-card.seleccionado .totales{
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.catalogo-card.seleccionado:hover{
+    background-color: cadetblue;
+}
+
+.catalogo-card:hover{
+    background-color: white;
+}
+
+.catalogo-card .icono{
+    padding: 6px;
+}
+
+.catalogo-card .titulo{
+    font-weight: 500;
+    font-size: medium;
+}
+
+.catalogo-card .totales{
+    font-size: small;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.not-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.data-table{
+    width: 100%;
+}
+
+.data-table th {
+    text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+table td {
+    padding:0 2px;
+}
+
+table td .icono{
+    color: grey;
+}
+
+table td .icono.indispensable{
+    color: goldenrod;
+}
+
+.hide{
+    display: none;
+}
+
+tr.tabla-row-articulo{
+    cursor: pointer;
+}
+
+tr.tabla-row-articulo td{
+    border-bottom-width: 0;
+}
+
+tr.tabla-row-articulo:not(.tabla-row-articulo-expandido):hover{
+    background-color: whitesmoke;
+}
+
+tr.tabla-row-articulo:not(.tabla-row-articulo-expandido):active {
+    background: #efefef;
+}
+
+tr.tabla-row-articulo.tabla-row-articulo-expandido{
+    background-color: #c7dfd2;
+    font-weight: bold;
+}
+
+tr.tabla-row-articulo-detalle{
+    background-color: #daf7e7;
+    height: 0;
+}
+
+.articulo-detalle-configuracion {
+    overflow: hidden;
+    display: flex;
+}
+
+.articulo-configuracion{
+    width: 100%;
+    padding: 10px;
+}
+
+.articulo-formulario{
+    padding:5px;
+}
+
+.medium-button{
+    line-height: 30px !important;
+}
+
+.medium-button .mat-icon {
+    width: 22px !important;
+    height: 22px !important;
+    line-height: 22px !important;
+}
+
+.medium-button .material-icons {
+    font-size: 22px !important;
+}
+
+.small-search-input{
+    padding: 0px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos > .mat-form-field{
+    background-color: rgb(213, 213, 255);
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: whitesmoke;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos .mat-form-field-label { 
+    font-weight: bolder !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.activo:hover .icono-default{
+    display: none;
+}
+
+.icono-hover{
+    display: none;
+}
+
+.activo:hover .icono-hover{
+    display: block;
+}

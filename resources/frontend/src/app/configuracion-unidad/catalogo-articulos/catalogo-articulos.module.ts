@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 import { CatalogoArticulosRoutingModule } from './catalogo-articulos-routing.module';
-import { ListaArticulosComponent } from './lista-articulos/lista-articulos.component';
-import { DialogoArticuloComponent } from './dialogo-articulo/dialogo-articulo.component';
+import { ListaCatalogosComponent } from './lista-catalogos/lista-catalogos.component';
+import { WidgetBuscadorArticulosComponent } from './widget-buscador-articulos/widget-buscador-articulos.component';
 
 
 @NgModule({
-  declarations: [ListaArticulosComponent, DialogoArticuloComponent],
+  declarations: [ListaCatalogosComponent, WidgetBuscadorArticulosComponent],
   imports: [
     CommonModule,
     CatalogoArticulosRoutingModule,

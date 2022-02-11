@@ -15,6 +15,7 @@ use App\Exports\DevReportExport;
 use App\Models\CorteReporteAbastoSurtimiento;
 use App\Models\ConfigCapturaAbastoSurtimiento;
 use App\Models\UnidadMedica;
+use App\Models\UnidadMedicaCatalogo;
 
 class ConfigCapturaAbastoSurtimientoController extends Controller{
     public function getDataInfo(Request $request){
@@ -26,6 +27,25 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
             ];
             
             return response()->json(['data'=>$data],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function getListaUnidadesMedicasCatalogos(Request $request){
+        try{
+            $loggedUser = auth()->userOrFail();
+
+            $unidades = UnidadMedicaCatalogo::select('unidad_medica_catalogo.id','catalogo_unidades_medicas.clues','catalogo_unidades_medicas.nombre',
+                                            DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.total_articulos,0)) AS cantidad_medicamentos'),
+                                            DB::raw('IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.puede_editar,0) AS puede_editar_medicamentos'),
+                                            DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.total_articulos,0)) AS cantidad_material_curacion'),
+                                            DB::raw('IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.puede_editar,0) AS puede_editar_material_curacion'))
+                                            ->leftjoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','unidad_medica_catalogo.unidad_medica_id')
+                                            ->groupBy('unidad_medica_id')
+                                            ->get();
+            
+            return response()->json(['data'=>$unidades],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }

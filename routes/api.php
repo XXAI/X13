@@ -52,8 +52,9 @@ Route::group(['middleware'=>'auth'],function($router){
     /**
      *  Modulo de Configuración de la Unidad
      */
-    Route::apiResource('configuracion-unidad/catalogo-articulos',   'API\ConfiguracionUnidad\CatalogoArticulosController');
-    Route::get('configuracion-unidad/catalogo-articulos-catalogos', 'API\ConfiguracionUnidad\CatalogoArticulosController@getCatalogos');
+    Route::apiResource('configuracion-unidad/catalogo-articulos',               'API\ConfiguracionUnidad\CatalogoArticulosController');
+    Route::get('configuracion-unidad/catalogo-articulos-catalogos',             'API\ConfiguracionUnidad\CatalogoArticulosController@getCatalogos');
+    Route::get('configuracion-unidad/catalogo-articulos-cerrar-captura/{id}',   'API\ConfiguracionUnidad\CatalogoArticulosController@cerrarCaptura');
 
     /**
      *  Modulo de Reportes
@@ -95,10 +96,11 @@ Route::group(['middleware'=>'auth'],function($router){
     /*
     *   Modulos Reporte Semanal
     */
-    Route::get('get-data-cap-reporte-as',                'API\Modulos\CapturaReporteAbastoSurtimientoController@getDataInfo');
-    Route::get('excel-admin-reporte-abasto',             'API\Modulos\CapturaReporteAbastoSurtimientoController@exportAdminExcel');
-    Route::apiResource('cap-reporte-abasto-surtimiento', 'API\Modulos\CapturaReporteAbastoSurtimientoController');
-    Route::apiResource('config-cap-abasto-surtimiento',  'API\Modulos\ConfigCapturaAbastoSurtimientoController');
+    Route::get('get-data-cap-reporte-as',                       'API\Modulos\CapturaReporteAbastoSurtimientoController@getDataInfo');
+    Route::get('excel-admin-reporte-abasto',                    'API\Modulos\CapturaReporteAbastoSurtimientoController@exportAdminExcel');
+    Route::apiResource('cap-reporte-abasto-surtimiento',        'API\Modulos\CapturaReporteAbastoSurtimientoController');
+    Route::apiResource('config-cap-abasto-surtimiento',         'API\Modulos\ConfigCapturaAbastoSurtimientoController');
+    Route::get('config-cap-abasto-lista-unidades-catalogos',    'API\Modulos\ConfigCapturaAbastoSurtimientoController@getListaUnidadesMedicasCatalogos');
 
 
     /*

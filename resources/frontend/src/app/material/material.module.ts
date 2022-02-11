@@ -31,7 +31,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-
+import { MatRippleModule } from '@angular/material/core';
 import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
@@ -68,6 +68,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatButtonToggleModule,
     MatProgressBarModule,
     MatExpansionModule,
+    MatRippleModule,
     MatSortModule
   ],
   exports: [
@@ -101,6 +102,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatButtonToggleModule,
     MatProgressBarModule,
     MatExpansionModule,
+    MatRippleModule,
     MatSortModule
   ],
 })

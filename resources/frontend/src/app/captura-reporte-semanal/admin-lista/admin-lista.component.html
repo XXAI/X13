@@ -21,32 +21,25 @@
                 </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <button mat-raised-button color="primary" (click)="verAdminSemanasCaptura()">
-                        <mat-icon>settings</mat-icon> Configurar Semanas
-                    </button>
-                    &nbsp;
-                    <button mat-icon-button (click)="loadListadoRegistros()">
-                        <mat-icon>refresh</mat-icon>
+                    <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuAcciones" aria-label="Acciones">
+                        <mat-icon>tune</mat-icon> Acciones <mat-icon>arrow_drop_down</mat-icon>
                     </button>
                 </div>
-                <!--div fxFlex fxLayout="row wrap">
-                    <mat-form-field fxFill appearance="outline">
-                        <mat-label>Buscar</mat-label>
-                        <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applyFilter()" placeholder="Buscar">
-                        <button matSuffix *ngIf="searchQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
-                            <mat-icon>close</mat-icon>
-                        </button>
-                    </mat-form-field>
-                </div>
-                <div fxFlex="none" fxFlex.xs="100">
-                    <div fxFlex></div>
-                    <section class="search-button">
-                        <button mat-raised-button color="accent" (click)="applyFilter()">
-                            <mat-icon>search</mat-icon> Buscar
-                        </button>
-                    </section>
-                </div-->
             </div>
+            <mat-menu #menuAcciones="matMenu">
+                <button mat-menu-item (click)="verAdminCapturaCatalogos()">
+                    <mat-icon>manage_accounts</mat-icon>
+                    <span>Admin. Captura de Catalogos</span>
+                </button>
+                <button mat-menu-item (click)="verAdminSemanasCaptura()">
+                    <mat-icon>settings</mat-icon>
+                    <span>Configurar Semanas</span>
+                </button>
+                <button mat-menu-item (click)="loadListadoRegistros()">
+                    <mat-icon>refresh</mat-icon>
+                    <span>Recargar Datos</span>
+                </button>
+            </mat-menu>
         </mat-card>
     </section>
     <section fxFlex fxLayout="row">
