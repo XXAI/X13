@@ -40,6 +40,11 @@ table td {
     padding:0 5px;
 }
 
+table tr:hover {
+    cursor:default;
+    background-color: whitesmoke;
+}
+
 .selected-item{
     background-color: lightskyblue;
 }
@@ -69,4 +74,17 @@ table td {
 
 .old-row{
     color:grey;
+}
+
+.datos-semana{
+    text-align: center;
+}
+
+.datos-semana .titulo{
+    font-weight: 500;
+}
+
+.datos-semana .datos{
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.70);
 }

@@ -16,6 +16,8 @@ use App\Models\CorteReporteAbastoSurtimiento;
 use App\Models\ConfigCapturaAbastoSurtimiento;
 use App\Models\UnidadMedica;
 use App\Models\UnidadMedicaCatalogo;
+use App\Models\TipoBienServicio;
+use App\Models\ConfigUnidadMedicaAbasto;
 
 class ConfigCapturaAbastoSurtimientoController extends Controller{
     public function getDataInfo(Request $request){
@@ -36,13 +38,14 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
         try{
             $loggedUser = auth()->userOrFail();
 
-            $unidades = UnidadMedicaCatalogo::select('unidad_medica_catalogo.id','catalogo_unidades_medicas.clues','catalogo_unidades_medicas.nombre',
+            $unidades = UnidadMedicaCatalogo::select('unidad_medica_catalogo.unidad_medica_id as id','catalogo_unidades_medicas.clues','catalogo_unidades_medicas.nombre',
                                             DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.total_articulos,0)) AS cantidad_medicamentos'),
                                             DB::raw('IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.puede_editar,0) AS puede_editar_medicamentos'),
                                             DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.total_articulos,0)) AS cantidad_material_curacion'),
                                             DB::raw('IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.puede_editar,0) AS puede_editar_material_curacion'))
                                             ->leftjoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','unidad_medica_catalogo.unidad_medica_id')
                                             ->groupBy('unidad_medica_id')
+                                            ->orderBy('catalogo_unidades_medicas.nombre')
                                             ->get();
             
             return response()->json(['data'=>$unidades],HttpResponse::HTTP_OK);
@@ -50,6 +53,95 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
+
+    public function adminListaUnidadesMedicasCatalogos(Request $request){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            DB::beginTransaction();
+            if(isset($parametros['unidades']) && count($parametros['unidades']) > 0){
+                $catalogos_unidades_ids = UnidadMedicaCatalogo::select('id')->whereIn('unidad_medica_id',$parametros['unidades']);
+                if($parametros['tipo_catalogo'] != '*'){
+                    $tipo_bien = TipoBienServicio::where('clave',$parametros['tipo_catalogo'])->first();
+                    $catalogos_unidades_ids = $catalogos_unidades_ids->where('tipo_bien_servicio_id',$tipo_bien->id);
+                }
+                $catalogos_unidades_ids = $catalogos_unidades_ids->get()->pluck('id');
+
+                UnidadMedicaCatalogo::whereIn('id',$catalogos_unidades_ids)->update(['puede_editar'=>$parametros['puede_editar']]);
+
+                /*
+                if(!$parametros['puede_editar']){ DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT
+                    $catalogos_unidades_ids_query = implode(',',$catalogos_unidades_ids->toArray());
+
+                    DB::statement("UPDATE unidad_medica_catalogo A, config_unidad_medica_abasto_surtimiento B set B.total_claves_medicamentos_catalogo = A.total_articulos
+                                where A.unidad_medica_id = B.unidad_medica_id AND B.deleted_at IS NULL AND A.tipo_bien_servicio_id = ? 
+                                AND A.id IN ?", 
+                            [ 1, '('.$catalogos_unidades_ids_query.')']);
+                    
+                    DB::statement("UPDATE unidad_medica_catalogo A, config_unidad_medica_abasto_surtimiento B set B.total_claves_material_curacion_catalogo = A.total_articulos
+                                where A.unidad_medica_id = B.unidad_medica_id AND B.deleted_at IS NULL AND A.tipo_bien_servicio_id = ? 
+                                AND A.id IN ?", 
+                            [ 2, '('.$catalogos_unidades_ids_query.')']);
+                } !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT !!!!!! DEFEAT
+                */
+            }
+
+            DB::commit();
+            
+            return response()->json(['data'=>$parametros],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function recalcularPorcentajes(Request $request,$id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            
+            DB::beginTransaction();
+
+            $registros = CorteReporteAbastoSurtimiento::where('config_captura_id',$id)->get();
+            $total_registros = count($registros);
+
+            if($total_registros){
+                $lista_unidades_ids = $registros->pluck('unidad_medica_id');
+                $catalogos_unidades_raw = ConfigUnidadMedicaAbasto::whereIn('unidad_medica_id',$lista_unidades_ids)->get();
+                $catalogos_unidades = [];
+                for ($i=0; $i < count($catalogos_unidades_raw); $i++) { 
+                    $catalogos_unidades[$catalogos_unidades_raw[$i]->unidad_medica_id] = $catalogos_unidades_raw[$i];
+                }
+
+                for ($i=0; $i < $total_registros; $i++) { 
+                    $registro = $registros[$i];
+
+                    $catalogo_medicamentos = $catalogos_unidades[$registro->unidad_medica_id]->total_claves_medicamentos_catalogo;
+                    $catalogo_mat_curacion = $catalogos_unidades[$registro->unidad_medica_id]->total_claves_material_curacion_catalogo;
+
+                    $total_claves_catalogo = $catalogo_medicamentos + $catalogo_mat_curacion;
+                    $total_claves_existentes = $registro->claves_medicamentos_existentes + $registro->claves_material_curacion_existentes;
+
+                    $registro->claves_medicamentos_catalogo = $catalogo_medicamentos;
+                    $registro->claves_medicamentos_porcentaje = round((($registro->claves_medicamentos_existentes/$catalogo_medicamentos)*100),2);
+                    $registro->claves_material_curacion_catalogo = $catalogo_mat_curacion;
+                    $registro->claves_material_curacion_porcentaje = round((($registro->claves_material_curacion_existentes/$catalogo_mat_curacion)*100),2);
+                    $registro->total_claves_catalogo = $total_claves_catalogo;
+                    $registro->total_claves_porcentaje = round((($total_claves_existentes/$total_claves_catalogo)*100),2);
+
+                    $registro->save();
+                }
+            }
+
+            DB::commit();
+            
+            return response()->json(['data'=>$catalogos_unidades],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *

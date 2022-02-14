@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UnidadMedicaCatalogo;
 use App\Models\UnidadMedicaCatalogoArticulo;
 use App\Models\BienServicio;
+use App\Models\ConfigUnidadMedicaAbasto;
 
 use DB;
 
@@ -34,14 +35,33 @@ class CatalogoArticulosController extends Controller
 
     public function cerrarCaptura(Request $request, $id){
         try{
+            DB::beginTransaction();
+            
             $loggedUser = auth()->userOrFail();
             $catalogo = UnidadMedicaCatalogo::find($id);
             $catalogo->puede_editar = false;
             $catalogo->ultima_modificacion_por = $loggedUser->id;
+
+            $total_articulos = UnidadMedicaCatalogoArticulo::where('unidad_medica_catalogo_id',$catalogo->id)->count();
+            $catalogo->total_articulos = $total_articulos;
             $catalogo->save();
             
+            //TODO:: Temporal, se quitara una vez se trabaje bien el modulo
+            $config_captura = ConfigUnidadMedicaAbasto::where('unidad_medica_id',$catalogo->unidad_medica_id)->first();
+            if(!$config_captura){
+                $config_captura = ConfigUnidadMedicaAbasto::create(['unidad_medica_id'=>$catalogo->unidad_medica_id,'total_claves_medicamentos_catalogo'=>0,'total_claves_material_curacion_catalogo'=>0]);
+            }
+            if($catalogo->tipo_bien_servicio_id == 1){
+                $config_captura->total_claves_medicamentos_catalogo = $total_articulos;
+            }else if($catalogo->tipo_bien_servicio_id == 2){
+                $config_captura->total_claves_material_curacion_catalogo = $total_articulos;
+            }
+            $config_captura->save();
+            
+            DB::commit();
             return response()->json(['data'=>$catalogo],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
+            DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
@@ -192,24 +212,42 @@ class CatalogoArticulosController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id){
+    public function destroy(Request $request, $id){
         //$this->authorize('has-permission',\Permissions::ELIMINAR_ROL);
         try{
             DB::beginTransaction();
 
             $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+            
+            $total_elimindos = 0;
+            if(isset($parametros['borrado_multiple']) && $parametros['borrado_multiple']){
+                if(isset($parametros['lista_ids']) && $parametros['lista_ids']){
+                    $lista_ids = explode(',',$parametros['lista_ids']);
 
-            $articulo = UnidadMedicaCatalogoArticulo::find($id);
-            $catalogo_unidad = UnidadMedicaCatalogo::find($articulo->unidad_medica_catalogo_id);
+                    $catalogo_unidad = UnidadMedicaCatalogo::find($parametros['unidad_medica_catalogo_id']);
 
-            $articulo->modificado_por = $loggedUser->id;
-            $articulo->save();
-            $articulo->delete();
+                    UnidadMedicaCatalogoArticulo::whereIn('id',$lista_ids)->update(['modificado_por'=>$loggedUser->id]);
+                    $total_elimindos = UnidadMedicaCatalogoArticulo::whereIn('id',$lista_ids)->delete();
+                }
+            }else{
+                $articulo = UnidadMedicaCatalogoArticulo::find($id);
 
+                if(!$articulo){
+                    throw new \Exception("No se encontro el articulo a eliminar", 1);
+                }
+
+                $catalogo_unidad = UnidadMedicaCatalogo::find($articulo->unidad_medica_catalogo_id);
+
+                $articulo->modificado_por = $loggedUser->id;
+                $articulo->save();
+                $articulo->delete();
+
+                $total_elimindos = 1;
+            }
             $catalogo_unidad->ultima_modificacion_por = $loggedUser->id;
-            $catalogo_unidad->total_articulos -= 1;
-            $catalogo_unidad->save();
-
+            $catalogo_unidad->total_articulos -= $total_elimindos;
+            $catalogo_unidad->save();            
             DB::commit();
 
             return response()->json(['data'=>'Tipo de Pedido eliminado'], HttpResponse::HTTP_OK);

@@ -59,6 +59,10 @@ export class ListaCatalogosComponent implements OnInit {
   
   puedeEditarElementos: boolean;
 
+  modoSelecionMultiple: boolean;
+  listaArticulosSeleccionados: any;
+  conteoArticulosSeleccionados: number;
+
   formArticulo:FormGroup;
 
   ngOnInit(): void {
@@ -98,6 +102,13 @@ export class ListaCatalogosComponent implements OnInit {
     this.puedeEditarElementos = catalogo.puede_editar;
     this.dataSourceArticulos = new MatTableDataSource<any>([]);
 
+    if(!this.puedeEditarElementos && this.modoSelecionMultiple){
+      this.desactivarSeleccionMultiple();
+    }else if(this.modoSelecionMultiple){
+      this.conteoArticulosSeleccionados = 0;
+      this.listaArticulosSeleccionados = {};
+    }
+
     let params:any = {catalogo_id:catalogo.id};
     
     this.catalogoArticulosService.getListaArticulos(params).subscribe(
@@ -123,28 +134,40 @@ export class ListaCatalogosComponent implements OnInit {
     );
   }
 
-  expandirRow(row){
-    this.idArticuloSeleccionado = this.idArticuloSeleccionado === row.bien_servicio_id ? null : row.bien_servicio_id;
-
-    if(this.puedeEditarElementos && !this.formArticulo){
-      this.formArticulo = this.formBuilder.group({
-        id:[''],
-        bien_servicio_id:[''],
-        unidad_medica_catalogo_id:[''],
-        cantidad_minima:[''],
-        cantidad_maxima:[''],
-        es_indispensable:['']
-      });
-    }
-
-    if(this.puedeEditarElementos){
-      this.formArticulo.patchValue(row);
-      
-      setTimeout(() => {
-        if(this.inputFormField){
-          this.inputFormField.nativeElement.focus();
+  clickEnRow(row){
+    if(this.modoSelecionMultiple){
+      if(row.id){
+        if(!this.listaArticulosSeleccionados[row.id]){
+          this.listaArticulosSeleccionados[row.id] = true;
+          this.conteoArticulosSeleccionados += 1;
+        }else{
+          delete this.listaArticulosSeleccionados[row.id];
+          this.conteoArticulosSeleccionados -= 1;
         }
-      }, 10);
+      }
+    }else{
+      this.idArticuloSeleccionado = this.idArticuloSeleccionado === row.bien_servicio_id ? null : row.bien_servicio_id;
+
+      if(this.puedeEditarElementos && !this.formArticulo){
+        this.formArticulo = this.formBuilder.group({
+          id:[''],
+          bien_servicio_id:[''],
+          unidad_medica_catalogo_id:[''],
+          cantidad_minima:[''],
+          cantidad_maxima:[''],
+          es_indispensable:['']
+        });
+      }
+
+      if(this.puedeEditarElementos){
+        this.formArticulo.patchValue(row);
+        
+        setTimeout(() => {
+          if(this.inputFormField){
+            this.inputFormField.nativeElement.focus();
+          }
+        }, 10);
+      }
     }
   }
 
@@ -237,7 +260,7 @@ export class ListaCatalogosComponent implements OnInit {
     this.dataSourceArticulos.sort = this.sort;
 
     //this.idArticuloSeleccionado = articulo_catalogo.bien_servicio_id;
-    this.expandirRow(articulo_catalogo);
+    this.clickEnRow(articulo_catalogo);
     console.log(articulo_catalogo);
   }
 
@@ -282,6 +305,63 @@ export class ListaCatalogosComponent implements OnInit {
     });
   }
 
+  quitarMultiplesArticulos(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Quitar '+this.conteoArticulosSeleccionados+' Articulo(s)?',dialogMessage:'Esta seguro que desea quitar estos articulos de su catalogo?',btnColor:'warn',btnText:'Quitar'}
+    });
+
+    let articulo_id = 0;
+    let lista_articulos_ids:string = '';
+    let params:any = {borrado_multiple:true, unidad_medica_catalogo_id: this.idCatalogoSeleccionado, lista_ids:''};
+
+    for (let key in this.listaArticulosSeleccionados){
+      lista_articulos_ids += key+',';
+    }
+    params.lista_ids = lista_articulos_ids.slice(0,-1);
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.isSaving = true;
+        this.catalogoArticulosService.deleteArticulo(articulo_id,params).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            } else {
+              this.sharedService.showSnackBar('Articulos removidos con éxito', null, 3000);
+
+              for (let id in this.listaArticulosSeleccionados){
+                let index = this.dataSourceArticulos.data.findIndex(x => x.id === +id);
+                this.dataSourceArticulos.data.splice(index,1);
+              }
+
+              this.articulosTable.renderRows();
+              this.dataSourceArticulos.paginator = this.articulosPaginator;
+              this.dataSourceArticulos.sort = this.sort;
+              this.idArticuloSeleccionado = null;
+
+              let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
+              catalogo.total_articulos -= this.conteoArticulosSeleccionados;
+
+              this.conteoArticulosSeleccionados = 0;
+              this.listaArticulosSeleccionados = {};
+            }
+            this.isSaving = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isSaving = false;
+          }
+        );
+      }
+    });
+  }
+
   cerrarCaptura(){
     if(this.idCatalogoSeleccionado && this.puedeEditarElementos){
       const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
@@ -300,6 +380,7 @@ export class ListaCatalogosComponent implements OnInit {
                 this.sharedService.showSnackBar('Captura Terminada', null, 3000);
                 let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
                 catalogo.puede_editar = false;
+                catalogo.total_articulos = response.data.total_articulos;
                 this.puedeEditarElementos = false;
               }
               //this.isSaving = false;
@@ -316,6 +397,17 @@ export class ListaCatalogosComponent implements OnInit {
         }
       });
     }
+  }
+
+  activarSeleccionMultiple(){
+    this.modoSelecionMultiple = true;
+    this.listaArticulosSeleccionados = {};
+    this.conteoArticulosSeleccionados = 0;
+    this.idArticuloSeleccionado = null;
+  }
+
+  desactivarSeleccionMultiple(){
+    this.modoSelecionMultiple = false;
   }
 
   cancelarArticulo(articulo){

@@ -63,7 +63,7 @@ export class DialogoDetallesRegistroComponent implements OnInit {
         errorResponse =>{
           var errorMessage = "Ocurrió un error.";
           if(errorResponse.status == 409){
-            errorMessage = errorResponse.error.message;
+            errorMessage = errorResponse.error.error.message;
           }
           this.sharedService.showSnackBar(errorMessage, null, 3000);
           this.isLoading = false;

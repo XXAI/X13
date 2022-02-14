@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, Injectable, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, Injectable, Input, OnInit, Output, EventEmitter, SimpleChange } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { debounceTime, finalize, map, switchMap, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -109,6 +109,15 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
         this.sharedService.showSnackBar(errorMessage, null, 3000);
       }
     );
+  }
+
+  ngOnChanges(changes: SimpleChange){
+    for (const propName in changes) {
+      if(propName == 'filtro'){
+        console.log('reseteando buscador');
+        this.inputBuscadorArticulos.reset();
+      }
+    }
   }
 
   itemSeleccionado(item){

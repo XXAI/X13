@@ -159,6 +159,11 @@ tr.tabla-row-articulo-detalle{
     font-size: 22px !important;
 }
 
+.conteo-selccion{
+    font-size: small;
+    color: rgba(0, 0, 0, 0.55);
+}
+
 .small-search-input{
     padding: 0px 5px 5px 5px;
 }

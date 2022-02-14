@@ -445,6 +445,7 @@ class AlmacenEntradaController extends Controller
                 throw new Exception("No se puede eliminar este movimiento", 1);
             }
             
+            $movimiento->listaArticulos->cartaCanje()->delete();
             $movimiento->listaArticulos()->delete();
             $movimiento->listaArticulosBorrador()->delete();
             $movimiento->delete();

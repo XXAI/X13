@@ -4,6 +4,7 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { AdminCapturaSemanalService } from '../admin-captura-semanal.service';
 import { SharedService } from 'src/app/shared/shared.service';
 import { MatSort } from '@angular/material/sort';
+import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-dialogo-admin-captura-catalogos',
@@ -17,10 +18,12 @@ export class DialogoAdminCapturaCatalogosComponent implements OnInit {
 
   constructor(
     private adminCapturaService: AdminCapturaSemanalService,
-    private sharedService: SharedService
+    private sharedService: SharedService,
+    public dialogRef: MatDialogRef<DialogoAdminCapturaCatalogosComponent>,
   ) { }
 
   isLoading: boolean;
+  isSaving: boolean;
   filtroUnidades: string;
   filtroAplicado: boolean;
 
@@ -38,6 +41,7 @@ export class DialogoAdminCapturaCatalogosComponent implements OnInit {
   
   ngOnInit(): void {
     this.unidadesSeleccionadas = 0;
+    this.isLoading = true;
 
     this.adminCapturaService.obtenerListaUnidades().subscribe(
       response =>{
@@ -46,11 +50,9 @@ export class DialogoAdminCapturaCatalogosComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response.data);
           this.dataSourceUnidades = new MatTableDataSource<any>(response.data);
           this.dataSourceUnidades.paginator = this.articulosPaginator;
           this.dataSourceUnidades.sort = this.sort;
-          //this.articulosTable.renderRows();
         }
       },
       errorResponse =>{
@@ -83,12 +85,72 @@ export class DialogoAdminCapturaCatalogosComponent implements OnInit {
     }
   }
 
-  toggleEditarCatalogosGrupo(puede_editar,tipo_catalogo:string = '*'){
-    //
+  toggleEditarCatalogosGrupo(puede_editar:boolean,tipo_catalogo:string = '*'){
+    let grupo_unidades:any[] = [];
+    this.dataSourceUnidades.data.forEach(unidad =>{
+      if(unidad.seleccionado){
+        grupo_unidades.push(unidad.id);
+      }
+    });
+    this.aplicarEditarCatalogos(grupo_unidades,tipo_catalogo,puede_editar);
   }
 
-  toggleEditarCatalogos(unidad,tipo_catalogo:string = '*'){
-    //
+  toggleEditarCatalogos(unidad:any,puede_editar:boolean,tipo_catalogo:string = '*'){
+    let grupo_unidades:any[] = [];
+    grupo_unidades.push(unidad.id);
+    this.aplicarEditarCatalogos(grupo_unidades,tipo_catalogo,puede_editar);
+  }
+
+  aplicarEditarCatalogos(lista_unidades:any[],tipo_catalogo:string,puede_editar:boolean){
+    this.isSaving = true;
+    let params:any = {
+      unidades: lista_unidades,
+      tipo_catalogo: tipo_catalogo,
+      puede_editar: puede_editar,
+    };
+
+    this.adminCapturaService.configListaUnidades(params).subscribe(
+      response =>{
+        this.isSaving = false;
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          if(lista_unidades.length > 1){
+            this.dataSourceUnidades.data.forEach(unidad =>{
+              if(unidad.seleccionado){
+                if(tipo_catalogo == '*'){
+                  unidad.puede_editar_medicamentos = puede_editar;
+                  unidad.puede_editar_material_curacion = puede_editar;
+                }else if (tipo_catalogo == 'MED'){
+                  unidad.puede_editar_medicamentos = puede_editar;
+                }else{ //MTC
+                   unidad.puede_editar_material_curacion = puede_editar;
+                }
+              }
+            });
+          }else{
+            let unidad = this.dataSourceUnidades.data.find(item => item.id == lista_unidades[0]);
+            if(tipo_catalogo == '*'){
+              unidad.puede_editar_medicamentos = puede_editar;
+              unidad.puede_editar_material_curacion = puede_editar;
+            }else if (tipo_catalogo == 'MED'){
+              unidad.puede_editar_medicamentos = puede_editar;
+            }else{ //MTC
+               unidad.puede_editar_material_curacion = puede_editar;
+            }
+          }
+        }
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isSaving = false;
+      }
+    );
   }
 
   aplicarFiltroUnidades(event: Event){ 
@@ -102,6 +164,14 @@ export class DialogoAdminCapturaCatalogosComponent implements OnInit {
     }
   }
 
-  limpiarFiltroUnidades(){}
+  limpiarFiltroUnidades(){
+    this.filtroUnidades = '';
+    this.dataSourceUnidades.filter = '';
+    this.filtroAplicado = false;
+  }
+
+  cerrar(){
+    this.dialogRef.close();
+  }
 
 }

@@ -1,13 +1,17 @@
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
-    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
-        Administrar Captura de Catalogos de las Unidades Medicas
+    <section fxFlex="none" fxLayout="row" style="font-weight: 450; font-size: 20px; text-align: center;">
+        <div fxFlex></div>
+        <div fxFlex="none">Administrar Captura de Catalogos de las Unidades Medicas</div>
+        <div fxFlex fxLayoutAlign="end">
+            <button mat-flat-button (click)="cerrar()"><mat-icon>clear</mat-icon></button>
+        </div>
     </section>
     <div fxFlex fxLayout="column" style="overflow: auto;position:relative;">
-        <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+        <div class="data-loading-shade" *ngIf="isSaving"><mat-spinner></mat-spinner></div>
         <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
             <div fxFlex class="small-search-input">
                 <mat-form-field fxFlex appearance="outline">
-                    <input matInput [(ngModel)]="filtroUnidades" (keyup)="aplicarFiltroUnidades($event)" placeholder="Filtrar" autocomplete="off">
+                    <input matInput cdkFocusInitial [(ngModel)]="filtroUnidades" (keyup)="aplicarFiltroUnidades($event)" placeholder="Filtrar" autocomplete="off">
                 </mat-form-field>
             </div>
             <div fxFlex="none">
@@ -19,7 +23,7 @@
         <div fxFlex style="overflow: auto;">
             <table mat-table [dataSource]="dataSourceUnidades" class="data-table" matSort>
                 <ng-container matColumnDef="clues">
-                    <th mat-header-cell *matHeaderCellDef style="text-align: left;" width="1"><mat-checkbox [(ngModel)]="seleccionarTodo" (change)="toggleSeleccionarTodo()">CLUES</mat-checkbox> </th>
+                    <th mat-header-cell *matHeaderCellDef style="text-align: left;" width="1"><mat-checkbox color="primary" [(ngModel)]="seleccionarTodo" (change)="toggleSeleccionarTodo()">CLUES</mat-checkbox> </th>
                     <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
                         <mat-checkbox (change)="cambioSeleccion(row)" [(ngModel)]="row.seleccionado">{{row.clues}}</mat-checkbox>
                     </td>
@@ -33,21 +37,21 @@
                 <ng-container matColumnDef="cantidad_medicamentos" >
                     <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> Medicamentos </th>
                     <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> 
-                        <mat-icon>{{(row.puede_editar_medicamentos)?'lock_open':'done'}}</mat-icon> {{(row.cantidad_medicamentos)?(row.cantidad_medicamentos | number:'1.0-0'):'0'}} 
+                        <mat-icon class="icon-status">{{(row.puede_editar_medicamentos)?'lock_open':'lock'}}</mat-icon> {{(row.cantidad_medicamentos)?(row.cantidad_medicamentos | number:'1.0-0'):'0'}} 
                     </td>
                 </ng-container>
                 
                 <ng-container matColumnDef="cantidad_material_curacion" >
                     <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> Materiales de Curación </th>
                     <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> 
-                        <mat-icon>{{(row.puede_editar_material_curacion)?'lock_open':'done'}}</mat-icon> {{(row.cantidad_material_curacion)?(row.cantidad_material_curacion | number:'1.0-0'):'0'}} 
+                        <mat-icon class="icon-status">{{(row.puede_editar_material_curacion)?'lock_open':'lock'}}</mat-icon> {{(row.cantidad_material_curacion)?(row.cantidad_material_curacion | number:'1.0-0'):'0'}} 
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell width="1" *matHeaderCellDef>Acciones</th>
                     <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                        <button mat-icon-button  [matMenuTriggerFor]="menuAccionesUnidad" [matMenuTriggerData]="{unidad: row}">
+                        <button mat-icon-button [disabled]="unidadesSeleccionadas > 1" [matMenuTriggerFor]="menuAccionesUnidad" [matMenuTriggerData]="{unidad: row}">
                             <mat-icon>more_vert</mat-icon>
                         </button>
                     </td>
@@ -57,23 +61,28 @@
                     <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron Unidades Medicas </td>
                 </ng-container>
 
+                <ng-container matColumnDef="loadingResults">
+                    <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> Cargando Datos ... </td>
+                </ng-container>
+
                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide': dataSourceUnidades && dataSourceUnidades.filteredData.length > 0}"></tr>
+                <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide': isLoading || (dataSourceUnidades && dataSourceUnidades.filteredData.length > 0)}"></tr>
+                <tr mat-footer-row *matFooterRowDef="['loadingResults']" class="not-results-found" [ngClass]="{'hide': !isLoading}"></tr>
             </table>
         </div>
         <mat-menu #menuAccionesUnidad="matMenu">
             <ng-template matMenuContent let-unidad="unidad">
-                    <button mat-menu-item (click)="toggleEditarCatalogos(unidad)">
-                        <mat-icon>{{(unidad.puede_editar_medicamentos || unidad.puede_editar_material_curacion)?'lock':'lock_open'}}</mat-icon>
-                        <span>{{(unidad.puede_editar_medicamentos || unidad.puede_editar_material_curacion)?'Cerrar Edición':'Abrir Edición'}} Catalogos (Todos)</span>
+                    <button mat-menu-item (click)="toggleEditarCatalogos(unidad,!unidad.puede_editar_medicamentos)"  *ngIf="unidad.puede_editar_medicamentos == unidad.puede_editar_material_curacion">
+                        <mat-icon>{{(unidad.puede_editar_medicamentos)?'lock':'lock_open'}}</mat-icon>
+                        <span>{{(unidad.puede_editar_medicamentos)?'Cerrar Edición':'Abrir Edición'}} Catalogos (Todos)</span>
                     </button>
                     <mat-divider></mat-divider>
-                    <button mat-menu-item (click)="toggleEditarCatalogos(unidad,'MED')">
+                    <button mat-menu-item (click)="toggleEditarCatalogos(unidad,!unidad.puede_editar_medicamentos,'MED')">
                         <mat-icon>{{(unidad.puede_editar_medicamentos)?'lock':'lock_open'}}</mat-icon>
                         <span>{{(unidad.puede_editar_medicamentos)?'Cerrar Edición':'Abrir Edición'}} Medicamentos</span>
                     </button>
-                    <button mat-menu-item (click)="toggleEditarCatalogos(unidad,'MTC')">
+                    <button mat-menu-item (click)="toggleEditarCatalogos(unidad,!unidad.puede_editar_material_curacion,'MTC')">
                         <mat-icon>{{(unidad.puede_editar_material_curacion)?'lock':'lock_open'}}</mat-icon>
                         <span>{{(unidad.puede_editar_material_curacion)?'Cerrar Edición':'Abrir Edición'}} Materiales de Curación</span>
                     </button>
@@ -90,32 +99,27 @@
             </div>
         </div>
         <mat-menu #menuAccionesGrupo="matMenu" yPosition="above">
-            <ng-template matMenuContent>
-                    <button mat-menu-item (click)="toggleEditarCatalogosGrupo(true)">
-                        <mat-icon>lock_open</mat-icon>
-                        <span>Abrir Edición Catalogos (Todos)</span>
-                    </button>
-                    <button mat-menu-item (click)="toggleEditarCatalogosGrupo(false)">
-                        <mat-icon>lock</mat-icon>
-                        <span>Cerrar Edición Catalogos (Todos)</span>
-                    </button>
-                    <mat-divider></mat-divider>
-                    <button mat-menu-item (click)="toggleEditarCatalogosGrupo(true,'MED')">
-                        <mat-icon>lock_open</mat-icon>
-                        <span>Abrir Edición Medicamentos</span>
-                    </button>
-                    <button mat-menu-item (click)="toggleEditarCatalogosGrupo(false,'MED')">
-                        <mat-icon>lock</mat-icon>
-                        <span>Cerrar Edición Medicamentos</span>
-                    </button>
-                    <button mat-menu-item (click)="toggleEditarCatalogosGrupo(true,'MTC')">
-                        <mat-icon>lock_open</mat-icon>
-                        <span>Abrir Edición Materiales de Curación</span>
-                    </button>
-                    <button mat-menu-item (click)="toggleEditarCatalogosGrupo(false,'MTC')">
-                        <mat-icon>lock</mat-icon>
-                        <span>Cerrar Edición Materiales de Curación</span>
-                    </button>
+            <button mat-menu-item [matMenuTriggerFor]="accionesMenu" [matMenuTriggerData]="{catalogo: '*'}">
+                <span>Todos los Catalogos</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item [matMenuTriggerFor]="accionesMenu" [matMenuTriggerData]="{catalogo: 'MED'}">
+                <span>Medicamentos</span>
+            </button>
+            <button mat-menu-item [matMenuTriggerFor]="accionesMenu" [matMenuTriggerData]="{catalogo: 'MTC'}">
+                <span>Materiales de Curación</span>
+            </button>
+        </mat-menu>
+        <mat-menu #accionesMenu="matMenu">
+            <ng-template matMenuContent let-catalogo="catalogo">
+                <button mat-menu-item (click)="toggleEditarCatalogosGrupo(true,catalogo)">
+                    <mat-icon>lock_open</mat-icon>
+                    <span>Abrir Edición</span>
+                </button>
+                <button mat-menu-item (click)="toggleEditarCatalogosGrupo(false,catalogo)">
+                    <mat-icon>lock</mat-icon>
+                    <span>Cerrar Edición</span>
+                </button>
             </ng-template>
         </mat-menu>
     </div>

@@ -28,7 +28,10 @@
                 Seleccione un Catalogo
             </div>
             <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
-                <widget-buscador-articulos *ngIf="puedeEditarElementos" fxFlex="none" [filtro]="{tipo_articulo: idTipoArticuloSeleccionado}" [mostrarExistencias]="false" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-articulos>
+                <div *ngIf="modoSelecionMultiple" class="conteo-selccion">
+                    Total Seleccionado:<br> {{conteoArticulosSeleccionados}} Articulo(s)
+                </div>
+                <widget-buscador-articulos *ngIf="puedeEditarElementos &&  !modoSelecionMultiple" fxFlex="none" [filtro]="{tipo_articulo: idTipoArticuloSeleccionado}" [mostrarExistencias]="false" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-articulos>
                 <div fxFlex class="small-search-input">
                     <mat-form-field fxFlex appearance="outline">
                         <input matInput [(ngModel)]="filtroArticulos" (keyup)="aplicarFiltroArticulos($event)" placeholder="Filtrar" autocomplete="off">
@@ -83,7 +86,8 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell width="1" *matHeaderCellDef></th>
                         <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
-                            <mat-icon>{{(idArticuloSeleccionado == row.bien_servicio_id)?'expand_less':'expand_more'}}</mat-icon>
+                            <mat-icon *ngIf="!modoSelecionMultiple">{{(idArticuloSeleccionado == row.bien_servicio_id)?'expand_less':'expand_more'}}</mat-icon>
+                            <mat-icon *ngIf="modoSelecionMultiple && row.id">{{(listaArticulosSeleccionados[row.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
                         </td>
                     </ng-container>
 
@@ -143,7 +147,7 @@
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                     <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;" 
-                        (click)="expandirRow(row)" [class.tabla-row-articulo-expandido]="idArticuloSeleccionado === row.bien_servicio_id" >
+                        (click)="clickEnRow(row)" [class.tabla-row-articulo-expandido]="idArticuloSeleccionado === row.bien_servicio_id" >
                     <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="tabla-row-articulo-detalle"></tr>
 
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide': dataSourceArticulos && dataSourceArticulos.filteredData.length > 0}"></tr>
@@ -151,6 +155,10 @@
             </div>
             <div fxFlex="none" fxLayout="row">
                 <div fxFlex="none" style="padding-top: 10px;">
+                    <button mat-stroked-button color="warn" *ngIf="puedeEditarElementos && !modoSelecionMultiple" (click)="activarSeleccionMultiple()">Activar Selección Multiple</button>
+                    <button mat-stroked-button *ngIf="modoSelecionMultiple" (click)="desactivarSeleccionMultiple()">Desactivar</button>
+                    &nbsp;
+                    <button mat-flat-button *ngIf="modoSelecionMultiple" color="warn" [disabled]="conteoArticulosSeleccionados == 0" (click)="quitarMultiplesArticulos()">Eliminar</button>
                 </div>
                 <div fxFlex>
                     <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>

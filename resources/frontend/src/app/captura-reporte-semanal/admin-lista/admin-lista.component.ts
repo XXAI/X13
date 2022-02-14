@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { CapturaReporteSemanalService } from '../captura-reporte-semanal.service';
+import { AdminCapturaSemanalService } from '../admin-captura-semanal.service';
 import { SharedService } from '../../shared/shared.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogoDetallesRegistroComponent } from '../dialogo-detalles-registro/dialogo-detalles-registro.component';
@@ -22,12 +23,17 @@ import {map, startWith} from 'rxjs/operators';
 export class AdminListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  constructor(private capturaReporteSemanalService: CapturaReporteSemanalService, private sharedService: SharedService, private dialog: MatDialog, public datepipe: DatePipe) {
-  }
+  constructor(
+    private capturaReporteSemanalService: CapturaReporteSemanalService, 
+    private adminCapturaSemanalService: AdminCapturaSemanalService,
+    private sharedService: SharedService, 
+    private dialog: MatDialog, 
+    public datepipe: DatePipe) {}
 
   semanas: any[];
   semanaSeleccionada:number;
   semanaActiva: any;
+  semanaActual: any;
   
   isLoading: boolean = false;
   isLoadingExcel: boolean = false;
@@ -39,7 +45,7 @@ export class AdminListaComponent implements OnInit {
   pageSize: number = 50;
   selectedItemIndex: number = -1;
 
-  displayedColumns: string[] = ['unidad_medica','fechas','total_claves','total_porcentaje','actions'];
+  displayedColumns: string[] = ['unidad_medica','caducidad_3_meses','caducidad_4_6_meses','total_claves','total_porcentaje','actions'];
   dataSource: MatTableDataSource<any>;
   listadoRegistros: any[] = [];
 
@@ -56,7 +62,7 @@ export class AdminListaComponent implements OnInit {
         } else {
           this.semanas = response.data.semanas_capturadas;
           this.semanaActiva = response.data.semana_activa;
-
+          this.semanaActual = this.semanaActiva;
           if(this.semanaActiva){
             this.semanaSeleccionada = this.semanaActiva.id;
           }else{
@@ -102,6 +108,8 @@ export class AdminListaComponent implements OnInit {
         } else {
           this.listadoRegistros = response.data.data;
           this.resultsLength = response.data.total;
+          let semana = this.semanas.find(item => item.id == this.semanaSeleccionada);
+          this.semanaActual = semana;
         }
         this.isLoading = false;
       },
@@ -176,6 +184,38 @@ export class AdminListaComponent implements OnInit {
 
   imprimirPDF(id){
     //imprimir pdf
+  }
+
+  recalcularPorcentajes(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Recalcular porcentajes?',dialogMessage:'Esta seguro que desea recacular el porcentaje de existencias en base al catalogo por unidad?',btnColor:'primary',btnText:'Recalcular'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.adminCapturaSemanalService.recalcularPorcentajes(this.semanaSeleccionada).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error.message;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            } else {
+              this.sharedService.showSnackBar('Proceso Terminado', null, 3000);
+              this.loadListadoRegistros();
+            }
+            //this.isSaving = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isSaving = false;
+          }
+        );
+      }
+    });
   }
 
   imprimirReporteExcel(){

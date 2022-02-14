@@ -64,8 +64,8 @@ export class CatalogoArticulosService {
     ));
   }
 
-  deleteArticulo(id) {
-    return this.http.delete<any>(this.url+'/'+id,{}).pipe(
+  deleteArticulo(id,payload:any={}) {
+    return this.http.delete<any>(this.url+'/'+id,{params: payload}).pipe(
       map( (response) => {
         return response;
       }

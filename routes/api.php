@@ -100,8 +100,9 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('excel-admin-reporte-abasto',                    'API\Modulos\CapturaReporteAbastoSurtimientoController@exportAdminExcel');
     Route::apiResource('cap-reporte-abasto-surtimiento',        'API\Modulos\CapturaReporteAbastoSurtimientoController');
     Route::apiResource('config-cap-abasto-surtimiento',         'API\Modulos\ConfigCapturaAbastoSurtimientoController');
-    Route::get('config-cap-abasto-lista-unidades-catalogos',    'API\Modulos\ConfigCapturaAbastoSurtimientoController@getListaUnidadesMedicasCatalogos');
-
+    Route::put('config-cap-abasto-surtimiento-recalcular/{id}', 'API\Modulos\ConfigCapturaAbastoSurtimientoController@recalcularPorcentajes');
+    Route::get('config-lista-unidades-catalogos',               'API\Modulos\ConfigCapturaAbastoSurtimientoController@getListaUnidadesMedicasCatalogos');
+    Route::post('config-lista-unidades-catalogos-editar',       'API\Modulos\ConfigCapturaAbastoSurtimientoController@adminListaUnidadesMedicasCatalogos');
 
     /*
     *   Modulos generales

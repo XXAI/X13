@@ -13,13 +13,21 @@
                         </mat-select>
                     </mat-form-field>
                 </div>
-                <div fxFlex></div>
                 <div fxFlex="none">
-                    <button mat-mini-fab color="accent" (click)="imprimirReporteExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
-                        <mat-icon>print</mat-icon>
+                    <button mat-icon-button [matTooltip]="'Recargar'" [class.button-spinner]="isLoading" [disabled]="isLoading" (click)="loadListadoRegistros()">
+                        <mat-icon>refresh</mat-icon>
                     </button>
                 </div>
                 <div fxFlex></div>
+                <div fxFlex="none" class="datos-semana" *ngIf="semanaActual">
+                    <span class="titulo">Semana Seleccionada</span><br><span class="datos">[{{semanaActual.fecha_inicio | date:'d MMM, y'}}] - [{{semanaActual.fecha_fin | date:'d MMM, y'}}]</span>
+                </div>
+                <div fxFlex></div>
+                <div fxFlex="none">
+                    <button mat-icon-button [matTooltip]="'Imprimir Reporte Excel'" (click)="imprimirReporteExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
+                        <mat-icon>print</mat-icon>
+                    </button>
+                </div>
                 <div fxFlex="none">
                     <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuAcciones" aria-label="Acciones">
                         <mat-icon>tune</mat-icon> Acciones <mat-icon>arrow_drop_down</mat-icon>
@@ -27,6 +35,11 @@
                 </div>
             </div>
             <mat-menu #menuAcciones="matMenu">
+                <button mat-menu-item (click)="recalcularPorcentajes()">
+                    <mat-icon>calculate</mat-icon>
+                    <span>Recalcular % (Catalogos)</span>
+                </button>
+                <mat-divider></mat-divider>
                 <button mat-menu-item (click)="verAdminCapturaCatalogos()">
                     <mat-icon>manage_accounts</mat-icon>
                     <span>Admin. Captura de Catalogos</span>
@@ -34,10 +47,6 @@
                 <button mat-menu-item (click)="verAdminSemanasCaptura()">
                     <mat-icon>settings</mat-icon>
                     <span>Configurar Semanas</span>
-                </button>
-                <button mat-menu-item (click)="loadListadoRegistros()">
-                    <mat-icon>refresh</mat-icon>
-                    <span>Recargar Datos</span>
                 </button>
             </mat-menu>
         </mat-card>
@@ -51,11 +60,16 @@
                         <td mat-cell *matCellDef="let row" style="white-space: nowrap;"  width="1"> [{{row.clues}}]<br>{{row.nombre_unidad}} </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="fechas">
-                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;" width="1"> Fecha<br>[Inicio - Fin] </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">[{{row.fecha_inicio}}] - [{{row.fecha_fin}}]</span> </td>
+                    <ng-container matColumnDef="caducidad_3_meses">
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;" width="1"> Caduca en<br>< de 3 Meses </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id" [matTooltip]="row.caducidad_3_meses_total_claves + ' claves'" [matTooltipPosition]="'before'">{{row.caducidad_3_meses_total_piezas | number}} pzas.</span> </td>
                     </ng-container>
-                    
+
+                    <ng-container matColumnDef="caducidad_4_6_meses">
+                        <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;" width="1"> Caduca de<br>4 a 6 Meses </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id" [matTooltip]="row.caducidad_4_6_meses_total_claves + ' claves'" [matTooltipPosition]="'after'">{{row.caducidad_4_6_meses_total_piezas | number}} pzas.</span> </td>
+                    </ng-container>
+
                     <ng-container matColumnDef="total_claves" >
                         <th mat-header-cell *matHeaderCellDef fxHide.xs style="text-align: center; white-space: nowrap;"> Total Claves<br>Catalogo/Existentes </th>
                         <td mat-cell *matCellDef="let row" fxHide.xs style="text-align: center;"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">{{row.total_claves_catalogo | number:'1.0-0'}} / {{row.total_claves_existentes | number:'1.0-0'}}</span> </td>

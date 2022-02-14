@@ -166,7 +166,14 @@ class CapturaReporteAbastoSurtimientoController extends Controller
                 throw new \Exception("Registro no encontrado", 1);
             }
 
+            $tiene_acceso = true;
             if($loggedUser->unidad_medica_asignada_id && $loggedUser->unidad_medica_asignada_id != $registro->unidad_medica_id){
+                if(!$this->authorize('has-permission','BjvroJXhbaJvcKrBnxHpRRBq2u6BovUN')){
+                    $tiene_acceso = false;
+                }
+            }
+
+            if(!$tiene_acceso){
                 throw new \Exception("El usuario no tiene acceso a este registro", 1);
             }
 

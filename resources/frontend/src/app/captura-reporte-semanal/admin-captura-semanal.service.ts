@@ -10,7 +10,9 @@ import { map } from 'rxjs/operators';
 
 export class AdminCapturaSemanalService {
   url_semanas = `${environment.base_url}/config-cap-abasto-surtimiento`;
-  url_lista_unidades = `${environment.base_url}/config-cap-abasto-lista-unidades-catalogos`;
+  url_lista_unidades = `${environment.base_url}/config-lista-unidades-catalogos`;
+  url_config_lista_unidades = `${environment.base_url}/config-lista-unidades-catalogos-editar`;
+  url_recalcular_porcentajes = `${environment.base_url}/config-cap-abasto-surtimiento-recalcular`;
   
   constructor(private http: HttpClient) { }
 
@@ -28,6 +30,22 @@ export class AdminCapturaSemanalService {
         return response;
       })
     );
+  }
+
+  configListaUnidades(payload) {
+    return this.http.post<any>(this.url_config_lista_unidades,payload).pipe(
+      map( (response) => {
+        return response;
+      }
+    ));
+  }
+
+  recalcularPorcentajes(id){
+    return this.http.put<any>(this.url_recalcular_porcentajes+'/'+id,{}).pipe(
+      map( (response) => {
+        return response;
+      }
+    ));
   }
 
   borrarSemana(id,payload:any={}){
