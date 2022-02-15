@@ -408,6 +408,8 @@ export class ListaCatalogosComponent implements OnInit {
 
   desactivarSeleccionMultiple(){
     this.modoSelecionMultiple = false;
+    this.listaArticulosSeleccionados = {};
+    this.conteoArticulosSeleccionados = 0;
   }
 
   cancelarArticulo(articulo){

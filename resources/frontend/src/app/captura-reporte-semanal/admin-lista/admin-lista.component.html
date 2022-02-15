@@ -62,12 +62,12 @@
 
                     <ng-container matColumnDef="caducidad_3_meses">
                         <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;" width="1"> Caduca en<br>< de 3 Meses </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id" [matTooltip]="row.caducidad_3_meses_total_claves + ' claves'" [matTooltipPosition]="'before'">{{row.caducidad_3_meses_total_piezas | number}} pzas.</span> </td>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"  width="1" [matTooltip]="((row.id)?row.caducidad_3_meses_total_claves  + ' claves':'S/R')" [matTooltipPosition]="'before'"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">{{row.caducidad_3_meses_total_piezas | number}} pzas.</span> </td>
                     </ng-container>
 
                     <ng-container matColumnDef="caducidad_4_6_meses">
                         <th mat-header-cell *matHeaderCellDef style="text-align: center; white-space: nowrap;" width="1"> Caduca de<br>4 a 6 Meses </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"  width="1"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id" [matTooltip]="row.caducidad_4_6_meses_total_claves + ' claves'" [matTooltipPosition]="'after'">{{row.caducidad_4_6_meses_total_piezas | number}} pzas.</span> </td>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"  width="1" [matTooltip]="((row.id)?row.caducidad_4_6_meses_total_claves  + ' claves':'S/R')" [matTooltipPosition]="'after'"> <span class="not-results-found" *ngIf="!row.id">Sin Registro</span><span *ngIf="row.id">{{row.caducidad_4_6_meses_total_piezas | number}} pzas.</span> </td>
                     </ng-container>
 
                     <ng-container matColumnDef="total_claves" >

@@ -63,7 +63,7 @@
                     
                     <ng-container matColumnDef="articulo" >
                         <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Descripción </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.articulo}} </td>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" [matTooltip]="row.especificaciones"> {{row.articulo}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="cantidad_minima" >
@@ -146,8 +146,9 @@
                     </ng-container>
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;" 
-                        (click)="clickEnRow(row)" [class.tabla-row-articulo-expandido]="idArticuloSeleccionado === row.bien_servicio_id" >
+                    <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;" (click)="clickEnRow(row)" 
+                                [class.tabla-row-articulo-expandido]="idArticuloSeleccionado === row.bien_servicio_id"
+                                [class.tabla-row-seleccionada]="listaArticulosSeleccionados && listaArticulosSeleccionados[row.id]">
                     <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="tabla-row-articulo-detalle"></tr>
 
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide': dataSourceArticulos && dataSourceArticulos.filteredData.length > 0}"></tr>

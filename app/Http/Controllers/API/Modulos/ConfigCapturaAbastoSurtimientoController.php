@@ -156,7 +156,9 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
                                                         ->leftJoin('corte_reporte_abasto_surtimiento as corte',function($join){
                                                             $join->on('corte.config_captura_id','=','config_captura_abasto_surtimiento.id')->whereNull('corte.deleted_at');
                                                         })
-                                                        ->orderBy('no_semana','DESC')->orderBy('fecha_fin','DESC')
+                                                        ->orderBy('ejercicio','DESC')
+                                                        ->orderBy('no_semana','DESC')
+                                                        ->orderBy('fecha_fin','DESC')
                                                         ->groupBy('config_captura_abasto_surtimiento.id');
 
             //Filtros, busquedas, ordenamiento

@@ -105,6 +105,10 @@ table td .icono.indispensable{
     display: none;
 }
 
+tr.tabla-row-seleccionada{
+    font-weight: bold;
+}
+
 tr.tabla-row-articulo{
     cursor: pointer;
 }
