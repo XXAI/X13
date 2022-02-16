@@ -14,3 +14,63 @@
     align-items: center;
     justify-content: center;
 }
+
+.desabasto{
+    color: red;
+}
+
+.abasto{
+    color:green;
+}
+
+.field-list{
+    padding:5px;
+}
+
+.field{
+    background-color: whitesmoke;
+    padding:5px;
+    cursor: default;
+}
+
+.field .field-label{
+    color: rgba(0,0,0,.75);
+    font-weight: 500;
+    font-size: medium;
+    border-bottom: 1px solid rgba(0,0,0,.75);
+}
+
+.field .field-value{
+    font-weight: 400;
+    font-size: medium;
+}
+
+.field-title{
+    background-color: rgba(0,0,0,.80);
+    padding: 5px;
+    font-weight: 500;
+    font-size: large;
+    color:white;
+    text-align: center;
+}
+
+.field .field-group{
+    display: flex;
+}
+
+.field .field-group .field-item{
+    flex: 1 1 auto;
+}
+
+.field .field-group .field-item .field-label{
+    border-bottom: none;
+    border-top: 1px solid rgba(0,0,0,.75);
+    font-size: small;
+    text-align: center;
+    padding: 0px 5px;
+}
+
+.field .field-group .field-item .field-value{
+    text-align: center;
+    padding: 0px 5px;
+}

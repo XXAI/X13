@@ -40,9 +40,9 @@ class ConfigCapturaAbastoSurtimientoController extends Controller{
 
             $unidades = UnidadMedicaCatalogo::select('unidad_medica_catalogo.unidad_medica_id as id','catalogo_unidades_medicas.clues','catalogo_unidades_medicas.nombre',
                                             DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.total_articulos,0)) AS cantidad_medicamentos'),
-                                            DB::raw('IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.puede_editar,0) AS puede_editar_medicamentos'),
+                                            DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 1, unidad_medica_catalogo.puede_editar,0)) AS puede_editar_medicamentos'),
                                             DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.total_articulos,0)) AS cantidad_material_curacion'),
-                                            DB::raw('IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.puede_editar,0) AS puede_editar_material_curacion'))
+                                            DB::raw('SUM(IF(unidad_medica_catalogo.tipo_bien_servicio_id = 2, unidad_medica_catalogo.puede_editar,0)) AS puede_editar_material_curacion'))
                                             ->leftjoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','unidad_medica_catalogo.unidad_medica_id')
                                             ->groupBy('unidad_medica_id')
                                             ->orderBy('catalogo_unidades_medicas.nombre')

@@ -6,7 +6,7 @@
             <button mat-flat-button (click)="cerrar()"><mat-icon>clear</mat-icon></button>
         </div>
     </section>
-    <div fxFlex fxLayout="column" style="overflow: auto;position:relative;">
+    <div fxFlex fxLayout="column" style="overflow: hidden; position:relative;">
         <div class="data-loading-shade" *ngIf="isSaving"><mat-spinner></mat-spinner></div>
         <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
             <div fxFlex class="small-search-input">

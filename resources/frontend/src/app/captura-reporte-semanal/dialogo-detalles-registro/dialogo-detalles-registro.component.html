@@ -4,8 +4,141 @@
     </section>
     <div fxFlex fxLayout="column" style="overflow: auto;position:relative;">
         <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+        <div fxFlex="none" fxLayout="row" *ngIf="registro" class="field-list">
+            <div fxFlex="none" class="field">
+                <div class="field-label">Rango de Fechas</div>
+                <div class="field-value">{{registro.fecha_inicio | date:'d MMM, y'}} - {{registro.fecha_fin | date:'d MMM, y'}}</div>
+            </div>
+        </div>
+        <div fxFlex="none" fxLayout="row raw" *ngIf="registro" class="field-list">
+            <div fxFlex="33" class="field">
+                <div class="field-title">Claves de Medicamentos</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.claves_medicamentos_catalogo | number:'1.0-0'}}</div>
+                        <div class="field-label">Catalogo</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.claves_medicamentos_existentes | number:'1.0-0'}}</div>
+                        <div class="field-label">Existentes</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value" [ngClass]="{'desabasto':registro.claves_medicamentos_porcentaje<70,'abasto':registro.claves_medicamentos_porcentaje>=70}" >
+                            {{registro.claves_medicamentos_porcentaje | number:'1.0-2'}} %
+                        </div>
+                        <div class="field-label">Porcentaje</div>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="34" class="field">
+                <div class="field-title">Claves de Mat. de Curación</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.claves_material_curacion_catalogo | number:'1.0-0'}}</div>
+                        <div class="field-label">Catalogo</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.claves_material_curacion_existentes | number:'1.0-0'}}</div>
+                        <div class="field-label">Existentes</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value" [ngClass]="{'desabasto':registro.claves_material_curacion_porcentaje<70,'abasto':registro.claves_material_curacion_porcentaje>=70}" >
+                            {{registro.claves_material_curacion_porcentaje | number:'1.0-2'}} %
+                        </div>
+                        <div class="field-label">Porcentaje</div>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="32" class="field">
+                <div class="field-title">Total de Claves</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.total_claves_catalogo | number:'1.0-0'}}</div>
+                        <div class="field-label">Catalogo</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.total_claves_existentes | number:'1.0-0'}}</div>
+                        <div class="field-label">Existentes</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value" [ngClass]="{'desabasto':registro.total_claves_porcentaje<70,'abasto':registro.total_claves_porcentaje>=70}" >
+                            {{registro.total_claves_porcentaje | number:'1.0-2'}} %
+                        </div>
+                        <div class="field-label">Porcentaje</div>
+                    </div>
+                </div>
+            </div>
+
+            <div fxFlex="11"></div>
+            <div fxFlex="34" class="field">
+                <div class="field-title">Recetas Completas</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.recetas_recibidas | number:'1.0-0'}}</div>
+                        <div class="field-label">Recibidas</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.recetas_surtidas | number:'1.0-0'}}</div>
+                        <div class="field-label">Surtidas</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">% {{registro.recetas_porcentaje | number:'1.0-2'}}</div>
+                        <div class="field-label">Porcentaje</div>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="10"></div>
+            <div fxFlex="34" class="field">
+                <div class="field-title">Colectivos Completos</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.colectivos_recibidos | number:'1.0-0'}}</div>
+                        <div class="field-label">Recibidos</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.colectivos_surtidos | number:'1.0-0'}}</div>
+                        <div class="field-label">Surtidos</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">% {{registro.colectivos_porcentaje | number:'1.0-2'}}</div>
+                        <div class="field-label">Porcentaje</div>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="11"></div>
+
+            <div fxFlex="11"></div>
+            <div fxFlex="34" class="field">
+                <div class="field-title">Caducidad < 3 Meses</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.caducidad_3_meses_total_claves | number:'1.0-0'}}</div>
+                        <div class="field-label">Claves</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.caducidad_3_meses_total_piezas | number:'1.0-0'}}</div>
+                        <div class="field-label">Piezas</div>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="10"></div>
+            <div fxFlex="34" class="field">
+                <div class="field-title">Caducidad de 4 a 6 Meses</div>
+                <div class="field-group">
+                    <div class="field-item">
+                        <div class="field-value">{{registro.caducidad_4_6_meses_total_claves | number:'1.0-0'}}</div>
+                        <div class="field-label">Claves</div>
+                    </div>
+                    <div class="field-item">
+                        <div class="field-value">{{registro.caducidad_4_6_meses_total_piezas | number:'1.0-0'}}</div>
+                        <div class="field-label">Piezas</div>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="11"></div>
+        </div>
         <div fxFlex fxLayout="row raw" [formGroup]="registroForm">
-            <mat-form-field fxFlex="100" appearance="fill">
+            <!--mat-form-field fxFlex="100" appearance="fill">
                 <mat-label>Rango de Fechas del registro: </mat-label>
                 <input matInput placeholder="Inicio - Fin" formControlName="rango_inicio_fin" [readonly]="true">
             </mat-form-field>
@@ -50,7 +183,7 @@
             </mat-form-field>
             <mat-form-field fxFlex="25" fxFlex.xs="100">
                 <input matInput placeholder="Piezas con Caducidad de 4 a 6 Meses" formControlName="caducidad_4_6_meses_total_piezas" [readonly]="true">
-            </mat-form-field>
+            </mat-form-field-->
         </div>
     </div>
     <section fxFlex="none" fxLayout="row">

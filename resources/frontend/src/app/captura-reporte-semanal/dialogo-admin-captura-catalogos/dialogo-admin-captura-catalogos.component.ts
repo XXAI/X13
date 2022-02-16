@@ -50,6 +50,10 @@ export class DialogoAdminCapturaCatalogosComponent implements OnInit {
           let errorMessage = response.error.message;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
+          response.data.forEach(unidad => {
+            unidad.puede_editar_medicamentos = (unidad.puede_editar_medicamentos==1);
+            unidad.puede_editar_material_curacion = (unidad.puede_editar_material_curacion==1);
+          });
           this.dataSourceUnidades = new MatTableDataSource<any>(response.data);
           this.dataSourceUnidades.paginator = this.articulosPaginator;
           this.dataSourceUnidades.sort = this.sort;

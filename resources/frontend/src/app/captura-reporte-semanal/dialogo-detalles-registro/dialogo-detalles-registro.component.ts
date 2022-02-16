@@ -27,6 +27,7 @@ export class DialogoDetallesRegistroComponent implements OnInit {
 
   isLoading:boolean;
   registroForm: FormGroup;
+  registro: any;
   
   ngOnInit(): void {
     this.isLoading = true;
@@ -55,6 +56,8 @@ export class DialogoDetallesRegistroComponent implements OnInit {
             let errorMessage = response.error.message;
             this.sharedService.showSnackBar(errorMessage, null, 3000);
           } else {
+            console.log(response.data);
+            this.registro = response.data;
             response.data.rango_inicio_fin = response.data.fecha_inicio + ' - ' + response.data.fecha_fin;
             this.registroForm.patchValue(response.data);
           }
