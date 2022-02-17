@@ -44,7 +44,7 @@ export class FormComponent implements OnInit {
     'is_superuser': [false],
     'avatar': [''],
     'unidad_medica_asignada':[''],
-    'unidad_medica_asignada_id':['',Validators.required],
+    'unidad_medica_asignada_id':[''],
     'roles': [[]],
     'permissions': [[]],
     'groups': [[]],
