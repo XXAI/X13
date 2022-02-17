@@ -61,9 +61,9 @@ class AlmacenMovimientosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            if($loggedUser->is_superuser){
-                $parametros['buscar_catalogo_completo'] = true;
-            }
+            //if($loggedUser->is_superuser){
+            $parametros['buscar_catalogo_completo'] = true;
+            //}
 
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 

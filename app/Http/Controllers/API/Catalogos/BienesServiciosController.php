@@ -24,9 +24,9 @@ class BienesServiciosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            if($loggedUser->is_superuser){
-                $parametros['buscar_catalogo_completo'] = true;
-            }
+            //if($loggedUser->is_superuser){
+            $parametros['buscar_catalogo_completo'] = true;
+            //}
 
             $catalogo_articulos = BienServicio::select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                         'unidad_medica_catalogo_articulos.es_indispensable','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
