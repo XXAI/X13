@@ -13,6 +13,8 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
+import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
+
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -152,14 +154,19 @@ export class ListaComponent implements OnInit {
   }
 
   cancelarEntrada(id){
-    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
-      width: '500px',
-      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta entrada? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
-    });
+    let configDialog = {
+      width: '350px',
+      maxHeight: '90vh',
+      height: '340px',
+      data:{},
+      panelClass: 'no-padding-dialog'
+    };
 
-    dialogRef.afterClosed().subscribe(valid => {
-      if(valid){
-        this.entradasService.cancelarEntrada(id).subscribe(
+    const dialogRef = this.dialog.open(DialogoCancelarMovimientoComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(dialogResponse => {
+      if(dialogResponse){
+        this.entradasService.cancelarEntrada(id,dialogResponse).subscribe(
           response =>{
             if(response.error) {
               let configDialog = {

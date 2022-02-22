@@ -16,7 +16,7 @@ class Almacen extends Model{
         return $this->belongsTo('App\Models\UnidadMedica','unidad_medica_id','id');
     }
 
-    public function tipo_almacen(){   
+    public function tipoAlmacen(){   
         return $this->belongsTo('App\Models\TipoAlmacen','tipo_almacen_id','id');
     }
 

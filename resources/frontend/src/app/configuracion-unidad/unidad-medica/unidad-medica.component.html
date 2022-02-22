@@ -1,0 +1,32 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+    <mat-card fxFlex fxLayout="column">
+        <section fxFlex="none" class="sin-unidad" *ngIf="!unidadMedica">
+            Sin Unidad Médica Asignada
+        </section>
+        <section fxFlex="none" fxLayout="row" fxLayoutGap="10px" class="encabezado" *ngIf="unidadMedica">
+            <section fxFlex="none" class="icono"><mat-icon>home_work</mat-icon></section>
+            <section fxFlex fxLayout="column" class="informacion">
+                <div fxFlex>{{unidadMedica.clues}}</div>
+                <div fxFlex>{{unidadMedica.nombre}}</div>
+                <div fxFlex>{{unidadMedica.direccion}}</div>
+                <div fxFlex>{{(unidadMedica.distrito)?unidadMedica.distrito.descripcion:'Sin Asignar'}}</div>
+            </section>
+        </section>
+        <mat-divider [inset]="true"></mat-divider>
+        <section fxFlex fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="space-around start" class="tarjetero">
+            <div fxFlex="none" class="tarjeta" *ngFor="let tarjeta of tarjetas">
+                <div class="titulo">{{tarjeta.titulo}}</div>
+                <div class="subtitulo">{{tarjeta.subtitulo}}</div>
+                <div class="detalles">
+                    <div class="lista" *ngIf="tarjeta.lista">
+                        <div class="item" *ngFor="let item of tarjeta.lista">
+                            <div class="titulo">{{item.titulo}}</div>
+                            <div class="subtitulo">{{item.subtitulo}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </mat-card>
+</section>

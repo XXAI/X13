@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, LOCALE_ID } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
@@ -41,6 +41,11 @@ import { PedidosModule } from './pedidos/pedidos.module';
 import { CapturaReporteSemanalModule } from './captura-reporte-semanal/captura-reporte-semanal.module';
 import { ConfiguracionUnidadModule } from './configuracion-unidad/configuracion-unidad.module';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
+
+//Para el Lenguaje de las Fechas
+import { registerLocaleData } from '@angular/common';
+import locale from '@angular/common/locales/es-MX';
+registerLocaleData(locale);
 
 @NgModule({
   declarations: [
@@ -94,6 +99,10 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
     },
     {
       provide: MAT_DATE_LOCALE, 
+      useValue: 'es-MX'
+    },
+    { 
+      provide: LOCALE_ID, 
       useValue: 'es-MX'
     },
     SharedService

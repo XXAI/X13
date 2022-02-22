@@ -271,7 +271,7 @@
                                             </div>
                                             <div fxFlex="none" fxLayout="row">
                                                 <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Indispensable" *ngIf="articulo.indispensable" style="color:green;">notification_important</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">notification_important</mat-icon>
                                                 <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
                                                 <div fxFlex></div>
                                                 <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos">

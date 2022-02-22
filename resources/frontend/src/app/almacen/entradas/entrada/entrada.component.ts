@@ -17,6 +17,7 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import { ReportWorker } from 'src/app/web-workers/report-worker';
 import * as FileSaver from 'file-saver';
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
+import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 
 @Component({
   selector: 'app-entrada',
@@ -243,7 +244,7 @@ export class EntradaComponent implements OnInit {
                     tipo_articulo: lista_articulos[i].articulo.tipo_bien_servicio,
                     tipo_formulario: lista_articulos[i].articulo.clave_form,
                     en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
-                    indispensable: (lista_articulos[i].articulo.es_indispensable)?true:false,
+                    normativo: (lista_articulos[i].articulo.es_normativo)?true:false,
                     descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
                     total_monto: lista_articulos[i].total_monto,
                     no_lotes: 1,
@@ -502,14 +503,19 @@ export class EntradaComponent implements OnInit {
   cancelarEntrada(){
     let id = this.formMovimiento.get('id').value;
 
-    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
-      width: '500px',
-      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta entrada? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
-    });
+    let configDialog = {
+      width: '350px',
+      maxHeight: '90vh',
+      height: '340px',
+      data:{},
+      panelClass: 'no-padding-dialog'
+    };
 
-    dialogRef.afterClosed().subscribe(valid => {
-      if(valid){
-        this.entradasService.cancelarEntrada(id).subscribe(
+    const dialogRef = this.dialog.open(DialogoCancelarMovimientoComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(dialogResponse => {
+      if(dialogResponse){
+        this.entradasService.cancelarEntrada(id,dialogResponse).subscribe(
           response =>{
             if(response.error) {
               let configDialog = {

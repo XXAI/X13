@@ -405,10 +405,12 @@ class AlmacenSalidaController extends Controller
         }
     }
 
-    public function cancelarMovimiento($id){
+    public function cancelarMovimiento($id,Request $request){
         try{
             DB::beginTransaction();
-
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+            
             $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
 
             if($movimiento->estatus != 'FIN'){
@@ -417,13 +419,14 @@ class AlmacenSalidaController extends Controller
             
             $control_stocks = [];
             foreach ($movimiento->listaArticulos as $articulo) {
-                $stock = $articulo->stock;
-                $stock->existencia = $stock->existencia + $articulo->cantidad;
-                $stock->save();
+                if($articulo->stock){
+                    $stock = $articulo->stock;
+                    $stock->existencia = $stock->existencia + $articulo->cantidad;
+                    $stock->save();
+                }
             }
 
-            $movimiento->estatus = 'CAN';
-            $movimiento->save();
+            $movimiento->update(['cancelado_por_usuario_id'=>$loggedUser->id, 'estatus'=>'CAN', 'cancelado'=>true, 'fecha_cancelacion'=>$parametros['fecha'], 'motivo_cancelacion'=>$parametros['motivo']]);
 
             DB::commit();
 

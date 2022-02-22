@@ -12,6 +12,7 @@ import * as FileSaver from 'file-saver';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
+import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -132,14 +133,19 @@ export class ListaComponent implements OnInit {
   }
 
   cancelarSalida(id){
-    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
-      width: '500px',
-      data:{dialogTitle:'Cancelar Movimiento?',dialogMessage:'Esta seguro de cancelar esta salida? escriba CANCELAR para confirmar la acción',validationString:'CANCELAR',btnColor:'warn',btnText:'Cancelar'}
-    });
+    let configDialog = {
+      width: '350px',
+      maxHeight: '90vh',
+      height: '340px',
+      data:{},
+      panelClass: 'no-padding-dialog'
+    };
 
-    dialogRef.afterClosed().subscribe(valid => {
-      if(valid){
-        this.salidasService.cancelarSalida(id).subscribe(
+    const dialogRef = this.dialog.open(DialogoCancelarMovimientoComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(dialogResponse => {
+      if(dialogResponse){
+        this.salidasService.cancelarSalida(id,dialogResponse).subscribe(
           response =>{
             if(response.error) {
               let errorMessage = response.error.message;
@@ -154,8 +160,7 @@ export class ListaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
-            //this.isLoadingPDF = false;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);            
           }
         );
       }

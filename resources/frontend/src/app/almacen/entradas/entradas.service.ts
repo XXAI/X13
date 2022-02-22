@@ -45,8 +45,8 @@ export class EntradasService {
     );
   }
 
-  cancelarEntrada(id):Observable<any>{
-    return this.http.put<any>(this.url_cancelar+id,{}).pipe(
+  cancelarEntrada(id,payload):Observable<any>{
+    return this.http.put<any>(this.url_cancelar+id,payload).pipe(
       map( response => {
         return response;
       })

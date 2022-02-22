@@ -4,12 +4,15 @@ import { CommonModule } from '@angular/common';
 import { ConfiguracionUnidadRoutingModule } from './configuracion-unidad-routing.module';
 import { CatalogoArticulosModule } from './catalogo-articulos/catalogo-articulos.module';
 import { AlmacenesModule } from './almacenes/almacenes.module';
+import { UnidadMedicaComponent } from './unidad-medica/unidad-medica.component';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
-  declarations: [],
+  declarations: [UnidadMedicaComponent],
   imports: [
     CommonModule,
-    ConfiguracionUnidadRoutingModule
+    ConfiguracionUnidadRoutingModule,
+    SharedModule
   ],
   exports:[
     CatalogoArticulosModule,

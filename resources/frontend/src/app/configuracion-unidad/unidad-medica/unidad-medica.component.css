@@ -1,0 +1,95 @@
+::ng-deep .mat-card{
+    padding:10px !important;
+}
+
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sin-unidad{
+    font-size: larger;
+    font-weight: 700;
+    text-align: center;
+    padding: 15px;
+    color:rgba(0, 0, 0, 0.45);
+    cursor: default;
+}
+
+.encabezado .icono .mat-icon{
+    font-size: 80px;
+    width: 80px !important;
+    height: 80px !important;
+    line-height: 80px !important;
+}
+
+.encabezado .informacion{
+    font-family: "Roboto Mono" , "Roboto" !important;
+    font-weight: 400;
+    font-size: 0.9em;
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+    padding-left: 10px;
+}
+
+.tarjetero{
+    padding-top:10px;
+}
+
+.tarjetero .tarjeta{
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 4px;
+    cursor: default;
+}
+
+.tarjetero .tarjeta > .titulo{
+    font-weight: 500;
+    text-align: center;
+    padding: 5px;
+    background-color: rgb(82, 148, 150);
+    color: white;
+}
+
+.tarjetero .tarjeta > .subtitulo{
+    font-weight: 400;
+    padding: 5px;
+    background-color: rgba(82, 148, 150, 0.25);
+    font-size: small;
+}
+
+.tarjetero .tarjeta .detalles{
+    padding: 5px;
+}
+
+.tarjetero .tarjeta .detalles .lista{
+    font-size: medium;
+}
+
+.tarjetero .tarjeta .detalles .lista .item{
+    padding: 3px;
+}
+
+.tarjetero .tarjeta .detalles .lista .item:not(:last-child){
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.tarjetero .tarjeta .detalles .lista .item:hover{
+    background-color: whitesmoke;
+}
+
+.tarjetero .tarjeta .detalles .lista .item > .titulo{
+    font-weight: 500;
+    font-size: medium;
+}
+
+.tarjetero .tarjeta .detalles .lista .item > .subtitulo{
+    font-weight: 400;
+    font-size: small;
+}

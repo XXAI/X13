@@ -47,14 +47,15 @@ class CatalogoArticulosController extends Controller
             $catalogo->save();
             
             //TODO:: Temporal, se quitara una vez se trabaje bien el modulo
+            $total_articulos_normativos = UnidadMedicaCatalogoArticulo::where('unidad_medica_catalogo_id',$catalogo->id)->where('es_normativo',true)->count();
             $config_captura = ConfigUnidadMedicaAbasto::where('unidad_medica_id',$catalogo->unidad_medica_id)->first();
             if(!$config_captura){
                 $config_captura = ConfigUnidadMedicaAbasto::create(['unidad_medica_id'=>$catalogo->unidad_medica_id,'total_claves_medicamentos_catalogo'=>0,'total_claves_material_curacion_catalogo'=>0]);
             }
             if($catalogo->tipo_bien_servicio_id == 1){
-                $config_captura->total_claves_medicamentos_catalogo = $total_articulos;
+                $config_captura->total_claves_medicamentos_catalogo = $total_articulos_normativos;
             }else if($catalogo->tipo_bien_servicio_id == 2){
-                $config_captura->total_claves_material_curacion_catalogo = $total_articulos;
+                $config_captura->total_claves_material_curacion_catalogo = $total_articulos_normativos;
             }
             $config_captura->save();
             

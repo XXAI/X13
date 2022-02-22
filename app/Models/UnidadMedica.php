@@ -15,4 +15,16 @@ class UnidadMedica extends Model{
     public function almacenes(){
         return $this->hasMany('App\Models\Almacen','unidad_medica_id');
     }
+
+    public function catalogos(){
+        return $this->hasMany('App\Models\UnidadMedicaCatalogo','unidad_medica_id');
+    }
+
+    public function usuarios(){
+        return $this->hasMany('App\Models\User','unidad_medica_asignada_id');
+    }
+
+    public function distrito(){
+        return $this->belongsTo('App\Models\Distrito','distrito_id');
+    }
 }

@@ -52,6 +52,7 @@ Route::group(['middleware'=>'auth'],function($router){
     /**
      *  Modulo de Configuración de la Unidad
      */
+    Route::apiResource('configuracion-unidad',                                  'API\ConfiguracionUnidad\ConfiguracionUnidadController')->only(['index']);
     Route::apiResource('configuracion-unidad/catalogo-articulos',               'API\ConfiguracionUnidad\CatalogoArticulosController');
     Route::get('configuracion-unidad/catalogo-articulos-catalogos',             'API\ConfiguracionUnidad\CatalogoArticulosController@getCatalogos');
     Route::get('configuracion-unidad/catalogo-articulos-cerrar-captura/{id}',   'API\ConfiguracionUnidad\CatalogoArticulosController@cerrarCaptura');

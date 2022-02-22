@@ -55,7 +55,7 @@ export class ListaCatalogosComponent implements OnInit {
   pageSizeOptions: number[] = [25, 30, 50, 100];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['estatus','clave','articulo','cantidad_minima','cantidad_maxima','es_indispensable','actions'];
+  displayedColumns: string[] = ['estatus','clave','articulo','cantidad_minima','cantidad_maxima','es_normativo','actions'];
   
   puedeEditarElementos: boolean;
 
@@ -155,7 +155,7 @@ export class ListaCatalogosComponent implements OnInit {
           unidad_medica_catalogo_id:[''],
           cantidad_minima:[''],
           cantidad_maxima:[''],
-          es_indispensable:['']
+          es_normativo:['']
         });
       }
 
@@ -187,7 +187,7 @@ export class ListaCatalogosComponent implements OnInit {
               let articulo = this.dataSourceArticulos.data.find(item => item.bien_servicio_id == datosForm.bien_servicio_id);
               articulo.cantidad_minima = datosForm.cantidad_minima;
               articulo.cantidad_maxima = datosForm.cantidad_maxima;
-              articulo.es_indispensable = datosForm.es_indispensable;
+              articulo.es_normativo = datosForm.es_normativo;
             }
             this.isSaving = false;
           },
@@ -212,7 +212,7 @@ export class ListaCatalogosComponent implements OnInit {
               articulo.id = response.data.id;
               articulo.cantidad_minima = response.data.cantidad_minima;
               articulo.cantidad_maxima = response.data.cantidad_maxima;
-              articulo.es_indispensable = response.data.es_indispensable;
+              articulo.es_normativo = response.data.es_normativo;
 
               let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
               catalogo.total_articulos += 1;
@@ -250,7 +250,7 @@ export class ListaCatalogosComponent implements OnInit {
       delete articulo_catalogo.descripcion;
       articulo_catalogo.cantidad_maxima = null;
       articulo_catalogo.cantidad_minima = null;
-      articulo_catalogo.es_indispensable = null;
+      articulo_catalogo.es_normativo = null;
     }
 
     this.dataSourceArticulos.data.unshift(articulo_catalogo);

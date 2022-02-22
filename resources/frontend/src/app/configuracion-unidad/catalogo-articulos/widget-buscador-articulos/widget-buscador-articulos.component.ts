@@ -93,7 +93,7 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
               tipo_articulo: response.data[i].tipo_bien_servicio,
               tipo_formulario: response.data[i].clave_form,
               descontinuado: (response.data[i].descontinuado)?true:false,
-              indispensable: (response.data[i].es_indispensable)?true:false,
+              normativo: (response.data[i].es_normativo)?true:false,
               en_catalogo: (response.data[i].en_catalogo_unidad)?true:false,
             };
             articulos_temp.push(articulo);

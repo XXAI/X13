@@ -62,7 +62,7 @@ class AlmacenMovimientosController extends Controller{
             $parametros = $request->all();
 
             //if($loggedUser->is_superuser){
-            $parametros['buscar_catalogo_completo'] = true;
+            //$parametros['buscar_catalogo_completo'] = true;
             //}
 
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
@@ -70,7 +70,7 @@ class AlmacenMovimientosController extends Controller{
             $stock_existencias = BienServicio::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
                                                     'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
                                                     'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
-                                                    'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_indispensable','catalogo_marcas.nombre AS marca',
+                                                    'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo','catalogo_marcas.nombre AS marca',
                                                     'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
                                                     'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
                                                 ->orderBy('stocks.existencia','DESC')
@@ -107,7 +107,7 @@ class AlmacenMovimientosController extends Controller{
             /*$stock_existencias = Stock::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
                                                 'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
                                                 'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
-                                                'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_indispensable',
+                                                'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo',
                                                 'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
                                                 'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
                                                 //DB::raw('count(distinct stocks.id) as total_lotes'), DB::raw('SUM(stocks.existencia) as existencias'))
@@ -183,12 +183,12 @@ class AlmacenMovimientosController extends Controller{
                 $stock_existencias = $stock_existencias->where('bienes_servicios.descontinuado','!=',1);
             }
 
-            if(isset($parametros['indispensables']) && $parametros['indispensables']){
-                $stock_existencias = $stock_existencias->where('unidad_medica_catalogo_articulos.es_indispensable',1);
+            if(isset($parametros['normativos']) && $parametros['normativos']){
+                $stock_existencias = $stock_existencias->where('unidad_medica_catalogo_articulos.es_normativo',1);
             }
 
-            if(isset($parametros['no_indispensables']) && $parametros['no_indispensables']){
-                $stock_existencias = $stock_existencias->where('unidad_medica_catalogo_articulos.es_indispensable','!=',1);
+            if(isset($parametros['no_normativos']) && $parametros['no_normativos']){
+                $stock_existencias = $stock_existencias->where('unidad_medica_catalogo_articulos.es_normativo','!=',1);
             }
 
             if(isset($parametros['page'])){
@@ -218,7 +218,7 @@ class AlmacenMovimientosController extends Controller{
                         'clave_form' => $value->clave_form,
                         'partida_especifica'=>$value->partida_especifica,
                         'familia' => $value->familia,
-                        'es_indispensable' => $value->es_indispensable,
+                        'es_normativo' => $value->es_normativo,
                         'cantidad_minima' => $value->cantidad_minima,
                         'cantidad_maxima' => $value->cantidad_maxima,
                         'en_catalogo_unidad' => $value->en_catalogo_unidad,

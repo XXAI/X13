@@ -33,12 +33,12 @@ class AlmacenesController extends Controller
 
             if(isset($usuario->unidad_medica_asignada_id, $usuario->unidad_medica_asignada_id)){
 
-                $almacenes = Almacen::select('almacenes.*')->with('unidad_medica', 'tipo_almacen')
+                $almacenes = Almacen::select('almacenes.*')->with('unidad_medica', 'tipoAlmacen')
                 ->where('unidad_medica_id', $usuario->unidad_medica_asignada_id)
                 ->orderBy('id');
                 
             }else{
-                $almacenes = Almacen::orderBy('id')->with('unidad_medica', 'tipo_almacen');
+                $almacenes = Almacen::orderBy('id')->with('unidad_medica', 'tipoAlmacen');
             }
 
             //Filtros, busquedas, ordenamiento
@@ -122,7 +122,7 @@ class AlmacenesController extends Controller
      */
     public function show($id)
     {
-        $almacen = Almacen::with('unidad_medica', 'tipo_almacen')->find($id);
+        $almacen = Almacen::with('unidad_medica', 'tipoAlmacen')->find($id);
 
         if(!$almacen){
             return response()->json(['No se encuentra el recurso que esta buscando.'], HttpResponse::HTTP_CONFLICT);

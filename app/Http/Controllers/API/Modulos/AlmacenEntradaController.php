@@ -390,9 +390,11 @@ class AlmacenEntradaController extends Controller
         }
     }
 
-    public function cancelarMovimiento($id){
+    public function cancelarMovimiento($id, Request $request){
         try{
             DB::beginTransaction();
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
 
             $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
 
@@ -416,9 +418,8 @@ class AlmacenEntradaController extends Controller
                 DB::rollback();
                 return response()->json(['error'=>'Uno o mas elementos resultan con valores negativos','data'=>$control_stocks],HttpResponse::HTTP_OK);
             }
-
-            $movimiento->estatus = 'CAN';
-            $movimiento->save();
+            
+            $movimiento->update(['cancelado_por_usuario_id'=>$loggedUser->id, 'estatus'=>'CAN', 'cancelado'=>true, 'fecha_cancelacion'=>$parametros['fecha'], 'motivo_cancelacion'=>$parametros['motivo']]);
 
             DB::commit();
 
@@ -438,12 +439,15 @@ class AlmacenEntradaController extends Controller
     public function destroy($id){
         try{
             DB::beginTransaction();
-
+            $loggedUser = auth()->userOrFail();
+            
             $movimiento = Movimiento::with('listaArticulos','listaArticulosBorrador')->find($id);
 
             if($movimiento->estatus != 'BOR'){
                 throw new Exception("No se puede eliminar este movimiento", 1);
             }
+
+            $movimiento->update(['eliminado_por_usuario_id'=>$loggedUser->id]);
             
             $movimiento->listaArticulos->cartaCanje()->delete();
             $movimiento->listaArticulos()->delete();
