@@ -11,7 +11,7 @@
             <div fxFlex>
             </div>
             <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
-                <div fxFlex fxLayout="row" class="estatus-pedido {{listaEstatusClaves[estatusMovimiento]}}-color">
+                <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
                     <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[estatusMovimiento]}}</span>
                 </div>
@@ -41,7 +41,11 @@
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Movimiento</span>
             </button>
-            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
+            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'PERE'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+                <mat-icon>all_inbox</mat-icon>
+                <span>Concluir Recepción</span>
+            </button>
+            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR' || estatusMovimiento == 'PERE'"></mat-divider>
             <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarEntrada()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Entrada</span>
@@ -49,6 +53,10 @@
             <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarEntrada()">
                 <mat-icon color="warn">cancel</mat-icon>
                 <span>Cancelar Entrada</span>
+            </button>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'PERE'" (click)="cancelarEntrada()">
+                <mat-icon color="warn">cancel</mat-icon>
+                <span>Rechazar Entrada</span>
             </button>
             <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
             <button mat-menu-item (click)="generarPDF()">
@@ -62,7 +70,7 @@
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
         <section fxFlex="none" fxLayout="column">
             <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" fxLayoutAlign="space-between center" [formGroup]="formMovimiento" [style.fontSize.px]="15">
-                <mat-form-field fxFlex="none">
+                <mat-form-field fxFlex="none" *ngIf="datosForm.fecha_movimiento">
                     <mat-label>Fecha Entrada</mat-label>
                     <input matInput formControlName="fecha_movimiento" [max]="maxFechaMovimiento" [matDatepicker]="picker" required readonly>
                     <mat-datepicker-toggle matPrefix [for]="picker"></mat-datepicker-toggle>
@@ -71,8 +79,13 @@
                     <mat-error *ngIf="formMovimiento.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
-                    <mat-label>Almacen</mat-label>
+                <mat-form-field fxFlex="none" *ngIf="!datosForm.fecha_movimiento && datosEntrada">
+                    <mat-label>Fecha Entrada</mat-label>
+                    <input matInput value="{{datosEntrada.fecha_movimiento | date:'d MMM, y'}}" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.almacen_id">
+                    <mat-label>Almacén</mat-label>
                     <mat-select formControlName="almacen_id" required>
                         <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
                         <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
@@ -81,7 +94,12 @@
                     </mat-select>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex *ngIf="!datosForm.almacen_id && datosEntrada">
+                    <mat-label>Almacén</mat-label>
+                    <input matInput [value]="(datosEntrada.almacen)?datosEntrada.almacen.nombre:'Sin Almacén'" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.tipo_movimiento_id">
                     <mat-label>Tipo de Entrada</mat-label>
                     <mat-select formControlName="tipo_movimiento_id" required>
                         <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0">Sin Tipos de Movimiento</mat-option>
@@ -91,7 +109,12 @@
                     </mat-select>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none" *ngIf="!datosForm.tipo_movimiento_id && datosEntrada">
+                    <mat-label>Tipo Movimiento</mat-label>
+                    <input matInput [value]="(datosEntrada.tipo_movimiento)?datosEntrada.tipo_movimiento.descripcion:'Sin Tipo Asignado'" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.programa">
                     <mat-label>Programa</mat-label>
                     <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off">
                     <button mat-icon-button matPrefix>
@@ -106,13 +129,23 @@
                     <mat-hint *ngIf="formMovimiento.get('programa').value"><mat-icon>{{(formMovimiento.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
-                    <mat-label>No de Pedido</mat-label>
+                <mat-form-field fxFlex *ngIf="!datosForm.programa && datosEntrada">
+                    <mat-label>Programa</mat-label>
+                    <input matInput [value]="(datosEntrada.programa)?datosEntrada.programa.descripcion:'Sin Programa'" readonly>
+                </mat-form-field>
+                
+                <mat-form-field fxFlex *ngIf="datosForm.documento_folio">
+                    <mat-label>Folio - Documento</mat-label>
                     <input matInput formControlName="documento_folio" autocomplete="off" [readonly]="!editable">
                     <mat-hint align="end">En caso de ser necesario</mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none" *ngIf="!datosForm.documento_folio && datosEntrada">
+                    <mat-label>Folio - Documento</mat-label>
+                    <input matInput [value]="(datosEntrada.documento_folio)?datosEntrada.documento_folio:'---'" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.proveedor">
                     <mat-label>Proveedor</mat-label>
                     <input #proveedorInput type="text" placeholder="Teclee para buscar un proveedor" matInput formControlName="proveedor" [matAutocomplete]="autoProveedores">
                     <button mat-icon-button matPrefix>
@@ -128,13 +161,24 @@
                     <mat-hint align="end" *ngIf="formMovimiento.get('proveedor').value">[{{formMovimiento.get('proveedor').value.rfc}}]</mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex="none">
+                <mat-form-field fxFlex *ngIf="!datosForm.proveedor && datosEntrada">
+                    <mat-label>Proveedor</mat-label>
+                    <input matInput [value]="(datosEntrada.proveedor)?datosEntrada.proveedor.nombre:'Sin Proveedor'" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex="none" *ngIf="datosForm.referencia_folio">
                     <mat-label>No de Referencia</mat-label>
                     <input matInput formControlName="referencia_folio" [readonly]="!editable" autocomplete="off">
                     <mat-hint>Folio de Referencia o Factura</mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex="none">
+                <mat-form-field fxFlex *ngIf="!datosForm.referencia_folio && datosEntrada">
+                    <mat-label>No de Referencia</mat-label>
+                    <input matInput [value]="(datosEntrada.referencia_folio)?datosEntrada.referencia_folio:'---'" readonly>
+                    <mat-hint>Folio de Referencia o Factura</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field fxFlex="none" *ngIf="datosForm.referencia_fecha">
                     <mat-label>Fecha de Referencia</mat-label>
                     <input matInput formControlName="referencia_fecha" [max]="maxFechaMovimiento" [matDatepicker]="pickerReferencia" readonly>
                     <mat-datepicker-toggle matPrefix [for]="pickerReferencia"></mat-datepicker-toggle>
@@ -142,9 +186,19 @@
                     <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none" *ngIf="!datosForm.referencia_fecha && datosEntrada">
+                    <mat-label>Fecha de Referencia</mat-label>
+                    <input matInput [value]="(datosEntrada.referencia_fecha)?datosEntrada.referencia_fecha:'---'" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.observaciones">
                     <mat-label>Observaciones</mat-label>
                     <textarea matInput formControlName="observaciones" rows="1" [readonly]="!editable"></textarea>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="!datosForm.observaciones && datosEntrada">
+                    <mat-label>Observaciones</mat-label>
+                    <textarea matInput rows="1" readonly>{{(datosEntrada.observaciones)?datosEntrada.observaciones:'---'}}</textarea>
                 </mat-form-field>
             </mat-card>
         </section>
@@ -254,6 +308,11 @@
                                 <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> ${{row.total_monto | number:'1.2-2'}} </td>
                             </ng-container>
 
+                            <ng-container matColumnDef="total_recibido" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" style="text-align: center; white-space: nowrap;"> Recibido </th>
+                                <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_recibido | number:'1.0-0'}} </td>
+                            </ng-container>
+
                             <ng-container matColumnDef="actions">
                                 <th mat-header-cell width="1" *matHeaderCellDef></th>
                                 <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
@@ -274,15 +333,16 @@
                                                 <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">notification_important</mat-icon>
                                                 <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
                                                 <div fxFlex></div>
-                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos">
+                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos && !modoRecepcion">
                                                     <mat-icon>delete</mat-icon> Eliminar Articulo
                                                 </button>
                                             </div>
                                         </div>
                                         <inner-articulo-admin-lista-lotes   [articulo]="articulo" 
                                                                             [edicionActiva]="puedeEditarElementos" 
-                                                                            [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
+                                                                            [fechaMovimiento]="(formMovimiento.get('fecha_movimiento'))?formMovimiento.get('fecha_movimiento').value:datosEntrada.fecha_movimiento"
                                                                             [catalogoMarcas]="catalogos['marcas']"
+                                                                            [modoRecepcion]="modoRecepcion"
                                                                             (cambiosEnLotes)="aplicarCambios($event)">
                                         </inner-articulo-admin-lista-lotes>
                                     </div>

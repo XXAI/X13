@@ -46,9 +46,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions'};
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción'};
 
   displayedColumns: string[] = ['id','folio','almacen','tipo_movimiento','fecha_movimiento','total_claves','total_articulos','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
@@ -315,7 +315,7 @@ export class ListaComponent implements OnInit {
       );
       
       let config = {
-        title: "SALIDA DE ALMACEN",
+        title: "SALIDA DE ALMACÉN",
         showSigns: this.reportIncludeSigns, 
       };
       reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/salida'});

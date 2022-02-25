@@ -45,8 +45,12 @@ class AlmacenMovimientosController extends Controller{
                 if($value == '*'){
                     $catalogos[$key] = $temp_cat->get();
                 }else{
-                    $filter = explode('.',$value);
-                    $catalogos[$key] = $temp_cat->where($filter[0],$filter[1])->get();
+                    $filters = explode('|',$value); 
+                    foreach ($filters as $index => $filter) {
+                        $condition = explode('.',$filter);
+                        $temp_cat = $temp_cat->where($condition[0],$condition[1]);
+                    }
+                    $catalogos[$key] =  $temp_cat->get();
                 }
             }
 

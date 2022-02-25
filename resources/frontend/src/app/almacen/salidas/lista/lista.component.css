@@ -99,6 +99,10 @@ color:#07a8ff;
 color:#ff2a2a;
 }
 
+.pendiente-recepcion-color{
+  color:#dc8503;
+}
+
 .cancelado{
   text-decoration: line-through;
 }

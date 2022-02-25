@@ -91,6 +91,10 @@ table tr:hover{
   color:#6b6767;
 }
 
+.pendiente-recepcion-color{
+  color:#dc8503;
+}
+
 .concluido-color{
   color:#07a8ff;
 }

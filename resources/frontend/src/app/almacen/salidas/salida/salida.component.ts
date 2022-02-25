@@ -83,9 +83,9 @@ export class SalidaComponent implements OnInit {
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in', 'CAN':'cancel',      'PERE':'pending_actions'};
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',            'CAN':'cancelado',   'PERE':'pendiente-recepcion'};
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',            'CAN':'Cancelado',   'PERE':'Pendiente de Recepción'};
   
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
@@ -221,6 +221,12 @@ export class SalidaComponent implements OnInit {
 
           this.formMovimiento.patchValue(response.data);
 
+          if(response.data.persona){
+            this.formMovimiento.get('nombre_completo').patchValue(response.data.persona.nombre_completo);
+            this.formMovimiento.get('curp').patchValue(response.data.persona.curp);
+          }
+
+          this.estatusMovimiento = response.data.estatus;
           if(response.data.estatus == 'BOR'){
             this.estatusMovimiento = 'BOR';
             this.editable = true;
@@ -230,10 +236,6 @@ export class SalidaComponent implements OnInit {
               guardar:true,
               agregar_articulos:true
             };
-          }else if(response.data.estatus == 'FIN'){
-            this.estatusMovimiento = 'FIN';
-          }else if(response.data.estatus == 'CAN'){
-            this.estatusMovimiento = 'CAN';
           }
 
           let articulos_temp = [];
@@ -377,6 +379,20 @@ export class SalidaComponent implements OnInit {
     );
   }
 
+  checarAlmacenSeleccionado(){
+    if(this.tipoSalida && this.tipoSalida.clave == 'LMCN'){
+      this.formMovimiento.get('almacen_movimiento_id').reset();
+    }
+  }
+
+  checarEsColectivo(checked){
+    if(checked){
+      this.formMovimiento.get('documento_folio').setValidators(Validators.required);
+    }else{
+      this.formMovimiento.get('documento_folio').clearValidators();
+    }
+  }
+
   cambiarTipoSalida(){
     this.tipoSalida = this.catalogos['tipos_movimiento'].find(x => x.id === this.formMovimiento.get('tipo_movimiento_id').value);
     let lista_campos_remover:string[] = [
@@ -385,6 +401,9 @@ export class SalidaComponent implements OnInit {
       'almacen_movimiento_id',
       'area_servicio_movimiento',
       'area_servicio_movimiento_id',
+      'nombre_completo',
+      'curp',
+      'es_colectivo',
     ];
 
     lista_campos_remover.forEach(campo => {
@@ -392,28 +411,35 @@ export class SalidaComponent implements OnInit {
         this.formMovimiento.removeControl(campo);
       }
     });
+
     this.filteredUnidades = undefined;
     this.filteredAreasServicios = undefined;
     this.formMovimiento.get('documento_folio').clearValidators();
 
-    if(this.tipoSalida.clave == 'AUM'){
+    if(this.tipoSalida.clave == 'UNMD'){
       this.formMovimiento.addControl('unidad_medica_movimiento', new FormControl('', Validators.required));
       this.formMovimiento.addControl('unidad_medica_movimiento_id', new FormControl(''));
 
       this.filteredUnidades = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
                                 map(nombre => nombre ? this._filter('unidades_medicas',nombre,'nombre') : this.catalogos['unidades_medicas'].slice())
                               );
-    }else if(this.tipoSalida.clave == 'TPSO'){
+    }else if(this.tipoSalida.clave == 'LMCN'){
       this.formMovimiento.addControl('almacen_movimiento_id', new FormControl('', Validators.required));
-    }else if(this.tipoSalida.clave == 'CTVO'){
+      this.formMovimiento.addControl('es_colectivo', new FormControl(''));
+    }else if(this.tipoSalida.clave == 'SRVC'){
       this.formMovimiento.addControl('area_servicio_movimiento', new FormControl('', Validators.required));
       this.formMovimiento.addControl('area_servicio_movimiento_id', new FormControl(''));
-      this.formMovimiento.get('documento_folio').setValidators(Validators.required);
-      //this.formMovimiento.get('documento_folio').markAllAsTouched();
+      this.formMovimiento.addControl('es_colectivo', new FormControl(''));
 
+      //this.formMovimiento.get('documento_folio').setValidators(Validators.required);
       this.filteredAreasServicios = this.formMovimiento.get('area_servicio_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
                               map(descripcion => descripcion ? this._filter('areas_servicios',descripcion,'descripcion') : this.catalogos['areas_servicios'].slice())
                             );
+    }else if(this.tipoSalida.clave == 'RCTA'){
+      //this.formMovimiento.addControl('persona_id',new FormControl(''));
+      this.formMovimiento.addControl('nombre_completo', new FormControl('', Validators.required));
+      this.formMovimiento.addControl('curp', new FormControl(''));
+      this.formMovimiento.get('documento_folio').setValidators(Validators.required);
     }
     this.formMovimiento.updateValueAndValidity();
   }
@@ -641,7 +667,7 @@ export class SalidaComponent implements OnInit {
             );
             
             let config = {
-              title: "SALIDA DE ALMACEN",
+              title: "SALIDA DE ALMACÉN",
             };
 
             reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/salida'});

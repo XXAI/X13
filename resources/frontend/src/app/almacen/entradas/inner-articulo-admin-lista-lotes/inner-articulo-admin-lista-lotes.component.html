@@ -11,8 +11,8 @@
                 <th *ngIf="articulo.tipo_formulario == 'ACTVO'">Marca</th>
 
                 <th>Cantidad</th>
-                <th>Monto</th>
-                <th *ngIf="edicionActiva">Control</th>
+                <th>{{(modoRecepcion)?'Recibido':'Monto'}}</th>
+                <th *ngIf="edicionActiva && !modoRecepcion">Control</th>
             </tr>
         </thead>
         <tbody>
@@ -26,9 +26,15 @@
                     <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.modelo}}</td>
                     <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.marca?.nombre}}</td>
 
-                    <td>{{lote.cantidad | number:'1.0-0'}}</td>
-                    <td>$ {{lote.total_monto | number:'1.2-2'}}</td>
-                    <td width="1" style="white-space: nowrap;" *ngIf="edicionActiva">
+                    <td *ngIf="!modoRecepcion">{{lote.cantidad | number:'1.0-0'}}</td>
+                    <td *ngIf="!modoRecepcion">$ {{lote.total_monto | number:'1.2-2'}}</td>
+                    
+                    <td *ngIf="modoRecepcion">{{lote.cantidad_enviada | number:'1.0-0'}}</td>
+                    <td width="1" *ngIf="modoRecepcion">
+                        <input type="number" [(ngModel)]="lote.cantidad" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
+                    </td>
+
+                    <td width="1" style="white-space: nowrap;" *ngIf="edicionActiva && !modoRecepcion">
                         <button class="small-icon-button" mat-icon-button color="primary" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button>
                         <button class="small-icon-button" mat-icon-button color="warn" (click)="eliminarLote(i)"><mat-icon>delete</mat-icon></button>
                     </td>
@@ -162,7 +168,7 @@
             </tr>
         </tbody>
         <tfoot>
-            <tr *ngIf="edicionActiva && loteEditIndex < 0">
+            <tr *ngIf="edicionActiva && !modoRecepcion && loteEditIndex < 0">
                 <ng-container>
                     <td colspan="6">
                         <button class="medium-button" mat-button (click)="agregarLote()"><mat-icon>add_circle</mat-icon> Agregar Lote</button>

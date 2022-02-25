@@ -21,6 +21,7 @@ use App\Models\CartaCanje;
 use App\Models\BienServicio;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
+use App\Models\Persona;
 
 class AlmacenSalidaController extends Controller
 {
@@ -35,9 +36,10 @@ class AlmacenSalidaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','catalogo_unidades_medicas.nombre as unidad_medica_movimiento',
-                                        'catalogo_tipos_movimiento.descripcion as tipo_movimiento')
+            $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','catalogo_unidades_medicas.nombre_corto as unidad_medica_movimiento',
+                                        'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
+                                    ->leftJoin('almacenes as almacen_destino','almacen_destino.id','=','movimientos.almacen_movimiento_id')
                                     ->leftJoin('programas','programas.id','=','movimientos.programa_id')
                                     ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','movimientos.unidad_medica_movimiento_id')
                                     ->leftJoin('catalogo_tipos_movimiento','catalogo_tipos_movimiento.id','=','movimientos.tipo_movimiento_id')
@@ -86,7 +88,7 @@ class AlmacenSalidaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
-            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa')->find($id);
+            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa','persona')->find($id);
             $extras = [];
 
             if($movimiento->estatus != 'BOR'){
@@ -182,6 +184,7 @@ class AlmacenSalidaController extends Controller
                 'descripcion' => 'Salida Manual Enviado a Unidad Medica',
                 'documento_folio' => $parametros['documento_folio'],
                 'observaciones' => $parametros['observaciones'],
+                'es_colectivo' => (isset($parametros['es_colectivo']) && $parametros['es_colectivo'])?$parametros['es_colectivo']:null,
                 'total_claves' => 0,
                 'total_articulos' => 0,
             ];
@@ -204,6 +207,19 @@ class AlmacenSalidaController extends Controller
                 }
 
                 $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+            }
+
+            if($tipo_movimiento->clave == 'RCTA'){
+                if(!isset($parametros['persona_id']) || !$parametros['persona_id']){
+                    $persona = Persona::where('nombre_completo',strtolower($parametros['nombre_completo']))->where('curp',strtolower($parametros['curp']))->first();
+                    if(!$persona){
+                        $persona = Persona::create($parametros);
+                    }
+                    $persona_id = $persona->id;
+                }else{
+                    $persona_id = $parametros['persona_id'];
+                }
+                $datos_movimiento['persona_id'] = $persona_id;
             }
 
             if(isset($parametros['id']) && $parametros['id']){
@@ -271,6 +287,7 @@ class AlmacenSalidaController extends Controller
                 $movimiento->listaArticulosBorrador()->delete();
                 $movimiento->listaArticulosBorrador()->createMany($lista_articulos_borrador);
             }else{
+                //SI es concluir
                 $lista_articulos_agregar = [];
                 $lista_articulos_eliminar = [];
 
@@ -366,6 +383,61 @@ class AlmacenSalidaController extends Controller
             $movimiento->total_claves = $total_claves;
             $movimiento->total_articulos = $total_articulos;
             $movimiento->save();
+
+            if($tipo_movimiento->clave == 'LMCN' && $concluir){ //si es movimiento de Traspado entre almacenes
+                //Se debe crear un movimiento de entrada en el almacen al que se mando
+                $movimiento->load('listaArticulos');
+                $tipo_movimiento_recepcion = TipoMovimiento::where('clave','RCPCN')->first();
+
+                if(!$tipo_movimiento_recepcion){
+                    throw new Exception("No se encontro el tipo de movimiento necesario", 1);
+                }
+
+                $datos_movimiento_entrada = [
+                    'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
+                    'almacen_id' => $movimiento->almacen_movimiento_id,
+                    'almacen_movimiento_id' => $movimiento->almacen_id,
+                    'direccion_movimiento' => 'ENT',
+                    'tipo_movimiento_id' => $tipo_movimiento_recepcion->id,
+                    'estatus' => 'PERE',
+                    'fecha_movimiento' => $movimiento->fecha_movimiento,
+                    'programa_id' => $movimiento->programa_id,
+                    'descripcion' => 'Recepción Generada Automaticamente por un Traspaso entre Almacenes',
+                    'documento_folio' => ($movimiento->es_colectivo)?$movimiento->documento_folio:$movimiento->folio,
+                    'es_colectivo' => $movimiento->es_colectivo,
+                    'total_claves' => $movimiento->total_claves,
+                    'total_articulos' => $movimiento->total_articulos,
+                    'creado_por_usuario_id' => $loggedUser->id,
+                    'movimiento_padre_id' => $movimiento->id,
+                ];
+
+                /*$lista_articulos_agregar = [];
+                for ($i=0; $i < count($movimiento->listaArticulos) ; $i++) {
+                    $articulo = $movimiento->listaArticulos[$i];
+                    if($articulo->cantidad > 0){  //esto va en borrador
+                        $lista_articulos_agregar[] = [
+                            'bien_servicio_id' => $articulo['bien_servicio_id'],
+                            'direccion_movimiento' => 'ENT',
+                            'modo_movimiento' => 'TPS',
+                            'marca_id' => $articulo['marca_id'],
+                            'modelo' => $articulo['modelo'],
+                            'no_serie' => $articulo['no_serie'],
+                            'lote' => $articulo['lote'],
+                            'fecha_caducidad' => $articulo['fecha_caducidad'],
+                            'codigo_barras' => $articulo['codigo_barras'],
+                            'cantidad' => $articulo['cantidad'],
+                            'precio_unitario' => $articulo['precio_unitario'],
+                            'iva' => $articulo['iva'],
+                            'total_monto' => $articulo['total_monto'],
+                            'user_id' => $loggedUser->id,
+                        ];
+                    }
+                    # code...
+                }*/
+
+                $movimiento_entrada = Movimiento::create($datos_movimiento_entrada);
+                //$movimiento_entrada->listaArticulosBorrador()->createMany($lista_articulos_agregar);
+            }
             
             DB::commit();
             

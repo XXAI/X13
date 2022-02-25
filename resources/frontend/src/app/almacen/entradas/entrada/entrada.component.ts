@@ -18,6 +18,7 @@ import { ReportWorker } from 'src/app/web-workers/report-worker';
 import * as FileSaver from 'file-saver';
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
+import { MovimientoData } from '../../tools/entrada';
 
 @Component({
   selector: 'app-entrada',
@@ -74,10 +75,14 @@ export class EntradaComponent implements OnInit {
   pageSizeOptions: number[] = [10, 20, 30, 50];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['estatus','clave','nombre','no_lotes','total_piezas','total_monto','actions'];
+  displayedColumns: string[]; //= ['estatus','clave','nombre','no_lotes','total_piezas','total_monto','actions'];
   
   editable: boolean;
   puedeEditarElementos: boolean;
+
+  datosForm:any;
+  datosEntrada:MovimientoData;
+  modoRecepcion:boolean;
 
   verBoton: any;
   isLoading: boolean;
@@ -85,9 +90,9 @@ export class EntradaComponent implements OnInit {
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in', 'CAN':'cancel',     'PERE':'pending_actions'};
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',            'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',            'CAN':'Cancelado',  'PERE':'Pendiente de Recepción'};
   
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
@@ -97,6 +102,11 @@ export class EntradaComponent implements OnInit {
 
     this.editable = false;
     this.puedeEditarElementos = false;
+
+    this.displayedColumns = [];
+    this.datosForm = {};
+    //this.datosEntrada = {};
+
     this.listadoArticulosEliminados = [];
     this.controlArticulosAgregados = {};
     this.controlArticulosModificados = {};
@@ -129,8 +139,8 @@ export class EntradaComponent implements OnInit {
     };
 
     this.maxFechaMovimiento = new Date();
-    
-    this.formMovimiento = this.formBuilder.group({
+    this.formMovimiento = this.formBuilder.group({});
+    /*this.formMovimiento = this.formBuilder.group({
       id:[''],
       tipo_movimiento_id:['',Validators.required],
       fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
@@ -143,7 +153,8 @@ export class EntradaComponent implements OnInit {
       referencia_folio:[''],
       referencia_fecha:[''],
       observaciones: [''],
-    });
+    });*/
+    //this.reconfigurarFormulario();
 
     this.verBoton = {
       concluir:false,
@@ -151,7 +162,7 @@ export class EntradaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',tipos_movimiento:'movimiento.ENT'};
+    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',tipos_movimiento:'movimiento.ENT|captura_independiente.1'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -165,7 +176,9 @@ export class EntradaComponent implements OnInit {
           this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
           this.catalogos['marcas'] = response.data.marcas;
 
-          if(this.catalogos['almacenes'].length == 1){
+          this.cargarDatosMovimiento();
+
+          /*if(this.catalogos['almacenes'].length == 1){
             this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
           }
 
@@ -174,7 +187,7 @@ export class EntradaComponent implements OnInit {
                                 );
           this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
                                 map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
-                              );
+                              );*/
         }
         this.isLoading = false;
       },
@@ -187,7 +200,10 @@ export class EntradaComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
 
+  cargarDatosMovimiento(){
+    this.modoRecepcion = false;
     this.route.paramMap.subscribe(params => {
       if(params.get('id')){
         this.entradasService.verEntrada(params.get('id')).subscribe(
@@ -200,10 +216,9 @@ export class EntradaComponent implements OnInit {
               if(response.data.referencia_fecha){
                 response.data.referencia_fecha = new Date(response.data.referencia_fecha+'T12:00:00');
               }
-              this.formMovimiento.patchValue(response.data);
 
+              this.estatusMovimiento = response.data.estatus;
               if(response.data.estatus == 'BOR'){
-                this.estatusMovimiento = 'BOR';
                 this.editable = true;
                 this.puedeEditarElementos = true;
                 this.verBoton = {
@@ -211,16 +226,28 @@ export class EntradaComponent implements OnInit {
                   guardar:true,
                   agregar_articulos:true
                 };
-              }else if(response.data.estatus == 'FIN'){
-                this.estatusMovimiento = 'FIN';
-              }else if(response.data.estatus == 'CAN'){
-                this.estatusMovimiento = 'CAN';
+                this.reconfigurarFormulario();
+              }else if(response.data.estatus == 'PERE'){
+                this.editable = true;
+                this.puedeEditarElementos = true;
+                this.verBoton = {
+                  concluir:true,
+                  guardar:true,
+                  agregar_articulos:false
+                };
+                this.reconfigurarFormulario(['observaciones']);
+                this.modoRecepcion = true;
               }
+              this.formMovimiento.patchValue(response.data);
+              this.datosEntrada = response.data;
+              this.cargarColumnasArticulos();
 
               let articulos_temp = [];
               let lista_articulos;
 
-              if(this.estatusMovimiento == 'BOR'){
+              if(this.estatusMovimiento == 'PERE'){
+                lista_articulos = response.data.lista_articulos_recepcion;
+              }else if(this.estatusMovimiento == 'BOR'){
                 lista_articulos = response.data.lista_articulos_borrador;
               }else{
                 lista_articulos = response.data.lista_articulos;
@@ -246,9 +273,10 @@ export class EntradaComponent implements OnInit {
                     en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
                     normativo: (lista_articulos[i].articulo.es_normativo)?true:false,
                     descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
-                    total_monto: lista_articulos[i].total_monto,
-                    no_lotes: 1,
-                    total_piezas: lista_articulos[i].cantidad,
+                    total_monto: 0,
+                    no_lotes: 0,
+                    total_piezas: 0,
+                    total_recibido: 0,
                     lotes: [],
                   };
                   
@@ -258,14 +286,13 @@ export class EntradaComponent implements OnInit {
                   this.totalesRecibidos.claves += 1;
                 }else{
                   let index = articulos_temp.findIndex(x => x.id == lista_articulos[i].articulo.id);
-                  articulo = articulos_temp[index];
-
-                  articulo.no_lotes += 1;
-                  articulo.total_piezas += lista_articulos[i].cantidad;
-                  articulo.total_monto += lista_articulos[i].total_monto;
+                  articulo = articulos_temp[index];                  
                 }
 
-                articulo.lotes.push({
+                articulo.no_lotes += 1;
+                articulo.total_monto += lista_articulos[i].total_monto;
+
+                let lote:any = {
                   lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
                   fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
                   codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
@@ -273,16 +300,33 @@ export class EntradaComponent implements OnInit {
                   modelo:           (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
                   marca_id:         (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
                   marca:            (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
-                  cantidad:         lista_articulos[i].cantidad,
-                  precio_unitario:  lista_articulos[i].precio_unitario,
-                  iva:              lista_articulos[i].iva,
-                  total_monto:      lista_articulos[i].total_monto,
+                  precio_unitario:   lista_articulos[i].precio_unitario,
+                  iva:               lista_articulos[i].iva,
+                  total_monto:       lista_articulos[i].total_monto,
                   memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
                   memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
                   vigencia_meses:   (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                });
+                };
 
-                this.totalesRecibidos.articulos += lista_articulos[i].cantidad;
+                if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN' && this.datosEntrada.estatus == 'PERE'){
+                  lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
+                  articulo.total_recibido += lista_articulos[i].cantidad_recibida;
+                  articulo.total_piezas += lista_articulos[i].cantidad;
+                  lote.cantidad = lista_articulos[i].cantidad_recibida;
+                  lote.cantidad_enviada = lista_articulos[i].cantidad;
+                }else if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN'){
+                  articulo.total_recibido += lista_articulos[i].cantidad;
+                  articulo.total_piezas += lista_articulos[i].cantidad_anterior;
+                  lote.cantidad = lista_articulos[i].cantidad;
+                  lote.cantidad_enviada = lista_articulos[i].cantidad_anterior;
+                }else{
+                  articulo.total_piezas += lista_articulos[i].cantidad;
+                  lote.cantidad = lista_articulos[i].cantidad;
+                }
+
+                articulo.lotes.push(lote);
+
+                this.totalesRecibidos.articulos += lote.cantidad;//lista_articulos[i].cantidad;
                 this.totalesRecibidos.monto += lista_articulos[i].total_monto;
               }
 
@@ -313,8 +357,76 @@ export class EntradaComponent implements OnInit {
           guardar:true,
           agregar_articulos:true
         };
+        this.reconfigurarFormulario();
+        this.cargarColumnasArticulos();
       }
     });
+  }
+
+  cargarColumnasArticulos(){
+    if(this.modoRecepcion){
+      this.displayedColumns = ['estatus','clave','nombre','no_lotes','total_piezas','total_recibido','actions'];
+    }else{
+      this.displayedColumns = ['estatus','clave','nombre','no_lotes','total_piezas','total_monto','actions'];
+    }
+  }
+
+  reconfigurarFormulario(mostrar_campos?:string[]){
+    let grupoFields:any = {
+      id:[''],
+      tipo_movimiento_id:['',Validators.required],
+      fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
+      almacen_id: ['',Validators.required],
+      documento_folio:[''],
+      programa: [''],
+      programa_id: [''],
+      proveedor:[''],
+      proveedor_id: [''],
+      referencia_folio:[''],
+      referencia_fecha:[''],
+      observaciones: [''],
+    };
+
+    if(!mostrar_campos){
+      this.datosForm = {
+        id:true,
+        tipo_movimiento_id:true,
+        fecha_movimiento:true,
+        almacen_id: true,
+        documento_folio:true,
+        programa: true,
+        programa_id: true,
+        proveedor:true,
+        proveedor_id: true,
+        referencia_folio:true,
+        referencia_fecha:true,
+        observaciones: true,
+      };
+      this.formMovimiento = this.formBuilder.group(grupoFields);
+    }else{
+      this.datosForm = {};
+      let nuevoGrupo:any = {};
+      mostrar_campos.forEach(item =>{
+        this.datosForm[item] = true;
+        nuevoGrupo[item] = grupoFields[item];
+      });
+      this.formMovimiento = this.formBuilder.group(nuevoGrupo);
+    }
+
+    if(this.formMovimiento.get('almacen_id') && this.catalogos['almacenes'].length == 1){
+      this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
+    }    
+
+    if(this.formMovimiento.get('proveedor')){
+      this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
+                            map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
+                          );
+    }
+    if(this.formMovimiento.get('programa')){
+      this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
+                          map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
+                        );
+    }
   }
   
   agregarArticulo(articulo){ 
@@ -429,15 +541,8 @@ export class EntradaComponent implements OnInit {
             this.sharedService.showSnackBar(errorMessage, null, 4000);
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
-
-            if(response.data.estatus == 'BOR'){ //Borrador
-              this.estatusMovimiento = 'BOR';
-            }else if(response.data.estatus == 'FIN'){ //Finalizado
-              this.estatusMovimiento = 'FIN';
-            }else if(response.data.estatus == 'CAN'){ //Cancelado
-              this.estatusMovimiento = 'CAN';
-            }
-
+            this.estatusMovimiento = response.data.estatus;
+            
             if(this.estatusMovimiento != 'BOR'){
               this.editable = false;
               this.puedeEditarElementos = false;
@@ -501,7 +606,12 @@ export class EntradaComponent implements OnInit {
   }
 
   cancelarEntrada(){
-    let id = this.formMovimiento.get('id').value;
+    let id:Number;
+    if(this.formMovimiento.get('id')){
+      id = this.formMovimiento.get('id').value;
+    }else{
+      id = this.datosEntrada.id;
+    }
 
     let configDialog = {
       width: '350px',
@@ -546,8 +656,13 @@ export class EntradaComponent implements OnInit {
   }
 
   eliminarEntrada(){
-    let id = this.formMovimiento.get('id').value;
-
+    let id:Number;
+    if(this.formMovimiento.get('id')){
+      id = this.formMovimiento.get('id').value;
+    }else{
+      id = this.datosEntrada.id;
+    }
+    
     const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
       width: '500px',
       data:{dialogTitle:'Eliminar Movimiento?',dialogMessage:'Esta seguro de eliminar esta entrada?',btnColor:'warn',btnText:'Eliminar'}
@@ -582,7 +697,12 @@ export class EntradaComponent implements OnInit {
 
   generarPDF(){
     this.isLoading = true;
-    let id = this.formMovimiento.get('id').value;
+    let id:Number;
+    if(this.formMovimiento.get('id')){
+      id = this.formMovimiento.get('id').value;
+    }else{
+      id = this.datosEntrada.id;
+    }
     
     this.entradasService.verEntrada(id).subscribe(
       response =>{

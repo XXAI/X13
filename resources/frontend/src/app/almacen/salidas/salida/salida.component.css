@@ -211,7 +211,8 @@ table td {
     color:#575757;
 }
 
-.estatus-pedido{
+.estatus-movimiento{
+    cursor: default;
     padding:5px;
     text-align: center;
     background-color: #dddddd;
@@ -224,6 +225,10 @@ table td {
 
 .borrador-color{
     color:#6b6767;
+}
+
+.pendiente-recepcion-color{
+    color:#dc8503;
 }
 
 .concluido-color{

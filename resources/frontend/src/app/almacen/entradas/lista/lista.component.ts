@@ -46,11 +46,11 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'description', 'CAN':'cancel'  };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',   'CAN':'cancelado' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',   'CAN':'Cancelado' };
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',    'PERE':'pending_actions' };
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado', 'PERE':'pendiente-recepcion' };
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado', 'PERE':'Pendiente de Recepción' };
 
-  displayedColumns: string[] = ['id','folio','almacen','programa','fecha_movimiento','total_claves','total_articulos','total_monto','actions']; //,'descripcion','proveedor','programa'
+  displayedColumns: string[] = ['id','folio','almacen','tipo_movimiento','fecha_movimiento','totales_claves_articulos','total_monto','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 
@@ -102,9 +102,19 @@ export class ListaComponent implements OnInit {
               element.estatus_clave = this.listaEstatusClaves[element.estatus];
               element.estatus_label = this.listaEstatusLabels[element.estatus];
               element.estatus_icono = this.listaEstatusIconos[element.estatus];
+
+              if(!element.folio){
+                element.folio = 'Sin Folio';
+                if(element.estatus == 'PERE'){
+                  element.folio += ' (Pendiente de Recepción)';
+                }else if(element.estatus == 'BOR'){
+                  element.folio += ' (En Borrador)';
+                }else if(element.estatus == 'CAN'){
+                  element.folio += ' (Rechazado)';
+                }
+              }
             });
             this.listadoMovimientos = response.data.data;
-            console.log(this.listadoMovimientos);
             this.resultsLength = response.data.total;
           }
         }
@@ -327,7 +337,7 @@ export class ListaComponent implements OnInit {
       );
       
       let config = {
-        title: "ENTRADA DE ALMACEN",
+        title: "ENTRADA DE ALMACÉN",
         showSigns: this.reportIncludeSigns, 
       };
       reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/entrada'});

@@ -19,6 +19,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   @Input() edicionActiva: boolean;
   @Input() fechaMovimiento: Date;
   @Input() catalogoMarcas: any[];
+  @Input() modoRecepcion: boolean;
 
   @Output() cambiosEnLotes = new EventEmitter<any>();
 
@@ -135,6 +136,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
       }
     }
+  }
+
+  aplicarCantidad(lote){
+    console.log(lote);
   }
 
   editarLote(index:number){

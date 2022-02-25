@@ -11,7 +11,7 @@
             <div fxFlex>
             </div>
             <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
-                <div fxFlex fxLayout="row" class="estatus-pedido {{listaEstatusClaves[estatusMovimiento]}}-color">
+                <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
                     <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[estatusMovimiento]}}</span>
                 </div>
@@ -72,8 +72,8 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex>
-                    <mat-label>Almacen</mat-label>
-                    <mat-select formControlName="almacen_id" required>
+                    <mat-label>Almacén</mat-label>
+                    <mat-select formControlName="almacen_id" (selectionChange)="checarAlmacenSeleccionado()" required>
                         <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
                         <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
                             {{item.nombre}}
@@ -131,10 +131,10 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('almacen_movimiento_id')">
-                    <mat-label>Almacen Destino</mat-label>
+                    <mat-label>Almacén Destino</mat-label>
                     <mat-select formControlName="almacen_movimiento_id" required>
                         <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
-                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
+                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id" [disabled]="item.id == this.formMovimiento.get('almacen_id').value">
                             {{item.nombre}}
                         </mat-option>
                     </mat-select>
@@ -154,6 +154,24 @@
                     </mat-autocomplete>
                     <mat-hint *ngIf="formMovimiento.get('area_servicio_movimiento').value"><mat-icon>{{(formMovimiento.get('area_servicio_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                 </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('nombre_completo')">
+                    <mat-label>Nombre Completo</mat-label>
+                    <input matInput formControlName="nombre_completo" autocomplete="off" required>
+                    <mat-error *ngIf="formMovimiento.get('nombre_completo').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('curp')">
+                    <mat-label>CURP</mat-label>
+                    <input matInput formControlName="curp" autocomplete="off">
+                    <mat-error *ngIf="formMovimiento.get('curp').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+
+                <div class="mat-form-field" fxFlex="none" *ngIf="formMovimiento.get('es_colectivo')">
+                    <mat-checkbox formControlName="es_colectivo" (change)="checarEsColectivo($event.checked)">
+                        Es Colectivo
+                    </mat-checkbox>
+                </div>
 
                 <!--mat-form-field fxFlex="none">
                     <mat-label>Fecha de Referencia</mat-label>
