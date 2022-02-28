@@ -19,13 +19,7 @@
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
-            <!--button mat-menu-item *ngIf="verBoton['guardar']" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
-                <mat-icon>save</mat-icon>
-                <span>Guardar</span>
-                height:10px; padding-top: 15px;
-            </button>
-            <mat-divider></mat-divider-->
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
+            <!--button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
                 <mat-icon>settings_applications</mat-icon>
                 <span>Configurar Firmantes</span>
             </button>
@@ -36,12 +30,12 @@
             <button mat-menu-item *ngIf="verBoton['enviar_revision'] && estatusMovimiento == 'BOR'">
                 <mat-icon>outbox</mat-icon>
                 <span>Enviar a Revisión</span>
-            </button>
+            </button-->
             <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Movimiento</span>
             </button>
-            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
+            <mat-divider *ngIf="estatusMovimiento == 'BOR'"></mat-divider>
             <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarSalida()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Salida</span>
@@ -197,6 +191,34 @@
                             [programaId]="formMovimiento.get('programa').value.id" 
                             (articuloSeleccionado)="agregarArticulo($event)">
                     </widget-buscador-stock>
+                </mat-card>
+                <mat-card fxFlex="none" fxLayout="column" *ngIf="movimientoHijo" class="datos-movimiento-hijo">
+                    <div fxFlex="none">
+                        <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[movimientoHijo.estatus]}}-color">
+                            <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[movimientoHijo.estatus]}}</mat-icon></span>
+                            <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[movimientoHijo.estatus]}}</span>
+                        </div>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" class="folio">
+                        <span>{{(movimientoHijo.folio)?movimientoHijo.folio:'Sin Folio'}}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Tipo de Movimiento:</span> <span>{{ movimientoHijo.tipo_movimiento.descripcion }}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Total de Claves:</span> <span>{{ movimientoHijo.total_claves | number:'1.0-0'}}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Total de Articulos:</span> <span>{{ movimientoHijo.total_articulos | number:'1.0-0'}}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Concluido Por:</span> <span>{{(movimientoHijo.concluido_por)?movimientoHijo.concluido_por.name:'En Proceso'}}</span>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" class="fecha">
+                        <span>{{ movimientoHijo.updated_at | date:'d MMM, y' }}</span>
+                    </div>
                 </mat-card>
                 <mat-card fxFlex fxLayout="column" style="overflow: auto;">
                     <div fxFlex="none" fxLayout="column">

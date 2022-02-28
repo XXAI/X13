@@ -52,6 +52,8 @@ export class SalidaComponent implements OnInit {
   tipoSalida:any;
   idArticuloSeleccionado:number;
 
+  movimientoHijo:any;
+
   controlArticulosAgregados:any;
   controlArticulosModificados:any;
   listadoArticulosEliminados:any[];
@@ -220,6 +222,10 @@ export class SalidaComponent implements OnInit {
           this.cambiarTipoSalida();
 
           this.formMovimiento.patchValue(response.data);
+
+          if(response.data.movimiento_hijo){
+            this.movimientoHijo = response.data.movimiento_hijo;
+          }
 
           if(response.data.persona){
             this.formMovimiento.get('nombre_completo').patchValue(response.data.persona.nombre_completo);
@@ -533,15 +539,12 @@ export class SalidaComponent implements OnInit {
             this.sharedService.showSnackBar(errorMessage, null, 3000);
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
+            this.estatusMovimiento = response.data.estatus;
 
-            if(response.data.estatus == 'BOR'){ //Borrador
-              this.estatusMovimiento = 'BOR';
-            }else if(response.data.estatus == 'FIN'){ //Finalizado
-              this.estatusMovimiento = 'FIN';
-            }else if(response.data.estatus == 'CAN'){ //Cancelado
-              this.estatusMovimiento = 'CAN';
+            if(response.data.movimiento_hijo){
+              this.movimientoHijo = response.data.movimiento_hijo;
             }
-
+            
             if(this.estatusMovimiento != 'BOR'){
               this.editable = false;
               this.puedeEditarElementos = false;

@@ -104,7 +104,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     });
     this.articulo.estatus = estatus_articulo;
 
-    if(this.articulo.lotes.length == 0){
+    if(this.articulo.lotes.length == 0 && !this.modoRecepcion){
       this.agregarLote();
     }
   }
@@ -140,6 +140,24 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
 
   aplicarCantidad(lote){
     console.log(lote);
+    if(this.edicionActiva){
+      if(lote.cantidad < 0){
+        lote.cantidad = 0;
+      }else if(lote.cantidad > lote.cantidad_enviada){
+        lote.cantidad = lote.cantidad_enviada;
+      }
+  
+      let estado_anterior = this.obtenerEstadoActualArticulo();
+      
+      if(lote.cantidad_recibida_anterior){
+        this.articulo.total_recibido += lote.cantidad_recibida_anterior;
+      }
+  
+      this.articulo.total_recibido -= (lote.cantidad_enviada - lote.cantidad);
+      lote.cantidad_recibida_anterior = (lote.cantidad_enviada - lote.cantidad);
+  
+      this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
+    }
   }
 
   editarLote(index:number){
@@ -331,6 +349,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     let estado = {
       id: this.articulo.id,
       total_piezas: this.articulo.total_piezas, 
+      total_recibido: this.articulo.total_recibido,
       no_lotes: this.articulo.no_lotes, 
       total_monto: this.articulo.total_monto,
     };

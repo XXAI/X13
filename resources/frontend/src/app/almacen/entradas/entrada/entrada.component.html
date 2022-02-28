@@ -10,6 +10,9 @@
             </button>
             <div fxFlex>
             </div>
+            <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.es_colectivo" class="label-info">
+                <span>Colectivo</span>
+            </div>
             <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
                 <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
@@ -19,13 +22,7 @@
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
-            <!--button mat-menu-item *ngIf="verBoton['guardar']" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
-                <mat-icon>save</mat-icon>
-                <span>Guardar</span>
-                height:10px; padding-top: 15px;
-            </button>
-            <mat-divider></mat-divider-->
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
+            <!--button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
                 <mat-icon>settings_applications</mat-icon>
                 <span>Configurar Firmantes</span>
             </button>
@@ -36,7 +33,7 @@
             <button mat-menu-item *ngIf="verBoton['enviar_revision'] && estatusMovimiento == 'BOR'">
                 <mat-icon>outbox</mat-icon>
                 <span>Enviar a Revisión</span>
-            </button>
+            </button-->
             <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Movimiento</span>
@@ -45,7 +42,7 @@
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Recepción</span>
             </button>
-            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR' || estatusMovimiento == 'PERE'"></mat-divider>
+            <mat-divider *ngIf="estatusMovimiento == 'BOR' || estatusMovimiento == 'PERE'"></mat-divider>
             <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarEntrada()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Entrada</span>
@@ -53,10 +50,6 @@
             <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarEntrada()">
                 <mat-icon color="warn">cancel</mat-icon>
                 <span>Cancelar Entrada</span>
-            </button>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'PERE'" (click)="cancelarEntrada()">
-                <mat-icon color="warn">cancel</mat-icon>
-                <span>Rechazar Entrada</span>
             </button>
             <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
             <button mat-menu-item (click)="generarPDF()">
@@ -116,7 +109,7 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.programa">
                     <mat-label>Programa</mat-label>
-                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off">
+                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off" required>
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
@@ -219,6 +212,9 @@
                             </mat-list-item>
                             <mat-list-item role="listitem">
                                 Articulos: {{ totalesRecibidos.articulos | number}}
+                            </mat-list-item>
+                            <mat-list-item role="listitem" *ngIf="totalesRecibidos.recibidos >= 0">
+                                Articulos Recibidos: {{ totalesRecibidos.recibidos | number}}
                             </mat-list-item>
                             <mat-list-item role="listitem">
                                 Monto: $ {{ totalesRecibidos.monto | number:'1.2-2'}}

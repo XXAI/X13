@@ -219,6 +219,34 @@ table td {
     font-weight: bold;
 }
 
+.datos-movimiento-hijo{
+    cursor: default;
+    overflow: auto; 
+    padding:0px; 
+    margin-bottom: 5px;
+    font-size: small;
+    font-weight: 400;
+}
+
+.datos-movimiento-hijo > .folio{
+    text-align: center;
+    font-weight: 500;
+    padding:2px;
+}
+
+.datos-movimiento-hijo > .fecha{
+    text-align: center;
+    font-style: italic;
+    font-weight: 500;
+    padding:2px;
+    color: rgba(0,0,0,.80);
+}
+
+.datos-movimiento-hijo .etiqueta{
+    color: rgba(0,0,0,.70);
+    padding-right: 3px;
+}
+
 .nuevo-color{
     color:#8f8787;
 }

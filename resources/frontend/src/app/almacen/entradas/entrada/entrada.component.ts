@@ -235,9 +235,16 @@ export class EntradaComponent implements OnInit {
                   guardar:true,
                   agregar_articulos:false
                 };
-                this.reconfigurarFormulario(['observaciones']);
+                this.reconfigurarFormulario(['id','observaciones']);
                 this.modoRecepcion = true;
+                this.totalesRecibidos.recibidos = 0;
               }
+
+              if(response.data.tipo_movimiento && response.data.tipo_movimiento.clave == 'RCPCN'){
+                this.modoRecepcion = true;
+                this.totalesRecibidos.recibidos = 0;
+              }
+
               this.formMovimiento.patchValue(response.data);
               this.datosEntrada = response.data;
               this.cargarColumnasArticulos();
@@ -289,45 +296,53 @@ export class EntradaComponent implements OnInit {
                   articulo = articulos_temp[index];                  
                 }
 
-                articulo.no_lotes += 1;
-                articulo.total_monto += lista_articulos[i].total_monto;
+                if(lista_articulos[i].cantidad > 0 || lista_articulos[i].cantidad_anterior > 0){
+                  articulo.no_lotes += 1;
+                  articulo.total_monto += lista_articulos[i].total_monto;
 
-                let lote:any = {
-                  lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                  fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                  codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                  no_serie:         (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
-                  modelo:           (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
-                  marca_id:         (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
-                  marca:            (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
-                  precio_unitario:   lista_articulos[i].precio_unitario,
-                  iva:               lista_articulos[i].iva,
-                  total_monto:       lista_articulos[i].total_monto,
-                  memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                  memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                  vigencia_meses:   (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                };
+                  let lote:any = {
+                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
+                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
+                    no_serie:         (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
+                    modelo:           (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
+                    marca_id:         (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
+                    marca:            (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
+                    precio_unitario:   lista_articulos[i].precio_unitario,
+                    iva:               lista_articulos[i].iva,
+                    total_monto:       lista_articulos[i].total_monto,
+                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                    vigencia_meses:   (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
+                  };
 
-                if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN' && this.datosEntrada.estatus == 'PERE'){
-                  lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
-                  articulo.total_recibido += lista_articulos[i].cantidad_recibida;
-                  articulo.total_piezas += lista_articulos[i].cantidad;
-                  lote.cantidad = lista_articulos[i].cantidad_recibida;
-                  lote.cantidad_enviada = lista_articulos[i].cantidad;
-                }else if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN'){
-                  articulo.total_recibido += lista_articulos[i].cantidad;
-                  articulo.total_piezas += lista_articulos[i].cantidad_anterior;
-                  lote.cantidad = lista_articulos[i].cantidad;
-                  lote.cantidad_enviada = lista_articulos[i].cantidad_anterior;
-                }else{
-                  articulo.total_piezas += lista_articulos[i].cantidad;
-                  lote.cantidad = lista_articulos[i].cantidad;
+                  if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN' && this.datosEntrada.estatus == 'PERE'){
+                    lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
+                    lote.cantidad = (lista_articulos[i].cantidad_recibida === null)?lista_articulos[i].cantidad:lista_articulos[i].cantidad_recibida;
+                    lote.cantidad_enviada = lista_articulos[i].cantidad;
+                    lote.cantidad_recibida_anterior = lote.cantidad_enviada - lote.cantidad;
+                    articulo.total_recibido += lote.cantidad;
+                    articulo.total_piezas += lote.cantidad_enviada;
+                  }else if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN'){
+                    lote.cantidad = lista_articulos[i].cantidad;
+                    lote.cantidad_enviada = lista_articulos[i].cantidad_anterior;
+                    articulo.total_recibido += lote.cantidad;
+                    articulo.total_piezas += lote.cantidad_enviada;
+                  }else{
+                    articulo.total_piezas += lista_articulos[i].cantidad;
+                    lote.cantidad = lista_articulos[i].cantidad;
+                  }
+
+                  articulo.lotes.push(lote);
+
+                  if(this.modoRecepcion){
+                    this.totalesRecibidos.recibidos += lote.cantidad;
+                    this.totalesRecibidos.articulos += lote.cantidad_enviada;
+                  }else{
+                    this.totalesRecibidos.articulos += lote.cantidad;//lista_articulos[i].cantidad;
+                  }
+                  this.totalesRecibidos.monto += lista_articulos[i].total_monto;
                 }
-
-                articulo.lotes.push(lote);
-
-                this.totalesRecibidos.articulos += lote.cantidad;//lista_articulos[i].cantidad;
-                this.totalesRecibidos.monto += lista_articulos[i].total_monto;
               }
 
               this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
@@ -378,7 +393,7 @@ export class EntradaComponent implements OnInit {
       fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
       almacen_id: ['',Validators.required],
       documento_folio:[''],
-      programa: [''],
+      programa: ['',Validators.required],
       programa_id: [''],
       proveedor:[''],
       proveedor_id: [''],
@@ -503,6 +518,11 @@ export class EntradaComponent implements OnInit {
 
       this.totalesRecibidos.monto += articulo.total_monto;
       this.totalesRecibidos.articulos += articulo.total_piezas;
+
+      if(this.modoRecepcion){
+        this.totalesRecibidos.recibidos -= config.value.total_recibido;
+        this.totalesRecibidos.recibidos += articulo.total_recibido;
+      }
     }
   }
   
@@ -526,12 +546,19 @@ export class EntradaComponent implements OnInit {
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
 
-      formData.proveedor_id = (formData.proveedor)?formData.proveedor.id:null;
-      formData.programa_id = (formData.programa)?formData.programa.id:null;
+      if(this.modoRecepcion){ //El formulario no esta completo asi que se agregan los elementos requeridos
+        formData.fecha_movimiento = this.datepipe.transform(this.datosEntrada.fecha_movimiento, 'yyyy-MM-dd');
+        formData.almacen_id = this.datosEntrada.almacen_id;
+        formData.tipo_movimiento_id = this.datosEntrada.tipo_movimiento_id;
+        formData.programa_id = this.datosEntrada.programa_id;
+      }else{
+        formData.proveedor_id = (formData.proveedor)?formData.proveedor.id:null;
+        formData.programa_id = (formData.programa)?formData.programa.id:null;
 
-      formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
-      if(formData.referencia_fecha){
-        formData.referencia_fecha = this.datepipe.transform(formData.referencia_fecha, 'yyyy-MM-dd');
+        formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
+        if(formData.referencia_fecha){
+          formData.referencia_fecha = this.datepipe.transform(formData.referencia_fecha, 'yyyy-MM-dd');
+        }
       }
       
       this.entradasService.guardarEntrada(formData).subscribe(
@@ -543,7 +570,7 @@ export class EntradaComponent implements OnInit {
             this.formMovimiento.get('id').patchValue(response.data.id);
             this.estatusMovimiento = response.data.estatus;
             
-            if(this.estatusMovimiento != 'BOR'){
+            if(this.estatusMovimiento != 'BOR' && this.estatusMovimiento != 'PERE'){
               this.editable = false;
               this.puedeEditarElementos = false;
                 this.verBoton = {

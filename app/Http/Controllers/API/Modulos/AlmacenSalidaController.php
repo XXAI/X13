@@ -92,10 +92,12 @@ class AlmacenSalidaController extends Controller
             $extras = [];
 
             if($movimiento->estatus != 'BOR'){
-                $movimiento->load(['listaArticulos'=>function($listaArticulos)use($loggedUser){ 
-                                                                return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
-                                                                            $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                                        },'stock.marca']);
+                $movimiento->load(['listaArticulos' => function($listaArticulos)use($loggedUser){ 
+                                        return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
+                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                                },'stock.marca']);
+                                    },'movimientoHijo' => function($movimientoHijo){
+                                        return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
                                     },'almacen','almacenMovimiento']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
@@ -386,11 +388,12 @@ class AlmacenSalidaController extends Controller
 
             if($tipo_movimiento->clave == 'LMCN' && $concluir){ //si es movimiento de Traspado entre almacenes
                 //Se debe crear un movimiento de entrada en el almacen al que se mando
+                $movimiento->update(['estatus'=>'PERE']);
                 $movimiento->load('listaArticulos');
                 $tipo_movimiento_recepcion = TipoMovimiento::where('clave','RCPCN')->first();
 
                 if(!$tipo_movimiento_recepcion){
-                    throw new Exception("No se encontro el tipo de movimiento necesario", 1);
+                    throw new \Exception("No se encontro el tipo de movimiento necesario", 1);
                 }
 
                 $datos_movimiento_entrada = [
@@ -410,36 +413,16 @@ class AlmacenSalidaController extends Controller
                     'creado_por_usuario_id' => $loggedUser->id,
                     'movimiento_padre_id' => $movimiento->id,
                 ];
-
-                /*$lista_articulos_agregar = [];
-                for ($i=0; $i < count($movimiento->listaArticulos) ; $i++) {
-                    $articulo = $movimiento->listaArticulos[$i];
-                    if($articulo->cantidad > 0){  //esto va en borrador
-                        $lista_articulos_agregar[] = [
-                            'bien_servicio_id' => $articulo['bien_servicio_id'],
-                            'direccion_movimiento' => 'ENT',
-                            'modo_movimiento' => 'TPS',
-                            'marca_id' => $articulo['marca_id'],
-                            'modelo' => $articulo['modelo'],
-                            'no_serie' => $articulo['no_serie'],
-                            'lote' => $articulo['lote'],
-                            'fecha_caducidad' => $articulo['fecha_caducidad'],
-                            'codigo_barras' => $articulo['codigo_barras'],
-                            'cantidad' => $articulo['cantidad'],
-                            'precio_unitario' => $articulo['precio_unitario'],
-                            'iva' => $articulo['iva'],
-                            'total_monto' => $articulo['total_monto'],
-                            'user_id' => $loggedUser->id,
-                        ];
-                    }
-                    # code...
-                }*/
-
                 $movimiento_entrada = Movimiento::create($datos_movimiento_entrada);
-                //$movimiento_entrada->listaArticulosBorrador()->createMany($lista_articulos_agregar);
             }
             
             DB::commit();
+
+            if($tipo_movimiento->clave == 'LMCN' && $concluir){
+                $movimiento->load(['movimientoHijo' => function($movimientoHijo){
+                                        return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
+                                    }]);
+            }
             
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -461,7 +444,7 @@ class AlmacenSalidaController extends Controller
             $movimiento = Movimiento::with('listaArticulos','listaArticulosBorrador')->find($id);
 
             if($movimiento->estatus != 'BOR'){
-                throw new Exception("No se puede eliminar este movimiento", 1);
+                throw new \Exception("No se puede eliminar este movimiento", 1);
             }
             
             $movimiento->listaArticulos()->delete();
@@ -486,7 +469,12 @@ class AlmacenSalidaController extends Controller
             $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
 
             if($movimiento->estatus != 'FIN'){
-                throw new Exception("No se puede cancelar este movimiento", 1);
+                throw new \Exception("No se puede cancelar este movimiento", 1);
+            }
+
+            $movimiento_hijo = Movimiento::where('movimiento_padre_id')->first();
+            if($movimiento_hijo && $movimiento_hijo->estatus != 'CAN'){
+                throw new \Exception("No se puede cancelar este movimiento, ya que la recepción sigue activa", 1);
             }
             
             $control_stocks = [];

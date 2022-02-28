@@ -206,6 +206,15 @@ table td {
     color:#575757;
 }
 
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+}
+
 .estatus-movimiento{
     cursor: default;
     padding:5px;

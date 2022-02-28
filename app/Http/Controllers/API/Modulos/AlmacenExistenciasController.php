@@ -60,7 +60,8 @@ class AlmacenExistenciasController extends Controller
             if(isset($params['groupBy']) && trim($params['groupBy']) != ""){
                 if($params['groupBy'] == 'articulo'){
                     $items = $items->select(
-                        "almacenes.nombre as almacen",
+                        //"almacenes.nombre as almacen",
+                        DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)') as almacen"),
                         "programas.descripcion as programa",
                         "stocks.bien_servicio_id as id", 
                         DB::raw("IF(bienes_servicios.clave_local,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
@@ -76,7 +77,8 @@ class AlmacenExistenciasController extends Controller
                 }
             }else{
                 $items = $items->select(
-                    "almacenes.nombre as almacen",
+                    //"almacenes.nombre as almacen",
+                    DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)') as almacen"),
                     "programas.descripcion as programa",
                     "stocks.id as id", 
                     "stocks.bien_servicio_id as bien_servicio_id", 
@@ -220,6 +222,7 @@ class AlmacenExistenciasController extends Controller
                     ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
                     ->where("movimientos.estatus","FIN")
                     ->orderBy("movimientos.fecha_movimiento","DESC")
+                    ->orderBy("movimientos.created_at","DESC")
                     ->orderBy("stocks.lote");
 
         if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){

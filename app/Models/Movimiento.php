@@ -53,6 +53,10 @@ class Movimiento extends Model{
         return $this->belongsTo('App\Models\Persona','persona_id');
     }
 
+    public function movimientoHijo(){
+        return $this->hasOne('App\Models\Movimiento','movimiento_padre_id');
+    }
+
     public function movimientoPadre(){
         return $this->belongsTo('App\Models\Movimiento','movimiento_padre_id');
     }
@@ -62,23 +66,23 @@ class Movimiento extends Model{
     }
 
     public function creadoPor(){
-        return $this->belongsTo('App\Models\Usuario','creado_por_usuario_id');
+        return $this->belongsTo('App\Models\User','creado_por_usuario_id');
     }
 
     public function modificadoPor(){
-        return $this->belongsTo('App\Models\Usuario','modificado_por_usuario_id');
+        return $this->belongsTo('App\Models\User','modificado_por_usuario_id');
     }
 
     public function concluidoPor(){
-        return $this->belongsTo('App\Models\Usuario','concluido_por_usuario_id');
+        return $this->belongsTo('App\Models\User','concluido_por_usuario_id');
     }
 
     public function canceladoPor(){
-        return $this->belongsTo('App\Models\Usuario','cancelado_por_usuario_id');
+        return $this->belongsTo('App\Models\User','cancelado_por_usuario_id');
     }
 
     public function eliminadoPor(){
-        return $this->belongsTo('App\Models\Usuario','eliminado_por_usuario_id');
+        return $this->belongsTo('App\Models\User','eliminado_por_usuario_id');
     }
 
 

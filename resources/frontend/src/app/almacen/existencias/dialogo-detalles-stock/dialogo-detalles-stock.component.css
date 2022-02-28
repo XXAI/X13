@@ -4,13 +4,17 @@ table {
     width: 100%;
     table-layout: fixed;
   }
+
+  tr:hover{
+      background-color: whitesmoke;
+  }
   
   th,
   td {
     overflow: hidden;
     width: auto;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    /*white-space: nowrap;*/
     cursor: default;
     padding: 0 0.5em !important;
   }
@@ -35,7 +39,7 @@ table {
     width: 90px;
 }
 .mat-column-lote {
-    width: 150px;
+    width: 100px;
 }
 .mat-column-fecha_caducidad {
     width: 90px;

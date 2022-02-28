@@ -88,19 +88,19 @@ table tr:hover{
 }
 
 .borrador-color{
-  color:#6b6767;
+  color:#6b6767 !important;
 }
 
 .pendiente-recepcion-color{
-  color:#dc8503;
+  color:#dc8503 !important;
 }
 
 .concluido-color{
-  color:#07a8ff;
+  color:#07a8ff !important;
 }
 
 .cancelado-color{
-  color:#ff2a2a;
+  color:#ff2a2a !important;
 }
 
 .cancelado{
