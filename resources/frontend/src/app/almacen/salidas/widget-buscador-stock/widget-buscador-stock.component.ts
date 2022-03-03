@@ -30,8 +30,8 @@ export class Service {
 })
 export class WidgetBuscadorStockComponent implements OnInit {
   @Input() mostrarExistencias: boolean;
-  @Input() almacenId: boolean;
-  @Input() programaId: boolean;
+  @Input() almacenId: Number;
+  @Input() programaId: Number;
   
   @Output() articuloSeleccionado = new EventEmitter<any>();
 
@@ -61,17 +61,24 @@ export class WidgetBuscadorStockComponent implements OnInit {
       switchMap(value => {
           this.isLoadingArticulos = true; 
           if(!(typeof value === 'object')){
-            if( value && value.length > 3 && (this.almacenId && this.programaId)){
-              let resultado = this.service.buscar({query: value, programa_id: this.programaId, almacen_id: this.almacenId}).pipe(
-                                                                                                                              finalize(() => {
-                                                                                                                                this.isLoadingArticulos = false; 
-                                                                                                                                this.terminoBusqueda = true;
-                                                                                                                              } ),
-                                                                                                                              catchError(error => {
-                                                                                                                                this.mostrarError = true;
-                                                                                                                                return EMPTY;
-                                                                                                                              })
-                                                                                                                            );
+            if( value && value.length > 3 && this.almacenId){
+              let params:any = {query: value};
+              if(this.programaId){
+                params.programa_id = this.programaId;
+              }
+              if(this.almacenId){
+                params.almacen_id = this.almacenId;
+              }
+              let resultado = this.service.buscar(params).pipe(
+                                                                finalize(() => {
+                                                                  this.isLoadingArticulos = false; 
+                                                                  this.terminoBusqueda = true;
+                                                                } ),
+                                                                catchError(error => {
+                                                                  this.mostrarError = true;
+                                                                  return EMPTY;
+                                                                })
+                                                              );
               return resultado;
             }else{
               this.terminoBusqueda = false;

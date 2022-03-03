@@ -65,9 +65,9 @@ class AlmacenMovimientosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            //if($loggedUser->is_superuser){
-            //$parametros['buscar_catalogo_completo'] = true;
-            //}
+            if(!\Gate::denies('has-permission', 'vPZUt02ZCcGoNuxDlfOCETTjJAobvJvO')){
+                $parametros['buscar_catalogo_completo'] = true;
+            }
 
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 
@@ -77,68 +77,47 @@ class AlmacenMovimientosController extends Controller{
                                                     'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo','catalogo_marcas.nombre AS marca',
                                                     'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
                                                     'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
+                                                //Relaciones de filtrado
+                                                ->leftjoin('stocks',function($join)use($unidad_medica_id,$parametros){
+                                                    $join = $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
+                                                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                                                ->where('stocks.existencia','>',0)
+                                                                ->where('stocks.almacen_id',$parametros['almacen_id'])
+                                                                ->whereNull('stocks.deleted_at');
+                                                    if(isset($parametros['programa_id']) && $parametros['programa_id']){
+                                                        $join = $join->where('stocks.programa_id',$parametros['programa_id']);
+                                                    }
+                                                    return $join;
+                                                })
+                                                ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
+                                                    return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
+                                                        ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                                                        ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
+                                                })
+                                                //Catalogos informativos
+                                                ->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
+                                                ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
+                                                ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
+                                                ->leftjoin('programas','programas.id','=','stocks.programa_id')
+                                                ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                                                ->leftjoin('catalogo_marcas','catalogo_marcas.id','=','stocks.marca_id')
+                                                //Ordenamiento
                                                 ->orderBy('stocks.existencia','DESC')
                                                 ->orderBy('stocks.fecha_caducidad','DESC')
                                                 ->orderBy('unidad_medica_catalogo_articulos.id','DESC')
                                                 ->orderBy('bienes_servicios.especificaciones')
                                                 ;
-            
+
             if(isset($parametros['buscar_solo_stock']) && $parametros['buscar_solo_stock']){
-                $stock_existencias = $stock_existencias->join('stocks',function($join)use($unidad_medica_id,$parametros){
-                                                    return $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
-                                                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
-                                                                ->where('stocks.existencia','>',0)
-                                                                ->where('stocks.programa_id',$parametros['programa_id'])
-                                                                ->where('stocks.almacen_id',$parametros['almacen_id']);
-                                                });
-            }else{
-                $stock_existencias = $stock_existencias->leftjoin('stocks',function($join)use($unidad_medica_id,$parametros){
-                                                    return $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
-                                                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
-                                                                ->where('stocks.existencia','>',0)
-                                                                ->where('stocks.programa_id',$parametros['programa_id'])
-                                                                ->where('stocks.almacen_id',$parametros['almacen_id']);
-                                                });
+                $stock_existencias = $stock_existencias->whereNotNull('stocks.id');
             }
 
-            $stock_existencias = $stock_existencias->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
-                                                    ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
-                                                    ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
-                                                    ->leftjoin('programas','programas.id','=','stocks.programa_id')
-                                                    ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
-                                                    ->leftjoin('catalogo_marcas','catalogo_marcas.id','=','stocks.marca_id');
+            if(isset($parametros['buscar_solo_catalogo']) && $parametros['buscar_solo_catalogo']){
+                $stock_existencias = $stock_existencias->whereNotNull('unidad_medica_catalogo_articulos.id');
+            }
 
-            /*$stock_existencias = Stock::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
-                                                'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
-                                                'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
-                                                'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo',
-                                                'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
-                                                'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
-                                                //DB::raw('count(distinct stocks.id) as total_lotes'), DB::raw('SUM(stocks.existencia) as existencias'))
-                                        ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
-                                        ->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
-                                        ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
-                                        ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
-                                        ->leftjoin('programas','programas.id','=','stocks.programa_id')
-                                        ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
-                                        ->where('stocks.unidad_medica_id',$unidad_medica_id)
-                                        ->where('stocks.existencia','>',0)
-                                        ->with('marca')
-                                        //->groupBy('stocks.bien_servicio_id')
-                                        ->orderBy('bienes_servicios.especificaciones');*/
-
-            if(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo']){
-                $stock_existencias = $stock_existencias->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
-                    return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
-                        ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
-                        ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
-                });
-            }else{
-                $stock_existencias = $stock_existencias->join('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
-                    return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
-                        ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
-                        ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
-                });
+            if(!(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo'])){
+                $stock_existencias = $stock_existencias->where(function($where){ $where->whereNotNull('stocks.id')->orWhereNotNull('unidad_medica_catalogo_articulos.id'); });
             }
 
             //Filtros, busquedas, ordenamiento
@@ -155,13 +134,15 @@ class AlmacenMovimientosController extends Controller{
                 });
             }
 
-            /*if(isset($parametros['programa_id']) && $parametros['programa_id']){
+            /*if(isset($parametros['programa_id']) && $parametros['programa_id'] != null){
                 $stock_existencias = $stock_existencias->where('stocks.programa_id',$parametros['programa_id']);
-            }
+            }*/
 
+            /*
             if(isset($parametros['almacen_id']) && $parametros['almacen_id']){
                 $stock_existencias = $stock_existencias->where('stocks.almacen_id',$parametros['almacen_id']);
-            }*/
+            }
+            */
 
             if(isset($parametros['familia_id']) && $parametros['familia_id']){
                 $stock_existencias = $stock_existencias->where('bienes_servicios.familia_id',$parametros['familia_id']);
@@ -233,23 +214,7 @@ class AlmacenMovimientosController extends Controller{
                 $index_articulo = $control_articulos[$value->articulo_id];
 
                 if($value->id){
-                    if(isset($parametros['programa_id']) && $parametros['programa_id']){
-                        if(!isset($resultado_stock[$index_articulo]['lotes'])){
-                            $resultado_stock[$index_articulo]['lotes'] = [];
-                        }
-    
-                        $resultado_stock[$index_articulo]['lotes'][] = [
-                            'id' => $value->id,
-                            'lote' => $value->lote,
-                            'fecha_caducidad' => $value->fecha_caducidad,
-                            'codigo_barras' => $value->codigo_barras,
-                            'no_serie' => $value->no_serie,
-                            'modelo' => $value->modelo,
-                            'marca_id' => $value->marca_id,
-                            'marca' => $value->marca,
-                            'existencia' => $value->existencia,
-                        ];
-                    }else{
+                    if(isset($parametros['dividir_programa']) && $parametros['dividir_programa']){
                         if(!isset($resultado_stock[$index_articulo]['programa_lotes'])){
                             $resultado_stock[$index_articulo]['programa_lotes'] = [];
                         }
@@ -274,13 +239,31 @@ class AlmacenMovimientosController extends Controller{
                             'marca' => $value->marca,
                             'existencia' => $value->existencia,
                         ];
+                    }else{
+                        if(!isset($resultado_stock[$index_articulo]['lotes'])){
+                            $resultado_stock[$index_articulo]['lotes'] = [];
+                        }
+    
+                        $resultado_stock[$index_articulo]['lotes'][] = [
+                            'id'                => $value->id,
+                            'programa_id'       => $value->programa_id,
+                            'programa'          => ($value->programa_id)?$value->programa:'Sin Programa Asignado',
+                            'lote'              => $value->lote,
+                            'fecha_caducidad'   => $value->fecha_caducidad,
+                            'codigo_barras'     => $value->codigo_barras,
+                            'no_serie'          => $value->no_serie,
+                            'modelo'            => $value->modelo,
+                            'marca_id'          => $value->marca_id,
+                            'marca'             => $value->marca,
+                            'existencia'        => $value->existencia,
+                        ];
                     }
                     $resultado_stock[$index_articulo]['total_lotes']++;
                     $resultado_stock[$index_articulo]['existencias'] += $value->existencia;
                 }
             }
 
-            if(!(isset($parametros['programa_id']) && $parametros['programa_id'])){
+            if(isset($parametros['dividir_programa']) && $parametros['dividir_programa']){
                 foreach ($resultado_stock as $key => $value) {
                     $resultado_stock[$key]['programa_lotes'] = array_values($resultado_stock[$key]['programa_lotes']);
                 }

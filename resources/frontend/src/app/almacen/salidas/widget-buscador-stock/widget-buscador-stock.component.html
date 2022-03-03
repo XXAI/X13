@@ -7,8 +7,8 @@
             <mat-icon>clear</mat-icon>
         </button>
         <mat-autocomplete #articulosAutocomplete="matAutocomplete" [displayWith]="displayTerminoFn" (optionSelected)="itemSeleccionado($event.option.value)" [panelWidth]="'50%'">
-            <mat-option *ngIf="!programaId && !almacenId" style="text-align: center;" disabled>
-                Debe seleccionar un Almacén y un Programa
+            <mat-option *ngIf="!almacenId" style="text-align: center;" disabled>
+                Debe seleccionar un Almacén
             </mat-option>
             <mat-option *ngIf="!mostrarError && terminoBusqueda && inputQuery.value.length > 3 && resultadoArticulos.length == 0" style="text-align: center;" disabled>
                 No se encontraron resultados para <span style="font-style: italic; font-weight: bold;">"{{inputQuery.value}}"</span>

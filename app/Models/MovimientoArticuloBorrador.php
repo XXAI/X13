@@ -14,6 +14,7 @@ class MovimientoArticuloBorrador extends Model{
         'stock_id',
         'direccion_movimiento',
         'modo_movimiento',
+        'cantidad_solicitado',
         'cantidad',
         'marca_id',
         'no_serie',
@@ -30,6 +31,10 @@ class MovimientoArticuloBorrador extends Model{
 
     public function articulo(){
         return $this->belongsTo('App\Models\BienServicio','bien_servicio_id');
+    }
+    
+    public function stock(){
+        return $this->belongsTo('App\Models\Stock','stock_id');
     }
 
     public function marca(){

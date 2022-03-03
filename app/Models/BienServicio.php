@@ -31,6 +31,10 @@ class BienServicio extends Model{
         return $this->hasMany('App\Models\Stock','bien_servicio_id');
     }
 
+    public function enMovimientoBorrador(){
+        return $this->hasMany('App\Models\MovimientoArticuloBorrador','bien_servicio_id');
+    }
+
     public function tipoBienServicio(){
         return $this->belongsTo('App\Models\TipoBienServicio','tipo_bien_servicio_id');
     }

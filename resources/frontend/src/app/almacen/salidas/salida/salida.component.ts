@@ -53,6 +53,7 @@ export class SalidaComponent implements OnInit {
   idArticuloSeleccionado:number;
 
   movimientoHijo:any;
+  tieneSolicitud:boolean;
 
   controlArticulosAgregados:any;
   controlArticulosModificados:any;
@@ -223,6 +224,10 @@ export class SalidaComponent implements OnInit {
 
           this.formMovimiento.patchValue(response.data);
 
+          if(response.data.es_colectivo){
+            this.checarTieneSolicitud(true);
+          }
+
           if(response.data.movimiento_hijo){
             this.movimientoHijo = response.data.movimiento_hijo;
           }
@@ -266,6 +271,7 @@ export class SalidaComponent implements OnInit {
                   en_catalogo: (lista_articulos[i].en_catalogo_unidad)?true:false,
                   normativo: (lista_articulos[i].es_normativo)?true:false,
                   descontinuado: (lista_articulos[i].descontinuado)?true:false,
+                  cantidad_solicitado:lista_articulos[i].cantidad_solicitado,
                   total_piezas: 0,
                   total_monto: 0,
                   total_lotes: 0,
@@ -288,7 +294,8 @@ export class SalidaComponent implements OnInit {
                     fecha_caducidad: stock.fecha_caducidad,
                     no_serie: stock.no_serie,
                     modelo: stock.modelo,
-                    marca: stock.marca,
+                    programa: (stock.programa)?stock.programa.descripcion:'Sin Programa',
+                    marca: (stock.marca)?stock.marca:'Sin Marca',
                     existencia: stock.existencia,
                     salida: stock.cantidad,
                     restante: stock.existencia - stock.cantidad,
@@ -353,7 +360,8 @@ export class SalidaComponent implements OnInit {
                   fecha_caducidad: lista_articulos[i].stock.fecha_caducidad,
                   no_serie:lista_articulos[i].stock.no_serie,
                   modelo:lista_articulos[i].stock.modelo,
-                  marca:lista_articulos[i].stock.marca,
+                  programa: (lista_articulos[i].stock.programa)?lista_articulos[i].stock.programa.descripcion:'Sin Programa',
+                  marca: (lista_articulos[i].stock.marca)?lista_articulos[i].stock.marca:'Sin Marca',
                   existencia: lista_articulos[i].cantidad_anterior,
                   salida: lista_articulos[i].cantidad,
                   restante: +lista_articulos[i].cantidad_anterior - +lista_articulos[i].cantidad,
@@ -391,11 +399,14 @@ export class SalidaComponent implements OnInit {
     }
   }
 
-  checarEsColectivo(checked){
+  checarTieneSolicitud(checked){
+    this.tieneSolicitud = checked;
     if(checked){
       this.formMovimiento.get('documento_folio').setValidators(Validators.required);
+      this.displayedColumns = ['estatus','clave','nombre','cantidad_solicitado','total_piezas','cantidad_sin_surtir','actions'];
     }else{
       this.formMovimiento.get('documento_folio').clearValidators();
+      this.displayedColumns = ['estatus','clave','nombre','existencias','total_piezas','existencias_restantes','actions'];
     }
   }
 
@@ -425,17 +436,25 @@ export class SalidaComponent implements OnInit {
     if(this.tipoSalida.clave == 'UNMD'){
       this.formMovimiento.addControl('unidad_medica_movimiento', new FormControl('', Validators.required));
       this.formMovimiento.addControl('unidad_medica_movimiento_id', new FormControl(''));
-
+      this.tieneSolicitud = false;
       this.filteredUnidades = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
                                 map(nombre => nombre ? this._filter('unidades_medicas',nombre,'nombre') : this.catalogos['unidades_medicas'].slice())
                               );
     }else if(this.tipoSalida.clave == 'LMCN'){
       this.formMovimiento.addControl('almacen_movimiento_id', new FormControl('', Validators.required));
       this.formMovimiento.addControl('es_colectivo', new FormControl(''));
+
+      if(this.tieneSolicitud){
+        this.formMovimiento.get('es_colectivo').patchValue(true);
+      }
     }else if(this.tipoSalida.clave == 'SRVC'){
       this.formMovimiento.addControl('area_servicio_movimiento', new FormControl('', Validators.required));
       this.formMovimiento.addControl('area_servicio_movimiento_id', new FormControl(''));
       this.formMovimiento.addControl('es_colectivo', new FormControl(''));
+
+      if(this.tieneSolicitud){
+        this.formMovimiento.get('es_colectivo').patchValue(true);
+      }
 
       //this.formMovimiento.get('documento_folio').setValidators(Validators.required);
       this.filteredAreasServicios = this.formMovimiento.get('area_servicio_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
@@ -446,8 +465,10 @@ export class SalidaComponent implements OnInit {
       this.formMovimiento.addControl('nombre_completo', new FormControl('', Validators.required));
       this.formMovimiento.addControl('curp', new FormControl(''));
       this.formMovimiento.get('documento_folio').setValidators(Validators.required);
+      this.tieneSolicitud = false;
     }
     this.formMovimiento.updateValueAndValidity();
+    this.checarTieneSolicitud(this.tieneSolicitud);
   }
 
   agregarArticulo(articulo){

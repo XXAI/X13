@@ -22,6 +22,8 @@ use App\Models\BienServicio;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
 use App\Models\Persona;
+use App\Models\Solicitud;
+use App\Models\TipoSolicitud;
 
 class AlmacenSalidaController extends Controller
 {
@@ -95,7 +97,9 @@ class AlmacenSalidaController extends Controller
                 $movimiento->load(['listaArticulos' => function($listaArticulos)use($loggedUser){ 
                                         return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
                                                     $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                },'stock.marca']);
+                                                },'stock'=>function($stock){
+                                                    $stock->with('marca','programa');
+                                                }]);
                                     },'movimientoHijo' => function($movimientoHijo){
                                         return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
                                     },'almacen','almacenMovimiento']);
@@ -104,20 +108,36 @@ class AlmacenSalidaController extends Controller
                 $programa_id = $movimiento->programa_id;
                 $movimiento_id = $movimiento->id;
 
-                $movimiento->load('listaArticulosBorrador.articulo');
-
+                $movimiento->load('listaArticulosBorrador');
                 $articulos_ids = $movimiento->listaArticulosBorrador()->pluck('bien_servicio_id');
-                //$cantidades_stocks = $movimiento->listaArticulosBorrador()->pluck('cantidad','stock_id');
 
-                $articulos_borrador = BienServicio::datosDescripcion()->whereIn('bienes_servicios.id',$articulos_ids)->with(['stocks'=>function($stocks)use($almacen_id,$programa_id,$movimiento_id){
-                                                                                            $stocks->select('stocks.*','movimientos_articulos_borrador.cantidad')
-                                                                                                    ->where('almacen_id',$almacen_id)
-                                                                                                    ->where('programa_id',$programa_id)
-                                                                                                    ->leftjoin('movimientos_articulos_borrador',function($join)use($movimiento_id){
-                                                                                                        $join->on('movimientos_articulos_borrador.stock_id','stocks.id')
-                                                                                                            ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
-                                                                                                    })->with('marca');
-                                                                                        }])->get();
+                $articulos_borrador = BienServicio::datosDescripcion()//->whereIn('bienes_servicios.id',$articulos_ids)
+                                                    ->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
+                                                    'unidad_medica_catalogo_articulos.es_normativo','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
+                                                    'unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form',
+                                                    'movimientos_articulos_borrador.cantidad_solicitado')
+                                                    ->join('movimientos_articulos_borrador',function($borrador)use($movimiento_id){
+                                                        $borrador->on('movimientos_articulos_borrador.bien_servicio_id','bienes_servicios.id')
+                                                                ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
+                                                    })
+                                                    ->with(['stocks'=>function($stocks)use($almacen_id,$programa_id,$movimiento_id){
+                                                        $stocks = $stocks->select('stocks.*','movimientos_articulos_borrador.cantidad') //,'movimientos_articulos_borrador.cantidad_solicitado'
+                                                                ->where('almacen_id',$almacen_id)
+                                                                ->orderBy('stocks.fecha_caducidad','ASC')
+                                                                ->leftjoin('movimientos_articulos_borrador',function($join)use($movimiento_id){
+                                                                    $join->on('movimientos_articulos_borrador.stock_id','stocks.id')
+                                                                        ->on('movimientos_articulos_borrador.bien_servicio_id','stocks.bien_servicio_id')
+                                                                        ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
+                                                                })
+                                                                ->where('stocks.existencia','>',0)
+                                                                ->with('marca','programa');
+                                                        if($programa_id){
+                                                            $stocks = $stocks->where('programa_id',$programa_id);
+                                                        }
+                                                        return $stocks;
+                                                    }])
+                                                    ->groupBy('movimientos_articulos_borrador.bien_servicio_id')
+                                                    ->get();
                 //
                 $movimiento = $movimiento->toArray();
                 $movimiento['lista_articulos_borrador'] = $articulos_borrador;
@@ -248,7 +268,7 @@ class AlmacenSalidaController extends Controller
             }
 
             $conteo_claves = count($parametros['lista_articulos']);
-            $total_claves = count($parametros['lista_articulos']);
+            $total_claves = $conteo_claves;
             $total_articulos = 0;
 
             if(!$concluir){
@@ -268,6 +288,7 @@ class AlmacenSalidaController extends Controller
                                     'stock_id' => $lote['id'],
                                     'direccion_movimiento' => 'SAL',
                                     'modo_movimiento' => 'NRM',
+                                    'cantidad_solicitado' => $articulo['cantidad_solicitado'],
                                     'cantidad' => $lote['salida'],
                                     'user_id' => $loggedUser->id,
                                 ];
@@ -278,6 +299,7 @@ class AlmacenSalidaController extends Controller
                             'bien_servicio_id' => $articulo['id'],
                             'direccion_movimiento' => 'SAL',
                             'modo_movimiento' => 'NRM',
+                            'cantidad_solicitado' => $articulo['cantidad_solicitado'],
                             'cantidad' => 0,
                             'user_id' => $loggedUser->id,
                         ];
@@ -312,12 +334,18 @@ class AlmacenSalidaController extends Controller
 
                             if($lote['salida']){
                                 $lote_guardado = Stock::find($lote['id']);
-                                $existencia_anterior = $lote_guardado->existencia;
+                                
+                                if(!$lote_guardado){
+                                    throw new \Exception("No se encontro un lote para el medicamento: ".$articulo['clave'], 1);
+                                }
 
-                                if($lote_guardado){
+                                $cantidad_anterior = $lote_guardado->existencia;
+                                if($lote_guardado->existencia >= $lote['salida']){
                                     $lote_guardado->existencia -= $lote['salida'];
                                     $lote_guardado->user_id = $loggedUser->id;
                                     $lote_guardado->save();
+                                }else{
+                                    throw new \Exception("Existencias insuficientes para el medicamento: ".$articulo['clave'], 1);
                                 }
 
                                 if(isset($lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id])){
@@ -327,7 +355,7 @@ class AlmacenSalidaController extends Controller
                                     $articulo_guardado->direccion_movimiento = 'SAL';
                                     $articulo_guardado->modo_movimiento = 'NRM';
                                     $articulo_guardado->cantidad = $lote['salida'];
-                                    $articulo_guardado->cantidad_anterior = $existencia_anterior;
+                                    $articulo_guardado->cantidad_anterior = $cantidad_anterior;
                                     $articulo_guardado->user_id = $loggedUser->id;
                                     $articulo_guardado->save();
 
@@ -339,19 +367,20 @@ class AlmacenSalidaController extends Controller
                                         'direccion_movimiento' => 'SAL',
                                         'modo_movimiento' => 'NRM',
                                         'cantidad' => $lote['salida'],
-                                        'cantidad_anterior' => $existencia_anterior,
+                                        'cantidad_anterior' => $cantidad_anterior,
                                         'user_id' => $loggedUser->id,
                                     ];
                                 }
                             }
                         }
                     }else if($tipo_movimiento->acepta_ceros){
+                        $cantidad_anterior = 0;
                         $lista_articulos_agregar[] = [
                             'bien_servicio_id' => $articulo['id'],
                             'direccion_movimiento' => 'SAL',
                             'modo_movimiento' => 'NRM',
                             'cantidad' => 0,
-                            'cantidad_anterior' => 0,
+                            'cantidad_anterior' => $cantidad_anterior,
                             'user_id' => $loggedUser->id,
                         ];
                     }else{
@@ -389,11 +418,10 @@ class AlmacenSalidaController extends Controller
             if($tipo_movimiento->clave == 'LMCN' && $concluir){ //si es movimiento de Traspado entre almacenes
                 //Se debe crear un movimiento de entrada en el almacen al que se mando
                 $movimiento->update(['estatus'=>'PERE']);
-                $movimiento->load('listaArticulos');
                 $tipo_movimiento_recepcion = TipoMovimiento::where('clave','RCPCN')->first();
 
                 if(!$tipo_movimiento_recepcion){
-                    throw new \Exception("No se encontro el tipo de movimiento necesario", 1);
+                    throw new \Exception("No se encontro el tipo de movimiento: Recepción", 1);
                 }
 
                 $datos_movimiento_entrada = [
@@ -414,6 +442,73 @@ class AlmacenSalidaController extends Controller
                     'movimiento_padre_id' => $movimiento->id,
                 ];
                 $movimiento_entrada = Movimiento::create($datos_movimiento_entrada);
+            }
+
+            if($movimiento->es_colectivo && $concluir){
+                $tipo_solicitud = TipoSolicitud::where('clave','CTVO')->first();
+                if(!$tipo_solicitud){
+                    throw new \Exception("No se encontro tipo de solicitud: Colectivo", 1);
+                }
+
+                $solicitud_articulos = [];
+                if($movimiento->solicitud_id){
+                    $solicitud = Solicitud::with('listaArticulos')->find($movimiento->solicitud_id);
+                    for ($i=0; $i < count($solicitud->listaArticulos) ; $i++) { 
+                        $solicitud_articulos[$solicitud->listaArticulos[$i]->bien_servicio_id] = $solicitud->listaArticulos[$i];
+                    }
+                }else{
+                    $solicitud = Solicitud::create([
+                        'folio'                         =>$movimiento->documento_folio,
+                        'tipo_solicitud_id'             =>$tipo_solicitud->id,
+                        'fecha_solicitud'               =>$movimiento->fecha_movimiento,
+                        'mes'                           =>substr($movimiento->fecha_movimiento,5,2),
+                        'anio'                          =>substr($movimiento->fecha_movimiento,0,4),
+                        'observaciones'                 =>'Elemento generado de forma automatica por el modulo de salidas',
+                        'estatus'                       =>$movimiento->estatus,                        
+                        'unidad_medica_id'              =>$movimiento->unidad_medica_id,
+                        'almacen_id'                    =>$movimiento->almacen_movimiento_id,
+                        'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,
+                        'programa_id'                   =>$movimiento->programa_id,
+                        'total_claves_solicitadas'      =>$total_claves,
+                        'total_articulos_solicitados'   =>0,
+                        'total_claves_surtidas'         =>0,
+                        'total_articulos_surtidos'      =>$total_articulos,
+                        'usuario_captura_id'            =>$loggedUser->id,
+                        'usuario_finaliza_id'           =>($movimiento->estatus == 'FIN')?$loggedUser->id:null,
+                    ]);
+
+                    $movimiento->update(['solicitud_id'=>$solicitud->id]);
+                }
+
+                $total_claves_surtidas = $total_claves;
+                $total_articulos_solicitados = 0;
+                $nuevos_articulos = [];
+
+                for ($i=0; $i < $conteo_claves ; $i++) { 
+                    $articulo = $parametros['lista_articulos'][$i];
+                    if($articulo['cantidad_solicitado'] > 0){
+                        $datos_articulo = [
+                            'bien_servicio_id' => $articulo['id'],
+                            'cantidad_solicitada' => $articulo['cantidad_solicitado'],
+                            'cantidad_surtida' => $articulo['total_piezas'],
+                        ];
+                        $total_articulos_solicitados += $articulo['cantidad_solicitado'];
+                        if($articulo['total_piezas'] <= 0){
+                            $total_claves_surtidas -= 1;
+                        }
+                        if(isset($solicitud_articulos[$articulo['id']])){
+                            $solicitud_articulos[$articulo['id']]->update($datos_articulo);
+                        }else{
+                            $nuevos_articulos[] = $datos_articulo;
+                        }
+                    }
+                }
+
+                $solicitud->update(['total_articulos_solicitados'=>$total_articulos_solicitados,'total_claves_surtidas'=>$total_claves_surtidas]);
+                if(count($nuevos_articulos)){
+                    $solicitud->listaArticulos()->createMany($nuevos_articulos);
+                }
+                $movimiento->load('solicitud');
             }
             
             DB::commit();

@@ -14,6 +14,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
 
   @Input() articulo: any;
   @Input() edicionActiva: boolean;
+  @Input() tieneSolicitud: boolean;
   @Input() fechaMovimiento: Date;
 
   @Output() cambiosEnLotes = new EventEmitter<any>();
@@ -109,12 +110,37 @@ export class InnerArticuloListaLotesComponent implements OnInit {
         const chng = changes[propName];
         let cur  = chng.currentValue;
         console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
+      }else if(propName == 'tieneSolicitud'){
+        const chng = changes[propName];
+        let cur  = chng.currentValue;
+        console.log(`Cambio de valor en ${propName}: clave = ${cur}`);
       }
     }
   }
 
-  aplicarCantidad(lote:any){
-    if(lote.restante != (lote.existencia - lote.salida)){
+  checarTotalSolicitado(value){
+    this.articulo.cantidad_solicitado = value;
+    if(value < this.articulo.total_piezas){
+      for (let index = this.articulo.lotes.length-1; index >= 0; index--) {
+        let lote = this.articulo.lotes[index];
+        this.aplicarCantidad(lote,true);
+      }
+    }
+  }
+
+  aplicarCantidad(lote:any, force:boolean = false){
+    if((lote.restante != (lote.existencia - lote.salida)) || force){
+      if(this.tieneSolicitud){
+        let cantidad_surtida = this.articulo.total_piezas - (lote.existencia - lote.restante) + lote.salida;
+        if( cantidad_surtida > this.articulo.cantidad_solicitado){
+          lote.salida -= (cantidad_surtida - this.articulo.cantidad_solicitado);
+        }
+      }
+
+      if(lote.salida < 0){
+        lote.salida = 0;
+      }
+
       if((lote.existencia - lote.salida) < 0){
         lote.salida = lote.existencia;
       }

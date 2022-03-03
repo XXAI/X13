@@ -87,7 +87,7 @@
 
                 <mat-form-field fxFlex>
                     <mat-label>Programa</mat-label>
-                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off" required>
+                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off">
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
@@ -100,6 +100,12 @@
                     </mat-autocomplete>
                     <mat-hint *ngIf="formMovimiento.get('programa').value"><mat-icon>{{(formMovimiento.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                 </mat-form-field>
+
+                <div class="mat-form-field" fxFlex="none" *ngIf="formMovimiento.get('es_colectivo')">
+                    <mat-checkbox formControlName="es_colectivo" (change)="checarTieneSolicitud($event.checked)">
+                        Es Colectivo
+                    </mat-checkbox>
+                </div>
 
                 <mat-form-field fxFlex="none">
                     <mat-label>Folio - Documento</mat-label>
@@ -161,12 +167,6 @@
                     <mat-error *ngIf="formMovimiento.get('curp').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
-                <div class="mat-form-field" fxFlex="none" *ngIf="formMovimiento.get('es_colectivo')">
-                    <mat-checkbox formControlName="es_colectivo" (change)="checarEsColectivo($event.checked)">
-                        Es Colectivo
-                    </mat-checkbox>
-                </div>
-
                 <!--mat-form-field fxFlex="none">
                     <mat-label>Fecha de Referencia</mat-label>
                     <input matInput formControlName="referencia_fecha" [max]="maxFechaMovimiento" [matDatepicker]="pickerReferencia" readonly>
@@ -188,7 +188,7 @@
                     <widget-buscador-stock fxFlex="none" 
                             [mostrarExistencias]="true" 
                             [almacenId]="formMovimiento.get('almacen_id').value" 
-                            [programaId]="formMovimiento.get('programa').value.id" 
+                            [programaId]="(formMovimiento.get('programa').value)?formMovimiento.get('programa').value.id:0"
                             (articuloSeleccionado)="agregarArticulo($event)">
                     </widget-buscador-stock>
                 </mat-card>
@@ -307,10 +307,20 @@
                                 <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> # Lotes </th>
                                 <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.no_lotes | number:'1.0-0'}} </td>
                             </ng-container>
+
+                            <ng-container matColumnDef="cantidad_solicitado" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: center; white-space: nowrap;"> Solicitado </th>
+                                <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap; text-align: center;"> {{((row.cantidad_solicitado)?row.cantidad_solicitado:0) | number:'1.0-0'}} </td>
+                            </ng-container>
                             
                             <ng-container matColumnDef="total_piezas" >
                                 <th mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: center; white-space: nowrap;"> Cantidad </th>
                                 <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_piezas | number:'1.0-0'}} </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="cantidad_sin_surtir" >
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: center; white-space: nowrap;"> Sin Surtir </th>
+                                <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap; text-align: center;"> {{((row.cantidad_solicitado)?row.cantidad_solicitado:0) - row.total_piezas | number:'1.0-0'}} </td>
                             </ng-container>
 
                             <ng-container matColumnDef="existencias_restantes" >
@@ -346,6 +356,7 @@
                                         <inner-articulo-lista-lotes   [articulo]="articulo" 
                                                                             [edicionActiva]="puedeEditarElementos" 
                                                                             [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
+                                                                            [tieneSolicitud]="tieneSolicitud"
                                                                             (cambiosEnLotes)="aplicarCambios($event)">
                                         </inner-articulo-lista-lotes>
                                     </div>

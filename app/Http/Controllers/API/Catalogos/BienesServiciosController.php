@@ -24,9 +24,9 @@ class BienesServiciosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            //if($loggedUser->is_superuser){
-            //$parametros['buscar_catalogo_completo'] = true;
-            //}
+            if(!\Gate::denies('has-permission', 'vPZUt02ZCcGoNuxDlfOCETTjJAobvJvO')){
+                $parametros['buscar_catalogo_completo'] = true;
+            }
 
             $catalogo_articulos = BienServicio::select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                         'unidad_medica_catalogo_articulos.es_normativo','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
@@ -123,9 +123,9 @@ class BienesServiciosController extends Controller{
     public function show($id)
     {
         try{
-            $insumo = InsumoMedico::with('medicamento','materialCuracion')->find($id);
+            $bien_servicio = BienServicio::find($id);
 
-            $return_data['insumo'] = $insumo;
+            $return_data['bien_servicio'] = $bien_servicio;
 
             return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
