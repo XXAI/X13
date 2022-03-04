@@ -76,6 +76,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::put('almacen-salidas-cancelar/{id}',         'API\Modulos\AlmacenSalidaController@cancelarMovimiento');
     Route::get('almacen-existencias',                   'API\Modulos\AlmacenExistenciasController@index');
     Route::get('almacen-existencias/movimientos/{id}',  'API\Modulos\AlmacenExistenciasController@movimientos');
+    Route::get('almacen-existencias/detalles/{id}',     'API\Modulos\AlmacenExistenciasController@detalles');
     Route::get('almacen-existencias/catalogos/',        'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');
     Route::get('partidas-bienes-servicios/',            'API\Modulos\PartidasController@partidas');
     Route::get('familias-bienes-servicios/',            'API\Modulos\FamiliasController@familias');

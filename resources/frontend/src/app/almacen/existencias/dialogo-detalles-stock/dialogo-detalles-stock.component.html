@@ -1,9 +1,8 @@
 <div fxLayout="column" fxLayoutAlign="start" fxFlexFill  >
-    <h1 mat-dialog-title>Detalles</h1>
     <!--<div mat-dialog-content style="background-color: #F0F0F0;  border-radius: 10px;">-->
-    <div mat-dialog-content style="padding-top: 5px; padding-bottom: 5px;">
-        <mat-accordion  >
-            <mat-expansion-panel  [expanded]="true" style="background-color: #F7F7F7;">
+    <div fxFlex="none" mat-dialog-content style="padding-top: 5px; padding-bottom: 5px; overflow: visible;">
+        <mat-accordion>
+            <mat-expansion-panel [expanded]="false" style="background-color: #F7F7F7;">
                 <mat-expansion-panel-header>
                     <mat-panel-title>Artículo</mat-panel-title>
                     <mat-panel-description>
@@ -16,58 +15,107 @@
                 <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
                     <p><small><strong>Partida</strong></small><br>{{ data.clave_partida_generica }}{{ data.clave_partida_especifica }} {{ data.partida_especifica_descripcion }}</p>
                 </div>
+                <div style="font-weight: 300; width:100%; text-align: justify; margin:10px 0">
+                    <p><small><strong>Familia</strong></small><br>{{ data.familia }}</p>
+                </div>
             </mat-expansion-panel>
         </mat-accordion>
     </div>
 
-    <table mat-table [dataSource]="dataSource" matSort >
-        <ng-container matColumnDef="almacen">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> Almacén </th>
-            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.almacen}} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="lote">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> LOTE </th>
-            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.lote}} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="fecha_caducidad">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> CADUCIDAD </th>
-            <td mat-cell *matCellDef="let element">{{element.fecha_caducidad | date: 'dd/MM/yyyy'}}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="folio">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> FOLIO </th>
-            <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.folio}} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="direccion_movimiento">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> TIPO </th>
-            <td mat-cell *matCellDef="let element"><mat-icon [matTooltip]="(element.direccion_movimiento == 'ENT')?'Entrada':'Salida'">{{(element.direccion_movimiento == 'ENT')?'exit_to_app':'launch'}}</mat-icon></td>
-        </ng-container>
-
-        <ng-container matColumnDef="fecha_movimiento">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> FECHA </th>
-            <td mat-cell *matCellDef="let element">{{element.fecha_movimiento | date: 'dd/MM/yyyy'}}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="cantidad">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> CANT </th>
-            <td mat-cell *matCellDef="let element"> {{element.cantidad | number}}</td>
-        </ng-container>
-        
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;">
-        </tr>
-    </table>
-    <div class="spinner-container" *ngIf="dataSource.loading$ | async">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <div fxFlex="none" mat-dialog-content style="padding-top: 5px; padding-bottom: 5px; overflow: visible; cursor: default;">
+        <div fxLayout="row">
+            <div fxFlex="none" style="padding: 2px;" *ngFor="let almacen of listaExistenciasAlmacen">
+                <mat-card style="padding: 5px;">
+                    <div fxLayout="row">
+                        <div fxFlex>{{almacen.nombre}} :</div>
+                        <div fxFlex="none">&nbsp;{{almacen.total_existencias | number:'1.0-0'}}</div>
+                    </div>
+                </mat-card>
+            </div>            
+        </div>
     </div>
-    <div class="flex-spacer"></div>
+
+    <div fxFlex="none" fxLayout="row" class="datos-generales-unidad">
+        <div fxFlex="none">Total Existencias: {{data.existencia | number:'1.0-0'}}</div>
+        <div fxFlex></div>
+        <div fxFlex="none" *ngIf="datosCatalogo" fxLayout="row">
+            <div fxFlex>Mínimo: {{+datosCatalogo.cantidad_minima | number:'1.0-0'}}</div>
+            <div fxFlex>Máximo: {{+datosCatalogo.cantidad_maxima | number:'1.0-0'}}</div>
+            <div fxFlex>Es Normativo: {{(datosCatalogo.es_normativo)?'SI':'NO'}}</div>
+        </div>
+    </div>
+
+    <div fxFlex fxLayout="column">
+        <div fxFlex="none" fxLayout="column" style="overflow-y: scroll;">
+            <div fxFlex fxLayout="row" class="demi-header">
+                <div fxFlex="17">FECHA</div>
+                <div fxFlex="20">ALMACÉN</div>
+                <div fxFlex="25">FOLIO MOVIMIENTO</div>
+                <div fxFlex="10">LOTES</div>
+                <div fxFlex="14" style="text-align: right;">CANTIDAD ENTRADA</div>
+                <div fxFlex="14">CANTIDAD SALIDA</div>
+            </div>
+        </div>
+        <div fxFlex fxLayout="column" style="overflow: auto; overflow-y: scroll;">
+            <div fxFlex="none" fxLayout="row" *ngFor="let movimiento of listaResumenMovimientos" class="demi-row">
+                <div fxFlex="17">{{movimiento.fecha_movimiento | date:'MMMM d, YYYY'}}</div>
+                <div fxFlex="20">{{movimiento.almacen}}</div>
+                <div fxFlex="25">{{movimiento.folio}}</div>
+                <div fxFlex="10">{{movimiento.lotes}}</div>
+                <div fxFlex="14" style="text-align: right;">{{(movimiento.direccion_movimiento == 'ENT')?movimiento.cantidad:''}}</div>
+                <div fxFlex="14">{{(movimiento.direccion_movimiento == 'SAL')?movimiento.cantidad:''}}</div>
+            </div>
+        </div>
+    </div>
+
+    <!--div fxFlex style="overflow: auto;">
+        <table mat-table [dataSource]="dataSource" matSort >
+            <ng-container matColumnDef="almacen">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> Almacén </th>
+                <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.almacen}} </td>
+            </ng-container>
     
-    <div mat-dialog-actions fxLayout.gt-sm="row" fxLayout="column" fxLayoutAlign="end center">
-        <mat-paginator [length]="dataSource.length" [pageSizeOptions]="[20, 50, 100]" showFirstLastButtons>
-        </mat-paginator>
+            <ng-container matColumnDef="lote">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> LOTE </th>
+                <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.lote}} </td>
+            </ng-container>
+    
+            <ng-container matColumnDef="fecha_caducidad">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> CADUCIDAD </th>
+                <td mat-cell *matCellDef="let element">{{element.fecha_caducidad | date: 'dd/MM/yyyy'}}</td>
+            </ng-container>
+    
+            <ng-container matColumnDef="folio">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header  fxHide.lt-sm> FOLIO </th>
+                <td mat-cell *matCellDef="let element"  fxHide.lt-sm> {{element.folio}} </td>
+            </ng-container>
+    
+            <ng-container matColumnDef="direccion_movimiento">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> TIPO </th>
+                <td mat-cell *matCellDef="let element"><mat-icon [matTooltip]="(element.direccion_movimiento == 'ENT')?'Entrada':'Salida'">{{(element.direccion_movimiento == 'ENT')?'exit_to_app':'launch'}}</mat-icon></td>
+            </ng-container>
+    
+            <ng-container matColumnDef="fecha_movimiento">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> FECHA </th>
+                <td mat-cell *matCellDef="let element">{{element.fecha_movimiento | date: 'dd/MM/yyyy'}}</td>
+            </ng-container>
+    
+            <ng-container matColumnDef="cantidad">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> CANT </th>
+                <td mat-cell *matCellDef="let element"> {{element.cantidad | number}}</td>
+            </ng-container>
+            
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;">
+            </tr>
+        </table>
+    </div>
+    <div fxFlex="none" class="spinner-container" *ngIf="dataSource.loading$ | async">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div-->
+    <div fxFlex="none" mat-dialog-actions fxLayout.gt-sm="row" fxLayout="column" fxLayoutAlign="end center">
+        <!--mat-paginator [length]="dataSource.length" [pageSizeOptions]="[20, 50, 100]" showFirstLastButtons>
+        </mat-paginator-->
         <div>
             <button mat-button (click)="cerrar()">Cerrar</button>
         </div>

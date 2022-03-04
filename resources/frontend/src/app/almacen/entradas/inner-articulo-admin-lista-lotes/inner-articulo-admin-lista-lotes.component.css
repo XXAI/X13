@@ -1,3 +1,10 @@
+.no-results-found{
+    padding:5px;
+    font-style: italic;
+    color:rgba(0,0,0,0.54);
+    cursor: default;
+}
+
 .contenido-tabla-lotes table{
     width: 100%;
     border-collapse: collapse;
@@ -79,15 +86,15 @@
 }
 
 .caducidad-verde{
-    color:#1e7c41;
+    color:#1e7c41 !important;
 }
 
 .caducidad-ambar{
-    color:#ff9900;
+    color:#ff9900 !important;
 }
 
 .caducidad-rojo{
-    color:#ff2a2a;
+    color:#ff2a2a !important;
 }
 
 .carta-canje .cc-campo{

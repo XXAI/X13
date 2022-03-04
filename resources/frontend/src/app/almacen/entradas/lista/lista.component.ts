@@ -113,6 +113,12 @@ export class ListaComponent implements OnInit {
                   element.folio += ' (Rechazado)';
                 }
               }
+
+              if(element.unidad_origen){
+                element.origen = element.unidad_origen;
+              }else if(element.almacen_origen){
+                element.origen = element.almacen_origen;
+              }
             });
             this.listadoMovimientos = response.data.data;
             this.resultsLength = response.data.total;

@@ -17,6 +17,12 @@ export interface MovimientoData {
     fecha_cancelacion?:Date;
     motivo_cancelacion?:string;
 
+    //Relacione a otros Objetos
+    solicitud?: any;
+    movimiento_hijo?:MovimientoData;
+    movimiento_padre_id?:Number;
+    movimiento_padre?:MovimientoData;
+
     //Valores con relaciones
     unidad_medica_id?:Number;
     unidad_medica?:any;
@@ -36,8 +42,6 @@ export interface MovimientoData {
     area_servicio_movimiento?:any;
     persona_id?:Number;
     persona?:any;
-    movimiento_padre_id?:Number;
-    movimiento_padre?:MovimientoData;
     creado_por_usuario_id?:Number;
     creado_por_usuario?:any;
     modificado_por_usuario_id?:Number;

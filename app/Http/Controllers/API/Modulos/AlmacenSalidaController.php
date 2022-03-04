@@ -39,12 +39,17 @@ class AlmacenSalidaController extends Controller
             $parametros = $request->all();
 
             $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','catalogo_unidades_medicas.nombre_corto as unidad_medica_movimiento',
-                                        'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino')
+                                        'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino','unidad_destino.nombre as unidad_destino',
+                                        'area_servicio.descripcion as area_servicio_destino','tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('almacenes as almacen_destino','almacen_destino.id','=','movimientos.almacen_movimiento_id')
+                                    ->leftJoin('catalogo_unidades_medicas as unidad_destino','unidad_destino.id','=','movimientos.unidad_medica_movimiento_id')
+                                    ->leftJoin('catalogo_areas_servicios as area_servicio','area_servicio.id','=','movimientos.area_servicio_movimiento_id')
                                     ->leftJoin('programas','programas.id','=','movimientos.programa_id')
                                     ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','movimientos.unidad_medica_movimiento_id')
                                     ->leftJoin('catalogo_tipos_movimiento','catalogo_tipos_movimiento.id','=','movimientos.tipo_movimiento_id')
+                                    ->leftJoin('solicitudes','solicitudes.id','=','movimientos.solicitud_id')
+                                    ->leftJoin('catalogo_tipos_solicitud as tipo_solicitud','tipo_solicitud.id','=','solicitudes.tipo_solicitud_id')
                                     ->where('movimientos.direccion_movimiento','SAL')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->orderBy('updated_at','DESC');
@@ -94,15 +99,23 @@ class AlmacenSalidaController extends Controller
             $extras = [];
 
             if($movimiento->estatus != 'BOR'){
-                $movimiento->load(['listaArticulos' => function($listaArticulos)use($loggedUser){ 
-                                        return $listaArticulos->with(['articulo'=>function($articulos)use($loggedUser){
-                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                },'stock'=>function($stock){
-                                                    $stock->with('marca','programa');
-                                                }]);
+                $solicitud_id = $movimiento->solicitud_id;
+                $movimiento->load(['listaArticulos' => function($listaArticulos)use($loggedUser,$solicitud_id){ 
+                                        return $listaArticulos->select('movimientos_articulos.*','solicitudes_articulos.cantidad_solicitada as cantidad_solicitado')
+                                                            ->leftjoin('solicitudes_articulos',function($join)use($solicitud_id){
+                                                                return $join->on('solicitudes_articulos.bien_servicio_id','=','movimientos_articulos.bien_servicio_id')
+                                                                            ->where('solicitudes_articulos.solicitud_id',$solicitud_id);
+                                                            })
+                                                            ->with([
+                                                                'articulo'=>function($articulos)use($loggedUser){
+                                                                    return $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                                                },'stock'=>function($stock){
+                                                                    return $stock->with('marca','programa');
+                                                                }
+                                                            ]);
                                     },'movimientoHijo' => function($movimientoHijo){
                                         return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
-                                    },'almacen','almacenMovimiento']);
+                                    },'solicitud.tipoSolicitud','almacen','almacenMovimiento']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
                 $programa_id = $movimiento->programa_id;
@@ -166,20 +179,13 @@ class AlmacenSalidaController extends Controller
             $mensajes = [
                 'required'      => "required",
                 'email'         => "email",
-                'unique'        => "unique"
+                'unique'        => "unique",
             ];
     
             $reglas = [
                 'almacen_id' => 'required',
                 'fecha_movimiento' => 'required',
-                'tipo_movimiento_id' => 'required'
-                //'folio' => 'required',
-                //'descripcion' => 'required',
-                //'entrega' => 'required',
-                //'recibe' => 'required',
-                //'observaciones' => 'required',
-                //'programa_id' => 'required',
-                //'id' => 'required',
+                'tipo_movimiento_id' => 'required',
             ];
 
             DB::beginTransaction();
@@ -473,11 +479,16 @@ class AlmacenSalidaController extends Controller
                         'total_articulos_solicitados'   =>0,
                         'total_claves_surtidas'         =>0,
                         'total_articulos_surtidos'      =>$total_articulos,
+                        'porcentaje_claves_surtidas'    =>0,
+                        'porcentaje_articulos_surtidos' =>0,
                         'usuario_captura_id'            =>$loggedUser->id,
                         'usuario_finaliza_id'           =>($movimiento->estatus == 'FIN')?$loggedUser->id:null,
                     ]);
 
                     $movimiento->update(['solicitud_id'=>$solicitud->id]);
+                    if($movimiento_entrada){
+                        $movimiento_entrada->update(['solicitud_id'=>$solicitud->id]);
+                    }
                 }
 
                 $total_claves_surtidas = $total_claves;
@@ -504,11 +515,20 @@ class AlmacenSalidaController extends Controller
                     }
                 }
 
-                $solicitud->update(['total_articulos_solicitados'=>$total_articulos_solicitados,'total_claves_surtidas'=>$total_claves_surtidas]);
+                $porcentaje_claves_surtidas = round((($total_claves_surtidas/$total_claves)*100),2);
+                $porcentaje_articulos_surtidos = round((($total_articulos/$total_articulos_solicitados)*100),2);
+
+                $solicitud->update([
+                                'total_articulos_solicitados'   =>$total_articulos_solicitados,
+                                'total_claves_surtidas'         =>$total_claves_surtidas,
+                                'porcentaje_claves_surtidas'    =>$porcentaje_claves_surtidas,
+                                'porcentaje_articulos_surtidos' =>$porcentaje_articulos_surtidos,
+                            ]);
+
                 if(count($nuevos_articulos)){
                     $solicitud->listaArticulos()->createMany($nuevos_articulos);
                 }
-                $movimiento->load('solicitud');
+                $movimiento->load('solicitud.tipoSolicitud');
             }
             
             DB::commit();

@@ -67,6 +67,7 @@ export class EntradaComponent implements OnInit {
   filteredProgramas: Observable<any[]>;
 
   totalesRecibidos: any;
+  tieneSolicitado: boolean;
 
   pageEvent: PageEvent;
   resultsLength: number = 0;
@@ -247,6 +248,9 @@ export class EntradaComponent implements OnInit {
 
               this.formMovimiento.patchValue(response.data);
               this.datosEntrada = response.data;
+              if(response.data.solicitud){
+                this.tieneSolicitado = true;
+              }
               this.cargarColumnasArticulos();
 
               let articulos_temp = [];
@@ -280,6 +284,7 @@ export class EntradaComponent implements OnInit {
                     en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
                     normativo: (lista_articulos[i].articulo.es_normativo)?true:false,
                     descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
+                    cantidad_solicitada: lista_articulos[i].cantidad_solicitada,
                     total_monto: 0,
                     no_lotes: 0,
                     total_piezas: 0,
@@ -380,7 +385,12 @@ export class EntradaComponent implements OnInit {
 
   cargarColumnasArticulos(){
     if(this.modoRecepcion){
-      this.displayedColumns = ['estatus','clave','nombre','no_lotes','total_piezas','total_recibido','actions'];
+      if(this.tieneSolicitado){
+        this.displayedColumns = ['estatus','clave','nombre','cantidad_solicitada','total_piezas','total_recibido','actions'];
+      }else{
+        this.displayedColumns = ['estatus','clave','nombre','no_lotes','total_piezas','total_recibido','actions'];
+      }
+      
     }else{
       this.displayedColumns = ['estatus','clave','nombre','no_lotes','total_piezas','total_monto','actions'];
     }

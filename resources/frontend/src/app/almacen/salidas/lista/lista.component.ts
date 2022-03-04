@@ -97,6 +97,13 @@ export class ListaComponent implements OnInit {
               element.estatus_clave = this.listaEstatusClaves[element.estatus];
               element.estatus_label = this.listaEstatusLabels[element.estatus];
               element.estatus_icono = this.listaEstatusIconos[element.estatus];
+              if(element.unidad_destino){
+                element.destino = element.unidad_destino;
+              }else if(element.almacen_destino){
+                element.destino = element.almacen_destino;
+              }else if(element.area_servicio_destino){
+                element.destino = element.area_servicio_destino;
+              }
             });
             this.listadoMovimientos = response.data.data;
             this.resultsLength = response.data.total;

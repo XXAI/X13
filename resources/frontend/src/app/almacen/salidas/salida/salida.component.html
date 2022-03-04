@@ -220,6 +220,38 @@
                         <span>{{ movimientoHijo.updated_at | date:'d MMM, y' }}</span>
                     </div>
                 </mat-card>
+                <mat-card fxFlex="none" fxLayout="column" *ngIf="movimientoSolicitud" class="datos-movimiento-solicitud">
+                    <div fxFlex="none">
+                        <div fxFlex class="solicitud-tipo {{listaEstatusClaves[movimientoSolicitud.estatus]}}-color">
+                            {{movimientoSolicitud.tipo_solicitud.descripcion}}
+                        </div>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" class="folio">
+                        <span>{{ movimientoSolicitud.folio }}</span>
+                    </div>
+                    <div fxFlex="none" fxLayout="row" class="demi-table">
+                        <div fxFlex="none" fxLayout="column" class="demi-rows-labels">
+                            <div fxFlex>&nbsp;</div>
+                            <div fxFlex>Claves</div>
+                            <div fxFlex>Articulos</div>
+                        </div>
+                        <div fxFlex fxLayout="column">
+                            <div fxFlex class="demi-column-label">Solicitados / Surtidos</div>
+                            <div fxFlex class="demi-column-data">{{movimientoSolicitud.total_claves_solicitadas | number:'1.0-0'}} / {{movimientoSolicitud.total_claves_surtidas | number:'1.0-0'}}</div>
+                            <div fxFlex class="demi-column-data">{{movimientoSolicitud.total_articulos_solicitados | number:'1.0-0'}} / {{movimientoSolicitud.total_articulos_surtidos | number:'1.0-0'}}</div>
+                        </div>
+                        <div fxFlex fxLayout="column">
+                            <div fxFlex class="demi-column-label">%</div>
+                            <div fxFlex class="demi-column-data">{{ +movimientoSolicitud.porcentaje_claves_surtidas | number:'1.0-2'}} %</div>
+                            <div fxFlex class="demi-column-data">{{ +movimientoSolicitud.porcentaje_articulos_surtidos | number:'1.0-2'}} %</div>
+                        </div>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" class="fecha">
+                        <span>{{ movimientoSolicitud.updated_at | date:'MMMM d, y' }}</span>
+                    </div>
+                </mat-card>
                 <mat-card fxFlex fxLayout="column" style="overflow: auto;">
                     <div fxFlex="none" fxLayout="column">
                         <mat-list role="list" dense *ngIf="totalesSalida">

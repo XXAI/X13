@@ -23,6 +23,10 @@
   justify-content: center;
 }
 
+.added-data{
+  font-size: smaller;
+}
+
 table {
 width: 100%;
 }

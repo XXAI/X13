@@ -54,6 +54,7 @@ export class SalidaComponent implements OnInit {
 
   movimientoHijo:any;
   tieneSolicitud:boolean;
+  movimientoSolicitud:any;
 
   controlArticulosAgregados:any;
   controlArticulosModificados:any;
@@ -232,6 +233,10 @@ export class SalidaComponent implements OnInit {
             this.movimientoHijo = response.data.movimiento_hijo;
           }
 
+          if(response.data.solicitud){
+            this.movimientoSolicitud = response.data.solicitud;
+          }
+
           if(response.data.persona){
             this.formMovimiento.get('nombre_completo').patchValue(response.data.persona.nombre_completo);
             this.formMovimiento.get('curp').patchValue(response.data.persona.curp);
@@ -332,6 +337,7 @@ export class SalidaComponent implements OnInit {
                   en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
                   normativo: (lista_articulos[i].articulo.es_normativo)?true:false,
                   descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
+                  cantidad_solicitado: lista_articulos[i].cantidad_solicitado,
                   total_piezas: 0,
                   total_monto: lista_articulos[i].total_monto,
                   total_lotes: 0,
@@ -564,6 +570,10 @@ export class SalidaComponent implements OnInit {
 
             if(response.data.movimiento_hijo){
               this.movimientoHijo = response.data.movimiento_hijo;
+            }
+
+            if(response.data.solicitud){
+              this.movimientoSolicitud = response.data.solicitud;
             }
             
             if(this.estatusMovimiento != 'BOR'){

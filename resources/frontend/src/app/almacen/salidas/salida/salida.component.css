@@ -247,6 +247,71 @@ table td {
     padding-right: 3px;
 }
 
+.solicitud-tipo{
+    cursor: default;
+    padding:5px;
+    text-align: center;
+    background-color: #dddddd;
+    font-weight: bold;
+    font-size: large;
+}
+
+.datos-movimiento-solicitud{
+    cursor: default;
+    overflow: auto; 
+    padding:0px; 
+    margin-bottom: 5px;
+    font-size: small;
+    font-weight: 400;
+}
+
+.datos-movimiento-solicitud > .folio{
+    text-align: center;
+    font-weight: 500;
+    padding:2px;
+}
+
+.datos-movimiento-solicitud > .fecha{
+    text-align: center;
+    font-style: italic;
+    font-weight: 500;
+    padding:2px;
+    color: rgba(0,0,0,.80);
+}
+
+.datos-movimiento-solicitud .etiqueta{
+    color: rgba(0,0,0,.70);
+    padding-right: 3px;
+}
+
+.demi-table{
+    text-align: center;
+    white-space: nowrap;
+}
+
+.demi-rows-labels{
+    text-align: right;
+    background-color: #65aef3;
+}
+
+.demi-rows-labels > div{
+    border-bottom: 1px solid #3e92e1;
+    padding:2px;
+}
+
+.demi-column-label{
+    text-align: center;
+    background-color: #3e92e1;
+    padding:2px;
+    border-bottom: 1px solid #65aef3;
+}
+
+.demi-column-data{
+    text-align: center;
+    padding:2px;
+    border-bottom: 1px solid #8c8c8c;
+}
+
 .nuevo-color{
     color:#8f8787;
 }
