@@ -14,6 +14,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
+import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-subir-archivo.component';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -264,7 +265,27 @@ export class ListaComponent implements OnInit {
 
   }
 
+  verDialogoSubirArchivo(){
+    console.log('yadayada','asdsdafsdf');
+    let configDialog:any = {
+      width: '99%',
+      //height: '50%',
+      maxHeight: '100vh',
+      panelClass: 'no-padding-dialog'
+    };
 
+    configDialog.data = {pedidoId: 0};
+    
+    const dialogRef = this.dialog.open(DialogoSubirArchivoComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(response => {
+      if(response){
+        console.log(response);
+      }else{
+        console.log('Cancelar');
+      }
+    });
+  }
 
   generarEntradaPDF(obj){
 

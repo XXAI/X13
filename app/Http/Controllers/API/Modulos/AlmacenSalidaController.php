@@ -24,6 +24,7 @@ use App\Models\UnidadMedica;
 use App\Models\Persona;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
+use App\Models\Almacen;
 
 class AlmacenSalidaController extends Controller
 {
@@ -37,6 +38,12 @@ class AlmacenSalidaController extends Controller
         try{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
+
+            if($loggedUser->is_superuser){
+                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            }else{
+                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+            }
 
             $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','catalogo_unidades_medicas.nombre_corto as unidad_medica_movimiento',
                                         'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino','unidad_destino.nombre as unidad_destino',
@@ -52,6 +59,7 @@ class AlmacenSalidaController extends Controller
                                     ->leftJoin('catalogo_tipos_solicitud as tipo_solicitud','tipo_solicitud.id','=','solicitudes.tipo_solicitud_id')
                                     ->where('movimientos.direccion_movimiento','SAL')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
+                                    ->whereIn('movimientos.almacen_id',$almacenes)
                                     ->orderBy('updated_at','DESC');
             
             //Filtros, busquedas, ordenamiento

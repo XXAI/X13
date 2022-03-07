@@ -133,8 +133,8 @@
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('almacen_movimiento_id')">
                     <mat-label>Almacén Destino</mat-label>
                     <mat-select formControlName="almacen_movimiento_id" required>
-                        <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
-                        <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id" [disabled]="item.id == this.formMovimiento.get('almacen_id').value">
+                        <mat-option *ngIf="catalogos['almacenes_destino'].length == 0">Sin Almacenes</mat-option>
+                        <mat-option *ngFor="let item of catalogos['almacenes_destino']" [value]="item.id" [disabled]="item.id == this.formMovimiento.get('almacen_id').value">
                             {{item.nombre}}
                         </mat-option>
                     </mat-select>

@@ -51,6 +51,10 @@ table {
     width: 120px;
 }
 
+.show-controls{
+    padding:5px;
+}
+
 .demi-header > div{
     font-family: "Roboto Mono" , "Roboto" !important;
     font-size: 0.8em;

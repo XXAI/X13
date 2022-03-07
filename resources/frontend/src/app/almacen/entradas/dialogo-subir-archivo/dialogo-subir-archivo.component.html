@@ -1,0 +1,60 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+        Subir Layout de Existencias:
+    </section>
+    <div fxFlex="none">
+        <div fxFlex fxLayout="row" [formGroup]="entradaForm">
+            <mat-form-field fxFlex>
+                <mat-label>Almacen</mat-label>
+                <mat-select  formControlName="almacen_id" required>
+                    <mat-option *ngFor="let item of almacenes" [value]="item.id">
+                        {{item.nombre}}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="entradaForm.get('almacen_id').hasError('required')">El almacen es obligatorio</mat-error>
+            </mat-form-field>
+
+            <mat-form-field fxFlex>
+                <mat-label>Programa</mat-label>
+                <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off" required>
+                <button mat-icon-button matPrefix>
+                    <mat-icon>list_alt</mat-icon>
+                </button>
+                <mat-autocomplete autoActiveFirstOption #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                    <mat-option *ngIf="programas.length == 0" value="">No hay programas capturados</mat-option>
+                    <mat-option *ngFor="let programa of filteredProgramas | async" [value]="programa">
+                        {{programa.descripcion}}
+                    </mat-option>
+                </mat-autocomplete>
+                <mat-hint *ngIf="entradaForm.get('programa').value"><mat-icon>{{(entradaForm.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+            </mat-form-field>
+            
+            <div fxFlex fxLayout="row">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="customFile" name="myfile" (change)="onFileSelect($event)" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" #UploadFileInput>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div fxFlex fxLayout="column" *ngIf="erroresImport">
+        <mat-divider></mat-divider>
+        <div fxFlex="none" style="padding: 2px 0px;">Se encontraron los siguientes errores: <button mat-stroked-button color="accent" (click)="downloadFile(erroresImport)"><mat-icon>download</mat-icon> Descargar en un archivo</button></div>
+        <cdk-virtual-scroll-viewport fxFlex itemSize="40" class="error-list">
+            <div *cdkVirtualFor="let error of erroresImport;" class="error-container">
+                <div fxLayout="row" class="error-item">
+                    <div fxFlex="none">Linea: {{error.linea}}; </div>
+                    <div fxFlex style="text-align: center;">{{error.error}}; </div>
+                    <div fxFlex style="text-align: center;">Clave: {{error.clave}}</div>
+                    <div fxFlex style="text-align: center; overflow: hidden;">{{error.articulo}}</div>
+                </div>
+            </div>
+        </cdk-virtual-scroll-viewport>
+        <mat-divider></mat-divider>
+    </div>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex></div>
+        <button fxFlex="20" mat-raised-button color="primary" (click)="subirArchivo()" [disabled]="!entradaForm.valid"><mat-icon>upload_file</mat-icon>Subir</button>
+        <div fxFlex="none">&nbsp;</div>
+        <button fxFlex="20" mat-stroked-button (click)="cancelar()" >Cancelar</button>
+    </section>
+</section>

@@ -46,7 +46,8 @@ export const APPS:App [] = [
     { name:'Configuración Unidad',   route: "configuracion-unidad",     icon: "assets/icons/configuracion-unidad.svg", isHub:false, hideHome:false,
       children:[
         {name:'Catalogo de Articulos',  route:'configuracion-unidad/catalogo-articulos',  icon:'format_list_bulleted',  permission:"5IGo0daq6vkWxyfesewdq4eBL2aexpCO"},
-        {name:'Almacenes',              route:'configuracion-unidad/almacenes',           icon:'inventory',             permission:"g3ZLa9MK5dl0ozpR4zU0pN8l0j7ENgBe"}
+        {name:'Almacenes',              route:'configuracion-unidad/almacenes',           icon:'inventory',             permission:"g3ZLa9MK5dl0ozpR4zU0pN8l0j7ENgBe"},
+        {name:'Admin Usuarios',         route:'configuracion-unidad/admin-usuarios',      icon:'manage_accounts',       permission:"wqA6AeVDylBMkKokKmWWdkjvlNYXbGLc"},
       ],
     },
     { name:'Herramientas Dev', route: "dev-tools",  icon: "assets/icons/toolbox.svg", isHub:true, hideHome:true, 

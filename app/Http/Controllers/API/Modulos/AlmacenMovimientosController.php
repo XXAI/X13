@@ -28,9 +28,16 @@ class AlmacenMovimientosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
+            if($loggedUser->is_superuser){
+                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            }else{
+                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+            }
+
             $config_catalogs = [
                 'programas'         => Programa::getModel(),
-                'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
+                'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes),
+                'almacenes_todos'   => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
                 'unidades_medicas'  => UnidadMedica::getModel(),
                 'proveedores'       => Proveedor::getModel(),
                 'tipos_movimiento'  => TipoMovimiento::getModel(),

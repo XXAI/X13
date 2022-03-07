@@ -5,6 +5,7 @@ import { ConfiguracionUnidadRoutingModule } from './configuracion-unidad-routing
 import { CatalogoArticulosModule } from './catalogo-articulos/catalogo-articulos.module';
 import { AlmacenesModule } from './almacenes/almacenes.module';
 import { UnidadMedicaComponent } from './unidad-medica/unidad-medica.component';
+import { AdminUsuariosModule } from './admin-usuarios/admin-usuarios.module';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
@@ -16,7 +17,8 @@ import { SharedModule } from '../shared/shared.module';
   ],
   exports:[
     CatalogoArticulosModule,
-    AlmacenesModule
+    AlmacenesModule,
+    AdminUsuariosModule,
   ]
 })
 export class ConfiguracionUnidadModule { }

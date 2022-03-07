@@ -145,6 +145,7 @@ class ExcelImportInsumosController extends Controller
 
         $rules = [
             'almacen_id' => 'required|numeric',
+            'programa_id' => 'required|numeric',
             'layout' => 'required|file',
         ];
 
@@ -156,8 +157,6 @@ class ExcelImportInsumosController extends Controller
             ],409);
         }
         
-       
-
         if($request->hasFile('layout'))
         {
             if($request->file('layout')->isValid())
@@ -166,7 +165,7 @@ class ExcelImportInsumosController extends Controller
             $path = $file->store('existencias');
             try
             {
-                Excel::import(new ExistenciasInsumosImport($input["almacen_id"]), $path);
+                Excel::import(new ExistenciasInsumosImport($input["almacen_id"],$input["programa_id"]), $path);
                 return response()->json([
                     'message' => "Importación de existencias realizada correctamente"
                 ],200);

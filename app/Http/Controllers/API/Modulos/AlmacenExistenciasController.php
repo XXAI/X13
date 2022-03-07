@@ -20,6 +20,7 @@ use App\Models\Movimiento;
 use App\Models\MovimientoArticulo;
 use App\Models\Programa;
 use App\Models\UnidadMedicaCatalogoArticulo;
+use App\Models\Almacen;
 
 class AlmacenExistenciasController extends Controller
 {
@@ -50,6 +51,12 @@ class AlmacenExistenciasController extends Controller
             }
             
             $loggedUser = auth()->userOrFail();
+            
+            if($loggedUser->is_superuser){
+                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            }else{
+                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+            }
 
             $items = Stock::leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
                             ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica")
@@ -57,7 +64,8 @@ class AlmacenExistenciasController extends Controller
                             ->leftJoin("programas","programas.id","=","stocks.programa_id")
                             ->leftJoin("familias","familias.id","=","bienes_servicios.familia_id")
                             ->where('stocks.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
-                            ->where('stocks.existencia','>',0);
+                            ->where('stocks.existencia','>',0)
+                            ->whereIn('stocks.almacen_id',$almacenes);
 
             if(isset($params['groupBy']) && trim($params['groupBy']) != ""){
                 if($params['groupBy'] == 'articulo'){
@@ -204,6 +212,13 @@ class AlmacenExistenciasController extends Controller
     public function detalles($id, Request $request){
         try{
             $loggedUser = auth()->userOrFail();
+
+            if($loggedUser->is_superuser){
+                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            }else{
+                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+            }
+
             $params = $request->input();
 
             $returnData = [];
@@ -217,6 +232,7 @@ class AlmacenExistenciasController extends Controller
                                     ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
                                     ->groupBy('stocks.programa_id')
                                     ->groupBy('stocks.almacen_id')
+                                    ->whereIn('stocks.almacen_id',$almacenes)
                                     ->get();
                 $returnData['por_almacen'] = $por_almacen;
 
@@ -247,6 +263,7 @@ class AlmacenExistenciasController extends Controller
                 ->orderBy("stocks.lote")
                 ->groupBy("movimientos_articulos.movimiento_id")
                 ->groupBy("stocks.bien_servicio_id")
+                ->whereIn('stocks.almacen_id',$almacenes)
                 ->get();
                 $returnData['movimientos'] = $movimientos;
             }
@@ -264,6 +281,13 @@ class AlmacenExistenciasController extends Controller
      */
     public function movimientos($id, Request $request){
         $loggedUser = auth()->userOrFail();
+
+        if($loggedUser->is_superuser){
+            $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+        }else{
+            $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+        }
+
         $params = $request->input();
 
         $items = Stock::select(
@@ -292,6 +316,7 @@ class AlmacenExistenciasController extends Controller
                     ->orderBy("movimientos.fecha_movimiento","ASC")
                     ->orderBy("movimientos.created_at","ASC")
                     ->orderBy("stocks.id","ASC")
+                    ->whereIn('stocks.almacen_id',$almacenes)
                     ;
 
         if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){

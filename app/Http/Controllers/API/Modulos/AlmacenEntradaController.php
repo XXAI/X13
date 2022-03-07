@@ -20,6 +20,7 @@ use App\Models\Stock;
 use App\Models\CartaCanje;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
+use App\Models\Almacen;
 
 class AlmacenEntradaController extends Controller
 {
@@ -34,6 +35,12 @@ class AlmacenEntradaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
+            if($loggedUser->is_superuser){
+                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            }else{
+                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+            }
+            
             $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','proveedores.nombre as proveedor','catalogo_tipos_movimiento.descripcion as tipo_movimiento',
                                             'catalogo_tipos_movimiento.clave as tipo_movimiento_clave','almacen_origen.nombre as almacen_origen','unidad_origen.nombre as unidad_origen',
                                             'tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido')
@@ -47,6 +54,7 @@ class AlmacenEntradaController extends Controller
                                     ->leftJoin('catalogo_tipos_solicitud as tipo_solicitud','tipo_solicitud.id','=','solicitudes.tipo_solicitud_id')
                                     ->where('movimientos.direccion_movimiento','ENT')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
+                                    ->whereIn('movimientos.almacen_id',$almacenes)
                                     ->orderBy('updated_at','DESC');
             
             //Filtros, busquedas, ordenamiento

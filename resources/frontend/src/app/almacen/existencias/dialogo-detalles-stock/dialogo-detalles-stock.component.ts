@@ -15,7 +15,7 @@ import { SharedService } from 'src/app/shared/shared.service';
   styleUrls: ['./dialogo-detalles-stock.component.css']
 })
 export class DialogoDetallesStockComponent implements OnInit {
-  //@ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   //@ViewChild(MatSort,{static:true}) sort: MatSort;
 
   constructor(
@@ -34,6 +34,9 @@ export class DialogoDetallesStockComponent implements OnInit {
   private orderBy:string;
   //displayedColumns: string[] = ['direccion_movimiento','fecha_movimiento','folio','lote','fecha_caducidad','cantidad'];
   displayedColumns: string[] = ['direccion_movimiento','almacen','fecha_movimiento','folio','lote','fecha_caducidad','cantidad'];
+  columnasResumen: string[] = ['fecha','almacen','folio','lotes','cantidad_entrada','cantidad_salida'];
+
+  tablaSeleccionada:string;
 
   dataSource: MovimientosStockDataSource;
   panelOpenState:boolean = true;
@@ -46,8 +49,8 @@ export class DialogoDetallesStockComponent implements OnInit {
   
   ngOnInit() {
     console.log("chuchi");
-    //this.dataSource = new MovimientosStockDataSource(this.apiService);           
-    //this.dataSource.loadData(this.data.id,'','asc','',0,20); 
+    this.dataSource = new MovimientosStockDataSource(this.apiService);           
+    this.dataSource.loadData(this.data.id,'','asc','',0,20); 
 
     this.listaExistenciasAlmacen = [];
     this.listaResumenMovimientos = [];
@@ -60,7 +63,7 @@ export class DialogoDetallesStockComponent implements OnInit {
       .pipe(
         tap(()=> this.loadData())
       ).subscribe();
-    */
+      */
   }
 
   cargarDetalles(id){
@@ -112,8 +115,8 @@ export class DialogoDetallesStockComponent implements OnInit {
 
   applyFilter(): void {
     //this.filter = this.inputSearchTxt.trim().toLowerCase();
-    //this.paginator.pageIndex = 0;
-    //this.loadData();
+    this.paginator.pageIndex = 0;
+    this.loadData();
   }
 
   showFichaTecnica():void {
@@ -121,7 +124,7 @@ export class DialogoDetallesStockComponent implements OnInit {
   }
 
   loadData(){   
-    //this.dataSource.loadData(this.data.id,this.filter.trim().toLowerCase(),this.sort.direction,this.orderBy,this.paginator.pageIndex, this.paginator.pageSize);
+    this.dataSource.loadData(this.data.id,this.filter.trim().toLowerCase(),undefined,this.orderBy,this.paginator.pageIndex, this.paginator.pageSize);
   }
 
 }

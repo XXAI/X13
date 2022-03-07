@@ -124,6 +124,7 @@ export class SalidaComponent implements OnInit {
     
     this.catalogos = {
       'almacenes':[],
+      'almacenes_destino':[],
       'programas':[],
       'unidades_medicas':[],
       'tipos_movimiento':[],
@@ -149,7 +150,7 @@ export class SalidaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',programas:'*',unidades_medicas:'*',tipos_movimiento:'movimiento.SAL',areas_servicios:'*'};
+    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',tipos_movimiento:'movimiento.SAL',areas_servicios:'*'};
     
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -159,6 +160,7 @@ export class SalidaComponent implements OnInit {
           this.isLoading = false;
         } else {
           this.catalogos['almacenes'] = response.data.almacenes;
+          this.catalogos['almacenes_destino'] = response.data.almacenes_todos;
           this.catalogos['programas'] = response.data.programas;
           this.catalogos['unidades_medicas'] = response.data.unidades_medicas;
           this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
