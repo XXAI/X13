@@ -12,6 +12,9 @@ use Response;
 use Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+
+use App\Exports\DevReportExport;
 
 use App\EDocs\EDoc;
 
@@ -338,6 +341,49 @@ class AlmacenExistenciasController extends Controller
         $items = $items->paginate($params['pageSize']);
 
         return response()->json($items);
+    }
+
+    public function exportExcel(Request $request){
+        ini_set('memory_limit', '-1');
+
+        try{
+            $loggedUser = auth()->userOrFail();
+            if($loggedUser->is_superuser){
+                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            }else{
+                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+            }
+            $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
+
+            $stocks = Stock::select('almacenes.nombre as ALMACEN','programas.descripcion as PROGRAMA','catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO',
+                                'bienes_servicios.clave_local as CLAVE','bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
+                                'stocks.lote as LOTE','stocks.fecha_caducidad as FECHA_CADUCIDAD','stocks.existencia as EXISTENCIA',
+                                'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
+                            ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
+                            ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
+                            ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                            ->leftJoin('programas','programas.id','=','stocks.programa_id')
+                            ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
+                                $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','stocks.bien_servicio_id')
+                                    ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                                    ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
+                            })
+                            ->whereIn('stocks.almacen_id',$almacenes)
+                            ->orderBy('almacenes.nombre','ASC')
+                            ->orderBy('programas.descripcion','ASC')
+                            ->orderBy('bienes_servicios.articulo','ASC')
+                            ->orderBy('bienes_servicios.clave_local','ASC')
+                            ->orderBy('stocks.fecha_caducidad','ASC');
+            //
+            $resultado = $stocks->get();
+            $columnas = array_keys(collect($resultado[0])->toArray());
+
+            $filename = 'Existencias Por Almacen';
+
+            return (new DevReportExport($resultado,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
+        }catch(\Exception $e){
+            return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
+        }
     }
 
 }

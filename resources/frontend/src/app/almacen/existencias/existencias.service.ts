@@ -11,7 +11,8 @@ export class ExistenciasService {
   url_existencias = `${environment.base_url}/almacen-existencias`;
   url_movimientos = `${environment.base_url}/almacen-existencias/movimientos`;
   url_detalles = `${environment.base_url}/almacen-existencias/detalles`;
-  
+  url_export =  `${environment.base_url}/almacen-existencias/exportar-excel`;
+
   constructor(private http: HttpClient) { }
 
   obtenerExistencias(payload):Observable<any> {
@@ -32,5 +33,9 @@ export class ExistenciasService {
         return response;
       })
     );
+  }
+
+  exportarReporte(payload:any={}):Observable<any>{
+    return this.http.get<any>(this.url_export, {params:{payload}, responseType: 'blob' as 'json'});
   }
 }

@@ -12,8 +12,10 @@
             <mat-divider [inset]="true"></mat-divider>
             <div fxFlex fxLayout="column">
                 <section fxFlex="none">
-                    <div fxLayout="column">
-                        
+                    <div fxLayout="column" style="padding-top: 5px;">
+                        <button mat-stroked-button color="accent" (click)="descargarExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
+                            <mat-icon>file_download</mat-icon> Descargar Excel
+                        </button>
                     </div>
                 </section>
             </div>

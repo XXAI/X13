@@ -80,6 +80,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('almacen-existencias/movimientos/{id}',  'API\Modulos\AlmacenExistenciasController@movimientos');
     Route::get('almacen-existencias/detalles/{id}',     'API\Modulos\AlmacenExistenciasController@detalles');
     Route::get('almacen-existencias/catalogos/',        'API\Modulos\AlmacenExistenciasController@catalogoUnidadesAlmacenes');
+    Route::get('almacen-existencias/exportar-excel',    'API\Modulos\AlmacenExistenciasController@exportExcel');
     Route::get('partidas-bienes-servicios/',            'API\Modulos\PartidasController@partidas');
     Route::get('familias-bienes-servicios/',            'API\Modulos\FamiliasController@familias');
     Route::apiResource('catalogo-almacenes',            'API\ConfiguracionUnidad\AlmacenesController');

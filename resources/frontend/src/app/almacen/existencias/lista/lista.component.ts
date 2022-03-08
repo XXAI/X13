@@ -8,6 +8,7 @@ import { tap } from 'rxjs/operators';
 import { ExistenciasDataSource } from '../existencias.data-source';
 import { ExistenciasService } from '../existencias.service';
 import { DialogoDetallesStockComponent } from '../dialogo-detalles-stock/dialogo-detalles-stock.component';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-lista',
@@ -20,6 +21,8 @@ export class ListaComponent implements OnInit {
   @ViewChild(MatSort,{static:true}) sort: MatSort;
 
   constructor(private apiService:ExistenciasService, public dialog: MatDialog) { }
+
+  isLoadingExcel:boolean;
 
   searchQuery:string;
   filtroAplicado:boolean;
@@ -84,6 +87,20 @@ export class ListaComponent implements OnInit {
     dialogRef.afterClosed().subscribe(data => {
       if(data != null){ }     
     });
+  }
+
+  descargarExcel(){
+    this.isLoadingExcel = true;
+    this.apiService.exportarReporte().subscribe(
+      response => {
+        FileSaver.saveAs(response,'Existencias por almacen');
+        this.isLoadingExcel = false;
+      },
+      errorResponse =>{
+        console.log('Ocurrio un error al intentar descargar el archivo');
+        this.isLoadingExcel = false;
+      }
+    );
   }
 
 }
