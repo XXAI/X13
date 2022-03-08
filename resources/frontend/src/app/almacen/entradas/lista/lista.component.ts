@@ -266,7 +266,6 @@ export class ListaComponent implements OnInit {
   }
 
   verDialogoSubirArchivo(){
-    console.log('yadayada','asdsdafsdf');
     let configDialog:any = {
       width: '99%',
       //height: '50%',
@@ -280,7 +279,7 @@ export class ListaComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(response => {
       if(response){
-        console.log(response);
+        this.loadListadoMovimientos();
       }else{
         console.log('Cancelar');
       }

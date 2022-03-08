@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 
 use App\Exceptions\DataException;
 use Carbon\Carbon;
+use DateTime;
 use DB;
 
 use App\Models\BienServicio;
@@ -14,6 +15,8 @@ use App\Models\Movimiento;
 use App\Models\MovimientoArticulo;
 use App\Models\TipoMovimiento;
 use App\Models\Stock;
+use App\Models\UnidadMedica;
+use App\Models\Almacen;
 
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -63,18 +66,34 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
         $movimientosInsumosCreated = [];
         // ----
         $loggedUser = auth()->userOrFail();
-        $tipo_movimiento = TipoMovimiento::where('clave','INI')->first();
+        $tipo_movimiento = TipoMovimiento::where('movimiento','INI')->first();
         $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 
         try{
+            $unidad_medica = UnidadMedica::find($loggedUser->unidad_medica_asignada_id);
+            $almacen = Almacen::with('tipoAlmacen')->where('id',$this->almacen_id)->first();
+            $fecha = date('Y-m-d');
+            $fecha_array = explode('-',$fecha);
+            
+            $consecutivo = Movimiento::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->where('tipo_movimiento_id',$tipo_movimiento->id)->max('consecutivo');
+            if($consecutivo){
+                $consecutivo++;
+            }else{
+                $consecutivo = 1;
+            }
+            
+            $folio = $unidad_medica->clues . '-' . $fecha_array[0] . '-' . $fecha_array[1] . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+            
             $movimiento = Movimiento::create([
                 "unidad_medica_id"=>$unidad_medica_id,
                 "almacen_id"=>$this->almacen_id,
                 "programa_id"=>$this->programa_id,
                 "direccion_movimiento" => "ENT",
                 "tipo_movimiento_id" => $tipo_movimiento->id,
+                "folio" => $folio,
+                "consecutivo" => $consecutivo,
                 "estatus" => "FIN",
-                "fecha_movimiento"=> date('Y-m-d'),
+                "fecha_movimiento"=> date('Y-m-d'), //Carbon::now()->format('Y-m-d H:i:s'), 
                 "descripcion" => "Importación de existencias (Inicialización de inventario) con layout xlsx",
                 "observaciones" => "Esta operación sustituye existencias",
                 "creado_por_usuario_id" => $loggedUser->id,
@@ -103,6 +122,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                     if($stock != null){
                         $cantidad_anterior = $stock->existencia;
                         $stock->existencia = $insumo["cantidad"];
+                        $stock->user_id = $loggedUser->id;
                         $stock->save();
                     }else{
                         $stock = Stock::create(
@@ -113,7 +133,8 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                                 "bien_servicio_id"=>$bienServicio->id,
                                 "lote"=>$insumo["lote"],
                                 "fecha_caducidad" => $insumo["fecha_caducidad"],
-                                "existencia" => $insumo["cantidad"]
+                                "existencia" => $insumo["cantidad"],
+                                "user_id" => $loggedUser->id,
                             ]
                         );
                     }
@@ -127,6 +148,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                             "modo_movimiento" => "INI",
                             "cantidad" => $insumo["cantidad"],
                             "cantidad_anterior" => $cantidad_anterior,
+                            "user_id" => $loggedUser->id,
                         ]
                     );
 
@@ -138,8 +160,11 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                     $this->addToErrors("Insumo no existe",$insumo["excel_index"],$insumo);
                 }                    
             }
-            if (count($this->rowErrors) == 0)
-            {
+            if (count($this->rowErrors) == 0){
+                $total_claves = MovimientoArticulo::where('movimiento_id',$movimiento->id)->select(DB::raw('COUNT(DISTINCT bien_servicio_id) as conteo'))->groupBy('movimiento_id')->first();
+                $total_articulos = MovimientoArticulo::where('movimiento_id',$movimiento->id)->select(DB::raw('SUM(cantidad) as suma'))->groupBy('movimiento_id')->first();
+                $movimiento->update(['total_claves'=>$total_claves->conteo, 'total_articulos'=>$total_articulos->suma]);
+
                 DB::commit();
             }
         }catch(\Exception $e){

@@ -118,7 +118,7 @@ class AlmacenSalidaController extends Controller
                                                                 'articulo'=>function($articulos)use($loggedUser){
                                                                     return $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
                                                                 },'stock'=>function($stock){
-                                                                    return $stock->with('marca','programa');
+                                                                    return $stock->with('marca','programa')->withTrashed();
                                                                 }
                                                             ]);
                                     },'movimientoHijo' => function($movimientoHijo){
@@ -494,7 +494,7 @@ class AlmacenSalidaController extends Controller
                     ]);
 
                     $movimiento->update(['solicitud_id'=>$solicitud->id]);
-                    if($movimiento_entrada){
+                    if(isset($movimiento_entrada) && $movimiento_entrada){
                         $movimiento_entrada->update(['solicitud_id'=>$solicitud->id]);
                     }
                 }

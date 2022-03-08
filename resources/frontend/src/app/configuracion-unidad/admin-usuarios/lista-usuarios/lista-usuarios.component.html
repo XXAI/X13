@@ -1,7 +1,7 @@
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
     <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
     <section fxFlex="none" fxLayout="row raw" style="overflow: auto;">
-        <div fxFlex="none" *ngFor="let usuario of listaUsuarios" style="padding:5px;">
+        <div fxFlex="33" *ngFor="let usuario of listaUsuarios" style="padding:5px;">
             <mat-card style="font-size: smaller;"> 
                 <mat-card-header>
                     <div mat-card-avatar>

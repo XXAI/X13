@@ -141,7 +141,9 @@ class AlmacenEntradaController extends Controller
                                                                 })
                                                                 ->with(['articulo'=>function($articulos)use($loggedUser){
                                                                     $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
-                                                                },'stock.marca','cartaCanje']);
+                                                                },'stock'=>function($stock){
+                                                                    $stock->with('marca')->withTrashed();
+                                                                },'cartaCanje']);
                                                 },'listaArticulosBorrador'=>function($listaBorrador)use($loggedUser){ 
                                                     return $listaBorrador->with(['articulo'=>function($articulos)use($loggedUser){
                                                                 $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
@@ -385,6 +387,8 @@ class AlmacenEntradaController extends Controller
                                 if(!$lote_padre){
                                     throw new \Exception("Error al intentar copiar datos del Lote", 1);
                                 }
+
+                                $stock_lote['programa_id']      = $lote_padre->programa_id;
                                 
                                 $stock_lote["marca_id"]         = $lote_padre->marca_id;
                                 $stock_lote["modelo"]           = $lote_padre->modelo;
@@ -552,8 +556,9 @@ class AlmacenEntradaController extends Controller
             $movimiento->total_monto = $total_monto;
             $movimiento->save();
 
+            $total_articulos = 0;
             if($movimiento->es_colectivo && $movimiento->solicitud_id && $concluir){
-                $movimiento->load('solicitud.listAarticulos');
+                $movimiento->load('solicitud.listaArticulos');
                 $solicitud = $movimiento->solicitud;
 
                 $solicitud_articulos = [];
@@ -566,7 +571,7 @@ class AlmacenEntradaController extends Controller
                 
                 for ($i=0; $i < $total_loop ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
-                    $total_articulos += ($tipo_movimiento->clave == 'RCPCN')?$articulo['total_recibido']:$articulo['total_piezas'];
+                    $total_articulos = ($tipo_movimiento->clave == 'RCPCN')?$articulo['total_recibido']:$articulo['total_piezas'];
                     if($total_articulos <= 0){
                         $total_claves_surtidas -= 1;
                     }
