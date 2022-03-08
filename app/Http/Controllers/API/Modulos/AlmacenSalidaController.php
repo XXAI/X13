@@ -302,7 +302,7 @@ class AlmacenSalidaController extends Controller
                                     'stock_id' => $lote['id'],
                                     'direccion_movimiento' => 'SAL',
                                     'modo_movimiento' => 'NRM',
-                                    'cantidad_solicitado' => $articulo['cantidad_solicitado'],
+                                    'cantidad_solicitado' => (isset($articulo['cantidad_solicitado']))?$articulo['cantidad_solicitado']:null,
                                     'cantidad' => $lote['salida'],
                                     'user_id' => $loggedUser->id,
                                 ];
@@ -313,7 +313,7 @@ class AlmacenSalidaController extends Controller
                             'bien_servicio_id' => $articulo['id'],
                             'direccion_movimiento' => 'SAL',
                             'modo_movimiento' => 'NRM',
-                            'cantidad_solicitado' => $articulo['cantidad_solicitado'],
+                            'cantidad_solicitado' => (isset($articulo['cantidad_solicitado']))?$articulo['cantidad_solicitado']:null,
                             'cantidad' => 0,
                             'user_id' => $loggedUser->id,
                         ];
