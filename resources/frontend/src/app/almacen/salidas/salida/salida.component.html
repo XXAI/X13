@@ -86,6 +86,16 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex>
+                    <mat-label>Turno</mat-label>
+                    <mat-select formControlName="turno_id" required>
+                        <mat-option *ngIf="catalogos['turnos'].length == 0">Sin Turnos Capturados</mat-option>
+                        <mat-option *ngFor="let item of catalogos['turnos']" [value]="item.id">
+                            {{item.nombre}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field fxFlex>
                     <mat-label>Programa</mat-label>
                     <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off">
                     <button mat-icon-button matPrefix>
@@ -155,10 +165,26 @@
                     <mat-hint *ngIf="formMovimiento.get('area_servicio_movimiento').value"><mat-icon>{{(formMovimiento.get('area_servicio_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex *ngIf="formMovimiento.get('nombre_completo')">
-                    <mat-label>Nombre Completo</mat-label>
-                    <input matInput formControlName="nombre_completo" autocomplete="off" required>
-                    <mat-error *ngIf="formMovimiento.get('nombre_completo').hasError('required')">Este campo es obligatorio</mat-error>
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('personal_medico')">
+                    <mat-label>Médico</mat-label>
+                    <input type="text" matInput aria-label="Personal-Medico" placeholder="Buscar Médico" formControlName="personal_medico" [matAutocomplete]="autoPersonalMedico" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-autocomplete autoActiveFirstOption #autoPersonalMedico="matAutocomplete" [displayWith]="getDisplayFn('nombre_completo')" panelWidth="auto">
+                        <mat-option *ngIf="catalogos['personal_medico'].length == 0" value="">No hay Médicos asignados</mat-option>
+                        <mat-option *ngFor="let medico of filteredPersonalMedico | async" [value]="medico">
+                            {{medico.nombre_completo}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formMovimiento.get('personal_medico').value"><mat-icon>{{(formMovimiento.get('personal_medico').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                    <mat-error *ngIf="formMovimiento.get('personal_medico').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('paciente')">
+                    <mat-label>Paciente</mat-label>
+                    <input matInput formControlName="paciente" autocomplete="off" required>
+                    <mat-error *ngIf="formMovimiento.get('paciente').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('curp')">

@@ -66,6 +66,7 @@ export class SalidaComponent implements OnInit {
   filteredUnidades: Observable<any[]>;
   filteredProgramas: Observable<any[]>;
   filteredAreasServicios: Observable<any[]>;
+  filteredPersonalMedico: Observable<any[]>;
 
   totalesSalida: any;
 
@@ -129,6 +130,8 @@ export class SalidaComponent implements OnInit {
       'unidades_medicas':[],
       'tipos_movimiento':[],
       'areas_servicios':[],
+      'turnos': [],
+      'personal_medico': [],
     };
 
     this.maxFechaMovimiento = new Date();
@@ -140,6 +143,7 @@ export class SalidaComponent implements OnInit {
       tipo_movimiento_id:['',Validators.required],
       programa: [''],
       programa_id: [''],
+      turno_id: ['',Validators.required],
       observaciones: [''],
       documento_folio: [''],
     });
@@ -150,7 +154,7 @@ export class SalidaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',tipos_movimiento:'movimiento.SAL',areas_servicios:'*'};
+    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',tipos_movimiento:'movimiento.SAL',areas_servicios:'*',turnos:'*',personal_medico:'*'};
     
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -165,6 +169,8 @@ export class SalidaComponent implements OnInit {
           this.catalogos['unidades_medicas'] = response.data.unidades_medicas;
           this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
           this.catalogos['areas_servicios'] = response.data.areas_servicios;
+          this.catalogos['turnos'] = response.data.turnos;
+          this.catalogos['personal_medico'] = response.data.personal_medico;
 
           if(this.catalogos['almacenes'].length == 1){
             this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
@@ -240,7 +246,7 @@ export class SalidaComponent implements OnInit {
           }
 
           if(response.data.persona){
-            this.formMovimiento.get('nombre_completo').patchValue(response.data.persona.nombre_completo);
+            this.formMovimiento.get('paciente').patchValue(response.data.persona.nombre_completo);
             this.formMovimiento.get('curp').patchValue(response.data.persona.curp);
           }
 
@@ -426,7 +432,9 @@ export class SalidaComponent implements OnInit {
       'almacen_movimiento_id',
       'area_servicio_movimiento',
       'area_servicio_movimiento_id',
-      'nombre_completo',
+      'personal_medico',
+      'personal_medico_id',
+      'paciente',
       'curp',
       'es_colectivo',
     ];
@@ -439,6 +447,7 @@ export class SalidaComponent implements OnInit {
 
     this.filteredUnidades = undefined;
     this.filteredAreasServicios = undefined;
+    this.filteredPersonalMedico = undefined;
     this.formMovimiento.get('documento_folio').clearValidators();
 
     if(this.tipoSalida.clave == 'UNMD'){
@@ -464,17 +473,22 @@ export class SalidaComponent implements OnInit {
         this.formMovimiento.get('es_colectivo').patchValue(true);
       }
 
-      //this.formMovimiento.get('documento_folio').setValidators(Validators.required);
       this.filteredAreasServicios = this.formMovimiento.get('area_servicio_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
                               map(descripcion => descripcion ? this._filter('areas_servicios',descripcion,'descripcion') : this.catalogos['areas_servicios'].slice())
                             );
     }else if(this.tipoSalida.clave == 'RCTA'){
-      //this.formMovimiento.addControl('persona_id',new FormControl(''));
-      this.formMovimiento.addControl('nombre_completo', new FormControl('', Validators.required));
+      this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
+      this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
+      this.formMovimiento.addControl('paciente', new FormControl('', Validators.required));
       this.formMovimiento.addControl('curp', new FormControl(''));
       this.formMovimiento.get('documento_folio').setValidators(Validators.required);
-      this.tieneSolicitud = false;
+      this.tieneSolicitud = true;
+
+      this.filteredPersonalMedico = this.formMovimiento.get('personal_medico').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre_completo:''),
+                              map(nombre => nombre ? this._filter('personal_medico',nombre,'nombre_completo') : this.catalogos['personal_medico'].slice())
+                            );
     }
+
     this.formMovimiento.updateValueAndValidity();
     this.checarTieneSolicitud(this.tieneSolicitud);
   }
@@ -558,6 +572,7 @@ export class SalidaComponent implements OnInit {
       formData.programa_id = (formData.programa)?formData.programa.id:null;
       formData.unidad_medica_movimiento_id = (formData.unidad_medica_movimiento)?formData.unidad_medica_movimiento.id:null;
       formData.area_servicio_movimiento_id = (formData.area_servicio_movimiento)?formData.area_servicio_movimiento.id:null;
+      formData.personal_medico_id = (formData.personal_medico)?formData.personal_medico.id:null;
 
       formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
       

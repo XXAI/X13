@@ -11,14 +11,18 @@ class Movimiento extends Model{
     use SoftDeletes;
     protected $table = 'movimientos';  
     protected $fillable = [
-        'unidad_medica_id','almacen_id','folio','consecutivo','direccion_movimiento','tipo_movimiento_id','estatus','fecha_movimiento',
+        'unidad_medica_id','almacen_id','folio','consecutivo','direccion_movimiento','tipo_movimiento_id','estatus','fecha_movimiento','turno_id',
         'documento_folio','programa_id','proveedor_id','descripcion','entrega','recibe','observaciones','unidad_medica_movimiento_id','almacen_movimiento_id','area_servicio_movimiento_id','es_colectivo','persona_id',
-        'total_claves','total_articulos','total_monto','referencia_folio','referencia_fecha','cancelado','fecha_cancelacion','motivo_cancelacion','movimiento_padre_id','solicitud_id',
+        'personal_medico_id','total_claves','total_articulos','total_monto','referencia_folio','referencia_fecha','cancelado','fecha_cancelacion','motivo_cancelacion','movimiento_padre_id','solicitud_id',
         'creado_por_usuario_id','modificado_por_usuario_id','concluido_por_usuario_id','cancelado_por_usuario_id','eliminado_por_usuario_id'
     ];
 
     public function tipoMovimiento(){
         return $this->belongsTo('App\Models\TipoMovimiento','tipo_movimiento_id');
+    }
+
+    public function turno(){
+        return $this->belongsTo('App\Models\UnidadMedicaTurno','turno_id');
     }
 
     public function unidadMedica(){
@@ -51,6 +55,10 @@ class Movimiento extends Model{
 
     public function persona(){
         return $this->belongsTo('App\Models\Persona','persona_id');
+    }
+
+    public function personalMedico(){
+        return $this->belongsTo('App\Models\PersonalMedico','personal_medico_id');
     }
 
     public function movimientoHijo(){

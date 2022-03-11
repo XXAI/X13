@@ -47,9 +47,19 @@
                         </td>
                     </ng-container>
                     
+                    <ng-container matColumnDef="almacen_turno">
+                        <th mat-header-cell *matHeaderCellDef> Almacén/Turno </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"> {{row.almacen}}<br>{{row.turno}} </td>
+                    </ng-container>
+
                     <ng-container matColumnDef="almacen">
                         <th mat-header-cell *matHeaderCellDef> Almacén </th>
                         <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"> {{row.almacen}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="turno">
+                        <th mat-header-cell *matHeaderCellDef> Turno </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; text-align: center;"> {{row.turno}} </td>
                     </ng-container>
 
                     <ng-container matColumnDef="tipo_movimiento">
@@ -69,14 +79,9 @@
                         <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;"> {{row.fecha_movimiento}}</td>
                     </ng-container>
 
-                    <ng-container matColumnDef="total_claves" >
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" style="white-space: nowrap;"> Total Claves </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_claves | number:'1.0-0'}} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="total_articulos" >
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" style="white-space: nowrap;"> Total Articulos </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_articulos | number:'1.0-0'}} </td>
+                    <ng-container matColumnDef="totales_claves_articulos" >
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" style="white-space: nowrap;"> Totales<br> Claves ( Pzas. ) </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> {{row.total_claves | number:'1.0-0'}} ( {{row.total_articulos | number:'1.0-0'}} ) </td>
                     </ng-container>
 
                     <ng-container matColumnDef="actions">

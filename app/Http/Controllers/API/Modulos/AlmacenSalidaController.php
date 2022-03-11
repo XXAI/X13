@@ -46,8 +46,9 @@ class AlmacenSalidaController extends Controller
             }
 
             $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','catalogo_unidades_medicas.nombre_corto as unidad_medica_movimiento',
-                                        'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino','unidad_destino.nombre as unidad_destino',
+                                        'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino','unidad_destino.nombre as unidad_destino','unidad_medica_turnos.nombre as turno',
                                         'area_servicio.descripcion as area_servicio_destino','tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido')
+                                    ->leftJoin('unidad_medica_turnos','unidad_medica_turnos.id','=','movimientos.turno_id')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('almacenes as almacen_destino','almacen_destino.id','=','movimientos.almacen_movimiento_id')
                                     ->leftJoin('catalogo_unidades_medicas as unidad_destino','unidad_destino.id','=','movimientos.unidad_medica_movimiento_id')
@@ -103,7 +104,7 @@ class AlmacenSalidaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
-            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa','persona')->find($id);
+            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa','turno','persona','personalMedico')->find($id);
             $extras = [];
 
             if($movimiento->estatus != 'BOR'){
@@ -211,6 +212,7 @@ class AlmacenSalidaController extends Controller
                 'almacen_id' => $parametros['almacen_id'],
                 'direccion_movimiento' => 'SAL',
                 'tipo_movimiento_id' => $parametros['tipo_movimiento_id'],
+                'turno_id' => $parametros['turno_id'],
                 'estatus' => ($concluir)?'FIN':'BOR',
                 'fecha_movimiento' => $parametros['fecha_movimiento'],
                 'programa_id' => (isset($parametros['programa_id']) && $parametros['programa_id'])?$parametros['programa_id']:null,
@@ -247,15 +249,17 @@ class AlmacenSalidaController extends Controller
 
             if($tipo_movimiento->clave == 'RCTA'){
                 if(!isset($parametros['persona_id']) || !$parametros['persona_id']){
-                    $persona = Persona::where('nombre_completo',strtolower($parametros['nombre_completo']))->where('curp',strtolower($parametros['curp']))->first();
+                    $persona = Persona::where('nombre_completo',strtolower($parametros['paciente']))->where('curp',strtolower($parametros['curp']))->first();
                     if(!$persona){
-                        $persona = Persona::create($parametros);
+                        $persona = Persona::create(['nombre_completo'=>$parametros['paciente'],'curp'=>$parametros['curp']]);
                     }
                     $persona_id = $persona->id;
                 }else{
                     $persona_id = $parametros['persona_id'];
                 }
                 $datos_movimiento['persona_id'] = $persona_id;
+
+                $datos_movimiento['personal_medico_id'] = $parametros['personal_medico_id'];
             }
 
             if(isset($parametros['id']) && $parametros['id']){
@@ -458,8 +462,13 @@ class AlmacenSalidaController extends Controller
                 $movimiento_entrada = Movimiento::create($datos_movimiento_entrada);
             }
 
-            if($movimiento->es_colectivo && $concluir){
-                $tipo_solicitud = TipoSolicitud::where('clave','CTVO')->first();
+            if(($movimiento->es_colectivo || $tipo_movimiento->clave == 'RCTA') && $concluir){
+                if($tipo_movimiento->clave == 'RCTA'){
+                    $tipo_solicitud = TipoSolicitud::where('clave','RCTA')->first();
+                }else{
+                    $tipo_solicitud = TipoSolicitud::where('clave','CTVO')->first();
+                }
+                
                 if(!$tipo_solicitud){
                     throw new \Exception("No se encontro tipo de solicitud: Colectivo", 1);
                 }
@@ -483,6 +492,9 @@ class AlmacenSalidaController extends Controller
                         'almacen_id'                    =>$movimiento->almacen_movimiento_id,
                         'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,
                         'programa_id'                   =>$movimiento->programa_id,
+                        'turno_id'                      =>$movimiento->turno_id,
+                        'persona_id'                    =>$movimiento->persona_id,
+                        'personal_medico_id'            =>$movimiento->personal_medico_id,
                         'total_claves_solicitadas'      =>$total_claves,
                         'total_articulos_solicitados'   =>0,
                         'total_claves_surtidas'         =>0,

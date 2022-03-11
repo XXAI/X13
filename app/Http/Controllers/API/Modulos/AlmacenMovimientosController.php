@@ -20,6 +20,8 @@ use App\Models\Stock;
 use App\Models\Marca;
 use App\Models\AreaServicio;
 use App\Models\BienServicio;
+use App\Models\UnidadMedicaTurno;
+use App\Models\PersonalMedico;
 
 class AlmacenMovimientosController extends Controller{
     
@@ -43,6 +45,8 @@ class AlmacenMovimientosController extends Controller{
                 'tipos_movimiento'  => TipoMovimiento::getModel(),
                 'marcas'            => Marca::getModel(),
                 'areas_servicios'   => AreaServicio::getModel(),
+                'turnos'            => UnidadMedicaTurno::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
+                'personal_medico'   => PersonalMedico::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
             ];
 
             $catalogos = [];

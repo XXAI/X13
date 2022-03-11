@@ -103,8 +103,23 @@
                 </mat-form-field>
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.tipo_movimiento_id && datosEntrada">
-                    <mat-label>Tipo Movimiento</mat-label>
+                    <mat-label>Tipo Entrada</mat-label>
                     <input matInput [value]="(datosEntrada.tipo_movimiento)?datosEntrada.tipo_movimiento.descripcion:'Sin Tipo Asignado'" readonly>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.turno_id">
+                    <mat-label>Turno</mat-label>
+                    <mat-select formControlName="turno_id" required>
+                        <mat-option *ngIf="catalogos['turnos'].length == 0">Sin Turnos Capturados</mat-option>
+                        <mat-option *ngFor="let item of catalogos['turnos']" [value]="item.id">
+                            {{item.nombre}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field fxFlex="none" *ngIf="!datosForm.turno_id && datosEntrada">
+                    <mat-label>Turno</mat-label>
+                    <input matInput [value]="(datosEntrada.turno)?datosEntrada.turno.nombre:'Sin Turno Asignado'" readonly>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.programa">

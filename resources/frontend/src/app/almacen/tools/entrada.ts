@@ -30,6 +30,8 @@ export interface MovimientoData {
     almacen?:any;
     tipo_movimiento_id?:Number;
     tipo_movimiento?:any;
+    turno_id?:Number;
+    turno?:any;
     programa_id?:Number;
     programa?:any;
     proveedor_id?:Number;

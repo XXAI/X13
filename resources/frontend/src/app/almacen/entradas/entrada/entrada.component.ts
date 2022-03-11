@@ -136,6 +136,7 @@ export class EntradaComponent implements OnInit {
       'programas':[],
       'proveedores':[],
       'tipos_movimiento':[],
+      'turnos':[],
       'marcas':[],
     };
 
@@ -163,7 +164,7 @@ export class EntradaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',tipos_movimiento:'movimiento.ENT|captura_independiente.1'};
+    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',tipos_movimiento:'movimiento.ENT|captura_independiente.1',turnos:'*'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -176,6 +177,7 @@ export class EntradaComponent implements OnInit {
           this.catalogos['proveedores'] = response.data.proveedores;
           this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
           this.catalogos['marcas'] = response.data.marcas;
+          this.catalogos['turnos'] = response.data.turnos;
 
           this.cargarDatosMovimiento();
 
@@ -400,6 +402,7 @@ export class EntradaComponent implements OnInit {
     let grupoFields:any = {
       id:[''],
       tipo_movimiento_id:['',Validators.required],
+      turno_id:['',Validators.required],
       fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
       almacen_id: ['',Validators.required],
       documento_folio:[''],
@@ -416,6 +419,7 @@ export class EntradaComponent implements OnInit {
       this.datosForm = {
         id:true,
         tipo_movimiento_id:true,
+        turno_id:true,
         fecha_movimiento:true,
         almacen_id: true,
         documento_folio:true,
