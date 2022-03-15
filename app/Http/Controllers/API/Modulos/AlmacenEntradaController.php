@@ -43,7 +43,8 @@ class AlmacenEntradaController extends Controller
             
             $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','proveedores.nombre as proveedor','catalogo_tipos_movimiento.descripcion as tipo_movimiento',
                                             'catalogo_tipos_movimiento.clave as tipo_movimiento_clave','almacen_origen.nombre as almacen_origen','unidad_origen.nombre as unidad_origen',
-                                            'tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido')
+                                            'tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido','unidad_medica_turnos.nombre as turno')
+                                    ->leftJoin('unidad_medica_turnos','unidad_medica_turnos.id','=','movimientos.turno_id')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('almacenes as almacen_origen','almacen_origen.id','=','movimientos.almacen_movimiento_id')
                                     ->leftJoin('catalogo_unidades_medicas as unidad_origen','unidad_origen.id','=','movimientos.unidad_medica_movimiento_id')
@@ -109,7 +110,7 @@ class AlmacenEntradaController extends Controller
                                                         },'marca']);
                                             },'proveedor','programa','tipoMovimiento'])->find($id);*/
             //if($movimiento->estatus != 'BOR'){
-            $movimiento = Movimiento::with(['almacen','proveedor','programa','tipoMovimiento'])->find($id);
+            $movimiento = Movimiento::with(['almacen','proveedor','programa','tipoMovimiento','turno'])->find($id);
             //}
 
             if($movimiento->estatus == 'PERE'){
@@ -222,6 +223,7 @@ class AlmacenEntradaController extends Controller
                     'almacen_id' => $parametros['almacen_id'],
                     'direccion_movimiento' => 'ENT',
                     'tipo_movimiento_id' => $parametros['tipo_movimiento_id'],
+                    'turno_id' => $parametros['turno_id'],
                     'estatus' => ($concluir)?'FIN':'BOR',
                     'fecha_movimiento' => $parametros['fecha_movimiento'],
                     'programa_id' => (isset($parametros['programa_id']) && $parametros['programa_id'])?$parametros['programa_id']:null,
