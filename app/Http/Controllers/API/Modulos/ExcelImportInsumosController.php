@@ -174,7 +174,9 @@ class ExcelImportInsumosController extends Controller
             {
                 return response()->json([
                     'message' => "Hay uno o mas errores en el layout",
-                    "data" =>$e->getData()
+                    'error'=> $e->getMessage(),
+                    "data" =>$e->getData(),
+                    "line" => $e->getLine(),
                 ],400);
             }          
 

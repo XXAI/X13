@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
+
+use App\Exports\DevReportExport;
 
 use Validator;
 use Illuminate\Validation\Rule;
@@ -36,16 +39,10 @@ class CatalogoArticulosController extends Controller
     public function cerrarCaptura(Request $request, $id){
         try{
             DB::beginTransaction();
-            
+
             $loggedUser = auth()->userOrFail();
             $catalogo = UnidadMedicaCatalogo::find($id);
-            $catalogo->puede_editar = false;
-            $catalogo->ultima_modificacion_por = $loggedUser->id;
 
-            $total_articulos = UnidadMedicaCatalogoArticulo::where('unidad_medica_catalogo_id',$catalogo->id)->count();
-            $catalogo->total_articulos = $total_articulos;
-            $catalogo->save();
-            
             //TODO:: Temporal, se quitara una vez se trabaje bien el modulo
             $total_articulos_normativos = UnidadMedicaCatalogoArticulo::where('unidad_medica_catalogo_id',$catalogo->id)->where('es_normativo',true)->count();
             $config_captura = ConfigUnidadMedicaAbasto::where('unidad_medica_id',$catalogo->unidad_medica_id)->first();
@@ -58,12 +55,59 @@ class CatalogoArticulosController extends Controller
                 $config_captura->total_claves_material_curacion_catalogo = $total_articulos_normativos;
             }
             $config_captura->save();
+
+            $total_articulos = UnidadMedicaCatalogoArticulo::where('unidad_medica_catalogo_id',$catalogo->id)->count();
+            
+            $catalogo->puede_editar = false;
+            $catalogo->ultima_modificacion_por = $loggedUser->id;
+            $catalogo->total_articulos = $total_articulos;
+            $catalogo->total_articulos_normativos = $total_articulos_normativos;
+            $catalogo->save();
             
             DB::commit();
             return response()->json(['data'=>$catalogo],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function exportExcel(Request $request,$id){
+        ini_set('memory_limit', '-1');
+
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            if(isset($parametros['unidad_medica_id']) && $parametros['unidad_medica_id']){
+                $unidad_medica_id = $parametros['unidad_medica_id'];
+            }else{
+                $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
+            }
+            $unidad_medica_catalogo_id = $id;
+
+            $catalogo_articulos = UnidadMedicaCatalogoArticulo::select('catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO',
+                                'bienes_servicios.clave_local as CLAVE','bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
+                                'unidad_medica_catalogo_articulos.cantidad_minima as CANTIDAD_MINIMA','unidad_medica_catalogo_articulos.cantidad_maxima as CANTIDAD_MAXIMA',
+                                'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
+                            ->leftJoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
+                            ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
+                            ->where('unidad_medica_catalogo_articulos.unidad_medica_catalogo_id',$unidad_medica_catalogo_id)
+                            ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                            ->orderBy('unidad_medica_catalogo_articulos.es_normativo','DESC')
+                            ->orderBy('bienes_servicios.articulo','ASC')
+                            ->orderBy('bienes_servicios.clave_local','ASC');
+            //
+            $resultado = $catalogo_articulos->get();
+            $columnas = array_keys(collect($resultado[0])->toArray());
+
+            $catalogo = UnidadMedicaCatalogo::with('tipoBienServicio')->find($unidad_medica_catalogo_id);
+
+            $filename = 'Catalogo de Articulos '.$catalogo->tipoBienServicio->descripcion;
+
+            return (new DevReportExport($resultado,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
+        }catch(\Exception $e){
+            return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
         }
     }
 
@@ -84,7 +128,7 @@ class CatalogoArticulosController extends Controller
             $catalogo_articulos = UnidadMedicaCatalogoArticulo::select('unidad_medica_catalogo_articulos.*','cog_partidas_especificas.descripcion as partida_especifica','familias.nombre as familia',
                                                                 'familias.id as familia_id','bienes_servicios.articulo','bienes_servicios.clave_cubs','bienes_servicios.clave_local',
                                                                 'bienes_servicios.especificaciones','bienes_servicios.descontinuado',
-                                                                DB::raw('IF(bienes_servicios.clave_local,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave'))
+                                                                DB::raw('IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave'))
                                                         ->leftjoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                         ->leftjoin('cog_partidas_especificas','cog_partidas_especificas.clave','=','bienes_servicios.clave_partida_especifica')
                                                         ->leftjoin('familias','familias.id','=','bienes_servicios.familia_id')
@@ -159,6 +203,9 @@ class CatalogoArticulosController extends Controller
                 $catalogo_unidad = UnidadMedicaCatalogo::find($parametros['unidad_medica_catalogo_id']);
                 $catalogo_unidad->ultima_modificacion_por = $loggedUser->id;
                 $catalogo_unidad->total_articulos += 1;
+                if($articulo->es_normativo){
+                    $catalogo_unidad->total_articulos_normativos += 1;
+                }
                 $catalogo_unidad->save();
 
                 DB::commit();
@@ -191,9 +238,16 @@ class CatalogoArticulosController extends Controller
 
             $parametros['modificado_por'] = $loggedUser->id;
 
+            $era_normativo = $articulo->es_normativo;
+
             if($articulo->update($parametros)){
                 $catalogo_unidad = UnidadMedicaCatalogo::find($articulo->unidad_medica_catalogo_id);
                 $catalogo_unidad->ultima_modificacion_por = $loggedUser->id;
+                if($era_normativo && !$articulo->es_normativo){
+                    $catalogo_unidad->total_articulos_normativos -= 1;
+                }else if(!$era_normativo && $articulo->es_normativo){
+                    $catalogo_unidad->total_articulos_normativos += 1;
+                }
                 $catalogo_unidad->save();
                 DB::commit();
                 return response()->json(['data'=>$articulo], HttpResponse::HTTP_OK);

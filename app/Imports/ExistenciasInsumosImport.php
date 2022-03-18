@@ -44,12 +44,13 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
     
     public function collection(Collection $rows){
         $rowIndex = 2;
-
+        
         $batch = [];
+        $duplicates_control = [];
         //Validación de registros
         foreach ($rows as $row) 
         {            
-            $this->insertBatchItem($batch, $row, $rowIndex);
+            $this->insertBatchItem($batch, $row, $rowIndex,$duplicates_control);
             $rowIndex++;
         }
 
@@ -82,7 +83,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                 $consecutivo = 1;
             }
             
-            $folio = $unidad_medica->clues . '-' . $fecha_array[0] . '-' . $fecha_array[1] . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+            $folio = $unidad_medica->clues . '-' . $fecha_array[0] . '-' . $fecha_array[1] . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
             
             $movimiento = Movimiento::create([
                 "unidad_medica_id"=>$unidad_medica_id,
@@ -105,6 +106,10 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
             // Debug 
             $movimientoCreated = $movimiento;
             // ----
+
+            if(count($batch) == 0){
+                throw new DataException([],'No se encontraron elementos viables en el archivo');
+            }
 
             foreach($batch as $insumo){
                 $bienServicio = BienServicio::where("clave_local",$insumo["clave"])->first();
@@ -168,7 +173,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
                 DB::commit();
             }
         }catch(\Exception $e){
-            throw new DataException([],$e->getMessage());
+            throw new DataException(['rows'=>$rows],$e->getMessage());
             DB::rollback();
         }
 
@@ -210,28 +215,44 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
 
    
 
-    private function insertBatchItem(&$array, $row, $index){
-        if($row[3]){
-            $fecha_caducidad = explode("-",$row[3]);
+    private function insertBatchItem(&$array, $row, $index, &$duplicates_control){
+        $row_data = [
+            "clave" => str_replace(["'",'"'],"",$row[0]),
+            "articulo" => str_replace(["'",'"'],"",$row[1]),
+            "lote" => str_replace(["'",'"'],"",$row[2]),
+            "fecha_caducidad" => str_replace(["'",'"'],"",$row[3]),
+            "cantidad" => str_replace(["'",'"'],"",$row[4]),
+            "excel_index" => $index,
+        ];
+
+        if($row_data['fecha_caducidad']){
+            $fecha_caducidad = explode("-",$row_data['fecha_caducidad']);
             if( count($fecha_caducidad) != 3 || !checkdate($fecha_caducidad[1],$fecha_caducidad[2],$fecha_caducidad[0])){
-                $this->addToErrors("Fecha caducidad inválida: ".$row[6].", el formato valido es: AAAA-MM-DD", $index, $row);
+                $this->addToErrors("Fecha caducidad inválida: ".$row[6].", el formato valido es: AAAA-MM-DD", $index, $row_data);
                 return;
             }
         }
         
-        if( $row[4] <= 0 || !is_numeric($row[4])){
-            $this->addToErrors("Cantidad inválida: ".$row[4].", debe ser un número entero y mayor a 0", $index, $row);
+        if( $row_data['cantidad'] <= 0 || !is_numeric($row_data['cantidad'])){
+            $this->addToErrors("Cantidad inválida: ".$row_data['cantidad'].", debe ser un número entero y mayor a 0", $index, $row_data);
+            return;
+        }
+
+        $hash = $row_data['clave'] . '|' . $row_data['lote'] . '|' . $row_data['fecha_caducidad'];
+        if(!isset($duplicates_control[$hash])){
+            $bien_servicio = BienServicio::where("clave_local",$row_data['clave'])->first();
+            if($bien_servicio != null){
+                $duplicates_control[$hash] = $index;
+            }else{
+                $this->addToErrors("Insumo no existe",$index,$row_data);
+                return;
+            }
+        }else{
+            $this->addToErrors("Lote repetido: ".$row_data['lote'].", hay otro lote con los mismos datos en la linea ".$duplicates_control[$hash], $index, $row_data);
             return;
         }
         
-        $array[] = [
-            "clave" => $row[0],
-            "articulo" => $row[1],
-            "lote" => $row[2],
-            "fecha_caducidad" => $row[3],
-            "cantidad" => $row[4],
-            "excel_index" => $index,
-        ];
+        $array[] = $row_data;
     }
 
     private function removeAccents($string) : string {

@@ -9,6 +9,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-lista-catalogos',
@@ -37,6 +38,7 @@ export class ListaCatalogosComponent implements OnInit {
     private dialog: MatDialog
   ) { }
 
+  isLoadingExcel: boolean;
   isLoadingCatalogos: boolean;
   isLoadingArticulos: boolean;
   isSaving: boolean;
@@ -176,6 +178,8 @@ export class ListaCatalogosComponent implements OnInit {
       this.isSaving = true;
       let datosForm = this.formArticulo.value;
 
+      let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
+
       if(datosForm.id){
         this.catalogoArticulosService.updateArticulo(datosForm.id,datosForm).subscribe(
           response =>{
@@ -185,6 +189,13 @@ export class ListaCatalogosComponent implements OnInit {
             } else {
               this.sharedService.showSnackBar('Cambios almacenados con éxito', null, 3000);
               let articulo = this.dataSourceArticulos.data.find(item => item.bien_servicio_id == datosForm.bien_servicio_id);
+
+              if(!articulo.es_normativo && datosForm.es_normativo){
+                catalogo.total_articulos_normativos += 1;
+              }else if(articulo.es_normativo && !datosForm.es_normativo){
+                catalogo.total_articulos_normativos -= 1;
+              }
+
               articulo.cantidad_minima = datosForm.cantidad_minima;
               articulo.cantidad_maxima = datosForm.cantidad_maxima;
               articulo.es_normativo = datosForm.es_normativo;
@@ -214,8 +225,12 @@ export class ListaCatalogosComponent implements OnInit {
               articulo.cantidad_maxima = response.data.cantidad_maxima;
               articulo.es_normativo = response.data.es_normativo;
 
-              let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
               catalogo.total_articulos += 1;
+              if(articulo.es_normativo){
+                catalogo.total_articulos_normativos += 1;
+              }
+
+              this.formArticulo.get('id').patchValue(response.data.id);
             }
             this.isSaving = false;
           },
@@ -261,7 +276,6 @@ export class ListaCatalogosComponent implements OnInit {
 
     //this.idArticuloSeleccionado = articulo_catalogo.bien_servicio_id;
     this.clickEnRow(articulo_catalogo);
-    console.log(articulo_catalogo);
   }
 
   quitarArticulo(articulo){ 
@@ -289,6 +303,10 @@ export class ListaCatalogosComponent implements OnInit {
 
               let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
               catalogo.total_articulos -= 1;
+
+              if(articulo.es_normativo){
+                catalogo.total_articulos_normativos -= 1;
+              }
             }
             //this.isSaving = false;
           },
@@ -331,8 +349,14 @@ export class ListaCatalogosComponent implements OnInit {
             } else {
               this.sharedService.showSnackBar('Articulos removidos con éxito', null, 3000);
 
+              let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
+              catalogo.total_articulos -= this.conteoArticulosSeleccionados;
+
               for (let id in this.listaArticulosSeleccionados){
                 let index = this.dataSourceArticulos.data.findIndex(x => x.id === +id);
+                if(this.dataSourceArticulos.data[index].es_normativo){
+                  catalogo.total_articulos_normativos -= 1;
+                }
                 this.dataSourceArticulos.data.splice(index,1);
               }
 
@@ -340,10 +364,6 @@ export class ListaCatalogosComponent implements OnInit {
               this.dataSourceArticulos.paginator = this.articulosPaginator;
               this.dataSourceArticulos.sort = this.sort;
               this.idArticuloSeleccionado = null;
-
-              let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
-              catalogo.total_articulos -= this.conteoArticulosSeleccionados;
-
               this.conteoArticulosSeleccionados = 0;
               this.listaArticulosSeleccionados = {};
             }
@@ -381,6 +401,7 @@ export class ListaCatalogosComponent implements OnInit {
                 let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
                 catalogo.puede_editar = false;
                 catalogo.total_articulos = response.data.total_articulos;
+                catalogo.total_articulos_normativos = response.data.total_articulos_normativos;
                 this.puedeEditarElementos = false;
               }
               //this.isSaving = false;
@@ -436,6 +457,21 @@ export class ListaCatalogosComponent implements OnInit {
     this.filtroArticulos = '';
     this.dataSourceArticulos.filter = '';
     this.filtroAplicado = false;
+  }
+
+  descargarReporteExcel(){
+    this.isLoadingExcel = true;
+    this.catalogoArticulosService.exportarReporte(this.idCatalogoSeleccionado).subscribe(
+      response => {
+        let catalogo = this.catalogosDisponibles.find(item => item.id == this.idCatalogoSeleccionado);
+        FileSaver.saveAs(response,'Catalogo '+catalogo.tipo_bien_servicio.descripcion);
+        this.isLoadingExcel = false;
+      },
+      errorResponse =>{
+        console.log('Ocurrio un error al intentar descargar el archivo');
+        this.isLoadingExcel = false;
+      }
+    );
   }
 
 }

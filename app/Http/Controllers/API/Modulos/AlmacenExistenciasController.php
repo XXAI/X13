@@ -243,12 +243,18 @@ class AlmacenExistenciasController extends Controller
                 $returnData['datos_catalogo'] = $datos_catalogo;
 
                 $movimientos = Stock::select(
-                    "almacenes.nombre as almacen",
                     "movimientos_articulos.movimiento_id as id", 
+                    "almacenes.nombre as almacen",
                     "movimientos.folio as folio", 
                     "movimientos.estatus as estatus", 
                     "movimientos_articulos.direccion_movimiento as direccion_movimiento",
                     "movimientos.fecha_movimiento as fecha_movimiento",
+                    "programas.descripcion as programa",
+                    "proveedores.nombre as proveedor",
+                    "almacen_destino.nombre as almacen_destino",
+                    "catalogo_unidades_medicas.nombre as unidad_medica_destino",
+                    "catalogo_areas_servicios.descripcion as area_servicio_destino",
+                    "catalogo_tipos_solicitud.descripcion as tipo_solicitud",
                     DB::raw("SUM(movimientos_articulos.cantidad) as cantidad"),
                     DB::raw("CONCAT(COUNT(DISTINCT stocks.id),' Lote(s)') as lotes"))
                 ->leftjoin("movimientos_articulos",function($joinArticulos){
@@ -258,9 +264,16 @@ class AlmacenExistenciasController extends Controller
                     $joinMovimientos->on("movimientos.id","=","movimientos_articulos.movimiento_id")->whereNull("movimientos.deleted_at");
                 })
                 ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
+                ->leftJoin('programas','programas.id','=','stocks.programa_id')
+                ->leftJoin('proveedores','proveedores.id','=','movimientos.proveedor_id')
+                ->leftJoin('almacenes as almacen_destino','almacen_destino.id','=','movimientos.almacen_movimiento_id')
+                ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','movimientos.unidad_medica_movimiento_id')
+                ->leftJoin('catalogo_areas_servicios','catalogo_areas_servicios.id','=','movimientos.area_servicio_movimiento_id')
+                ->leftJoin('solicitudes','solicitudes.id','=','movimientos.solicitud_id')
+                ->leftJoin('catalogo_tipos_solicitud','catalogo_tipos_solicitud.id','=','solicitudes.tipo_solicitud_id')
                 ->where("stocks.bien_servicio_id",$id)
                 ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
-                ->where("movimientos.estatus","FIN")
+                ->whereIn("movimientos.estatus",["FIN","PERE"])
                 ->orderBy("movimientos.fecha_movimiento","ASC")
                 ->orderBy("movimientos.created_at","ASC")
                 ->orderBy("stocks.lote")

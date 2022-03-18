@@ -10,7 +10,7 @@
             </div>
             <div fxFlex="none">
                 <span class="titulo">{{catalogo.tipo_bien_servicio.descripcion}}</span><br>
-                <span class="totales">Total: {{catalogo.total_articulos | number}}</span> 
+                <span class="totales">Total: {{catalogo.total_articulos | number}} | Normativos: {{catalogo.total_articulos_normativos | number}}</span> 
             </div>
         </mat-card>
         <div fxFlex></div>
@@ -32,6 +32,11 @@
                     Total Seleccionado:<br> {{conteoArticulosSeleccionados}} Articulo(s)
                 </div>
                 <widget-buscador-articulos *ngIf="puedeEditarElementos &&  !modoSelecionMultiple" fxFlex="none" [filtro]="{tipo_articulo: idTipoArticuloSeleccionado}" [mostrarExistencias]="false" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-articulos>
+                <div fxFlex="none">
+                    <button mat-stroked-button color="primary" (click)="descargarReporteExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
+                        <mat-icon>download</mat-icon>
+                    </button>
+                </div>
                 <div fxFlex class="small-search-input">
                     <mat-form-field fxFlex appearance="outline">
                         <input matInput [(ngModel)]="filtroArticulos" (keyup)="aplicarFiltroArticulos($event)" placeholder="Filtrar" autocomplete="off">

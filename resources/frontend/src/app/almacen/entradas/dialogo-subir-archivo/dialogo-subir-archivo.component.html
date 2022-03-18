@@ -42,10 +42,10 @@
         <cdk-virtual-scroll-viewport fxFlex itemSize="40" class="error-list">
             <div *cdkVirtualFor="let error of erroresImport;" class="error-container">
                 <div fxLayout="row" class="error-item">
-                    <div fxFlex="none">Linea: {{error.linea}}; </div>
+                    <div fxFlex="none">Linea: {{error.linea}}&nbsp;|&nbsp;</div>
                     <div fxFlex style="text-align: center;">{{error.error}}; </div>
-                    <div fxFlex style="text-align: center;">Clave: {{error.clave}}</div>
-                    <div fxFlex style="text-align: center; overflow: hidden;">{{error.articulo}}</div>
+                    <div fxFlex="none" style="text-align: center;">&nbsp;|&nbsp;Clave: {{error.clave}}&nbsp;|&nbsp;</div>
+                    <div fxFlex style="text-align: center; text-overflow: ellipsis; overflow: hidden;">{{error.articulo}}</div>
                 </div>
             </div>
         </cdk-virtual-scroll-viewport>

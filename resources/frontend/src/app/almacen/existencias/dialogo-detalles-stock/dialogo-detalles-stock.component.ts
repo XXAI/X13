@@ -34,7 +34,7 @@ export class DialogoDetallesStockComponent implements OnInit {
   private orderBy:string;
   //displayedColumns: string[] = ['direccion_movimiento','fecha_movimiento','folio','lote','fecha_caducidad','cantidad'];
   displayedColumns: string[] = ['direccion_movimiento','almacen','fecha_movimiento','folio','lote','fecha_caducidad','cantidad'];
-  columnasResumen: string[] = ['fecha','almacen','folio','lotes','cantidad_entrada','cantidad_salida'];
+  columnasResumen: string[] = ['fecha','folio','lotes','origen_destino','cantidad_entrada','cantidad_salida','existencia'];
 
   tablaSeleccionada:string;
 
@@ -51,7 +51,7 @@ export class DialogoDetallesStockComponent implements OnInit {
     console.log("chuchi");
     this.dataSource = new MovimientosStockDataSource(this.apiService);           
     this.dataSource.loadData(this.data.id,'','asc','',0,20); 
-
+    this.tablaSeleccionada = 'resumen';
     this.listaExistenciasAlmacen = [];
     this.listaResumenMovimientos = [];
     this.cargarDetalles(this.data.id);
@@ -93,6 +93,40 @@ export class DialogoDetallesStockComponent implements OnInit {
               this.listaExistenciasAlmacen[index].programas.push({ nombre: almacen.programa, existencias: +almacen.existencias });
             }
           }
+          let existencia_anterior = 0;
+          response.movimientos.forEach(element => {
+            element.existencia = existencia_anterior;
+            let origen_destino = '';
+
+            if(element.direccion_movimiento == 'ENT'){
+              element.existencia += +element.cantidad;
+
+              if(element.proveedor){
+                origen_destino = element.proveedor + ' => ';
+              }else if(element.unidad_medica_destino ){
+                origen_destino = element.unidad_medica_destino + ' => ';
+              }else if(element.almacen_destino){
+                origen_destino = element.almacen_destino + '=>';
+              }else{
+                origen_destino = '';
+              }
+              origen_destino += element.almacen;
+            }else if(element.direccion_movimiento == 'SAL'){
+              element.existencia -= +element.cantidad;
+
+              origen_destino = element.almacen;
+              if(element.almacen_destino){
+                origen_destino += '=>' + element.almacen_destino;
+              }else if(element.area_servicio_destino){
+                origen_destino += '=>' + element.area_servicio_destino;
+              }else if(element.unidad_medica_destino ){
+                origen_destino += '=>' + element.unidad_medica_destino;
+              }
+            }
+            existencia_anterior = element.existencia;
+
+            element.origen_destino = origen_destino;
+          });
           this.listaResumenMovimientos = response.movimientos;
           this.datosCatalogo = response.datos_catalogo;
         }

@@ -13,7 +13,8 @@ export class CatalogoArticulosService {
   url = `${environment.base_url}/configuracion-unidad/catalogo-articulos`;
   url_catalogos = `${environment.base_url}/configuracion-unidad/catalogo-articulos-catalogos`;
   url_cerrar_captura = `${environment.base_url}/configuracion-unidad/catalogo-articulos-cerrar-captura/`;
-
+  url_exportar_excel = `${environment.base_url}/configuracion-unidad/catalogo-articulos-exportar-excel/`;
+  
   constructor(private http: HttpClient) { }
 
   getCatalogos():Observable<any> {
@@ -70,6 +71,10 @@ export class CatalogoArticulosService {
         return response;
       }
     ));
+  }
+
+  exportarReporte(id,payload:any={}):Observable<any>{
+    return this.http.get<any>(this.url_exportar_excel+id, {params:{payload}, responseType: 'blob' as 'json'});
   }
 }
 

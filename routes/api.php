@@ -58,6 +58,7 @@ Route::group(['middleware'=>'auth'],function($router){
     
     Route::get('configuracion-unidad/catalogo-articulos-catalogos',             'API\ConfiguracionUnidad\CatalogoArticulosController@getCatalogos');
     Route::get('configuracion-unidad/catalogo-articulos-cerrar-captura/{id}',   'API\ConfiguracionUnidad\CatalogoArticulosController@cerrarCaptura');
+    Route::get('configuracion-unidad/catalogo-articulos-exportar-excel/{id}',   'API\ConfiguracionUnidad\CatalogoArticulosController@exportExcel');
 
     /**
      *  Modulo de Reportes
