@@ -38,9 +38,10 @@ class AlmacenMovimientosController extends Controller{
 
             $config_catalogs = [
                 'programas'         => Programa::getModel(),
-                'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes)->with(['tiposMovimiento'=>function($tiposMovimiento)use($parametros){
-                                                                                                                                                    $tiposMovimiento->where('movimiento',$parametros['filtro_almacenes_movimiento']);
-                                                                                                                                                }]),
+                // 'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes)->with(['tiposMovimiento'=>function($tiposMovimiento)use($parametros){
+                //                                                                                                                                     $tiposMovimiento->where('movimiento',$parametros['filtro_almacenes_movimiento']);
+                //
+                'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes),                                                                                                                               
                 'almacenes_todos'   => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
                 'unidades_medicas'  => UnidadMedica::getModel(),
                 'proveedores'       => Proveedor::getModel(),
@@ -50,6 +51,12 @@ class AlmacenMovimientosController extends Controller{
                 'turnos'            => UnidadMedicaTurno::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
                 'personal_medico'   => PersonalMedico::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
             ];
+
+            if(isset($parametros['filtro_almacenes_movimiento']) && $parametros['filtro_almacenes_movimiento']){
+                $config_catalogs['almacenes']->with(['tiposMovimiento' => function($tiposMovimiento)use($parametros){
+                    $tiposMovimiento->where('movimiento',$parametros['filtro_almacenes_movimiento']);
+                }]);
+            }
 
             $catalogos = [];
             foreach ($parametros as $key => $value) {
