@@ -77,7 +77,7 @@ export class SalidaComponent implements OnInit {
   pageSizeOptions: number[] = [10, 20, 30, 50];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  displayedColumns: string[] = ['estatus','clave','nombre','existencias','total_piezas','existencias_restantes','actions'];//'no_lotes',
+  displayedColumns: string[] = ['estatus','clave','nombre','modo_salida','existencias','total_piezas','existencias_restantes','actions'];//'no_lotes',
   
   editable: boolean;
   puedeEditarElementos: boolean;
@@ -154,7 +154,7 @@ export class SalidaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',tipos_movimiento:'movimiento.SAL',areas_servicios:'*',turnos:'*',personal_medico:'*'};
+    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',areas_servicios:'*',turnos:'*',personal_medico:'*', filtro_almacenes_movimiento:'SAL'};
     
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -167,13 +167,14 @@ export class SalidaComponent implements OnInit {
           this.catalogos['almacenes_destino'] = response.data.almacenes_todos;
           this.catalogos['programas'] = response.data.programas;
           this.catalogos['unidades_medicas'] = response.data.unidades_medicas;
-          this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
+          //this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
           this.catalogos['areas_servicios'] = response.data.areas_servicios;
           this.catalogos['turnos'] = response.data.turnos;
           this.catalogos['personal_medico'] = response.data.personal_medico;
 
           if(this.catalogos['almacenes'].length == 1){
             this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
+            this.catalogos['tipos_movimiento'] = this.catalogos['almacenes'][0].tipos_movimiento;
           }
 
           if(this.catalogos['tipos_movimiento'].length == 1){
@@ -228,6 +229,7 @@ export class SalidaComponent implements OnInit {
             response.data.referencia_fecha = new Date(response.data.referencia_fecha+'T12:00:00');
           }
 
+          this.catalogos['tipos_movimiento'] = response.data.almacen.tipos_movimiento;
           this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
           this.cambiarTipoSalida();
 
@@ -279,6 +281,8 @@ export class SalidaComponent implements OnInit {
                   partida_descripcion: lista_articulos[i].partida_especifica,
                   familia: lista_articulos[i].familia,
                   tiene_fecha_caducidad: (lista_articulos[i].tiene_fecha_caducidad)?true:false,
+                  puede_surtir_unidades: (lista_articulos[i].puede_surtir_unidades)?true:false,
+                  surtir_en_unidades: (lista_articulos[i].modo_movimiento == 'UNI')?true:false,
                   tipo_articulo: lista_articulos[i].tipo_bien_servicio,
                   tipo_formulario: lista_articulos[i].clave_form,
                   en_catalogo: (lista_articulos[i].en_catalogo_unidad)?true:false,
@@ -290,6 +294,8 @@ export class SalidaComponent implements OnInit {
                   total_lotes: 0,
                   existencias: 0,
                   existencias_restantes: 0,
+                  existencias_empaque: 0,
+                  existencias_unidades: 0,
                   existencias_extras: 0,
                   lotes: []
                 };
@@ -299,7 +305,10 @@ export class SalidaComponent implements OnInit {
                     articulo.total_piezas += stock.cantidad;
                     articulo.total_lotes++;
                   }
-                  articulo.existencias += stock.existencia;
+                  
+                  articulo.existencias_empaque += stock.existencia;
+                  articulo.existencias_unidades += stock.existencia_unidades;
+
                   articulo.lotes.push({
                     id: stock.id,
                     lote: stock.lote,
@@ -310,11 +319,14 @@ export class SalidaComponent implements OnInit {
                     programa: (stock.programa)?stock.programa.descripcion:'Sin Programa',
                     marca: (stock.marca)?stock.marca:'Sin Marca',
                     existencia: stock.existencia,
+                    existencia_empaque: stock.existencia,
+                    existencia_unidades: stock.existencia_unidades,
                     salida: stock.cantidad,
                     restante: stock.existencia - stock.cantidad,
                   });
                 });
 
+                articulo.existencias = (articulo.surtir_en_unidades)?articulo.existencias_unidades:articulo.existencias_empaque;
                 articulo.existencias_restantes = articulo.existencias - articulo.total_piezas;
 
                 articulos_temp.push(articulo);
@@ -340,6 +352,8 @@ export class SalidaComponent implements OnInit {
                   partida_descripcion: lista_articulos[i].articulo.partida_especifica,
                   familia: lista_articulos[i].articulo.familia,
                   tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
+                  puede_surtir_unidades: (lista_articulos[i].articulo.puede_surtir_unidades)?true:false,
+                  surtir_en_unidades: (lista_articulos[i].modo_movimiento == 'UNI')?true:false,
                   tipo_articulo: lista_articulos[i].articulo.tipo_bien_servicio,
                   tipo_formulario: lista_articulos[i].articulo.clave_form,
                   en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
@@ -351,15 +365,16 @@ export class SalidaComponent implements OnInit {
                   total_lotes: 0,
                   existencias: 0,
                   existencias_restantes: 0,
+                  existencias_empaque: 0,
+                  existencias_unidades: 0,
                   existencias_extras: 0,
                   lotes: [],
                 };
 
-                articulos_temp.push(articulo);
-
                 this.controlArticulosAgregados[articulo.id] = true;
                 this.totalesSalida.claves += 1;
                 
+                articulos_temp.push(articulo);
                 /*articulo.no_lotes = 1;*/
               }else{
                 let index = articulos_temp.findIndex(x => x.id == lista_articulos[i].articulo.id);
@@ -377,16 +392,20 @@ export class SalidaComponent implements OnInit {
                   programa: (lista_articulos[i].stock.programa)?lista_articulos[i].stock.programa.descripcion:'Sin Programa',
                   marca: (lista_articulos[i].stock.marca)?lista_articulos[i].stock.marca:'Sin Marca',
                   existencia: lista_articulos[i].cantidad_anterior,
+                  existencia_empaque: lista_articulos[i].cantidad_anterior,
+                  existencia_unidades: lista_articulos[i].cantidad_anterior,
                   salida: lista_articulos[i].cantidad,
                   restante: +lista_articulos[i].cantidad_anterior - +lista_articulos[i].cantidad,
                 });
 
                 this.totalesSalida.articulos += lista_articulos[i].cantidad;
                 articulo.total_piezas += lista_articulos[i].cantidad;
-                articulo.existencias += lista_articulos[i].cantidad_anterior;
+                articulo.existencias += +lista_articulos[i].cantidad_anterior;
                 articulo.existencias_restantes = articulo.existencias - articulo.total_piezas;
                 articulo.total_lotes++;
               }
+              articulo.existencias_empaque = articulo.existencias;
+              articulo.existencias_unidades = articulo.existencias;
             }
           }
 
@@ -408,6 +427,17 @@ export class SalidaComponent implements OnInit {
   }
 
   checarAlmacenSeleccionado(){
+    let almacen = this.catalogos['almacenes'].find(item => item.id == this.formMovimiento.get('almacen_id').value);
+
+    this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
+    if(this.catalogos['tipos_movimiento'].length == 1){
+      this.formMovimiento.get('tipo_movimiento_id').patchValue(this.catalogos['tipos_movimiento'][0].id);
+      this.cambiarTipoSalida();
+    }else{
+      this.formMovimiento.get('tipo_movimiento_id').reset();
+      this.cambiarTipoSalida();
+    }
+
     if(this.tipoSalida && this.tipoSalida.clave == 'LMCN'){
       this.formMovimiento.get('almacen_movimiento_id').reset();
     }
@@ -417,10 +447,10 @@ export class SalidaComponent implements OnInit {
     this.tieneSolicitud = checked;
     if(checked){
       this.formMovimiento.get('documento_folio').setValidators(Validators.required);
-      this.displayedColumns = ['estatus','clave','nombre','cantidad_solicitado','total_piezas','cantidad_sin_surtir','actions'];
+      this.displayedColumns = ['estatus','clave','nombre','modo_salida','cantidad_solicitado','total_piezas','cantidad_sin_surtir','actions'];
     }else{
       this.formMovimiento.get('documento_folio').clearValidators();
-      this.displayedColumns = ['estatus','clave','nombre','existencias','total_piezas','existencias_restantes','actions'];
+      this.displayedColumns = ['estatus','clave','nombre','modo_salida','existencias','total_piezas','existencias_restantes','actions'];
     }
   }
 
@@ -434,6 +464,7 @@ export class SalidaComponent implements OnInit {
       'area_servicio_movimiento_id',
       'personal_medico',
       'personal_medico_id',
+      'persona_id',
       'paciente',
       'curp',
       'es_colectivo',
@@ -450,40 +481,53 @@ export class SalidaComponent implements OnInit {
     this.filteredPersonalMedico = undefined;
     this.formMovimiento.get('documento_folio').clearValidators();
 
-    if(this.tipoSalida.clave == 'UNMD'){
-      this.formMovimiento.addControl('unidad_medica_movimiento', new FormControl('', Validators.required));
-      this.formMovimiento.addControl('unidad_medica_movimiento_id', new FormControl(''));
-      this.tieneSolicitud = false;
-      this.filteredUnidades = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
-                                map(nombre => nombre ? this._filter('unidades_medicas',nombre,'nombre') : this.catalogos['unidades_medicas'].slice())
-                              );
-    }else if(this.tipoSalida.clave == 'LMCN'){
-      this.formMovimiento.addControl('almacen_movimiento_id', new FormControl('', Validators.required));
-      this.formMovimiento.addControl('es_colectivo', new FormControl(''));
+    if(this.tipoSalida){
+      if(this.tipoSalida.clave == 'UNMD'){
+        this.formMovimiento.addControl('unidad_medica_movimiento', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('unidad_medica_movimiento_id', new FormControl(''));
+        this.tieneSolicitud = false;
+        this.filteredUnidades = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
+                                  map(nombre => nombre ? this._filter('unidades_medicas',nombre,'nombre') : this.catalogos['unidades_medicas'].slice())
+                                );
+      }else if(this.tipoSalida.clave == 'LMCN'){
+        this.formMovimiento.addControl('almacen_movimiento_id', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('es_colectivo', new FormControl(''));
 
-      if(this.tieneSolicitud){
-        this.formMovimiento.get('es_colectivo').patchValue(true);
+        if(this.tieneSolicitud){
+          this.formMovimiento.get('es_colectivo').patchValue(true);
+        }
+      }else if(this.tipoSalida.clave == 'SRVC'){
+        this.formMovimiento.addControl('area_servicio_movimiento', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('area_servicio_movimiento_id', new FormControl(''));
+        this.formMovimiento.addControl('es_colectivo', new FormControl(''));
+
+        if(this.tieneSolicitud){
+          this.formMovimiento.get('es_colectivo').patchValue(true);
+        }
+      }else if(this.tipoSalida.clave == 'RCTA'){
+        this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
+        this.formMovimiento.addControl('paciente', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('persona_id', new FormControl(''));
+        this.formMovimiento.addControl('curp', new FormControl(''));
+        this.formMovimiento.get('documento_folio').setValidators(Validators.required);
+        this.tieneSolicitud = true;      
+      }else if(this.tipoSalida.clave == 'PSNL'){
+        this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
+        this.formMovimiento.addControl('area_servicio_movimiento', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('area_servicio_movimiento_id', new FormControl(''));
+        this.tieneSolicitud = false;
       }
-    }else if(this.tipoSalida.clave == 'SRVC'){
-      this.formMovimiento.addControl('area_servicio_movimiento', new FormControl('', Validators.required));
-      this.formMovimiento.addControl('area_servicio_movimiento_id', new FormControl(''));
-      this.formMovimiento.addControl('es_colectivo', new FormControl(''));
+    }
 
-      if(this.tieneSolicitud){
-        this.formMovimiento.get('es_colectivo').patchValue(true);
-      }
-
+    if(this.formMovimiento.get('area_servicio_movimiento')){
       this.filteredAreasServicios = this.formMovimiento.get('area_servicio_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                              map(descripcion => descripcion ? this._filter('areas_servicios',descripcion,'descripcion') : this.catalogos['areas_servicios'].slice())
-                            );
-    }else if(this.tipoSalida.clave == 'RCTA'){
-      this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
-      this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
-      this.formMovimiento.addControl('paciente', new FormControl('', Validators.required));
-      this.formMovimiento.addControl('curp', new FormControl(''));
-      this.formMovimiento.get('documento_folio').setValidators(Validators.required);
-      this.tieneSolicitud = true;
+                                    map(descripcion => descripcion ? this._filter('areas_servicios',descripcion,'descripcion') : this.catalogos['areas_servicios'].slice())
+                                  );
+    }
 
+    if(this.formMovimiento.get('personal_medico')){
       this.filteredPersonalMedico = this.formMovimiento.get('personal_medico').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre_completo:''),
                               map(nombre => nombre ? this._filter('personal_medico',nombre,'nombre_completo') : this.catalogos['personal_medico'].slice())
                             );
@@ -763,6 +807,25 @@ export class SalidaComponent implements OnInit {
     this.filtroArticulos = '';
     this.dataSourceArticulos.filter = '';
     this.filtroAplicado = false;
+  }
+
+  agregarPersonal(){
+    let form_value = this.formMovimiento.get('personal_medico').value;
+    if(typeof form_value === 'string'){
+      let nuevo_personal:any = {
+        id:null,
+        nombre_completo: form_value,
+        clave:'NEW',
+      }
+  
+      setTimeout (() => {
+        this.formMovimiento.get('personal_medico').patchValue(nuevo_personal);
+        this.catalogos['personal_medico'].push(nuevo_personal);
+      }, 100);
+      console.log('persona', nuevo_personal);
+    }else if(typeof form_value === 'object'){
+      this.formMovimiento.get('personal_medico').patchValue(form_value);
+    }
   }
 
   getDisplayFn(label: string){

@@ -1,12 +1,18 @@
 <div class="contenido-tabla-lotes">
     <table>
         <thead>
-            <tr *ngIf="tieneSolicitud">
-                <th colspan="4"></th>
-                <th class="datos-solicitado">Cantidad Solicitada:</th>
-                <th width="1" class="datos-solicitado">
+            <tr>
+                <th colspan="2">
+                    <mat-checkbox *ngIf="(tipoSalida && (tipoSalida.clave == 'RCTA' || tipoSalida.clave == 'PSNL')) && articulo.puede_surtir_unidades" [ngModel]="articulo.surtir_en_unidades" (change)="surtirUnidades($event.checked)" [disabled]="!edicionActiva">
+                        Surtir en Unidades
+                    </mat-checkbox>
+                </th>
+                <th colspan="2"></th>
+                <th *ngIf="tieneSolicitud" class="datos-solicitado">Cantidad Solicitada:</th>
+                <th *ngIf="tieneSolicitud" width="1" class="datos-solicitado">
                     <input type="number" [ngModel]="articulo.cantidad_solicitado" (keydown.enter)="checarTotalSolicitado($event.target.value)" (blur)="checarTotalSolicitado($event.target.value)" [readonly]="!edicionActiva">
                 </th>
+                <th *ngIf="!tieneSolicitud" colspan="2"></th>
                 <th></th>
             </tr>
             <tr class="header">

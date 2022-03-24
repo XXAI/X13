@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\UnidadMedica;
 use App\Models\TipoAlmacen;
-
+use App\Models\TipoMovimiento;
 
 
 class BusquedaCatalogosController extends Controller
@@ -159,11 +159,9 @@ class BusquedaCatalogosController extends Controller
     {
         try {
             $listado_catalogos = [
-                
                 'unidades_medicas'             => UnidadMedica::getModel(),
                 'tipos_almacenes'              => TipoAlmacen::getModel(),
-
-
+                'tipos_movimiento'              => TipoMovimiento::where('captura_independiente',1)->where('movimiento','!=','INI'),
             ];
 
             //$parametros = Input::all();

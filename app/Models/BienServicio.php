@@ -10,7 +10,10 @@ class BienServicio extends Model{
     
     use SoftDeletes;
     protected $table = 'bienes_servicios';  
-    protected $fillable = ['clave_partida_especifica','familia_id','tipo_bien_servicio_id','clave_cubs','clave_local','articulo','especificaciones','descontinuado'];
+    protected $fillable = ['clave_partida_especifica','familia_id','tipo_bien_servicio_id','clave_cubs','clave_local','articulo','especificaciones',
+                            'destacar','presentacion_id','empaque_id', 'unidad_medida_id', 'descontinuado',
+                            'tiene_fecha_caducidad','puede_surtir_unidades','unidades_x_empaque'
+                        ];
 
     public function scopeDatosDescripcion($query,$unidad_medica_id = null){
         return $query->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',

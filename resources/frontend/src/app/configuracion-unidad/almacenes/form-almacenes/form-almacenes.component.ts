@@ -1,10 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FormGroup, Validators, FormBuilder } from '@angular/forms';
-import { startWith, map, debounceTime, tap, switchMap, finalize } from 'rxjs/operators';
+import { Validators, FormBuilder } from '@angular/forms';
 import { SharedService } from '../../../shared/shared.service';
 import { AlmacenesService } from '../almacenes.service';
-import { AuthService } from '../../../auth/auth.service';
 import { User } from '../../../auth/models/user';
 //import { CustomValidator } from '../../utils/classes/custom-validator';
 
@@ -21,7 +19,6 @@ export class FormAlmacenesComponent implements OnInit {
 
   constructor(
     private almacenesService: AlmacenesService,
-    private authService: AuthService,
     private sharedService: SharedService,
     public dialogRef: MatDialogRef<FormAlmacenesComponent>,
     private fb: FormBuilder,
@@ -33,41 +30,34 @@ export class FormAlmacenesComponent implements OnInit {
 
   authUser: User;
 
-  provideID:boolean = false;
-  catalogos: any = {};
-  filteredCatalogs:any = {};
+  catalogos: any = {'tipos_almacenes':[],'tipos_movimiento':[]};
+  tiposMovimientosSeleccionados:any[] = [];
   
   almacenForm = this.fb.group({
-
-    'unidad_medica_id'      : [''],
-    'nombre'                : ['',[Validators.required]],
-    'tipo_almacen_id'       : ['',[Validators.required]],
-    'externo'               : ['',[Validators.required]],
-    'unidosis'              : ['',[Validators.required]],
-    'responsable'           : ['',[Validators.required]],
-    'user_id'               : ['',[Validators.required]]
-    
+    'nombre'                : ['',Validators.required],
+    'tipo_almacen_id'       : ['',Validators.required],
+    'externo'               : [0],
+    'direccion'             : [''],
+    'puede_surtir_unidades' : [0],
+    'responsable'           : [''],
+    'tipos_movimiento_form' : [''],
   });
 
   ngOnInit() {
-
-    this.authUser = this.authService.getUserData();
+    //this.authUser = this.authService.getUserData();
     //console.log("asd",this.authUser.unidad_medica_asginada['clues']);
-
-    this.almacenForm.get('user_id').patchValue(this.authUser?.id);
-    this.almacenForm.get('unidad_medica_id').patchValue(this.authUser?.unidad_medica_asignada_id);
-
-    console.log("usuario",this.authUser);
+    //this.almacenForm.get('user_id').patchValue(this.authUser?.id);
+    //this.almacenForm.get('unidad_medica_id').patchValue(this.authUser?.unidad_medica_asignada_id);
+    //console.log("usuario",this.authUser);
 
     let id = this.data.id;
     if(id){
-
       this.isLoading = true;
       this.almacenesService.getAlmacen(id).subscribe(
         response => {
           this.almacenes = response.data;
           console.log("acaaa",this.almacenes);
-          this.cargarCatalogos(this.almacenes);
+          this.cargarCatalogos();
           this.almacenForm.patchValue(this.almacenes);
           this.isLoading = false;
         },
@@ -75,45 +65,30 @@ export class FormAlmacenesComponent implements OnInit {
           console.log(errorResponse);
           this.isLoading = false;
         });
+    }else{
+      this.cargarCatalogos();
     }
-
-    this.cargarCatalogos(null);
 
   }
 
-  public cargarCatalogos(obj){
+  public cargarCatalogos(){
 
     this.isLoading = true;
 
     let carga_catalogos = [
-
-      {nombre:'unidades_medicas',orden:'nombre'},
       {nombre:'tipos_almacenes',orden:'descripcion'},
-
+      {nombre:'tipos_movimiento',orden:'movimiento'},
     ];
 
     this.almacenesService.obtenerCatalogos(carga_catalogos).subscribe(
       response => {
-
         this.catalogos = response.data;
-
-        this.filteredCatalogs['unidades_medicas']      = this.almacenForm.controls['unidad_medica_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'unidades_medicas','nombre')));
-        this.filteredCatalogs['tipos_almacenes']     = this.almacenForm.controls['tipo_almacen_id'].valueChanges.pipe(startWith(''),map(value => this._filter(value,'tipos_almacenes','descripcion')));
-
-
-        if(obj)
-        {
-          if(obj.tipo_almacen){
-            this.almacenForm.get('tipo_almacen_id').setValue(obj.tipo_almacen);
-          }
-
-          if(obj.unidad_medica){
-            this.almacenForm.get('unidad_medica_id').setValue(obj.unidad_medica);
-          }
-        }
-
         this.isLoading = false;
-
+        if(this.almacenes.id){
+          this.almacenes.tipos_movimiento.forEach(item => {
+            this.tiposMovimientosSeleccionados.push(this.catalogos['tipos_movimiento'].find(x => x.id == item.id));
+          });
+        }
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -127,39 +102,15 @@ export class FormAlmacenesComponent implements OnInit {
 
   }
 
-  private _filter(value: any, catalog: string, valueField: string): string[] {
-    if(this.catalogos[catalog]){
-      let filterValue = '';
-      if(value){
-        if(typeof(value) == 'object'){
-          filterValue = value[valueField].toLowerCase();
-        }else{
-          filterValue = value.toLowerCase();
-        }
-      }
-      return this.catalogos[catalog].filter(option => option[valueField].toLowerCase().includes(filterValue));
-    }
-  }
-  
-  getDisplayFn(label: string){
-    return (val) => this.displayFn(val,label);
-  }
-
-  displayFn(value: any, valueLabel: string){
-    return value ? value[valueLabel] : value;
-  }
-
   saveAlmacen(){
+    let formData =  this.almacenForm.value;
+    formData.tipos_movimiento = [];
 
-    let formData =  JSON.parse(JSON.stringify(this.almacenForm.value));
-
-    if(formData.tipo_almacen_id){
-      formData.tipo_almacen_id = formData.tipo_almacen_id.id;
-    }
-    if (typeof formData.unidad_medica_id === 'object'){
-      formData.unidad_medica_id = formData.unidad_medica_id.id;
-    }
-
+    formData.tipos_movimiento_form.forEach(element => {
+      formData.tipos_movimiento.push(element.id);
+    });
+    delete formData.tipos_movimiento_form;
+    
     this.isLoading = true;
     if(this.almacenes.id){
       this.almacenesService.updateAlmacen(this.almacenes.id, formData).subscribe(

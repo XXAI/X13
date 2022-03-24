@@ -164,7 +164,7 @@ export class EntradaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',tipos_movimiento:'movimiento.ENT|captura_independiente.1',turnos:'*'};
+    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',turnos:'*',filtro_almacenes_movimiento:'ENT'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -175,22 +175,11 @@ export class EntradaComponent implements OnInit {
           this.catalogos['almacenes'] = response.data.almacenes;
           this.catalogos['programas'] = response.data.programas;
           this.catalogos['proveedores'] = response.data.proveedores;
-          this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
+          //this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
           this.catalogos['marcas'] = response.data.marcas;
           this.catalogos['turnos'] = response.data.turnos;
 
           this.cargarDatosMovimiento();
-
-          /*if(this.catalogos['almacenes'].length == 1){
-            this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
-          }
-
-          this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
-                                  map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
-                                );
-          this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
-                              );*/
         }
         this.isLoading = false;
       },
@@ -203,6 +192,17 @@ export class EntradaComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  checarAlmacenSeleccionado(){
+    let almacen = this.catalogos['almacenes'].find(item => item.id == this.formMovimiento.get('almacen_id').value);
+
+    this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
+    if(this.catalogos['tipos_movimiento'].length == 1){
+      this.formMovimiento.get('tipo_movimiento_id').patchValue(this.catalogos['tipos_movimiento'][0].id);
+    }else{
+      this.formMovimiento.get('tipo_movimiento_id').reset();
+    }
   }
 
   cargarDatosMovimiento(){
@@ -444,6 +444,7 @@ export class EntradaComponent implements OnInit {
 
     if(this.formMovimiento.get('almacen_id') && this.catalogos['almacenes'].length == 1){
       this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
+      this.checarAlmacenSeleccionado();
     }    
 
     if(this.formMovimiento.get('proveedor')){

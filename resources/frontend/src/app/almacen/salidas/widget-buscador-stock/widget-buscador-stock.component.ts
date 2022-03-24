@@ -111,14 +111,18 @@ export class WidgetBuscadorStockComponent implements OnInit {
               partida_descripcion: response.data[i].partida_especifica,
               familia: response.data[i].familia,
               tiene_fecha_caducidad: (response.data[i].tiene_fecha_caducidad)?true:false,
+              puede_surtir_unidades: (response.data[i].puede_surtir_unidades)?true:false,
+              surtir_en_unidades: false,
               tipo_articulo: response.data[i].tipo_bien_servicio,
               tipo_formulario: response.data[i].clave_form,
               descontinuado: (response.data[i].descontinuado)?true:false,
               normativo: (response.data[i].es_normativo)?true:false,
               en_catalogo: (response.data[i].en_catalogo_unidad)?true:false,
               total_lotes: response.data[i].total_lotes,
-              existencias: response.data[i].existencias,
-              existencias_restantes: response.data[i].existencias,
+              existencias: +response.data[i].existencias,
+              existencias_restantes: +response.data[i].existencias,
+              existencias_empaque: +response.data[i].existencias,
+              existencias_unidades: +response.data[i].existencias_unidades,
               existencias_extras: 0,
               lotes: (response.data[i].lotes)?response.data[i].lotes:[]
             };
@@ -141,6 +145,7 @@ export class WidgetBuscadorStockComponent implements OnInit {
 
   itemSeleccionado(item){
     this.inputBuscadorArticulos.reset();
+    console.log('Articulo Seleccionado',item);
     this.articuloSeleccionado.emit(item);
   }
 

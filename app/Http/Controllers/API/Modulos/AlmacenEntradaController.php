@@ -21,6 +21,7 @@ use App\Models\CartaCanje;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
 use App\Models\Almacen;
+use App\Models\BienServicio;
 
 class AlmacenEntradaController extends Controller
 {
@@ -355,9 +356,20 @@ class AlmacenEntradaController extends Controller
                     $lista_articulos_guardados[$articulo_guardado->bien_servicio_id.'-'.$articulo_guardado->stock_id] = $articulo_guardado;
                 }
 
+                $loaded_articulos = [];
                 for ($i=0; $i < $total_loop ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
 
+                    if(!isset($loaded_articulos[$articulo['id']])){
+                        $articulo_data = BienServicio::find($articulo['id']);
+                        if(!$articulo_data){
+                            throw new \Exception("No se encontro el articulo con clave: ".$articulo['clave'], 1);
+                        }
+                        $loaded_articulos[$articulo['id']] = $articulo_data;
+                    }else{
+                        $articulo_data = $loaded_articulos[$articulo['id']];
+                    }
+                    
                     if($articulo['total_piezas'] > 0){
                         $total_articulos += ($tipo_movimiento->clave == 'RCPCN')?$articulo['total_recibido']:$articulo['total_piezas'];
                         $total_monto += $articulo['total_monto'];
@@ -366,21 +378,22 @@ class AlmacenEntradaController extends Controller
                             $lote = $articulo['lotes'][$j];
 
                             $stock_lote = [
-                                'unidad_medica_id'  => $loggedUser->unidad_medica_asignada_id,
-                                'almacen_id'        => $movimiento->almacen_id,
-                                'bien_servicio_id'  => $articulo['id'],
-                                'programa_id'       => $movimiento->programa_id,
-                                'existencia'        => $lote['cantidad'],
+                                'unidad_medica_id'      => $loggedUser->unidad_medica_asignada_id,
+                                'almacen_id'            => $movimiento->almacen_id,
+                                'bien_servicio_id'      => $articulo['id'],
+                                'programa_id'           => $movimiento->programa_id,
+                                'existencia'            => $lote['cantidad'],
+                                'existencia_unidades'   => ($articulo_data->puede_surtir_unidades)?($articulo_data->unidades_x_empaque*$lote['cantidad']):null,
 
-                                'marca_id'          => (isset($lote['marca_id']))?$lote['marca_id']:null,
-                                'modelo'            => (isset($lote['modelo']))?$lote['modelo']:null,
-                                'no_serie'          => (isset($lote['no_serie']))?$lote['no_serie']:null,
+                                'marca_id'              => (isset($lote['marca_id']))?$lote['marca_id']:null,
+                                'modelo'                => (isset($lote['modelo']))?$lote['modelo']:null,
+                                'no_serie'              => (isset($lote['no_serie']))?$lote['no_serie']:null,
 
-                                'lote'              => (isset($lote['lote']))?$lote['lote']:null,
-                                'codigo_barras'     => (isset($lote['codigo_barras']))?$lote['codigo_barras']:null,
-                                'fecha_caducidad'   => (isset($lote['fecha_caducidad']))?$lote['fecha_caducidad']:null,
+                                'lote'                  => (isset($lote['lote']))?$lote['lote']:null,
+                                'codigo_barras'         => (isset($lote['codigo_barras']))?$lote['codigo_barras']:null,
+                                'fecha_caducidad'       => (isset($lote['fecha_caducidad']))?$lote['fecha_caducidad']:null,
 
-                                'user_id'           => $loggedUser->id,
+                                'user_id'               => $loggedUser->id,
                             ];
 
                             if($tipo_movimiento->clave == 'RCPCN'){ //Si el tipo de movimiento es de recepción, entonces ya debe venir con el id del lote, del que se saco
@@ -416,6 +429,9 @@ class AlmacenEntradaController extends Controller
                             
                             if($lote_guardado){
                                 $lote_guardado->existencia += $stock_lote['existencia'];
+                                if($articulo_data->puede_surtir_unidades){
+                                    $lote_guardado->existencia_unidades += ($articulo_data->unidades_x_empaque * $stock_lote['existencia']);
+                                }
                                 $lote_guardado->user_id = $loggedUser->id;
                                 $lote_guardado->save();
                             }else{
@@ -609,7 +625,7 @@ class AlmacenEntradaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
+            $movimiento = Movimiento::with('listaArticulos.stock.articulo')->find($id);
 
             if($movimiento->estatus != 'FIN'){
                 throw new \Exception("No se puede cancelar este movimiento", 1);
@@ -618,9 +634,16 @@ class AlmacenEntradaController extends Controller
             $control_stocks = [];
             foreach ($movimiento->listaArticulos as $articulo) {
                 $stock = $articulo->stock;
-                $stock->existencia = $stock->existencia - $articulo->cantidad;
+                if($articulo->modo_movimiento == 'UNI'){
+                    //
+                }else{
+                    $stock->existencia = $stock->existencia - $articulo->cantidad;
+                    if($stock->articulo->puede_surtir_unidades){
+                        $stock->existencia_unidades = $stock->existencia_unidades - ($articulo->cantidad * $stock->articulo->unidades_x_empaque);
+                    }
+                }
+                
                 if($stock->existencia < 0){
-                    $stock->load('articulo');
                     $control_stocks[] = $stock;
                 }else{
                     $stock->save();

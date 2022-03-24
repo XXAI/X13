@@ -38,7 +38,9 @@ class AlmacenMovimientosController extends Controller{
 
             $config_catalogs = [
                 'programas'         => Programa::getModel(),
-                'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes),
+                'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes)->with(['tiposMovimiento'=>function($tiposMovimiento)use($parametros){
+                                                                                                                                                    $tiposMovimiento->where('movimiento',$parametros['filtro_almacenes_movimiento']);
+                                                                                                                                                }]),
                 'almacenes_todos'   => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
                 'unidades_medicas'  => UnidadMedica::getModel(),
                 'proveedores'       => Proveedor::getModel(),
@@ -51,17 +53,19 @@ class AlmacenMovimientosController extends Controller{
 
             $catalogos = [];
             foreach ($parametros as $key => $value) {
-                $temp_cat = $config_catalogs[$key];
+                if(isset($config_catalogs[$key])){
+                    $temp_cat = $config_catalogs[$key];
 
-                if($value == '*'){
-                    $catalogos[$key] = $temp_cat->get();
-                }else{
-                    $filters = explode('|',$value); 
-                    foreach ($filters as $index => $filter) {
-                        $condition = explode('.',$filter);
-                        $temp_cat = $temp_cat->where($condition[0],$condition[1]);
+                    if($value == '*'){
+                        $catalogos[$key] = $temp_cat->get();
+                    }else{
+                        $filters = explode('|',$value); 
+                        foreach ($filters as $index => $filter) {
+                            $condition = explode('.',$filter);
+                            $temp_cat = $temp_cat->where($condition[0],$condition[1]);
+                        }
+                        $catalogos[$key] =  $temp_cat->get();
                     }
-                    $catalogos[$key] =  $temp_cat->get();
                 }
             }
 
@@ -83,7 +87,7 @@ class AlmacenMovimientosController extends Controller{
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 
             $stock_existencias = BienServicio::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
-                                                    'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado',
+                                                    'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado','bienes_servicios.puede_surtir_unidades',
                                                     'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                     'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo','catalogo_marcas.nombre AS marca',
                                                     'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
@@ -92,7 +96,9 @@ class AlmacenMovimientosController extends Controller{
                                                 ->leftjoin('stocks',function($join)use($unidad_medica_id,$parametros){
                                                     $join = $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
                                                                 ->where('stocks.unidad_medica_id',$unidad_medica_id)
-                                                                ->where('stocks.existencia','>',0)
+                                                                ->where(function($where){
+                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                })
                                                                 ->where('stocks.almacen_id',$parametros['almacen_id'])
                                                                 ->whereNull('stocks.deleted_at');
                                                     if(isset($parametros['programa_id']) && $parametros['programa_id']){
@@ -113,8 +119,9 @@ class AlmacenMovimientosController extends Controller{
                                                 ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
                                                 ->leftjoin('catalogo_marcas','catalogo_marcas.id','=','stocks.marca_id')
                                                 //Ordenamiento
+                                                ->orderBy('stocks.unidad_medica_id','DESC')
+                                                ->orderBy('stocks.fecha_caducidad','ASC')
                                                 ->orderBy('stocks.existencia','DESC')
-                                                ->orderBy('stocks.fecha_caducidad','DESC')
                                                 ->orderBy('unidad_medica_catalogo_articulos.id','DESC')
                                                 ->orderBy('bienes_servicios.especificaciones')
                                                 ;
@@ -210,6 +217,7 @@ class AlmacenMovimientosController extends Controller{
                         'especificaciones' => $value->especificaciones,
                         'descontinuado' => $value->descontinuado,
                         'tiene_fecha_caducidad' => $value->tiene_fecha_caducidad,
+                        'puede_surtir_unidades' => $value->puede_surtir_unidades,
                         'tipo_bien_servicio' => $value->tipo_bien_servicio,
                         'clave_form' => $value->clave_form,
                         'partida_especifica'=>$value->partida_especifica,
@@ -220,6 +228,8 @@ class AlmacenMovimientosController extends Controller{
                         'en_catalogo_unidad' => $value->en_catalogo_unidad,
                         'total_lotes' => 0,
                         'existencias' => 0,
+                        'existencias_empaque' => 0,
+                        'existencias_unidades' => 0,
                     ];
                 }
                 $index_articulo = $control_articulos[$value->articulo_id];
@@ -240,15 +250,17 @@ class AlmacenMovimientosController extends Controller{
                         }
     
                         $resultado_stock[$index_articulo]['programa_lotes'][$programa_id]['lotes'][] = [
-                            'id' => $value->id,
-                            'lote' => $value->lote,
-                            'fecha_caducidad' => $value->fecha_caducidad,
-                            'codigo_barras' => $value->codigo_barras,
-                            'no_serie' => $value->no_serie,
-                            'modelo' => $value->modelo,
-                            'marca_id' => $value->marca_id,
-                            'marca' => $value->marca,
-                            'existencia' => $value->existencia,
+                            'id'                    => $value->id,
+                            'lote'                  => $value->lote,
+                            'fecha_caducidad'       => $value->fecha_caducidad,
+                            'codigo_barras'         => $value->codigo_barras,
+                            'no_serie'              => $value->no_serie,
+                            'modelo'                => $value->modelo,
+                            'marca_id'              => $value->marca_id,
+                            'marca'                 => $value->marca,
+                            'existencia'            => $value->existencia,
+                            'existencia_empaque'    => $value->existencia,
+                            'existencia_unidades'   => $value->existencia_unidades,
                         ];
                     }else{
                         if(!isset($resultado_stock[$index_articulo]['lotes'])){
@@ -256,21 +268,25 @@ class AlmacenMovimientosController extends Controller{
                         }
     
                         $resultado_stock[$index_articulo]['lotes'][] = [
-                            'id'                => $value->id,
-                            'programa_id'       => $value->programa_id,
-                            'programa'          => ($value->programa_id)?$value->programa:'Sin Programa Asignado',
-                            'lote'              => $value->lote,
-                            'fecha_caducidad'   => $value->fecha_caducidad,
-                            'codigo_barras'     => $value->codigo_barras,
-                            'no_serie'          => $value->no_serie,
-                            'modelo'            => $value->modelo,
-                            'marca_id'          => $value->marca_id,
-                            'marca'             => $value->marca,
-                            'existencia'        => $value->existencia,
+                            'id'                    => $value->id,
+                            'programa_id'           => $value->programa_id,
+                            'programa'              => ($value->programa_id)?$value->programa:'Sin Programa Asignado',
+                            'lote'                  => $value->lote,
+                            'fecha_caducidad'       => $value->fecha_caducidad,
+                            'codigo_barras'         => $value->codigo_barras,
+                            'no_serie'              => $value->no_serie,
+                            'modelo'                => $value->modelo,
+                            'marca_id'              => $value->marca_id,
+                            'marca'                 => $value->marca,
+                            'existencia'            => $value->existencia,
+                            'existencia_empaque'    => $value->existencia,
+                            'existencia_unidades'   => $value->existencia_unidades,
                         ];
                     }
                     $resultado_stock[$index_articulo]['total_lotes']++;
                     $resultado_stock[$index_articulo]['existencias'] += $value->existencia;
+                    $resultado_stock[$index_articulo]['existencias_empaque'] += $value->existencia;
+                    $resultado_stock[$index_articulo]['existencias_unidades'] += $value->existencia_unidades;
                 }
             }
 

@@ -50,7 +50,7 @@ export class ListaComponent implements OnInit {
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción'};
 
-  displayedColumns: string[] = ['id','folio','almacen_turno','tipo_movimiento','fecha_movimiento','totales_claves_articulos','actions']; //,'descripcion','proveedor'
+  displayedColumns: string[] = ['id','folio','almacen_turno','tipo_movimiento','fecha_movimiento','totales_claves','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 

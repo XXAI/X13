@@ -22,6 +22,7 @@ use App\Models\BienServicio;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
 use App\Models\Persona;
+use App\Models\PersonalMedico;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use App\Models\Almacen;
@@ -124,7 +125,7 @@ class AlmacenSalidaController extends Controller
                                                             ]);
                                     },'movimientoHijo' => function($movimientoHijo){
                                         return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
-                                    },'solicitud.tipoSolicitud','almacen','almacenMovimiento']);
+                                    },'solicitud.tipoSolicitud','almacen.tiposMovimiento','almacenMovimiento']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
                 $programa_id = $movimiento->programa_id;
@@ -137,7 +138,7 @@ class AlmacenSalidaController extends Controller
                                                     ->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
                                                     'unidad_medica_catalogo_articulos.es_normativo','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
                                                     'unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form',
-                                                    'movimientos_articulos_borrador.cantidad_solicitado')
+                                                    'movimientos_articulos_borrador.cantidad_solicitado','movimientos_articulos_borrador.modo_movimiento')
                                                     ->join('movimientos_articulos_borrador',function($borrador)use($movimiento_id){
                                                         $borrador->on('movimientos_articulos_borrador.bien_servicio_id','bienes_servicios.id')
                                                                 ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
@@ -223,6 +224,8 @@ class AlmacenSalidaController extends Controller
                 'documento_folio' => $parametros['documento_folio'],
                 'observaciones' => $parametros['observaciones'],
                 'es_colectivo' => (isset($parametros['es_colectivo']) && $parametros['es_colectivo'])?$parametros['es_colectivo']:null,
+                'personal_medico_id' => null,
+                'persona_id' => null,
                 'total_claves' => 0,
                 'total_articulos' => 0,
             ];
@@ -247,18 +250,36 @@ class AlmacenSalidaController extends Controller
                 $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
             }
 
-            if($tipo_movimiento->clave == 'RCTA'){
-                if(!isset($parametros['persona_id']) || !$parametros['persona_id']){
-                    $persona = Persona::where('nombre_completo',strtolower($parametros['paciente']))->where('curp',strtolower($parametros['curp']))->first();
-                    if(!$persona){
-                        $persona = Persona::create(['nombre_completo'=>$parametros['paciente'],'curp'=>$parametros['curp']]);
+            if($tipo_movimiento->clave == 'RCTA' || $tipo_movimiento->clave == 'PSNL'){
+                if(isset($parametros['personal_medico']) && $parametros['personal_medico']){
+                    $personal_medico = $parametros['personal_medico'];
+                    if(isset($personal_medico['clave']) && $personal_medico['clave'] == 'NEW'){
+                        $nuevo_personal= PersonalMedico::create([
+                            'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
+                            'nombre_completo' => $personal_medico['nombre_completo'],
+                            'puede_recetar' => ($tipo_movimiento->clave == 'RCTA')?true:false,
+                        ]);
+                        $parametros['personal_medico_id'] = $nuevo_personal->id;
+                        $datos_movimiento['personal_medico_id'] = $nuevo_personal->id;
+                    }else{
+                        $parametros['personal_medico_id'] = $personal_medico['id'];
+                        $datos_movimiento['personal_medico_id'] = $personal_medico['id'];
                     }
-                    $persona_id = $persona->id;
-                }else{
-                    $persona_id = $parametros['persona_id'];
                 }
-                $datos_movimiento['persona_id'] = $persona_id;
+            }
 
+            if($tipo_movimiento->clave == 'RCTA'){
+                $persona = Persona::where('nombre_completo',strtolower($parametros['paciente']));
+                if($parametros['curp']){
+                    $persona = $persona->where('curp',strtolower($parametros['curp']))->first();
+                }else{
+                    $persona = $persona->first();
+                }
+
+                if(!$persona){
+                    $persona = Persona::create(['nombre_completo'=>$parametros['paciente'],'curp'=>$parametros['curp']]);
+                }
+                $datos_movimiento['persona_id'] = $persona->id;
                 $datos_movimiento['personal_medico_id'] = $parametros['personal_medico_id'];
             }
 
@@ -295,6 +316,7 @@ class AlmacenSalidaController extends Controller
                 for ($i=0; $i < $conteo_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
                     $total_articulos += $articulo['total_piezas'];
+                    $modo_movimiento = ($parametros['lista_articulos'][$i]['surtir_en_unidades'])?'UNI':'NRM';
                     
                     if($articulo['total_piezas'] > 0){
                         for($j=0; $j < count($articulo['lotes']); $j++){
@@ -305,7 +327,7 @@ class AlmacenSalidaController extends Controller
                                     'bien_servicio_id' => $articulo['id'],
                                     'stock_id' => $lote['id'],
                                     'direccion_movimiento' => 'SAL',
-                                    'modo_movimiento' => 'NRM',
+                                    'modo_movimiento' => $modo_movimiento,
                                     'cantidad_solicitado' => (isset($articulo['cantidad_solicitado']))?$articulo['cantidad_solicitado']:null,
                                     'cantidad' => $lote['salida'],
                                     'user_id' => $loggedUser->id,
@@ -316,7 +338,7 @@ class AlmacenSalidaController extends Controller
                         $lista_articulos_borrador[] = [
                             'bien_servicio_id' => $articulo['id'],
                             'direccion_movimiento' => 'SAL',
-                            'modo_movimiento' => 'NRM',
+                            'modo_movimiento' => $modo_movimiento,
                             'cantidad_solicitado' => (isset($articulo['cantidad_solicitado']))?$articulo['cantidad_solicitado']:null,
                             'cantidad' => 0,
                             'user_id' => $loggedUser->id,
@@ -342,8 +364,15 @@ class AlmacenSalidaController extends Controller
 
                 for ($i=0; $i < $conteo_claves ; $i++) { 
                     $articulo = $parametros['lista_articulos'][$i];
+                    $datos_articulo = BienServicio::find($articulo['id']);
+
+                    if(!$datos_articulo){
+                        throw new \Exception("No se encontro el articulo: ".$articulo['id'], 1);
+                    }
+
                     $total_articulos += $articulo['total_piezas'];
                     //$total_monto += $articulo['total_monto'];
+                    $modo_movimiento = ($parametros['lista_articulos'][$i]['surtir_en_unidades'])?'UNI':'NRM';
 
                     if($articulo['total_piezas'] > 0){
                         $articulos_lotes = $articulo['lotes'];
@@ -357,9 +386,17 @@ class AlmacenSalidaController extends Controller
                                     throw new \Exception("No se encontro un lote para el medicamento: ".$articulo['clave'], 1);
                                 }
 
-                                $cantidad_anterior = $lote_guardado->existencia;
-                                if($lote_guardado->existencia >= $lote['salida']){
-                                    $lote_guardado->existencia -= $lote['salida'];
+                                $cantidad_anterior = ($modo_movimiento == 'UNI')?$lote_guardado->existencia_unidades:$lote_guardado->existencia;
+                                if($cantidad_anterior >= $lote['salida']){
+                                    if($modo_movimiento == 'UNI'){
+                                        $lote_guardado->existencia_unidades -= $lote['salida'];
+                                        $lote_guardado->existencia = floor($lote_guardado->existencia_unidades / $datos_articulo->unidades_x_empaque);
+                                    }else{
+                                        $lote_guardado->existencia -= $lote['salida'];
+                                        if($datos_articulo->puede_surtir_unidades){
+                                            $lote_guardado->existencia_unidades -= ($lote['salida'] * $datos_articulo->unidades_x_empaque);
+                                        }
+                                    }
                                     $lote_guardado->user_id = $loggedUser->id;
                                     $lote_guardado->save();
                                 }else{
@@ -371,7 +408,7 @@ class AlmacenSalidaController extends Controller
                                     $articulo_guardado->stock_id = $lote_guardado->id;
                                     $articulo_guardado->bien_servicio_id = $articulo['id'];
                                     $articulo_guardado->direccion_movimiento = 'SAL';
-                                    $articulo_guardado->modo_movimiento = 'NRM';
+                                    $articulo_guardado->modo_movimiento = $modo_movimiento;
                                     $articulo_guardado->cantidad = $lote['salida'];
                                     $articulo_guardado->cantidad_anterior = $cantidad_anterior;
                                     $articulo_guardado->user_id = $loggedUser->id;
@@ -383,7 +420,7 @@ class AlmacenSalidaController extends Controller
                                         'stock_id' => $lote_guardado->id,
                                         'bien_servicio_id' => $articulo['id'],
                                         'direccion_movimiento' => 'SAL',
-                                        'modo_movimiento' => 'NRM',
+                                        'modo_movimiento' => $modo_movimiento,
                                         'cantidad' => $lote['salida'],
                                         'cantidad_anterior' => $cantidad_anterior,
                                         'user_id' => $loggedUser->id,
@@ -396,7 +433,7 @@ class AlmacenSalidaController extends Controller
                         $lista_articulos_agregar[] = [
                             'bien_servicio_id' => $articulo['id'],
                             'direccion_movimiento' => 'SAL',
-                            'modo_movimiento' => 'NRM',
+                            'modo_movimiento' => $modo_movimiento,
                             'cantidad' => 0,
                             'cantidad_anterior' => $cantidad_anterior,
                             'user_id' => $loggedUser->id,

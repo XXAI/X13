@@ -26,8 +26,8 @@
                         <div fxFlex fxLayout="row" class="articulo-header">
                             <div fxFlex="none" class="articulo-iconos">
                                 <mat-icon class="icono" matTooltip="En Catalogo"   [ngClass]="{'activo':articulo.en_catalogo}">fact_check</mat-icon>
-                                <mat-icon class="icono" matTooltip="Normativo"     [ngClass]="{'activo':articulo.normativo}">notification_important</mat-icon>
-                                <mat-icon class="icono" matTooltip="Descontinuado" [ngClass]="{'activo':articulo.descontinuado}">report_problem</mat-icon>
+                                <mat-icon class="icono" matTooltip="Normativo"     [ngClass]="{'activo':articulo.normativo}">gpp_good</mat-icon>
+                                <mat-icon class="icono" matTooltip="Descontinuado" [ngClass]="{'activo':articulo.descontinuado}">error</mat-icon>
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-titulo">
@@ -49,7 +49,7 @@
                             </div>
                             <div fxFlex></div>
                             <div fxFlex="none" class="articulo-info" *ngIf="mostrarExistencias">
-                                #Lotes: {{ articulo.total_lotes | number }} | Existencias: {{ articulo.existencias | number }} <span *ngIf="articulo.cantidad_minima">/ {{articulo.cantidad_minima||0 | number}}</span>
+                                #Lotes: {{ articulo.total_lotes | number }} | Existencias: {{ articulo.existencias | number }} <span *ngIf="articulo.puede_surtir_unidades">({{articulo.existencias_unidades | number}})</span>
                             </div>
                         </div>
                     </div>

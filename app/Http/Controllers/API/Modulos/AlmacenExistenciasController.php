@@ -78,7 +78,7 @@ class AlmacenExistenciasController extends Controller
                         DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)') as almacen"),
                         DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),
                         "stocks.bien_servicio_id as id", 
-                        DB::raw("IF(bienes_servicios.clave_local,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
+                        DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                         "bienes_servicios.articulo as articulo",
                         "bienes_servicios.especificaciones as especificaciones",
                         "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
@@ -86,7 +86,7 @@ class AlmacenExistenciasController extends Controller
                         "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
                         "familias.nombre as familia",
                         DB::raw("SUM(stocks.existencia) as existencia"),
-                        DB::raw("SUM(stocks.existencia_unidosis) as existencia_unidosis"),
+                        DB::raw("SUM(stocks.existencia_unidades) as existencia_unidades"),
                         DB::raw("COUNT(distinct stocks.id) as total_lotes"))
                         ->groupBy('stocks.bien_servicio_id');
                 }
@@ -103,7 +103,7 @@ class AlmacenExistenciasController extends Controller
                     "cog_partidas_especificas.clave as clave_partida_especifica",
                     "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
                     "stocks.existencia as existencia",
-                    "stocks.existencia_unidosis as existencia_unidosis",
+                    "stocks.existencia_unidades as existencia_unidades",
                     "stocks.fecha_caducidad as fecha_caducidad",
                     "stocks.lote as lote",
                     "stocks.codigo_barras as codigo_barras",
@@ -149,12 +149,14 @@ class AlmacenExistenciasController extends Controller
             }
 
             if(isset($params['search']) && trim($params['search'])!= ""){
-
                 $items = $items->where(function($query) use ($params) {
                     $query->where("codigo_barras","LIKE", "%".$params['search']."%")
                     ->orWhere("lote","LIKE", "%".$params['search']."%")
                     ->orWhere("articulo","LIKE", "%".$params['search']."%")
-                    ->orWhere("especificaciones","LIKE", "%".$params['search']."%");
+                    ->orWhere("especificaciones","LIKE", "%".$params['search']."%")
+                    ->orWhere("clave_local","LIKE", "%".$params['search']."%")
+                    ->orWhere("clave_cubs","LIKE", "%".$params['search']."%")
+                    ;
                 });
             }
             

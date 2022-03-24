@@ -10,6 +10,6 @@ class PersonalMedico extends Model{
     
     use SoftDeletes;
     protected $table = 'personal_medico';  
-    protected $fillable = ['unidad_medica_id','nombre_completo','curp','rfc','especialidad','sirh_id','actualizado_sirh'];
+    protected $fillable = ['unidad_medica_id','nombre_completo','curp','rfc','especialidad','puede_recetar','sirh_id','actualizado_sirh'];
 }
 

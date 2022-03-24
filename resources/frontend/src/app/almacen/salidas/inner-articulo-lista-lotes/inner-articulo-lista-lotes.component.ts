@@ -13,6 +13,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
   @ViewChild(MatInput) inputFormLote: MatInput;
 
   @Input() articulo: any;
+  @Input() tipoSalida: any;
   @Input() edicionActiva: boolean;
   @Input() tieneSolicitud: boolean;
   @Input() fechaMovimiento: Date;
@@ -65,7 +66,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
     if(!this.articulo.nuevos_lotes){
       this.articulo.nuevos_lotes = [];
     }
-    
+
     this.articulo.lotes.forEach(loteData => {
       loteData.hash = loteData.lote + loteData.fecha_caducidad + loteData.codigo_barras;
     
@@ -76,6 +77,12 @@ export class InnerArticuloListaLotesComponent implements OnInit {
       if(estatus_articulo < loteData.estatus_caducidad){
         estatus_articulo = loteData.estatus_caducidad;
       }
+
+      if(this.articulo.surtir_en_unidades){
+        loteData.existencia = loteData.existencia_unidades;
+      }else{
+        loteData.existencia = loteData.existencia_empaque;
+      }
       
       if(!loteData.salida){
         loteData.restante = loteData.existencia;
@@ -83,6 +90,39 @@ export class InnerArticuloListaLotesComponent implements OnInit {
       }
     });
     this.articulo.estatus = estatus_articulo;
+    if(this.articulo.puede_surtir_unidades && this.articulo.surtir_en_unidades){
+      this.surtirUnidades(this.articulo.surtir_en_unidades);
+    }
+  }
+
+  surtirUnidades(checked){
+    this.articulo.surtir_en_unidades = checked;
+    if(this.articulo.surtir_en_unidades){
+      this.articulo.existencias = this.articulo.existencias_unidades;
+    }else{
+      this.articulo.existencias = this.articulo.existencias_empaque;
+    }
+    
+    let articulo_restante = 0;
+    this.articulo.lotes.forEach(loteData => {
+      console.log(loteData);
+      if(this.articulo.surtir_en_unidades){
+        loteData.existencia = loteData.existencia_unidades;
+      }else{
+        loteData.existencia = loteData.existencia_empaque;
+      }
+
+      if(!loteData.salida){
+        loteData.restante = loteData.existencia;
+      }else{
+        loteData.restante = loteData.existencia - loteData.salida;
+      }
+
+      this.aplicarCantidad(loteData,true);
+
+      articulo_restante += loteData.restante;
+    });
+    this.articulo.existencias_restantes = articulo_restante;
   }
 
   ngOnChanges(changes: SimpleChange){
@@ -114,6 +154,15 @@ export class InnerArticuloListaLotesComponent implements OnInit {
         const chng = changes[propName];
         let cur  = chng.currentValue;
         console.log(`Cambio de valor en ${propName}: clave = ${cur}`);
+      }else if(propName == 'tipoSalida'){
+        const chng = changes[propName];
+        let cur = chng.currentValue;
+        if(cur && !(cur.clave == 'RCTA' || cur.clave == 'PSNL')){
+          this.surtirUnidades(false);
+        }
+        if(cur){
+          console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
+        }
       }
     }
   }
@@ -129,33 +178,34 @@ export class InnerArticuloListaLotesComponent implements OnInit {
   }
 
   aplicarCantidad(lote:any, force:boolean = false){
-    if((lote.restante != (lote.existencia - lote.salida)) || force){
-      if(this.tieneSolicitud){
-        let cantidad_surtida = this.articulo.total_piezas - (lote.existencia - lote.restante) + lote.salida;
-        if( cantidad_surtida > this.articulo.cantidad_solicitado){
-          lote.salida -= (cantidad_surtida - this.articulo.cantidad_solicitado);
+    if(lote.salida !== undefined && this.edicionActiva){
+      if((lote.restante != (lote.existencia - lote.salida)) || force){
+        if(this.tieneSolicitud){
+          let cantidad_surtida = this.articulo.total_piezas - (lote.existencia - lote.restante) + lote.salida;
+          if( cantidad_surtida > this.articulo.cantidad_solicitado){
+            lote.salida -= (cantidad_surtida - this.articulo.cantidad_solicitado);
+          }
         }
-      }
-
-      if(lote.salida < 0){
-        lote.salida = 0;
-      }
-
-      if((lote.existencia - lote.salida) < 0){
-        lote.salida = lote.existencia;
-      }
-
-      let estado_anterior = this.obtenerEstadoActualArticulo();
-
-      this.articulo.total_piezas -= (lote.existencia - lote.restante);
-      this.articulo.total_piezas += lote.salida;
-      //this.articulo.existencias_restantes = this.articulo.existencias - this.articulo.total_piezas;
-      this.articulo.existencias_restantes += (lote.existencia - lote.restante);
-      this.articulo.existencias_restantes -= lote.salida;
-
-      lote.restante = lote.existencia - lote.salida;
-
-      this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
+  
+        if(lote.salida < 0){
+          lote.salida = 0;
+        }
+  
+        if((lote.existencia - lote.salida) < 0){
+          lote.salida = lote.existencia;
+        }
+  
+        let estado_anterior = this.obtenerEstadoActualArticulo();
+  
+        this.articulo.total_piezas -= (lote.existencia - lote.restante);
+        this.articulo.total_piezas += lote.salida;
+        //this.articulo.existencias_restantes = this.articulo.existencias - this.articulo.total_piezas;
+        this.articulo.existencias_restantes += (lote.existencia - lote.restante);
+        this.articulo.existencias_restantes -= lote.salida;
+  
+        lote.restante = lote.existencia - lote.salida;
+        this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
+      } 
     }
   }
 

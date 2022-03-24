@@ -6,6 +6,11 @@
     padding:10px;
 }
 
+.seleccion-adicional {
+    opacity: 0.75;
+    font-size: 0.75em;
+}
+
 .form-table-container {
     position: relative;
     max-height: 400px;

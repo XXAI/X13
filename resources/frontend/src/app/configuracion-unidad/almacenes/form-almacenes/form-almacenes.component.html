@@ -4,100 +4,72 @@
 <div class="form-container">
     <div [formGroup]="almacenForm">
         <br>
-
-        <!-- <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
-
-            <mat-form-field fxFlex *ngIf="!catalogos['unidades_medicas']">
-                <mat-label>Unidad Medica del Almacen: </mat-label>
-                <input matInput formControlName="unidad_medica_id">
-                <mat-hint>Escribe el nombre de la Unidad Medica</mat-hint>
-                <mat-error *ngIf="almacenForm.get('unidad_medica_id').hasError('required')">Este campo es obligatorio</mat-error>
-            </mat-form-field>
-
-            <mat-form-field fxFlex *ngIf="catalogos['unidades_medicas']">
-                <mat-label>Unidad Medica del Almacen: </mat-label>
-                <input type="text" aria-label="unidad_medica_id" matInput formControlName="unidad_medica_id" [matAutocomplete]="unidadMedicaAutocomplete" required>
-                <mat-autocomplete #unidadMedicaAutocomplete="matAutocomplete" [displayWith]="getDisplayFn('nombre')" >
-                    <mat-option *ngFor="let item of filteredCatalogs['unidades_medicas'] | async" [value]="item">
-                        {{item.nombre}}
-                    </mat-option>
-                </mat-autocomplete>
-                <mat-hint *ngIf="!almacenForm.get('unidad_medica_id').value">Selecciona una Unidad Medica de la lista</mat-hint>
-                <mat-hint align="end" *ngIf="almacenForm.get('unidad_medica_id').value">Clave Clues: [{{almacenForm.get('unidad_medica_id').value.clues}}]</mat-hint>
-                <mat-error *ngIf="almacenForm.get('unidad_medica_id').hasError('required')">Este campo es obligatorio</mat-error>
-            </mat-form-field>
-
-        </div> -->
-        
         <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
 
             <mat-form-field fxFlex>
-                <input matInput id="nombre" formControlName="nombre" placeholder="Nombre del Almacén" required>
-                <mat-error *ngIf="almacenForm.get('nombre').invalid && (almacenForm.get('nombre').dirty || almacenForm.get('nombre').touched)">
-                    <span *ngIf="almacenForm.get('nombre').errors.required">El campo es obligatorio</span>
-                </mat-error>
+                <input matInput formControlName="nombre" placeholder="Nombre del Almacén" required>
+                <mat-error *ngIf="almacenForm.get('nombre').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
 
-            <mat-form-field fxFlex *ngIf="!catalogos['tipos_almacenes']">
+            <mat-form-field fxFlex>
                 <mat-label>Tipo de Almacén: </mat-label>
-                <input matInput formControlName="tipo_almacen_id">
-                <mat-hint>Escribe el Tipo de Almacén</mat-hint>
-                <mat-error *ngIf="almacenForm.get('tipo_almacen_id').hasError('required')">Este campo es obligatorio</mat-error>
-            </mat-form-field>
-
-            <mat-form-field fxFlex *ngIf="catalogos['tipos_almacenes']">
-                <mat-label>Tipo de Almacén: </mat-label>
-                <input type="text" aria-label="tipo_almacen_id" matInput formControlName="tipo_almacen_id" [matAutocomplete]="tiposAlmacenesAutocomplete" required>
-                <mat-autocomplete #tiposAlmacenesAutocomplete="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" >
-                    <mat-option *ngFor="let item of filteredCatalogs['tipos_almacenes'] | async" [value]="item">
+                <mat-select formControlName="tipo_almacen_id" required>
+                    <mat-option *ngFor="let item of catalogos['tipos_almacenes']" [value]="item.id">
                         {{item.descripcion}}
                     </mat-option>
-                </mat-autocomplete>
-                <mat-hint *ngIf="!almacenForm.get('tipo_almacen_id').value">Selecciona un Tipo de Almacén de la lista</mat-hint>
-                <mat-hint align="end" *ngIf="almacenForm.get('tipo_almacen_id').value">Clave: [{{almacenForm.get('tipo_almacen_id').value.clave}}]</mat-hint>
+                </mat-select>
                 <mat-error *ngIf="almacenForm.get('tipo_almacen_id').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
 
         </div>
 
 
-        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
+        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px" style="padding-top:5px;padding-bottom:5px;">
+            <div fxFlex>
+                <label>¿Puede surtir por Unidades? </label>
+                <mat-radio-group formControlName="puede_surtir_unidades">
+                    <mat-radio-button [value]="0">No</mat-radio-button>
+                    <mat-radio-button [value]="1">Si</mat-radio-button>
+                </mat-radio-group>
+            </div>
 
-            <mat-form-field fxFlex>
-                <mat-select id="externo" formControlName="externo" placeholder="¿El Almacén es Externo?" required>
-                    <mat-option [value]="1">Si</mat-option>
-                    <mat-option [value]="0">No</mat-option>
-                </mat-select>
-                <mat-error *ngIf="almacenForm.get('externo').invalid && (almacenForm.get('externo').dirty || almacenForm.get('externo').touched)">
-                    <span *ngIf="almacenForm.get('externo').errors.required">El campo es obligatorio</span>
-                </mat-error>
-            </mat-form-field>
-    
-            <mat-form-field fxFlex>
-                <mat-select id="unidosis" formControlName="unidosis" placeholder="¿Es un Almacén de Unidosis?" required>
-                    <mat-option [value]="1">Si</mat-option>
-                    <mat-option [value]="0">No</mat-option>
-                </mat-select>
-                <mat-error *ngIf="almacenForm.get('unidosis').invalid && (almacenForm.get('unidosis').dirty || almacenForm.get('unidosis').touched)">
-                    <span *ngIf="almacenForm.get('unidosis').errors.required">El campo es obligatorio</span>
-                </mat-error>
-            </mat-form-field>
+            <div fxFlex>
+                <label>¿El Almacén es Externo? </label>
+                <mat-radio-group formControlName="externo">
+                    <mat-radio-button [value]="0">No</mat-radio-button>
+                    <mat-radio-button [value]="1">Si</mat-radio-button>
+                </mat-radio-group>
+            </div>
+        </div>
 
+        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px" *ngIf="almacenForm.get('externo').value == 1">
+            <mat-form-field fxFlex>
+                <input matInput formControlName="direccion" placeholder="Dirección del Almacén Externo">
+            </mat-form-field>
         </div>
 
         <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
-
             <mat-form-field fxFlex>
-                <input matInput id="responsable" formControlName="responsable" placeholder="Responsable del Almacén (Nombre Completo)" required>
-                <mat-error *ngIf="almacenForm.get('responsable').invalid && (almacenForm.get('responsable').dirty || almacenForm.get('responsable').touched)">
-                    <span *ngIf="almacenForm.get('responsable').errors.required">El campo es obligatorio</span>
-                </mat-error>
+                <input matInput id="responsable" formControlName="responsable" placeholder="Responsable del Almacén (Nombre Completo)">
+                <mat-error *ngIf="almacenForm.get('responsable').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
-
         </div>
 
-
-
+        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
+            <mat-form-field fxFlex="50">
+                <mat-label>Tipos de Movimiento: </mat-label>
+                <mat-select formControlName="tipos_movimiento_form" [(ngModel)]="tiposMovimientosSeleccionados" multiple>
+                  <mat-select-trigger>
+                    {{tiposMovimientosSeleccionados.length ? tiposMovimientosSeleccionados[0].descripcion : ''}}
+                    <span *ngIf="tiposMovimientosSeleccionados.length > 1" >
+                      (+{{tiposMovimientosSeleccionados.length - 1}})
+                    </span>
+                  </mat-select-trigger>
+                  <mat-option *ngIf="catalogos['tipos_movimiento'] && catalogos['tipos_movimiento'].length == 0" [value]="" disabled>Sin Tipo de Movimiento Capturados</mat-option>
+                  <mat-option *ngFor="let movimiento of catalogos['tipos_movimiento']" [value]="movimiento">[{{movimiento.movimiento}}] {{movimiento.descripcion}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
 
     </div>
 </div>

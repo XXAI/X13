@@ -79,7 +79,7 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.almacen_id">
                     <mat-label>Almacén</mat-label>
-                    <mat-select formControlName="almacen_id" required>
+                    <mat-select formControlName="almacen_id" (selectionChange)="checarAlmacenSeleccionado()" required>
                         <mat-option *ngIf="catalogos['almacenes'].length == 0">Sin Almacenes</mat-option>
                         <mat-option *ngFor="let item of catalogos['almacenes']" [value]="item.id">
                             {{item.nombre}}
@@ -95,7 +95,7 @@
                 <mat-form-field fxFlex *ngIf="datosForm.tipo_movimiento_id">
                     <mat-label>Tipo de Entrada</mat-label>
                     <mat-select formControlName="tipo_movimiento_id" required>
-                        <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0">Sin Tipos de Movimiento</mat-option>
+                        <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0" disabled>Sin Tipos de Movimiento</mat-option>
                         <mat-option *ngFor="let item of catalogos['tipos_movimiento']" [value]="item.id">
                             {{item.descripcion}}
                         </mat-option>

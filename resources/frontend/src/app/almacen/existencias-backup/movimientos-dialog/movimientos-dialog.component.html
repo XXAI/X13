@@ -32,8 +32,8 @@
 
                         <div fxFlex>
                             <small><strong>Cantidad actual</strong></small><br>
-                            {{ data.existencia }} <span *ngIf="data.es_unidosis" matTooltip="Cantidad en unidosis"> ({{
-                                data.existencia_unidosis}})</span>
+                            {{ data.existencia }} <span *ngIf="data.puede_surtir_unidades" matTooltip="Cantidad en unidades"> ({{
+                                data.existencia_unidades}})</span>
                         </div>
                     </div>
                 </div>
