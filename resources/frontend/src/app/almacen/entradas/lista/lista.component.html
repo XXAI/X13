@@ -128,7 +128,7 @@
             <mat-menu #menuAccionesEntradas="matMenu">
                 <ng-template matMenuContent let-id="id" let-estatus="estatus">
                         <button mat-menu-item [routerLink]="'/almacen/entradas/editar/'+id" *ngIf="estatus != 'PERE'">
-                            <mat-icon color="primary">{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
+                            <mat-icon color="accent">{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
                             <span>{{(estatus != 'BOR')?'Ver Detalles':'Editar'}}</span>
                         </button>
                         <button mat-menu-item [routerLink]="'/almacen/entradas/editar/'+id" *ngIf="estatus == 'PERE'">
@@ -138,6 +138,11 @@
                         <button mat-menu-item (click)="obtenerEntrada(id)">
                             <mat-icon>print</mat-icon>
                             <span>Imprimir</span>
+                        </button>
+                        <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
+                        <button mat-menu-item *ngIf="estatus == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{entrada_id:id}}">
+                            <mat-icon color="primary">reply</mat-icon>
+                            <span>Crear Salida</span>
                         </button>
                         <mat-divider *ngIf="estatus == 'FIN' || estatus == 'BOR'"></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">

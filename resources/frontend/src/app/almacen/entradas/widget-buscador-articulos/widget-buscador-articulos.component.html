@@ -34,9 +34,7 @@
                                 <div fxFlex class="articulo-clave">{{articulo.clave}}</div>
                                 <div fxFlex class="articulo-nombre">{{articulo.nombre}}</div>
                             </div>
-                            <div fxFlex class="articulo-texto">
-                                {{articulo.descripcion}}
-                            </div>
+                            <div fxFlex class="articulo-texto" [innerHTML]="articulo.descripcion_html"></div>
                         </div>
                         <div fxFlex="none" fxLayout="row" class="articulo-footer">
                             <div fxFlex>&nbsp;</div>

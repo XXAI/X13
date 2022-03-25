@@ -635,7 +635,8 @@ class AlmacenEntradaController extends Controller
             foreach ($movimiento->listaArticulos as $articulo) {
                 $stock = $articulo->stock;
                 if($articulo->modo_movimiento == 'UNI'){
-                    //
+                    $stock->existencia_unidades = $stock->existencia_unidades - $articulo->cantidad;
+                    $stock->existencia = $stock->existencia - floor($articulo->cantidad / $stock->articulo->unidades_x_empaque);
                 }else{
                     $stock->existencia = $stock->existencia - $articulo->cantidad;
                     if($stock->articulo->puede_surtir_unidades){

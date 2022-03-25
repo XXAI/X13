@@ -249,6 +249,11 @@ export class EntradaComponent implements OnInit {
               }
 
               this.formMovimiento.patchValue(response.data);
+              if(response.data.estatus == 'BOR'){
+                this.checarAlmacenSeleccionado();
+                this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
+              }
+              
               this.datosEntrada = response.data;
               if(response.data.solicitud){
                 this.tieneSolicitado = true;

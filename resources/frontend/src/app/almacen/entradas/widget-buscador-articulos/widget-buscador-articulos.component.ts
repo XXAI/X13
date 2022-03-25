@@ -5,6 +5,7 @@ import { debounceTime, finalize, map, switchMap, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { SharedService } from 'src/app/shared/shared.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +34,7 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
   
   @Output() articuloSeleccionado = new EventEmitter<any>();
 
-  constructor( private service: Service, private sharedService: SharedService ){}
+  constructor( private service: Service, private sharedService: SharedService, private sanitizer: DomSanitizer ){}
 
   inputBuscadorArticulos = new FormControl();
 
@@ -79,11 +80,16 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
           let articulos_temp = [];
+          //let highlight_style = 'background-color: #beed5e !important; font-style: italic !important;';
+          let highlight_re = new RegExp(this.inputBuscadorArticulos.value,'gi');
+
           for(let i in response.data){
+            let descripcion:string = response.data[i].especificaciones;
             let articulo:any = {
               id: response.data[i].id,
               clave: (response.data[i].clave_cubs)?response.data[i].clave_cubs:response.data[i].clave_local,
               nombre: response.data[i].articulo,
+              descripcion_html: this.sanitizer.bypassSecurityTrustHtml(descripcion.replace(highlight_re, (match) => `<mark>${match}</mark>`)),
               descripcion: response.data[i].especificaciones,
               partida_clave: response.data[i].clave_partida_especifica,
               partida_descripcion: response.data[i].partida_especifica,

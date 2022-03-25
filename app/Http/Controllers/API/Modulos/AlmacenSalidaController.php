@@ -638,7 +638,7 @@ class AlmacenSalidaController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
             
-            $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
+            $movimiento = Movimiento::with('listaArticulos.stock.articulo')->find($id);
 
             if($movimiento->estatus != 'FIN'){
                 throw new \Exception("No se puede cancelar este movimiento", 1);
@@ -653,7 +653,15 @@ class AlmacenSalidaController extends Controller
             foreach ($movimiento->listaArticulos as $articulo) {
                 if($articulo->stock){
                     $stock = $articulo->stock;
-                    $stock->existencia = $stock->existencia + $articulo->cantidad;
+                    if($articulo->modo_movimiento == 'UNI'){
+                        $stock->existencia_unidades += $articulo->cantidad;
+                        $stock->existencia += floor($articulo->cantidad / $stock->articulo->unidades_x_empaque);
+                    }else{
+                        $stock->existencia += $articulo->cantidad;
+                        if($stock->articulo->puede_surtir_unidades){
+                            $stock->existencia_unidades += ($articulo->cantidad * $stock->articulo->unidades_x_empaque);
+                        }
+                    }
                     $stock->save();
                 }
             }

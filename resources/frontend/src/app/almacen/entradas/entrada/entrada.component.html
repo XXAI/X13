@@ -42,6 +42,10 @@
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Recepción</span>
             </button>
+            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{entrada_id:datosEntrada.id}}">
+                <mat-icon color="primary">reply</mat-icon>
+                <span>Crear Salida</span>
+            </button>
             <mat-divider *ngIf="estatusMovimiento == 'BOR' || estatusMovimiento == 'PERE'"></mat-divider>
             <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarEntrada()">
                 <mat-icon color="warn">delete</mat-icon>
