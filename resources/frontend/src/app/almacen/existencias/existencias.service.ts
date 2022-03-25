@@ -9,11 +9,20 @@ import { map } from 'rxjs/operators';
 })
 export class ExistenciasService {
   url_existencias = `${environment.base_url}/almacen-existencias`;
+  url_catalogos = `${environment.base_url}/almacen-existencias/catalogos`;
   url_movimientos = `${environment.base_url}/almacen-existencias/movimientos`;
   url_detalles = `${environment.base_url}/almacen-existencias/detalles`;
   url_export =  `${environment.base_url}/almacen-existencias/exportar-excel`;
 
   constructor(private http: HttpClient) { }
+
+  obtenerCatalogosFiltros():Observable<any> {
+    return this.http.get<any>(this.url_catalogos).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
 
   obtenerExistencias(payload):Observable<any> {
     return this.http.get<any>(this.url_existencias,{params: payload}).pipe(
@@ -36,6 +45,6 @@ export class ExistenciasService {
   }
 
   exportarReporte(payload:any={}):Observable<any>{
-    return this.http.get<any>(this.url_export, {params:{payload}, responseType: 'blob' as 'json'});
+    return this.http.get<any>(this.url_export, {params:payload, responseType: 'blob' as 'json'});
   }
 }

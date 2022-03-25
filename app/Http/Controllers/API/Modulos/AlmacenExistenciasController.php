@@ -141,7 +141,8 @@ class AlmacenExistenciasController extends Controller
             }
 
             if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){
-                $items = $items->where("stocks.almacen_id","=", $params['almacen_id']);
+                $almacenes_ids = explode('|',$params['almacen_id']);
+                $items = $items->whereIn("stocks.almacen_id", $almacenes_ids);
             }
 
             if(isset($params['programa_id']) && trim($params['programa_id'])!= ""){
@@ -188,6 +189,23 @@ class AlmacenExistenciasController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function catalogosExistencias(Request $request){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $catalogos = [];
+
+            if($loggedUser->is_superuser){
+                $catalogos['almacenes'] = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get();
+            }else{
+                $catalogos['almacenes'] = $loggedUser->almacenes();
+            }
+
+            return response()->json(['data'=>$catalogos],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     public function catalogoUnidadesAlmacenes(Request $request)
     {     
         $data = $this->getUserAccessData();
@@ -363,13 +381,19 @@ class AlmacenExistenciasController extends Controller
 
         try{
             $loggedUser = auth()->userOrFail();
-            if($loggedUser->is_superuser){
-                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+            $params = $request->all();
+
+            if(isset($params['almacenes_ids']) && trim($params['almacenes_ids']) != ''){
+                $almacenes = explode('|',$params['almacenes_ids']);
             }else{
-                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+                if($loggedUser->is_superuser){
+                    $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+                }else{
+                    $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+                }
             }
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
-
+            
             $stocks = Stock::select('almacenes.nombre as ALMACEN','programas.descripcion as PROGRAMA','catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO',
                                 'bienes_servicios.clave_local as CLAVE','bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
                                 'stocks.lote as LOTE','stocks.fecha_caducidad as FECHA_CADUCIDAD','stocks.existencia as EXISTENCIA',
@@ -390,6 +414,15 @@ class AlmacenExistenciasController extends Controller
                             ->orderBy('bienes_servicios.clave_local','ASC')
                             ->orderBy('stocks.fecha_caducidad','ASC');
             //
+            if(isset($params['agrupar_por']) && trim($params['agrupar_por']) != ''){
+                if($params['agrupar_por'] == 'articulo'){
+                    $stocks = $stocks->select('catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO','bienes_servicios.clave_local as CLAVE',
+                                            'bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
+                                            DB::raw('count(stocks.lote) as NO_LOTES'),DB::raw('SUM(stocks.existencia) as EXISTENCIAS'),
+                                            'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
+                                    ->groupBy('stocks.bien_servicio_id');
+                }
+            }
             $resultado = $stocks->get();
             $columnas = array_keys(collect($resultado[0])->toArray());
 

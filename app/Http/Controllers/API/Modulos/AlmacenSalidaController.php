@@ -131,7 +131,7 @@ class AlmacenSalidaController extends Controller
                 $programa_id = $movimiento->programa_id;
                 $movimiento_id = $movimiento->id;
 
-                $movimiento->load('listaArticulosBorrador');
+                $movimiento->load('listaArticulosBorrador','almacen.tiposMovimiento');
                 $articulos_ids = $movimiento->listaArticulosBorrador()->pluck('bien_servicio_id');
 
                 $articulos_borrador = BienServicio::datosDescripcion()//->whereIn('bienes_servicios.id',$articulos_ids)

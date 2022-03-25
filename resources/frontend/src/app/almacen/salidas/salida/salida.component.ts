@@ -606,10 +606,19 @@ export class SalidaComponent implements OnInit {
     });
   }
 
+  validarOpcionSeleccionada(campo:string){
+    setTimeout (() => {
+      if(typeof this.formMovimiento.get(campo).value == 'string'){
+        this.formMovimiento.get(campo).setErrors({notSelected:true});
+      }
+    }, 100);
+  }
+
   guardarMovimiento(concluir:boolean = false){
     if(this.formMovimiento.valid){
-      this.isSaving = true;
       let formData:any = this.formMovimiento.value;
+      this.isSaving = true;
+
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
 
@@ -617,7 +626,6 @@ export class SalidaComponent implements OnInit {
       formData.unidad_medica_movimiento_id = (formData.unidad_medica_movimiento)?formData.unidad_medica_movimiento.id:null;
       formData.area_servicio_movimiento_id = (formData.area_servicio_movimiento)?formData.area_servicio_movimiento.id:null;
       formData.personal_medico_id = (formData.personal_medico)?formData.personal_medico.id:null;
-
       formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
       
       this.salidasService.guardarSalida(formData).subscribe(

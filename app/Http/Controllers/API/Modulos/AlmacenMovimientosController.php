@@ -38,9 +38,6 @@ class AlmacenMovimientosController extends Controller{
 
             $config_catalogs = [
                 'programas'         => Programa::getModel(),
-                // 'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes)->with(['tiposMovimiento'=>function($tiposMovimiento)use($parametros){
-                //                                                                                                                                     $tiposMovimiento->where('movimiento',$parametros['filtro_almacenes_movimiento']);
-                //
                 'almacenes'         => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->whereIn('id',$almacenes),                                                                                                                               
                 'almacenes_todos'   => Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),
                 'unidades_medicas'  => UnidadMedica::getModel(),

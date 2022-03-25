@@ -7,6 +7,7 @@ import { merge, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { ExistenciasDataSource } from '../existencias.data-source';
 import { ExistenciasService } from '../existencias.service';
+import { SharedService } from 'src/app/shared/shared.service';
 import { DialogoDetallesStockComponent } from '../dialogo-detalles-stock/dialogo-detalles-stock.component';
 import * as FileSaver from 'file-saver';
 
@@ -20,9 +21,12 @@ export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   @ViewChild(MatSort,{static:true}) sort: MatSort;
 
-  constructor(private apiService:ExistenciasService, public dialog: MatDialog) { }
+  constructor(private apiService:ExistenciasService, private sharedService: SharedService, public dialog: MatDialog) { }
 
+  isLoading:boolean;
   isLoadingExcel:boolean;
+  filtros: any;
+  almacenesSeleccionados: any[];
 
   searchQuery:string;
   filtroAplicado:boolean;
@@ -34,7 +38,7 @@ export class ListaComponent implements OnInit {
     search: "",
     caducidad: "",
     fecha_caducidad_hasta: "",
-    almacen_id: "",
+    almacen_id: [],
     programa_id: "",
     unidad_medica_id: "",
     clave_partida_especifica: "",
@@ -44,8 +48,33 @@ export class ListaComponent implements OnInit {
   dataSource: ExistenciasDataSource;
 
   ngOnInit(): void {
+    this.filtros = {'almacenes':[]};
+    this.almacenesSeleccionados = [];
     this.dataSource = new ExistenciasDataSource(this.apiService);
     this.loadData();
+    this.apiService.obtenerCatalogosFiltros().subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          console.log(response);
+          this.filtros.almacenes = response.data.almacenes;
+          this.filtros.almacenes.forEach(element => {
+            this.almacenesSeleccionados.push(element);
+          });
+        }
+        //this.isLoading = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.isLoading = false;
+      }
+    );
   }
 
   ngAfterViewInit(){
@@ -63,7 +92,15 @@ export class ListaComponent implements OnInit {
   }
 
   abrirFiltros(){
-    this.filtrosDrawer.open().finally(() => this.filtroAplicado  = !this.filtroAplicado );
+    this.filtrosDrawer.open();
+    //this.filtrosDrawer.open().finally(() => this.filtroAplicado  = !this.filtroAplicado );
+  }
+
+  aplicarFiltros(){
+    let lista_almacenes_ids = [];
+    this.almacenesSeleccionados.forEach(item => lista_almacenes_ids.push(item.id));
+    this.filter.almacen_id = lista_almacenes_ids.join('|');
+    this.loadData();
   }
 
   cerrarFiltros(){
@@ -89,11 +126,19 @@ export class ListaComponent implements OnInit {
     });
   }
 
-  descargarExcel(){
+  descargarExcel(agrupadoPor:string){
     this.isLoadingExcel = true;
-    this.apiService.exportarReporte().subscribe(
+    let lista_almacenes_ids = [];
+    this.almacenesSeleccionados.forEach(item => lista_almacenes_ids.push(item.id));
+
+    let params:any = {
+      agrupar_por: agrupadoPor,
+      almacenes_ids: lista_almacenes_ids.join('|'),
+    };
+
+    this.apiService.exportarReporte(params).subscribe(
       response => {
-        FileSaver.saveAs(response,'Existencias por almacen');
+        FileSaver.saveAs(response,'Reporte de Existencias por '+agrupadoPor);
         this.isLoadingExcel = false;
       },
       errorResponse =>{

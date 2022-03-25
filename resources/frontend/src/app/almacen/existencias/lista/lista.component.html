@@ -2,7 +2,11 @@
     <mat-drawer #filtrosDrawer [mode]="'side'" style="min-width: 300px;">
         <mat-card fxFlex="100" fxLayout="column">
             <div fxFlex="none" fxLayout="row">
-                <div fxFlex>Filtros</div>
+                <div fxFlex>
+                    <button mat-stroked-button color="primary" (click)="aplicarFiltros()" [class.button-spinner]="isLoading" [disabled]="isLoading">
+                        <mat-icon>filter_alt</mat-icon> Aplicar Filtro
+                    </button>
+                </div>
                 <div fxFlex="none">
                     <button mat-icon-button (click)="cerrarFiltros()">
                         <mat-icon>clear</mat-icon>
@@ -10,11 +14,38 @@
                 </div>
             </div>
             <mat-divider [inset]="true"></mat-divider>
+            <div fxFlex="none" fxLayout="column">
+                <section fxFlex="none">
+                    <div fxLayout="column" style="padding-top: 5px;">
+                        <mat-form-field fxFlex appearance="fill">
+                            <mat-label>Almacenes</mat-label>
+                            <mat-select [(ngModel)]="almacenesSeleccionados" multiple>
+                              <mat-select-trigger>
+                                {{almacenesSeleccionados.length ? almacenesSeleccionados[0].nombre : ''}}
+                                <span *ngIf="almacenesSeleccionados.length > 1" class="seleccion-adicional">
+                                  (+{{almacenesSeleccionados.length - 1}})
+                                </span>
+                              </mat-select-trigger>
+                              <mat-option *ngIf="filtros.almacenes.length == 0" [value]="" disabled>Sin Almacenes Asignados</mat-option>
+                              <mat-option *ngFor="let almacen of filtros.almacenes" [value]="almacen">{{almacen.nombre}}</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </section>
+            </div>
+            <mat-divider [inset]="true"></mat-divider>
             <div fxFlex fxLayout="column">
                 <section fxFlex="none">
                     <div fxLayout="column" style="padding-top: 5px;">
-                        <button mat-stroked-button color="accent" (click)="descargarExcel()" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
-                            <mat-icon>file_download</mat-icon> Descargar Excel
+                        <button mat-stroked-button color="accent" (click)="descargarExcel('lotes')" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
+                            <mat-icon>file_download</mat-icon> Descargar Excel por Lotes
+                        </button>
+                    </div>
+                </section>
+                <section fxFlex="none">
+                    <div fxLayout="column" style="padding-top: 5px;">
+                        <button mat-stroked-button color="accent" (click)="descargarExcel('articulo')" [class.button-spinner]="isLoadingExcel" [disabled]="isLoadingExcel">
+                            <mat-icon>file_download</mat-icon> Descargar Excel por Clave
                         </button>
                     </div>
                 </section>
