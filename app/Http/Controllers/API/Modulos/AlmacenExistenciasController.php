@@ -197,7 +197,7 @@ class AlmacenExistenciasController extends Controller
             if($loggedUser->is_superuser){
                 $catalogos['almacenes'] = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get();
             }else{
-                $catalogos['almacenes'] = $loggedUser->almacenes();
+                $catalogos['almacenes'] = $loggedUser->almacenes;
             }
 
             return response()->json(['data'=>$catalogos],HttpResponse::HTTP_OK);
