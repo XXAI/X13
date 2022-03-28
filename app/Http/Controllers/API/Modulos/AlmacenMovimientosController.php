@@ -22,6 +22,9 @@ use App\Models\AreaServicio;
 use App\Models\BienServicio;
 use App\Models\UnidadMedicaTurno;
 use App\Models\PersonalMedico;
+use App\Models\Paciente;
+use App\Models\TipoSolicitud;
+use App\Models\Solicitud;
 
 class AlmacenMovimientosController extends Controller{
     
@@ -301,6 +304,32 @@ class AlmacenMovimientosController extends Controller{
             }
             
             return response()->json(['data'=>$resultado_stock],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function buscarPaciente(Request $request, $expediente){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $paciente = Paciente::where('expediente_clinico',$expediente)->first();
+            return response()->json(['data'=>$paciente],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+    
+    public function buscarReceta(Request $request, $folio){
+        try{
+            $loggedUser = auth()->userOrFail();
+
+            $tipoSolicitud = TipoSolicitud::where('clave','RCTA')->first();
+            if(!$tipoSolicitud){
+                throw new \Exception("Tipo de solicitud no encontrado", 1);
+            }
+
+            $receta = Solicitud::where('tipo_solicitud_id',$tipoSolicitud->id)->where('folio',$folio)->first();
+            return response()->json(['data'=>$receta],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }

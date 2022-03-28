@@ -44,7 +44,11 @@ class AlmacenEntradaController extends Controller
             
             $entradas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','proveedores.nombre as proveedor','catalogo_tipos_movimiento.descripcion as tipo_movimiento',
                                             'catalogo_tipos_movimiento.clave as tipo_movimiento_clave','almacen_origen.nombre as almacen_origen','unidad_origen.nombre as unidad_origen',
-                                            'tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido','unidad_medica_turnos.nombre as turno')
+                                            'tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido','unidad_medica_turnos.nombre as turno',
+                                            'eliminado_por.username as eliminado_por',
+                                            'cancelado_por.username as cancelado_por',
+                                            'concluido_por.username as concluido_por',
+                                            'modificado_por.username as modificado_por')
                                     ->leftJoin('unidad_medica_turnos','unidad_medica_turnos.id','=','movimientos.turno_id')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('almacenes as almacen_origen','almacen_origen.id','=','movimientos.almacen_movimiento_id')
@@ -54,6 +58,10 @@ class AlmacenEntradaController extends Controller
                                     ->leftJoin('catalogo_tipos_movimiento','catalogo_tipos_movimiento.id','=','movimientos.tipo_movimiento_id')
                                     ->leftJoin('solicitudes','solicitudes.id','=','movimientos.solicitud_id')
                                     ->leftJoin('catalogo_tipos_solicitud as tipo_solicitud','tipo_solicitud.id','=','solicitudes.tipo_solicitud_id')
+                                    ->leftJoin('users as eliminado_por','eliminado_por.id','=','movimientos.eliminado_por_usuario_id')
+                                    ->leftJoin('users as cancelado_por','cancelado_por.id','=','movimientos.cancelado_por_usuario_id')
+                                    ->leftJoin('users as concluido_por','concluido_por.id','=','movimientos.concluido_por_usuario_id')
+                                    ->leftJoin('users as modificado_por','modificado_por.id','=','movimientos.modificado_por_usuario_id')
                                     ->where('movimientos.direccion_movimiento','ENT')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->whereIn('movimientos.almacen_id',$almacenes)

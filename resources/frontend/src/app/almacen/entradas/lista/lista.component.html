@@ -69,28 +69,30 @@
                     </ng-container>
 
                     <ng-container matColumnDef="folio">
-                        <th mat-header-cell *matHeaderCellDef> Folio </th>
+                        <th mat-header-cell *matHeaderCellDef> Folio - Tipo Entrada </th>
                         <td mat-cell *matCellDef="let row" width="1">
                             <span style="white-space: nowrap;">{{ row.folio }}</span><br>
-                            <span class="added-data" *ngIf="row.origen">Origen: {{row.origen}}</span>
+                            <span class="added-data">
+                                {{(row.tipo_movimiento)?row.tipo_movimiento:'Sin Tipo'}}&nbsp;
+                                <span *ngIf="row.tipo_solicitud">{{row.tipo_solicitud}}: {{+row.porcentaje_surtido | number:'1.0-2'}} %</span>
+                            </span>
                         </td>
                     </ng-container>
 
                     <ng-container matColumnDef="almacen">
-                        <th mat-header-cell *matHeaderCellDef> Almacén/Turno </th>
-                        <td mat-cell *matCellDef="let row" > {{row.almacen}}<br>{{row.turno}} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="tipo_movimiento">
-                        <th mat-header-cell *matHeaderCellDef> Tipo Movimiento </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap;"> {{(row.tipo_movimiento)?row.tipo_movimiento:'Sin Tipo'}} <br>
-                            <span class="added-data" *ngIf="row.tipo_solicitud">{{row.tipo_solicitud}}: {{+row.porcentaje_surtido | number:'1.0-2'}} %</span>
+                        <th mat-header-cell *matHeaderCellDef> Almacén - Origen </th>
+                        <td mat-cell *matCellDef="let row" > 
+                            {{row.almacen}}<br>
+                            <span class="added-data" *ngIf="row.origen">Origen: {{row.origen}}</span>
                         </td>
                     </ng-container>
-                    
+
                     <ng-container matColumnDef="fecha_movimiento" >
-                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" width="1"> Fecha </th>
-                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;"> {{row.fecha_movimiento}}</td>
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" width="1"> Fecha - Turno </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> 
+                            {{row.fecha_movimiento}}<br>
+                            <span class="added-data">{{row.turno}}</span>
+                        </td>
                     </ng-container>
 
                     <ng-container matColumnDef="totales_claves_articulos" >
@@ -101,6 +103,14 @@
                     <ng-container matColumnDef="total_monto" >
                         <th mat-header-cell *matHeaderCellDef fxHide.xs="true" style="white-space: nowrap;"> Total Monto </th>
                         <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap; text-align: center;"> ${{row.total_monto | number:'1.0-0'}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="dato_usuario" >
+                        <th mat-header-cell *matHeaderCellDef fxHide.xs="true" width="1"> Usuario </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;text-align: center;"> 
+                            {{row.usuario}}<br>
+                            <span class="added-data">{{row.updated_at | date:'dd-MM-yyyy'}}</span>
+                        </td>
                     </ng-container>
 
                     <ng-container matColumnDef="actions">
@@ -128,30 +138,33 @@
             <mat-menu #menuAccionesEntradas="matMenu">
                 <ng-template matMenuContent let-id="id" let-estatus="estatus">
                         <button mat-menu-item [routerLink]="'/almacen/entradas/editar/'+id" *ngIf="estatus != 'PERE'">
-                            <mat-icon color="accent">{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
+                            <mat-icon>{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
                             <span>{{(estatus != 'BOR')?'Ver Detalles':'Editar'}}</span>
                         </button>
+                        <mat-divider *ngIf="estatus == 'PERE'"></mat-divider>
                         <button mat-menu-item [routerLink]="'/almacen/entradas/editar/'+id" *ngIf="estatus == 'PERE'">
                             <mat-icon color="accent">inventory</mat-icon>
                             <span>Recibir</span>
                         </button>
-                        <button mat-menu-item (click)="obtenerEntrada(id)">
-                            <mat-icon>print</mat-icon>
-                            <span>Imprimir</span>
-                        </button>
                         <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
-                        <button mat-menu-item *ngIf="estatus == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{entrada_id:id}}">
+                        <button mat-menu-item *ngIf="estatus == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:id}}">
                             <mat-icon color="primary">reply</mat-icon>
                             <span>Crear Salida</span>
                         </button>
-                        <mat-divider *ngIf="estatus == 'FIN' || estatus == 'BOR'"></mat-divider>
+                        <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">
                             <mat-icon color="warn">cancel</mat-icon>
                             <span>Cancelar</span>
                         </button>
+                        <mat-divider *ngIf="estatus == 'BOR'"></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus == 'BOR'" (click)="eliminarEntrada(id)">
                             <mat-icon color="warn">delete</mat-icon>
                             <span>Eliminar</span>
+                        </button>
+                        <mat-divider></mat-divider>
+                        <button mat-menu-item (click)="obtenerEntrada(id)">
+                            <mat-icon>print</mat-icon>
+                            <span>Imprimir</span>
                         </button>
                 </ng-template>
             </mat-menu>

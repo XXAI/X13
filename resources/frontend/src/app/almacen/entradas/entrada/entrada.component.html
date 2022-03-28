@@ -10,8 +10,8 @@
             </button>
             <div fxFlex>
             </div>
-            <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.es_colectivo" class="label-info">
-                <span>Colectivo</span>
+            <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.folio" class="label-info">
+                <span>{{datosEntrada.folio}}</span>
             </div>
             <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
                 <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
@@ -22,6 +22,38 @@
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
+            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+                <mat-icon>all_inbox</mat-icon>
+                <span>Concluir Movimiento</span>
+            </button>
+            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'PERE'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+                <mat-icon>all_inbox</mat-icon>
+                <span>Concluir Recepción</span>
+            </button>
+            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosEntrada.id}}">
+                <mat-icon color="primary">reply</mat-icon>
+                <span>Crear Salida</span>
+            </button>
+            <mat-divider *ngIf="estatusMovimiento == 'BOR'"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarEntrada()">
+                <mat-icon color="warn">delete</mat-icon>
+                <span>Eliminar Entrada</span>
+            </button>
+            <mat-divider *ngIf="estatusMovimiento == 'FIN'"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarEntrada()">
+                <mat-icon color="warn">cancel</mat-icon>
+                <span>Cancelar Entrada</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="generarPDF()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item [routerLink]="'/almacen/entradas/nueva'">
+                <mat-icon>add_circle</mat-icon>
+                <span>Nueva Entrada</span>
+            </button>
             <!--button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
                 <mat-icon>settings_applications</mat-icon>
                 <span>Configurar Firmantes</span>
@@ -34,32 +66,6 @@
                 <mat-icon>outbox</mat-icon>
                 <span>Enviar a Revisión</span>
             </button-->
-            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
-                <mat-icon>all_inbox</mat-icon>
-                <span>Concluir Movimiento</span>
-            </button>
-            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'PERE'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
-                <mat-icon>all_inbox</mat-icon>
-                <span>Concluir Recepción</span>
-            </button>
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{entrada_id:datosEntrada.id}}">
-                <mat-icon color="primary">reply</mat-icon>
-                <span>Crear Salida</span>
-            </button>
-            <mat-divider *ngIf="estatusMovimiento == 'BOR' || estatusMovimiento == 'PERE'"></mat-divider>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarEntrada()">
-                <mat-icon color="warn">delete</mat-icon>
-                <span>Eliminar Entrada</span>
-            </button>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarEntrada()">
-                <mat-icon color="warn">cancel</mat-icon>
-                <span>Cancelar Entrada</span>
-            </button>
-            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
-            <button mat-menu-item (click)="generarPDF()">
-                <mat-icon>print</mat-icon>
-                <span>Imprimir</span>
-            </button>
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
 
@@ -200,7 +206,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.referencia_fecha && datosEntrada">
                     <mat-label>Fecha de Referencia</mat-label>
-                    <input matInput [value]="(datosEntrada.referencia_fecha)?datosEntrada.referencia_fecha:'---'" readonly>
+                    <input matInput [value]="(datosEntrada.referencia_fecha)?(datosEntrada.referencia_fecha | date:'MMMM d, y'):'---'" readonly>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.observaciones">

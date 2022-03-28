@@ -37,7 +37,7 @@ class AlterTableAddIndexesBienesServicios extends Migration
             $table->index('clave_cubs');
             $table->index('clave_local');
             $table->index('articulo');
-            $table->index('especificaciones');
+            //$table->index('especificaciones');
 
             $table->foreign('familia_id')->references('id')->on('familias');
             $table->foreign('tipo_bien_servicio_id')->references('id')->on('catalogo_tipos_bien_servicio');

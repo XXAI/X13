@@ -589,6 +589,7 @@ export class EntradaComponent implements OnInit {
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
             this.estatusMovimiento = response.data.estatus;
+            this.datosEntrada = response.data;
             
             if(this.estatusMovimiento != 'BOR' && this.estatusMovimiento != 'PERE'){
               this.editable = false;

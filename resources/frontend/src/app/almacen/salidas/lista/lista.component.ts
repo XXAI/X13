@@ -50,7 +50,7 @@ export class ListaComponent implements OnInit {
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción'};
 
-  displayedColumns: string[] = ['id','folio','almacen_turno','tipo_movimiento','fecha_movimiento','totales_claves','actions']; //,'descripcion','proveedor'
+  displayedColumns: string[] = ['id','folio','almacen_turno','fecha_movimiento','totales_claves','dato_usuario','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 
@@ -97,12 +97,25 @@ export class ListaComponent implements OnInit {
               element.estatus_clave = this.listaEstatusClaves[element.estatus];
               element.estatus_label = this.listaEstatusLabels[element.estatus];
               element.estatus_icono = this.listaEstatusIconos[element.estatus];
+
               if(element.unidad_destino){
                 element.destino = element.unidad_destino;
               }else if(element.almacen_destino){
                 element.destino = element.almacen_destino;
               }else if(element.area_servicio_destino){
                 element.destino = element.area_servicio_destino;
+              }else if(element.paciente_id){
+                element.destino = 'Paciente';
+              }
+
+              if(element.eliminado_por_usuario_id){
+                element.usuario = element.eliminado_por;
+              }else if(element.cancelado_por_usuario_id){
+                element.usuario = element.cancelado_por;
+              }else if(element.concluido_por_usuario_id){
+                element.usuario = element.concluido_por;
+              }else if(element.modificado_por_usuario_id){
+                element.usuario = element.modificado_por;
               }
             });
             this.listadoMovimientos = response.data.data;

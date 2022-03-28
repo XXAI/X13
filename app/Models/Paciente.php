@@ -6,9 +6,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Persona extends Model{
-    
+class Paciente extends Model{
     use SoftDeletes;
-    protected $table = 'personas';  
-    protected $fillable = ['nombre_completo','curp','rfc'];
+    protected $table = 'pacientes';  
+    protected $fillable = ['nombre_completo','curp','expediente_clinico'];
 }

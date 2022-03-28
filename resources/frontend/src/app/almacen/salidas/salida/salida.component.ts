@@ -10,12 +10,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmActionDialogComponent } from '../../../utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DatePipe } from '@angular/common';
 import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { map, startWith, timeout } from 'rxjs/operators';
 import { MatSort } from '@angular/material/sort';
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import { ReportWorker } from 'src/app/web-workers/report-worker';
 import * as FileSaver from 'file-saver';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
+import { DialogoSolicitudRepetidaComponent } from '../dialogo-solicitud-repetida/dialogo-solicitud-repetida.component';
 
 @Component({
   selector: 'app-salida',
@@ -46,6 +47,7 @@ export class SalidaComponent implements OnInit {
     private router: Router
   ) { }
 
+  datosMovimiento:any;
   formMovimiento:FormGroup;
   catalogos:any;
 
@@ -55,6 +57,12 @@ export class SalidaComponent implements OnInit {
   movimientoHijo:any;
   tieneSolicitud:boolean;
   movimientoSolicitud:any;
+
+  cargandoDatosReceta:boolean;
+  cargandoDatosPaciente:boolean;
+  datosPacienteEstatus:string;
+  recetaEncontrada:any;
+  habilitarDatosPaciente:boolean;
 
   controlArticulosAgregados:any;
   controlArticulosModificados:any;
@@ -191,13 +199,16 @@ export class SalidaComponent implements OnInit {
               let datos_recibidos = history.state.data;
               this.estatusMovimiento = 'NV';
 
-              if(datos_recibidos && datos_recibidos.entrada_id){
+              if(datos_recibidos && datos_recibidos.movimiento_id){
                 this.isLoading = true;
-                this.salidasService.verSalida(datos_recibidos.entrada_id).subscribe(
+                this.salidasService.verSalida(datos_recibidos.movimiento_id).subscribe(
                   response =>{
                     console.log('Respuesta:',response);
                     this.formMovimiento.get('almacen_id').patchValue(response.data.almacen_id);
-                    this.catalogos['tipos_movimiento'] = response.data.almacen.tipos_movimiento;
+                    this.catalogos['tipos_movimiento'] = (this.catalogos['almacenes'].find(item => item.id == response.data.almacen_id)).tipos_movimiento;
+                    this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
+                    this.cambiarTipoSalida();
+                    //this.catalogos['tipos_movimiento'] = response.data.almacen.tipos_movimiento;
 
                     let lista_articulos:any[] = this.cargarArticulos(response.data.lista_articulos,true);
                     this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
@@ -260,6 +271,7 @@ export class SalidaComponent implements OnInit {
           this.cambiarTipoSalida();
 
           this.formMovimiento.patchValue(response.data);
+          this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
 
           if(response.data.es_colectivo){
             this.checarTieneSolicitud(true);
@@ -273,9 +285,10 @@ export class SalidaComponent implements OnInit {
             this.movimientoSolicitud = response.data.solicitud;
           }
 
-          if(response.data.persona){
-            this.formMovimiento.get('paciente').patchValue(response.data.persona.nombre_completo);
-            this.formMovimiento.get('curp').patchValue(response.data.persona.curp);
+          if(response.data.paciente){
+            this.formMovimiento.get('expediente_clinico').patchValue(response.data.paciente.expediente_clinico);
+            this.formMovimiento.get('paciente').patchValue(response.data.paciente.nombre_completo);
+            this.formMovimiento.get('curp').patchValue(response.data.paciente.curp);
           }
 
           this.estatusMovimiento = response.data.estatus;
@@ -510,11 +523,14 @@ export class SalidaComponent implements OnInit {
       'area_servicio_movimiento_id',
       'personal_medico',
       'personal_medico_id',
-      'persona_id',
+      'paciente_id',
+      'expediente_clinico',
       'paciente',
       'curp',
       'es_colectivo',
     ];
+    this.datosPacienteEstatus = 'Teclear un No. de Expediente';
+    this.habilitarDatosPaciente = false;
 
     lista_campos_remover.forEach(campo => {
       if(this.formMovimiento.get(campo)){
@@ -553,8 +569,9 @@ export class SalidaComponent implements OnInit {
       }else if(this.tipoSalida.clave == 'RCTA'){
         this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
         this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
+        this.formMovimiento.addControl('paciente_id', new FormControl(''));
+        this.formMovimiento.addControl('expediente_clinico', new FormControl('', Validators.required));
         this.formMovimiento.addControl('paciente', new FormControl('', Validators.required));
-        this.formMovimiento.addControl('persona_id', new FormControl(''));
         this.formMovimiento.addControl('curp', new FormControl(''));
         this.formMovimiento.get('documento_folio').setValidators(Validators.required);
         this.tieneSolicitud = true;      
@@ -654,7 +671,7 @@ export class SalidaComponent implements OnInit {
 
   validarOpcionSeleccionada(campo:string){
     setTimeout (() => {
-      if(typeof this.formMovimiento.get(campo).value == 'string'){
+      if(typeof this.formMovimiento.get(campo).value == 'string' && this.formMovimiento.get(campo).value != ''){
         this.formMovimiento.get(campo).setErrors({notSelected:true});
       }
     }, 100);
@@ -679,9 +696,23 @@ export class SalidaComponent implements OnInit {
           if(response.error) {
             let errorMessage = response.error;
             this.sharedService.showSnackBar(errorMessage, null, 3000);
+            if(response.code == 'solicitud_repetida'){
+              console.log(response.data);
+              let configDialog = {
+                width: '50%',
+                maxHeight: '90vh',
+                height: '343px',
+                data:{error:response.error, data:response.data},
+                panelClass: 'no-padding-dialog'
+              };
+          
+              const dialogRef = this.dialog.open(DialogoSolicitudRepetidaComponent, configDialog);
+            }
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
             this.estatusMovimiento = response.data.estatus;
+
+            this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
 
             if(response.data.movimiento_hijo){
               this.movimientoHijo = response.data.movimiento_hijo;
@@ -876,11 +907,50 @@ export class SalidaComponent implements OnInit {
         this.formMovimiento.get('personal_medico').patchValue(nuevo_personal);
         this.catalogos['personal_medico'].push(nuevo_personal);
       }, 100);
-      console.log('persona', nuevo_personal);
     }else if(typeof form_value === 'object'){
       this.formMovimiento.get('personal_medico').patchValue(form_value);
     }
   }
+
+  buscarExpediente(){
+    let expediente_clinico = this.formMovimiento.get('expediente_clinico').value;
+    if(expediente_clinico && expediente_clinico != this.datosPacienteEstatus){
+      this.cargandoDatosPaciente = true;
+      this.formMovimiento.get('paciente_id').reset();
+      this.formMovimiento.get('paciente').reset();
+      this.formMovimiento.get('curp').reset();
+      this.datosPacienteEstatus = 'Buscando Expediente...';
+      this.salidasService.buscarPaciente(expediente_clinico).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error.message;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.cargandoDatosPaciente = false;
+          }else{
+            if(response.data){
+              this.habilitarDatosPaciente = false;
+              this.datosPacienteEstatus = response.data.expediente_clinico;
+              this.formMovimiento.get('paciente_id').patchValue(response.data.id);
+              this.formMovimiento.get('paciente').patchValue(response.data.nombre_completo);
+              this.formMovimiento.get('curp').patchValue(response.data.curp);
+            }else{
+              this.datosPacienteEstatus = 'Escribir los datos del paciente.';
+              this.habilitarDatosPaciente = true;
+            }
+            this.cargandoDatosPaciente = false;
+          }
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.cargandoDatosPaciente = false;
+        }
+      );
+    }
+  };
 
   getDisplayFn(label: string){
     return (val) => this.displayFn(val,label);

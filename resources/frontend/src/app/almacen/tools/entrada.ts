@@ -42,8 +42,10 @@ export interface MovimientoData {
     almacen_movimiento?:any;
     area_servicio_movimiento_id?:Number;
     area_servicio_movimiento?:any;
-    persona_id?:Number;
-    persona?:any;
+    paciente_id?:Number;
+    paciente?:any;
+    personal_medico_id?:Number;
+    personal_medico?:any;
     creado_por_usuario_id?:Number;
     creado_por_usuario?:any;
     modificado_por_usuario_id?:Number;

@@ -21,7 +21,7 @@ use App\Models\CartaCanje;
 use App\Models\BienServicio;
 use App\Models\TipoMovimiento;
 use App\Models\UnidadMedica;
-use App\Models\Persona;
+use App\Models\Paciente;
 use App\Models\PersonalMedico;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
@@ -48,7 +48,11 @@ class AlmacenSalidaController extends Controller
 
             $salidas = Movimiento::select('movimientos.*','almacenes.nombre as almacen','programas.descripcion as programa','catalogo_unidades_medicas.nombre_corto as unidad_medica_movimiento',
                                         'catalogo_tipos_movimiento.descripcion as tipo_movimiento','almacen_destino.nombre as almacen_destino','unidad_destino.nombre as unidad_destino','unidad_medica_turnos.nombre as turno',
-                                        'area_servicio.descripcion as area_servicio_destino','tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido')
+                                        'area_servicio.descripcion as area_servicio_destino','tipo_solicitud.descripcion as tipo_solicitud','solicitudes.porcentaje_articulos_surtidos as porcentaje_surtido',
+                                        'eliminado_por.username as eliminado_por',
+                                        'cancelado_por.username as cancelado_por',
+                                        'concluido_por.username as concluido_por',
+                                        'modificado_por.username as modificado_por')
                                     ->leftJoin('unidad_medica_turnos','unidad_medica_turnos.id','=','movimientos.turno_id')
                                     ->leftJoin('almacenes','almacenes.id','=','movimientos.almacen_id')
                                     ->leftJoin('almacenes as almacen_destino','almacen_destino.id','=','movimientos.almacen_movimiento_id')
@@ -59,6 +63,10 @@ class AlmacenSalidaController extends Controller
                                     ->leftJoin('catalogo_tipos_movimiento','catalogo_tipos_movimiento.id','=','movimientos.tipo_movimiento_id')
                                     ->leftJoin('solicitudes','solicitudes.id','=','movimientos.solicitud_id')
                                     ->leftJoin('catalogo_tipos_solicitud as tipo_solicitud','tipo_solicitud.id','=','solicitudes.tipo_solicitud_id')
+                                    ->leftJoin('users as eliminado_por','eliminado_por.id','=','movimientos.eliminado_por_usuario_id')
+                                    ->leftJoin('users as cancelado_por','cancelado_por.id','=','movimientos.cancelado_por_usuario_id')
+                                    ->leftJoin('users as concluido_por','concluido_por.id','=','movimientos.concluido_por_usuario_id')
+                                    ->leftJoin('users as modificado_por','modificado_por.id','=','movimientos.modificado_por_usuario_id')
                                     ->where('movimientos.direccion_movimiento','SAL')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->whereIn('movimientos.almacen_id',$almacenes)
@@ -105,7 +113,7 @@ class AlmacenSalidaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
-            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa','turno','persona','personalMedico')->find($id);
+            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa','turno','paciente','personalMedico')->find($id);
             $extras = [];
 
             if($movimiento->estatus != 'BOR'){
@@ -225,7 +233,7 @@ class AlmacenSalidaController extends Controller
                 'observaciones' => $parametros['observaciones'],
                 'es_colectivo' => (isset($parametros['es_colectivo']) && $parametros['es_colectivo'])?$parametros['es_colectivo']:null,
                 'personal_medico_id' => null,
-                'persona_id' => null,
+                'paciente_id' => null,
                 'total_claves' => 0,
                 'total_articulos' => 0,
             ];
@@ -269,17 +277,24 @@ class AlmacenSalidaController extends Controller
             }
 
             if($tipo_movimiento->clave == 'RCTA'){
-                $persona = Persona::where('nombre_completo',strtolower($parametros['paciente']));
+                $parametros['expediente_clinico']   = trim($parametros['expediente_clinico']);
+                $parametros['paciente']             = trim($parametros['paciente']);
+                $parametros['curp']                 = trim($parametros['curp']);
+                $paciente = Paciente::where('expediente_clinico',$parametros['expediente_clinico'])->where('nombre_completo',strtoupper($parametros['paciente']));
                 if($parametros['curp']){
-                    $persona = $persona->where('curp',strtolower($parametros['curp']))->first();
+                    $paciente = $paciente->where('curp',strtoupper($parametros['curp']))->first();
                 }else{
-                    $persona = $persona->first();
+                    $paciente = $paciente->first();
                 }
 
-                if(!$persona){
-                    $persona = Persona::create(['nombre_completo'=>$parametros['paciente'],'curp'=>$parametros['curp']]);
+                if(!$paciente){
+                    $paciente = Paciente::create([
+                        'expediente_clinico'=>$parametros['expediente_clinico'],
+                        'nombre_completo'=>strtoupper($parametros['paciente']),
+                        'curp'=>strtoupper($parametros['curp'])
+                    ]);
                 }
-                $datos_movimiento['persona_id'] = $persona->id;
+                $datos_movimiento['paciente_id'] = $paciente->id;
                 $datos_movimiento['personal_medico_id'] = $parametros['personal_medico_id'];
             }
 
@@ -507,7 +522,19 @@ class AlmacenSalidaController extends Controller
                 }
                 
                 if(!$tipo_solicitud){
-                    throw new \Exception("No se encontro tipo de solicitud: Colectivo", 1);
+                    throw new \Exception("No se encontro tipo de solicitud", 1);
+                }
+
+                $buscar_solicitud = Solicitud::where('folio',$movimiento->documento_folio);
+                if($movimiento->solicitud_id){
+                    $buscar_solicitud = $buscar_solicitud->where('id','!=',$movimiento->solicitud_id);
+                }
+                $buscar_solicitud = $buscar_solicitud->first();
+
+                if($buscar_solicitud){
+                    DB::rollback();
+                    $buscar_solicitud->load('listaArticulos.articulo','paciente','personalMedico','tipoSolicitud','usuarioFinaliza');
+                    return response()->json(['error'=>'Se econtró una solicitud con el mismo folio','code'=>'solicitud_repetida','data'=>$buscar_solicitud],HttpResponse::HTTP_OK);
                 }
 
                 $solicitud_articulos = [];
@@ -530,7 +557,7 @@ class AlmacenSalidaController extends Controller
                         'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,
                         'programa_id'                   =>$movimiento->programa_id,
                         'turno_id'                      =>$movimiento->turno_id,
-                        'persona_id'                    =>$movimiento->persona_id,
+                        'paciente_id'                    =>$movimiento->paciente_id,
                         'personal_medico_id'            =>$movimiento->personal_medico_id,
                         'total_claves_solicitadas'      =>$total_claves,
                         'total_articulos_solicitados'   =>0,

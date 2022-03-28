@@ -51,7 +51,7 @@ export class ListaComponent implements OnInit {
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado', 'PERE':'pendiente-recepcion' };
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado', 'PERE':'Pendiente de Recepción' };
 
-  displayedColumns: string[] = ['id','folio','almacen','tipo_movimiento','fecha_movimiento','totales_claves_articulos','total_monto','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
+  displayedColumns: string[] = ['id','folio','almacen','fecha_movimiento','totales_claves_articulos','total_monto','dato_usuario','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 
@@ -119,6 +119,18 @@ export class ListaComponent implements OnInit {
                 element.origen = element.unidad_origen;
               }else if(element.almacen_origen){
                 element.origen = element.almacen_origen;
+              }else if(element.proveedor){
+                element.origen = element.proveedor;
+              }
+
+              if(element.eliminado_por_usuario_id){
+                element.usuario = element.eliminado_por;
+              }else if(element.cancelado_por_usuario_id){
+                element.usuario = element.cancelado_por;
+              }else if(element.concluido_por_usuario_id){
+                element.usuario = element.concluido_por;
+              }else if(element.modificado_por_usuario_id){
+                element.usuario = element.modificado_por;
               }
             });
             this.listadoMovimientos = response.data.data;

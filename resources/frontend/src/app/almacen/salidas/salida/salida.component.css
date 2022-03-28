@@ -127,6 +127,15 @@ table td {
     padding: 0px 5px 5px 5px;
 }
 
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+}
+
 .extras{
     font-size: smaller;
     color:green;

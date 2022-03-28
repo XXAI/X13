@@ -71,20 +71,22 @@ Route::group(['middleware'=>'auth'],function($router){
     /**
      * Modulos Almacen
      */
-    Route::get('almacen-buscar-stock',                  'API\Modulos\AlmacenMovimientosController@buscarStock');
-    Route::get('almacen-movimientos-catalogos',         'API\Modulos\AlmacenMovimientosController@obtenerCatalogos');
-    Route::apiResource('almacen-entradas',              'API\Modulos\AlmacenEntradaController');
-    Route::put('almacen-entradas-cancelar/{id}',        'API\Modulos\AlmacenEntradaController@cancelarMovimiento');
-    Route::apiResource('almacen-salidas',               'API\Modulos\AlmacenSalidaController');
-    Route::put('almacen-salidas-cancelar/{id}',         'API\Modulos\AlmacenSalidaController@cancelarMovimiento');
-    Route::get('almacen-existencias',                   'API\Modulos\AlmacenExistenciasController@index');
-    Route::get('almacen-existencias/movimientos/{id}',  'API\Modulos\AlmacenExistenciasController@movimientos');
-    Route::get('almacen-existencias/detalles/{id}',     'API\Modulos\AlmacenExistenciasController@detalles');
-    Route::get('almacen-existencias/catalogos',         'API\Modulos\AlmacenExistenciasController@catalogosExistencias');
-    Route::get('almacen-existencias/exportar-excel',    'API\Modulos\AlmacenExistenciasController@exportExcel');
-    Route::get('partidas-bienes-servicios/',            'API\Modulos\PartidasController@partidas');
-    Route::get('familias-bienes-servicios/',            'API\Modulos\FamiliasController@familias');
-    Route::apiResource('catalogo-almacenes',            'API\ConfiguracionUnidad\AlmacenesController');
+    Route::get('almacen-buscar-stock',                      'API\Modulos\AlmacenMovimientosController@buscarStock');
+    Route::get('movimientos-buscar-receta/{folio}',         'API\Modulos\AlmacenMovimientosController@buscarReceta');
+    Route::get('movimientos-buscar-paciente/{expediente}',  'API\Modulos\AlmacenMovimientosController@buscarPaciente');
+    Route::get('almacen-movimientos-catalogos',             'API\Modulos\AlmacenMovimientosController@obtenerCatalogos');
+    Route::apiResource('almacen-entradas',                  'API\Modulos\AlmacenEntradaController');
+    Route::put('almacen-entradas-cancelar/{id}',            'API\Modulos\AlmacenEntradaController@cancelarMovimiento');
+    Route::apiResource('almacen-salidas',                   'API\Modulos\AlmacenSalidaController');
+    Route::put('almacen-salidas-cancelar/{id}',             'API\Modulos\AlmacenSalidaController@cancelarMovimiento');
+    Route::get('almacen-existencias',                       'API\Modulos\AlmacenExistenciasController@index');
+    Route::get('almacen-existencias/movimientos/{id}',      'API\Modulos\AlmacenExistenciasController@movimientos');
+    Route::get('almacen-existencias/detalles/{id}',         'API\Modulos\AlmacenExistenciasController@detalles');
+    Route::get('almacen-existencias/catalogos',             'API\Modulos\AlmacenExistenciasController@catalogosExistencias');
+    Route::get('almacen-existencias/exportar-excel',        'API\Modulos\AlmacenExistenciasController@exportExcel');
+    Route::get('partidas-bienes-servicios/',                'API\Modulos\PartidasController@partidas');
+    Route::get('familias-bienes-servicios/',                'API\Modulos\FamiliasController@familias');
+    Route::apiResource('catalogo-almacenes',                'API\ConfiguracionUnidad\AlmacenesController');
 
     /**
      * Modulos Pedidos

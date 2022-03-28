@@ -11,10 +11,18 @@ class Solicitud extends Model{
     use SoftDeletes;
     protected $table = 'solicitudes';
     protected $fillable = [
-        'folio','consecutivo','tipo_solicitud_id','fecha_solicitud','mes','anio', 'observaciones', 'estatus','unidad_medica_id','almacen_id','area_servicio_id','programa_id','turno_id','persona_id','personal_medico_id',
+        'folio','consecutivo','tipo_solicitud_id','fecha_solicitud','mes','anio', 'observaciones', 'estatus','unidad_medica_id','almacen_id','area_servicio_id','programa_id','turno_id','paciente_id','personal_medico_id',
         'total_claves_solicitadas','total_articulos_solicitados','total_claves_surtidas','total_articulos_surtidos','porcentaje_claves_surtidas','porcentaje_articulos_surtidos',
         'usuario_captura_id','usuario_finaliza_id','usuario_cancela_id'
     ];
+
+    public function paciente(){
+        return $this->belongsTo('App\Models\Paciente','paciente_id');
+    }
+
+    public function personalMedico(){
+        return $this->belongsTo('App\Models\PersonalMedico','personal_medico_id');
+    }
 
     public function tipoSolicitud(){
         return $this->belongsTo('App\Models\TipoSolicitud','tipo_solicitud_id');

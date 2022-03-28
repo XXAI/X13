@@ -10,6 +10,9 @@
             </button>
             <div fxFlex>
             </div>
+            <div fxFlex="none" *ngIf="datosMovimiento && datosMovimiento.folio" class="label-info">
+                <span>{{datosMovimiento.folio}}</span>
+            </div>
             <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
                 <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
@@ -19,6 +22,34 @@
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
+            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosMovimiento.id}}">
+                <mat-icon color="primary">content_copy</mat-icon>
+                <span>Duplicar Salida</span>
+            </button>
+            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+                <mat-icon>all_inbox</mat-icon>
+                <span>Concluir Salida</span>
+            </button>
+            <mat-divider *ngIf="estatusMovimiento == 'BOR'"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarSalida()">
+                <mat-icon color="warn">delete</mat-icon>
+                <span>Eliminar Salida</span>
+            </button>
+            <mat-divider *ngIf="estatusMovimiento == 'FIN'"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarSalida()">
+                <mat-icon color="warn">cancel</mat-icon>
+                <span>Cancelar Salida</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="generarPDF()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item [routerLink]="'/almacen/salidas/nueva'">
+                <mat-icon>add_circle</mat-icon>
+                <span>Nueva Salida</span>
+            </button>
             <!--button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
                 <mat-icon>settings_applications</mat-icon>
                 <span>Configurar Firmantes</span>
@@ -31,24 +62,6 @@
                 <mat-icon>outbox</mat-icon>
                 <span>Enviar a Revisión</span>
             </button-->
-            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
-                <mat-icon>all_inbox</mat-icon>
-                <span>Concluir Movimiento</span>
-            </button>
-            <mat-divider *ngIf="estatusMovimiento == 'BOR'"></mat-divider>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarSalida()">
-                <mat-icon color="warn">delete</mat-icon>
-                <span>Eliminar Salida</span>
-            </button>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarSalida()">
-                <mat-icon color="warn">cancel</mat-icon>
-                <span>Cancelar Salida</span>
-            </button>
-            <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'BOR'"></mat-divider>
-            <button mat-menu-item (click)="generarPDF()">
-                <mat-icon>print</mat-icon>
-                <span>Imprimir</span>
-            </button>
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
 
@@ -208,15 +221,22 @@
                     <mat-error *ngIf="formMovimiento.get('personal_medico').hasError('notSelected')">Seleccionar una opción de la lista</mat-error>
                 </mat-form-field>
 
-                <mat-form-field fxFlex *ngIf="formMovimiento.get('paciente')">
+                <mat-form-field fxFlex="none" *ngIf="formMovimiento.get('expediente_clinico')">
+                    <mat-label>Folio Expediente</mat-label>
+                    <input matInput formControlName="expediente_clinico" (blur)="buscarExpediente()" autocomplete="off" required>
+                    <mat-error *ngIf="formMovimiento.get('expediente_clinico').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('paciente')" [floatLabel]="'always'">
                     <mat-label>Paciente</mat-label>
-                    <input matInput formControlName="paciente" autocomplete="off" required>
+                    <input matInput formControlName="paciente" placeholder="{{datosPacienteEstatus}}" autocomplete="off" required [readonly]="!habilitarDatosPaciente">
+                    <button mat-icon-button matPrefix *ngIf="cargandoDatosPaciente" [class.button-spinner]="cargandoDatosPaciente" [disabled]="true"></button>
                     <mat-error *ngIf="formMovimiento.get('paciente').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
-                <mat-form-field fxFlex *ngIf="formMovimiento.get('curp')">
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('curp')" [floatLabel]="'always'">
                     <mat-label>CURP</mat-label>
-                    <input matInput formControlName="curp" autocomplete="off">
+                    <input matInput formControlName="curp" placeholder="{{datosPacienteEstatus}}" autocomplete="off" [readonly]="!habilitarDatosPaciente">
                     <mat-error *ngIf="formMovimiento.get('curp').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
@@ -437,8 +457,8 @@
                                             </div>
                                             <div fxFlex="none" fxLayout="row">
                                                 <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">notification_important</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">gpp_good</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">error</mat-icon>
                                                 <div fxFlex></div>
                                                 <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos">
                                                     <mat-icon>delete</mat-icon> Quitar Articulo
