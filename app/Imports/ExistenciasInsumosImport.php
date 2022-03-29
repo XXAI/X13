@@ -228,7 +228,7 @@ class ExistenciasInsumosImport implements ToCollection,WithStartRow,SkipsEmptyRo
         if($row_data['fecha_caducidad']){
             $fecha_caducidad = explode("-",$row_data['fecha_caducidad']);
             if( count($fecha_caducidad) != 3 || !checkdate($fecha_caducidad[1],$fecha_caducidad[2],$fecha_caducidad[0])){
-                $this->addToErrors("Fecha caducidad inválida: ".$row[6].", el formato valido es: AAAA-MM-DD", $index, $row_data);
+                $this->addToErrors("Fecha caducidad inválida: ".$row[3].", el formato valido es: AAAA-MM-DD", $index, $row_data);
                 return;
             }
         }
