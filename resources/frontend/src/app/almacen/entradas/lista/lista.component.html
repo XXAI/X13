@@ -79,6 +79,14 @@
                         </td>
                     </ng-container>
 
+                    <ng-container matColumnDef="folio_referencia">
+                        <th mat-header-cell *matHeaderCellDef> Referencia </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center;">
+                            {{(row.referencia_folio)?row.referencia_folio:'---'}}<br>
+                            <span class="added-data" *ngIf="row.referencia_fecha">Fecha: {{row.referencia_fecha}}</span>
+                        </td>
+                    </ng-container>
+
                     <ng-container matColumnDef="almacen">
                         <th mat-header-cell *matHeaderCellDef> Almacén - Origen </th>
                         <td mat-cell *matCellDef="let row" > 
@@ -151,11 +159,13 @@
                             <mat-icon color="primary">reply</mat-icon>
                             <span>Crear Salida</span>
                         </button>
-                        <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
-                        <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">
-                            <mat-icon color="warn">cancel</mat-icon>
-                            <span>Cancelar</span>
-                        </button>
+                        <ng-template [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
+                            <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
+                            <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">
+                                <mat-icon color="warn">cancel</mat-icon>
+                                <span>Cancelar</span>
+                            </button>
+                        </ng-template>
                         <mat-divider *ngIf="estatus == 'BOR'"></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus == 'BOR'" (click)="eliminarEntrada(id)">
                             <mat-icon color="warn">delete</mat-icon>

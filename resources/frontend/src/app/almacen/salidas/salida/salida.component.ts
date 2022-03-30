@@ -827,6 +827,7 @@ export class SalidaComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         }else{
           if(response.data){
+            console.log('Datos Salida: ',response.data);
             let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
 
             const reportWorker = new ReportWorker();
@@ -847,7 +848,7 @@ export class SalidaComponent implements OnInit {
             );
             
             let config = {
-              title: "SALIDA DE ALMACÉN",
+              mostrar_montos: false,
             };
 
             reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/salida'});

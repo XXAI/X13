@@ -10,7 +10,9 @@
                 <div fxFlex>{{unidadMedica.clues}}</div>
                 <div fxFlex>{{unidadMedica.nombre}}</div>
                 <div fxFlex>{{unidadMedica.direccion}}</div>
-                <div fxFlex>{{(unidadMedica.distrito)?unidadMedica.distrito.descripcion:'Sin Asignar'}}</div>
+                <div fxFlex>
+                    {{(unidadMedica.distrito)?'DISTRITO '+unidadMedica.distrito.clave+' : '+unidadMedica.distrito.descripcion:'Sin Asignar'}}
+                </div>
             </section>
         </section>
         <mat-divider [inset]="true"></mat-divider>

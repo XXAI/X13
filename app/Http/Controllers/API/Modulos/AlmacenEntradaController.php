@@ -119,7 +119,7 @@ class AlmacenEntradaController extends Controller
                                                         },'marca']);
                                             },'proveedor','programa','tipoMovimiento'])->find($id);*/
             //if($movimiento->estatus != 'BOR'){
-            $movimiento = Movimiento::with(['almacen','proveedor','programa','tipoMovimiento','turno'])->find($id);
+            $movimiento = Movimiento::with(['unidadMedica','almacen','almacenMovimiento','unidadMedicaMovimiento','proveedor','programa','tipoMovimiento','turno'])->find($id);
             //}
 
             if($movimiento->estatus == 'PERE'){
@@ -161,7 +161,7 @@ class AlmacenEntradaController extends Controller
                                                 }]);
             }
 
-            if($movimiento->es_colectivo){
+            if($movimiento->solicitud_id){
                 $movimiento->load('solicitud.tipoSolicitud');
             }
 
@@ -632,6 +632,10 @@ class AlmacenEntradaController extends Controller
             DB::beginTransaction();
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
+
+            if(!$this->authorize('has-permission','XwFSazUr0aCZcAYtcdjYkw69N9amlutP')){
+                throw new \Exception("El usuario no tiene permiso para realizar esta acción", 1);
+            }
 
             $movimiento = Movimiento::with('listaArticulos.stock.articulo')->find($id);
 

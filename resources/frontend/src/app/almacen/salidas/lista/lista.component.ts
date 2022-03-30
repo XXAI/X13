@@ -335,8 +335,7 @@ export class ListaComponent implements OnInit {
       );
       
       let config = {
-        title: "SALIDA DE ALMACÉN",
-        showSigns: this.reportIncludeSigns, 
+        mostrar_montos:false,
       };
       reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/salida'});
       this.isLoading = false;

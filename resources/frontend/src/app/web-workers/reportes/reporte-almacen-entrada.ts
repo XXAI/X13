@@ -2,7 +2,6 @@ import { LOGOS } from "../../logos";
 export class ReporteAlmacenEntrada{
 
     getDocumentDefinition(reportData:any) {
-      console.log("consolaReporte",reportData);
         let catalogo_meses = {
             1: 'Enero',
             2: 'Febrero',
@@ -33,7 +32,7 @@ export class ReporteAlmacenEntrada{
                 },
                 {
                     margin: [10, 0, 0, 0],
-                    text: 'SECRETARÍA DE SALUD\n '+reportData.config.title,
+                    text: 'SECRETARÍA DE SALUD\n ENTRADA DE ALMACÉN\n',
                     bold: true,
                     fontSize: 12,
                     alignment: 'center'
@@ -50,7 +49,7 @@ export class ReporteAlmacenEntrada{
               margin: [30, 20, 30, 0],
               columns: [
                   {
-                      text:'Carretera Chicoasen S/N, Plan de Ayala, Tuxtla Gutiérrez, Chis.',
+                      text: entrada.almacen?.direccion,
                       alignment:'left',
                       fontSize: 8,
                   },
@@ -109,6 +108,12 @@ export class ReporteAlmacenEntrada{
               fontSize: 8,
               bold:true
             },
+            entrada_title_center:{
+              alignment:"center",
+              fillColor:"#DEDEDE",
+              fontSize: 8,
+              bold:true
+            },
             entrada_datos:{
               fontSize: 8
             },
@@ -138,7 +143,7 @@ export class ReporteAlmacenEntrada{
         };
 
 
-        let entrada = reportData.items;
+        let entrada:any = reportData.items;
         let total_entrada = parseFloat(entrada.total_monto);
         let fecha_entrada  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.fecha_movimiento));
 
@@ -147,49 +152,87 @@ export class ReporteAlmacenEntrada{
           fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.referencia_fecha));
         }
 
-        function numberFormat(num) {
+        function numberFormat(num,prices:boolean = false) {
           //return '$' + num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
           var str = num.toString().split(".");
           str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-          return '$ ' +str.join(".");
+          if(prices){
+            return '$ ' +str.join(".");
+          }else{
+            return str.join(".");
+          }
         }
+
         let monto_total = numberFormat(total_entrada);
         let IVA = parseFloat((entrada?.iva)?entrada?.iva:0.00);
 
-
+        //Checar origen:
+        if(entrada.almacen_movimiento_id){
+          entrada.origen = entrada.almacen_movimiento.nombre;
+        }else if(entrada.unidad_medica_movimiento_id){
+          entrada.origen = entrada.unidad_medica_movimiento.nombre;
+        }else if(entrada.proveedor_id){
+          entrada.origen = entrada.proveedor.nombre;
+        }else{
+          entrada.origen = 'Sin Origen Indicado';
+        }
 
         datos.content.push({
           table: {
             margin: [0,0,0,0],
-            widths: [ 60, '*', 70, '*', 60, 155],
+            widths: [ 60, '*', 70, '*', 70, 155],
             body: [
               [
-                {text: "Almacen:",                                                             style: "entrada_title"},
-                {text: entrada.almacen?.nombre,                                                style: "entrada_datos", colSpan: 3 },
+                {text: entrada.tipo_movimiento?.descripcion, colSpan: 6, style:'entrada_title_center'},
                 {text: ""},
                 {text: ""},
-                {text: "N° Entrada:",                                                           style: "entrada_title"},
-                {text: entrada.folio,                                                           style: "entrada_datos"},
+                {text: ""},
+                {text: ""},
+                {text: ""},
               ],
               [
-                {text: "Programa:",                                                             style: "entrada_title"},
-                {text: entrada.programa?.nombre,                                                style: "entrada_datos", colSpan: 3 },
+                {text: "Unidad:",                               style: "entrada_title"},
+                {text: entrada.unidad_medica?.nombre+' [ '+entrada.unidad_medica?.clues+' ]',           style: "entrada_datos", colSpan: 5 },
                 {text: ""},
                 {text: ""},
-                {text: "Pedido:",                                                               style: "entrada_title"},
-                {text: entrada.documento_folio,                                                 style: "entrada_datos"},
+                {text: ""},
+                {text: ""},
               ],
               [
-                {text: "N° Referencia:",                                                        style: "entrada_title" },
-                {text: entrada.referencia_folio,                                                style: "entrada_datos" },
-                {text: "Fecha Referencia:",                                                     style: "entrada_title" },
-                {text: fecha_referencia,                                                        style: "entrada_datos" },
-                {text: "Fecha Entrada:",                                                        style: "entrada_title" },
-                {text: fecha_entrada,                                                           style: "entrada_datos" },
+                {text: "Almacen:",                              style: "entrada_title"},
+                {text: entrada.almacen?.nombre,                 style: "entrada_datos", colSpan: 3 },
+                {text: ""},
+                {text: ""},
+                {text: "Folio Entrada:",                        style: "entrada_title"},
+                {text: entrada.folio,                           style: "entrada_datos"},
               ],
               [
-                {text: "Observaciones:",                                                        style: "entrada_title"},
-                {text: entrada.observaciones,                                                   style: "entrada_datos", colSpan: 5 },
+                {text: "Origen:",                               style: "entrada_title"},
+                {text: entrada.origen,                          style: "entrada_datos", colSpan: 3 },
+                {text: ""},
+                {text: ""},
+                {text: "Folio Documento:",                      style: "entrada_title"},
+                {text: entrada.documento_folio,                 style: "entrada_datos"},
+              ],
+              [
+                {text: "Programa:",                             style: "entrada_title"},
+                {text: entrada.programa?.nombre,                style: "entrada_datos", colSpan: 3 },
+                {text: ""},
+                {text: ""},
+                {text: "Turno:",                                style: "entrada_title"},
+                {text: entrada.turno?.nombre,                   style: "entrada_datos"},
+              ],
+              [
+                {text: "N° Referencia:",                        style: "entrada_title" },
+                {text: entrada.referencia_folio,                style: "entrada_datos" },
+                {text: "Fecha Referencia:",                     style: "entrada_title" },
+                {text: fecha_referencia,                        style: "entrada_datos" },
+                {text: "Fecha Entrada:",                        style: "entrada_title" },
+                {text: fecha_entrada,                           style: "entrada_datos" },
+              ],
+              [
+                {text: "Observaciones:",                        style: "entrada_title"},
+                {text: entrada.observaciones,                   style: "entrada_datos", colSpan: 5 },
                 {text: ""},
                 {text: ""},
                 {text: ""},
@@ -210,32 +253,38 @@ export class ReporteAlmacenEntrada{
           }
         });
 
+        let encabezado_lista = [
+            {text: "#",                   style: 'cabecera'},
+            {text: "CLAVE",               style: 'cabecera'},
+            {text: "PRODUCTO",            style: 'cabecera'},
+            {text: "LOTE",                style: 'cabecera'},
+            {text: "FECHA CADUCIDAD",     style: 'cabecera'},
+            {text: "CANT",                style: 'cabecera'},
+        ];
+
+        if(reportData.config.mostrar_montos){
+          encabezado_lista.push({text: "PRECIO UNITARIO",     style: 'cabecera'});
+          encabezado_lista.push({text: "IMPORTE",             style: 'cabecera'});
+        }
+
+        let table_widths = [10, 63, '*', 50, 45, 50];
+        if(reportData.config.mostrar_montos){
+          table_widths = [10, 20, 35, 45, 63, '*', 50, 50];
+        }
+
         datos.content.push({
           table: {
             headerRows:1,
             dontBreakRows: true,
             keepWithHeaderRows: 1,
-            widths: [ 10, 20, 35, 45, 63, 'auto', 50, 50],
+            widths: table_widths,
             margin: [0,0,0,0],
-            body: [
-              [
-                {text: "#",                   style: 'cabecera'},
-                {text: "CANT",                style: 'cabecera'},
-                {text: "LOTE",                style: 'cabecera'},
-                {text: "FECHA/CADUCIDAD",     style: 'cabecera'},
-                {text: "CLAVE",               style: 'cabecera'},
-                {text: "PRODUCTO",            style: 'cabecera'},
-                {text: "PRECIO UNITARIO",     style: 'cabecera'},
-                {text: "IMPORTE",             style: 'cabecera'},
-
-              ]
-            ]
+            body: [encabezado_lista]
           }
         });
 
-        let total_pedido = 0;
+        let total_articulos = 0;
         let tabla_articulos = [];
-        let borrador = {};
         let watermark = '';
 
         switch (entrada.estatus) {
@@ -260,75 +309,95 @@ export class ReporteAlmacenEntrada{
         for(let i = 0; i < tabla_articulos.length; i++){
           let item  = tabla_articulos[i];
           let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
-          let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
+          //let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
+          let fecha_caducidad = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
           
-          datos.content[1].table.body.push([
+          let item_pdf = [
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
-            { text: item.cantidad,                                                                  style: 'tabla_datos_center'},
-            { text: (item.stock?.lote)?item.stock?.lote:'S/L',                                      style: 'tabla_datos_center'},
-            { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
             { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
             { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-            { text: numberFormat(parseFloat(item.precio_unitario)),                                 style: 'tabla_datos_right'},
-            { text: numberFormat(parseFloat(item.total_monto)),                                     style: 'tabla_datos_right'},
+            { text: (item.stock?.lote)?item.stock?.lote:'S/L',                                      style: 'tabla_datos_center'},
+            { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
+            { text: numberFormat(parseInt(item.cantidad)),                                          style: 'tabla_datos_center'},
+          ];
 
-          ]);
-          //total_pedido += item.cantidad;
+          if(reportData.config.mostrar_montos){
+            item_pdf.push({ text: numberFormat(parseFloat(item.precio_unitario)), style: 'tabla_datos_right'});
+            item_pdf.push({ text: numberFormat(parseFloat(item.total_monto)),     style: 'tabla_datos_right'});
+          }
+
+          datos.content[1].table.body.push(item_pdf);
+          total_articulos += item.cantidad;
         }
 
-        datos.content[1].table.body.push([
-          { text: '', colSpan: 6, border: [false, false, false, false,]},
+        let base_footer = [
+          { text: '', colSpan: 3, border: [false, false, false, false,]},
           { text: ''},
           { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: 'Subtotal:',      style: 'subcabecera'},
-          { text: monto_total,   style: 'tabla_datos_right'},
-        ]);
+        ];
 
-        datos.content[1].table.body.push([
-          { text: '', colSpan: 6, border: [false, false, false, false,]},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: 'IVA:',        style: 'subcabecera'},
-          { text: IVA,   style: 'tabla_datos_right'},
-        ]);
+        if(reportData.config.mostrar_montos){
+          base_footer = [
+            { text: '', colSpan: 6, border: [false, false, false, false,]},
+            { text: ''},
+            { text: ''},
+            { text: ''},
+            { text: ''},
+            { text: ''},
+          ];
+        }
 
-        datos.content[1].table.body.push([
-          { text: '', colSpan: 6, border: [false, false, false, false,]},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: ''},
-          { text: 'Total:',        style: 'subcabecera'},
-          { text: monto_total,   style: 'tabla_datos_right'},
-        ]);
+        if(reportData.config.mostrar_montos){
+          let sub_total = [{text: 'Subtotal:', style: 'subcabecera'},{text: monto_total, style: 'tabla_datos_right'}];
+          datos.content[1].table.body.push(base_footer.concat(sub_total));
+
+          let total_iva = [{text: 'IVA:', style:'subcabecera'}, {text: 'IVA', style: 'tabla_datos_right'}];
+          datos.content[1].table.body.push(base_footer.concat(total_iva));
+
+          let total = [{ text: 'Total:',        style: 'subcabecera'}, { text: monto_total + IVA,   style: 'tabla_datos_right'}];
+          datos.content[1].table.body.push(base_footer.concat(total));
+        }else{
+          console.log('este es el total: ',total_articulos);
+          let total:any[] = [{ text: 'Total Articulos:', style: 'subcabecera', colSpan:2}, { text: ''}, { text: numberFormat(total_articulos),   style: 'tabla_datos_center'}];
+          datos.content[1].table.body.push(base_footer.concat(total));
+        }
         
-        datos.content.push({
-          layout: 'noBorders',
-          table: {
-           widths: [170, 170, 170],
-            margin: [0,0,0,0],
-            body: [
-              [
-                {text: "R E C I B I O\n\n\n", style: "tabla_encabezado_firmas"},
-                {text: "R E V I S Ó\n\n\n",  style:'tabla_encabezado_firmas'},
-                {text: "V o. B o.\n\n\n", style:'tabla_encabezado_firmas'},
-              ],
-              [
-                {text:  entrada.recibe, style: "tabla_encabezado_datos"},
-                {text:  entrada.recibe, style: "tabla_encabezado_datos"},
-                {text:  entrada.recibe, style: "tabla_encabezado_datos"}
-              ]
-            ]
-          }
-        });
+        if(reportData.config.firmas){
+          let firmas = reportData.config.firmas;
+          let firmas_etiquetas:any[] = [];
+          let firmas_nombres:any[] = [];
+          let firmas_widths:string[] = [];
+          let firmas_spaces:any[] = [];
 
+          firmas.forEach(element => {
+            firmas_etiquetas.push({
+              text: element.etiqueta,
+              style: "tabla_encabezado_firmas"
+            });
+            
+            firmas_nombres.push({
+              text:  element.nombre + '\n' + element.cargo, 
+              style: "tabla_encabezado_datos"
+            });
+
+            firmas_spaces.push({text:''});
+            firmas_widths.push('*');
+          });
+
+          datos.content.push({
+            layout: 'noBorders',
+            table: {
+              widths: firmas_widths,
+              margin: [0,0,0,0],
+              body: [
+                firmas_spaces,
+                firmas_etiquetas,
+                firmas_spaces,firmas_spaces,
+                firmas_nombres
+              ]
+            }
+          });
+        }
         return datos;
     }
 }

@@ -51,7 +51,7 @@ export class ListaComponent implements OnInit {
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado', 'PERE':'pendiente-recepcion' };
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado', 'PERE':'Pendiente de Recepción' };
 
-  displayedColumns: string[] = ['id','folio','almacen','fecha_movimiento','totales_claves_articulos','total_monto','dato_usuario','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
+  displayedColumns: string[] = ['id','folio','folio_referencia','almacen','fecha_movimiento','totales_claves_articulos','total_monto','dato_usuario','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
   listadoMovimientos: any = [];
   objetoMovimiento:any;
 
@@ -375,8 +375,7 @@ export class ListaComponent implements OnInit {
       );
       
       let config = {
-        title: "ENTRADA DE ALMACÉN",
-        showSigns: this.reportIncludeSigns, 
+        mostrar_montos:false,
       };
       reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/entrada'});
       this.isLoading = false;

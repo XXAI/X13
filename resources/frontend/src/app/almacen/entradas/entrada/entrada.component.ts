@@ -778,7 +778,12 @@ export class EntradaComponent implements OnInit {
             );
             
             let config = {
-              title: "ENTRADA DE ALMACEN",
+              mostrar_montos:false,
+              /*firmas:[
+                {etiqueta:'REALIZÓ', nombre:'Nombre del usuario', cargo:''},
+                {etiqueta:'RECIBIÓ', nombre:'', cargo:''},
+                {etiqueta:'REVISÓ', nombre:'Nombre del encargado',cargo:'Encargado de almacén'},
+              ]*/
             };
 
             reportWorker.postMessage({data:{items: response.data, config:config, fecha_actual: this.maxFechaMovimiento},reporte:'almacen/entrada'});

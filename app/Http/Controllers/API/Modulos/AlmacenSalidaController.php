@@ -113,7 +113,7 @@ class AlmacenSalidaController extends Controller
     public function show($id){
         try{
             $loggedUser = auth()->userOrFail();
-            $movimiento = Movimiento::with('unidadMedicaMovimiento','areaServicioMovimiento','programa','turno','paciente','personalMedico')->find($id);
+            $movimiento = Movimiento::with('unidadMedica','unidadMedicaMovimiento','almacenMovimiento','areaServicioMovimiento','programa','turno','paciente','personalMedico','tipoMovimiento')->find($id);
             $extras = [];
 
             if($movimiento->estatus != 'BOR'){
@@ -133,7 +133,7 @@ class AlmacenSalidaController extends Controller
                                                             ]);
                                     },'movimientoHijo' => function($movimientoHijo){
                                         return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
-                                    },'solicitud.tipoSolicitud','almacen.tiposMovimiento','almacenMovimiento']);
+                                    },'solicitud.tipoSolicitud','almacen.tiposMovimiento']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
                 $programa_id = $movimiento->programa_id;
@@ -278,14 +278,14 @@ class AlmacenSalidaController extends Controller
 
             if($tipo_movimiento->clave == 'RCTA'){
                 $parametros['expediente_clinico']   = trim($parametros['expediente_clinico']);
-                $parametros['paciente']             = trim($parametros['paciente']);
-                $parametros['curp']                 = trim($parametros['curp']);
-                $paciente = Paciente::where('expediente_clinico',$parametros['expediente_clinico'])->where('nombre_completo',strtoupper($parametros['paciente']));
-                if($parametros['curp']){
-                    $paciente = $paciente->where('curp',strtoupper($parametros['curp']))->first();
-                }else{
-                    $paciente = $paciente->first();
-                }
+                //$parametros['paciente']             = trim($parametros['paciente']);
+                //$parametros['curp']                 = trim($parametros['curp']);
+                $paciente = Paciente::where('expediente_clinico',$parametros['expediente_clinico'])->first();
+                //if($parametros['curp']){
+                //    $paciente = $paciente->where('curp',strtoupper($parametros['curp']))->first();
+                //}else{
+                //    $paciente = $paciente->first();
+                //}
 
                 if(!$paciente){
                     $paciente = Paciente::create([
@@ -664,6 +664,10 @@ class AlmacenSalidaController extends Controller
             DB::beginTransaction();
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
+
+            if(!$this->authorize('has-permission','XwFSazUr0aCZcAYtcdjYkw69N9amlutP')){
+                throw new \Exception("El usuario no tiene permiso para realizar esta acción", 1);
+            }
             
             $movimiento = Movimiento::with('listaArticulos.stock.articulo')->find($id);
 
