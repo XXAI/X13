@@ -179,3 +179,60 @@ table tr:hover{
   .my-stepper .my-step-error, .my-stepper .my-step-error .my-step-label, .my-stepper .my-step-error mat-icon{
   color: #f44336 !important;
   }
+
+/*.small-select-input{
+  padding: 0px 5px 5px 5px;
+}*/
+
+
+:host ::ng-deep .small-select-input .mat-form-field-wrapper {
+  height: 36px;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-appearance-outline .mat-form-field-wrapper {
+  margin: 0;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-infix {
+  border-top: 0px;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-appearance-outline .mat-form-field-outline {
+  height: 36px;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-appearance-outline .mat-form-field-outline {
+  height: 36px;
+}
+
+:host ::ng-deep .small-select-input .mat-select-arrow-wrapper {
+  display: block;
+}
+
+
+:host ::ng-deep .small-filter-input > .mat-form-field{
+  width: 100%;
+  background-color: whitesmoke;
+}
+
+:host ::ng-deep .small-filter-input > .mat-form-field > .mat-form-field-wrapper { 
+  padding: 0px !important;
+  margin: 0px !important;
+}
+
+:host ::ng-deep .small-filter-input > .mat-form-field-flex > .mat-form-field-infix { 
+  padding: 0px !important;
+}
+
+:host ::ng-deep .small-filter-input.agregar-articulos .mat-form-field-label { 
+  font-weight: bolder !important;
+}
+
+:host ::ng-deep .small-filter-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+  padding: 0.8em 0em 0.5em 0em !important;
+  border-top:none;
+}

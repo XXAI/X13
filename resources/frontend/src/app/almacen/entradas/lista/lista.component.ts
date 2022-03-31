@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTable } from '@angular/material/table';
 import { MediaObserver } from '@angular/flex-layout';
 import { EntradasService } from '../entradas.service';
-//import { FormulariosService } from '../formularios.service';
+import { AlmacenService } from '../../almacen.service';
 
 import { ReportWorker } from '../../../web-workers/report-worker';
 import * as FileSaver from 'file-saver';
@@ -15,6 +15,7 @@ import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialo
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-subir-archivo.component';
+import { DatePipe } from '@angular/common';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -37,8 +38,9 @@ export class ListaComponent implements OnInit {
   reportTitle:string;
   reportIncludeSigns:boolean = false;
 
-  
-
+  filtroAplicado: boolean;
+  filtros: any = {almacen_id:false, tipo_movimiento_id:false, rango_fechas:{inicio:null, fin:null}};
+  filtrosCatalogos: any = {almacenes:[],tipos_movimiento:[]};
   searchQuery: string = '';
 
   pageEvent: PageEvent;
@@ -57,7 +59,7 @@ export class ListaComponent implements OnInit {
 
   fechaActual:Date = new Date();
 
-  constructor(private sharedService: SharedService, private entradasService: EntradasService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
+  constructor(private datepipe: DatePipe, private sharedService: SharedService, private entradasService: EntradasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatTable) usersTable: MatTable<any>;
@@ -69,6 +71,29 @@ export class ListaComponent implements OnInit {
     });
     
     this.loadListadoMovimientos();
+
+    let lista_catalogos:any = {almacenes:'*',tipos_movimiento:'movimiento.ENT'};
+
+    this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          this.filtrosCatalogos.almacenes = response.data.almacenes;
+          this.filtrosCatalogos.tipos_movimiento = response.data.tipos_movimiento;
+        }
+        this.isLoading = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoading = false;
+      }
+    );
   }
 
   loadListadoMovimientos(event?){
@@ -90,6 +115,19 @@ export class ListaComponent implements OnInit {
     params.query = this.searchQuery;
     this.listadoMovimientos = [];
     this.resultsLength = 0;
+
+    if(this.filtros.almacen_id){
+      params.almacen_id = this.filtros.almacen_id;
+    }
+
+    if(this.filtros.tipo_movimiento_id){
+      params.tipo_movimiento_id = this.filtros.tipo_movimiento_id;
+    }
+
+    if(this.filtros.rango_fechas.inicio){
+      params.fecha_inicio = this.datepipe.transform(this.filtros.rango_fechas.inicio, 'yyyy-MM-dd');
+      params.fecha_fin = this.datepipe.transform(this.filtros.rango_fechas.fin, 'yyyy-MM-dd');
+    }
     
     this.entradasService.getListadoEntradas(params).subscribe(
       response =>{
@@ -274,7 +312,25 @@ export class ListaComponent implements OnInit {
         //this.isLoadingPDF = false;
       }
     );
+  }
 
+  limpiarFiltro(){
+    this.filtros.almacen_id = false;
+    this.filtros.tipo_movimiento_id = false;
+    this.filtros.rango_fechas = {inicio:null, fin:null};
+    this.aplicarFiltro();
+  }
+
+  checarFechasFiltro(){
+    if(this.filtros.rango_fechas.inicio && !this.filtros.rango_fechas.fin){
+      this.filtros.rango_fechas.fin = this.filtros.rango_fechas.inicio;
+    }
+    this.aplicarFiltro();
+  }
+
+  aplicarFiltro(){
+    this.loadListadoMovimientos();
+    //console.log(this.filtros);
   }
 
   verDialogoSubirArchivo(){
@@ -299,15 +355,9 @@ export class ListaComponent implements OnInit {
   }
 
   generarEntradaPDF(obj){
-
-    console.log("aca en el objeto",obj);
-
-    //this.selectedItemIndex = index;
-
       this.isLoadingPDF = true;
       this.showMyStepper = true;
       this.showReportForm = false;
-
 
       let params:any = {};
       let countFilter = 0;

@@ -1,37 +1,72 @@
 <section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
     <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
-    <section fxFlex="none" fxLayout="row" >
-        <mat-card fxFlex>
+    <section fxFlex="none" fxLayout="column">
             <div fxLayout="row" fxLayout.xs="column">
                 <div fxFlex fxLayout="row wrap">
-                    <mat-form-field fxFill appearance="outline">
+                    <mat-form-field fxFill appearance="fill">
                         <mat-label>Buscar</mat-label>
                         <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applyFilter()" placeholder="Buscar">
                         <button matSuffix *ngIf="searchQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
                             <mat-icon>close</mat-icon>
                         </button>
+                        <button mat-icon-button matSuffix (click)="applyFilter()">
+                            <mat-icon>search</mat-icon>
+                        </button>
                     </mat-form-field>
                 </div>
-                <div fxFlex="none" fxFlex.xs="100">
-                    <div fxFlex></div>
-                    <section class="search-button">
-                        <button mat-raised-button color="accent" (click)="applyFilter()">
-                            <mat-icon>search</mat-icon> Buscar
-                        </button>
-                    </section>
-                </div>
             </div>
-        </mat-card>
-    </section>
-    <section fxFlex fxLayout="row">
-        <mat-card fxFlex fxLayout="column" >
-            <div fxFlex="none" fxLayout="row">
+
+            <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
+                <div fxFlex fxLayout="row" fxLayoutGap="5px">
+                    <div fxFlex="none" class="small-select-input">
+                        <mat-form-field appearance="outline">
+                            <mat-select [(ngModel)]="filtros.almacen_id" (selectionChange)="aplicarFiltro()">
+                                <mat-option [value]="false">Todos los Almacenes</mat-option>
+                                <mat-option *ngIf="filtrosCatalogos.almacenes.length == 0" [value]="" disabled>Sin Almacenes Asignados</mat-option>
+                                <mat-option *ngFor="let almacen of filtrosCatalogos.almacenes" [value]="almacen.id">
+                                    {{almacen.nombre}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none" class="small-select-input">
+                        <mat-form-field appearance="outline">
+                            <mat-select [(ngModel)]="filtros.tipo_movimiento_id" (selectionChange)="aplicarFiltro()">
+                                <mat-option [value]="false">Todas las Salidas</mat-option>
+                                <mat-option *ngIf="filtrosCatalogos.almacenes.length == 0" [value]="" disabled>Sin Tipos de Entrada</mat-option>
+                                <mat-option *ngFor="let movimiento of filtrosCatalogos.tipos_movimiento" [value]="movimiento.id">
+                                    {{movimiento.descripcion}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none" class="small-select-input">
+                        <mat-form-field appearance="outline">
+                            <mat-date-range-input [rangePicker]="rangePicker">
+                                <input matStartDate [(ngModel)]="filtros.rango_fechas.inicio" placeholder="Inicio" readonly>
+                                <input matEndDate [(ngModel)]="filtros.rango_fechas.fin" placeholder="Fin" readonly>
+                            </mat-date-range-input>
+                            <mat-datepicker-toggle matSuffix [for]="rangePicker"></mat-datepicker-toggle>
+                            <mat-date-range-picker #rangePicker disabled="false">
+                                <mat-date-range-picker-actions>
+                                <button mat-button matDateRangePickerCancel>Cancelar</button>
+                                <button mat-raised-button color="primary" matDateRangePickerApply (click)="checarFechasFiltro()">Aplicar</button>
+                                </mat-date-range-picker-actions>
+                            </mat-date-range-picker>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none">
+                        <button mat-flat-button (click)="limpiarFiltro()" matTooltip="Quitar Filtro"><mat-icon>filter_alt_off</mat-icon></button>
+                    </div>
+                </div>
                 <div fxFlex></div>
                 <div fxFlex="none">
-                    <!--button mat-raised-button color="info"   ><mat-icon>add_circle</mat-icon> Nuevo Pedido</button-->
                     <button mat-raised-button color="info" [routerLink]="'/almacen/salidas/nueva'" ><mat-icon>add_circle</mat-icon> Nueva Salida</button>
                 </div>
             </div>
+    </section>
+    <section fxFlex fxLayout="row">
+        <mat-card fxFlex fxLayout="column" >
             <div fxFlex style="overflow: auto;">
                 <table #dataTable mat-table [dataSource]="listadoMovimientos" class="data-table pedidos-table" matSort>
                     <ng-container matColumnDef="id">

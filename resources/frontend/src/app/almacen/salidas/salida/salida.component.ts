@@ -691,6 +691,28 @@ export class SalidaComponent implements OnInit {
       formData.personal_medico_id = (formData.personal_medico)?formData.personal_medico.id:null;
       formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
       
+      //Validamos los articulos
+      let aritculos_en_cero = 0;
+      formData.lista_articulos.forEach(articulo => {
+        if(this.tieneSolicitud && (articulo.cantidad_solicitado == undefined || articulo.cantidad_solicitado <= 0)){
+          console.log('encontrado',articulo);
+          let index = this.dataSourceArticulos.data.find(x => x.id === articulo.id);
+          let articulo_encontrado = this.dataSourceArticulos.data[index];
+          this.dataSourceArticulos.data.splice(index,1);
+          this.dataSourceArticulos.data.unshift(articulo_encontrado);
+          aritculos_en_cero++;
+        }
+      });
+
+      if(aritculos_en_cero > 0){
+        this.articulosTable.renderRows();
+        this.dataSourceArticulos.paginator = this.articulosPaginator;
+        this.dataSourceArticulos.sort = this.sort;
+        this.isSaving = false;
+        this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
+        return false;
+      }
+
       this.salidasService.guardarSalida(formData).subscribe(
         response =>{
           if(response.error) {
@@ -741,7 +763,7 @@ export class SalidaComponent implements OnInit {
           if(errorResponse.status == 409){
             errorMessage = errorResponse.error.error.message;
           }
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.sharedService.showSnackBar(errorMessage, null, 5000);
           this.isSaving = false;
         }
       );

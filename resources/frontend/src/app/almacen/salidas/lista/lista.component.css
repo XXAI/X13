@@ -110,3 +110,31 @@ color:#ff2a2a;
 .cancelado{
   text-decoration: line-through;
 }
+
+:host ::ng-deep .small-select-input .mat-form-field-wrapper {
+  height: 36px;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-appearance-outline .mat-form-field-wrapper {
+  margin: 0;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-infix {
+  border-top: 0px;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-appearance-outline .mat-form-field-outline {
+  height: 36px;
+}
+
+:host ::ng-deep .small-select-input .mat-form-field-appearance-outline .mat-form-field-outline {
+  height: 36px;
+}
+
+:host ::ng-deep .small-select-input .mat-select-arrow-wrapper {
+  display: block;
+}

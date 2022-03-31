@@ -75,12 +75,25 @@ class AlmacenEntradaController extends Controller
                                 ->orWhere('almacen_origen.nombre','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('unidad_origen.nombre','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('programas.descripcion','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('proveedores.nombre','LIKE','%'.$parametros['query'].'%');
+                                ->orWhere('proveedores.nombre','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('movimientos.referencia_folio','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('catalogo_tipos_movimiento.descripcion','LIKE','%'.$parametros['query'].'%')
+                                ;
+
                 });
             }
 
-            if(isset($parametros['tipo_movimiento']) && $parametros['tipo_movimiento']){
-                $entradas = $entradas->where('tipo_movimiento_id',$parametros['tipo_movimiento']);
+            if(isset($parametros['almacen_id']) && $parametros['almacen_id']){
+                $entradas = $entradas->where('movimientos.almacen_id',$parametros['almacen_id']);
+            }
+
+            if(isset($parametros['tipo_movimiento_id']) && $parametros['tipo_movimiento_id']){
+                $entradas = $entradas->where('movimientos.tipo_movimiento_id',$parametros['tipo_movimiento_id']);
+            }
+
+            if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                $entradas = $entradas->where('movimientos.fecha_movimiento','>=',$parametros['fecha_inicio'])
+                                    ->where('movimientos.fecha_movimiento','<=',$parametros['fecha_fin']);
             }
             /*if(!(isset($parametros['mostrar_todo']) && $parametros['mostrar_todo'])){
                 $entradas = $entradas->where('estatus','like','ME-%');

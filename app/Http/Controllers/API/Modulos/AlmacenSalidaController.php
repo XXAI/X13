@@ -79,12 +79,23 @@ class AlmacenSalidaController extends Controller
                                 ->orWhere('almacenes.nombre','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('programas.descripcion','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('catalogo_unidades_medicas.nombre','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('catalogo_tipos_movimiento.descripcion','LIKE','%'.$parametros['query'].'%');
+                                ->orWhere('catalogo_tipos_movimiento.descripcion','LIKE','%'.$parametros['query'].'%')
+                                ->orWhere('movimientos.documento_folio','LIKE','%'.$parametros['query'].'%')
+                                ;
                 });
             }
 
-            if(isset($parametros['tipo_movimiento']) && $parametros['tipo_movimiento']){
-                $salidas = $salidas->where('tipo_movimiento_id',$parametros['tipo_movimiento']);
+            if(isset($parametros['almacen_id']) && $parametros['almacen_id']){
+                $salidas = $salidas->where('movimientos.almacen_id',$parametros['almacen_id']);
+            }
+
+            if(isset($parametros['tipo_movimiento_id']) && $parametros['tipo_movimiento_id']){
+                $salidas = $salidas->where('movimientos.tipo_movimiento_id',$parametros['tipo_movimiento_id']);
+            }
+
+            if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
+                $salidas = $salidas->where('movimientos.fecha_movimiento','>=',$parametros['fecha_inicio'])
+                                    ->where('movimientos.fecha_movimiento','<=',$parametros['fecha_fin']);
             }
             /*if(!(isset($parametros['mostrar_todo']) && $parametros['mostrar_todo'])){
                 $salidas = $salidas->where('estatus','like','ME-%');
@@ -557,7 +568,7 @@ class AlmacenSalidaController extends Controller
                         'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,
                         'programa_id'                   =>$movimiento->programa_id,
                         'turno_id'                      =>$movimiento->turno_id,
-                        'paciente_id'                    =>$movimiento->paciente_id,
+                        'paciente_id'                   =>$movimiento->paciente_id,
                         'personal_medico_id'            =>$movimiento->personal_medico_id,
                         'total_claves_solicitadas'      =>$total_claves,
                         'total_articulos_solicitados'   =>0,
@@ -596,6 +607,8 @@ class AlmacenSalidaController extends Controller
                         }else{
                             $nuevos_articulos[] = $datos_articulo;
                         }
+                    }else{
+                        throw new \Exception("Al articulo con Clave: '".$articulo['clave']."' le falta la cantidad solicitada.", 1);
                     }
                 }
 

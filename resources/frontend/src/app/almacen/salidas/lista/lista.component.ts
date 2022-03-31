@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTable } from '@angular/material/table';
 import { MediaObserver } from '@angular/flex-layout';
 import { SalidasService } from '../salidas.service';
-//import { FormulariosService } from '../formularios.service';
+import { AlmacenService } from '../../almacen.service';
 
 import { ReportWorker } from '../../../web-workers/report-worker';
 import * as FileSaver from 'file-saver';
@@ -13,6 +13,7 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
+import { DatePipe } from '@angular/common';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -24,7 +25,7 @@ export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatTable) usersTable: MatTable<any>;
   
-  constructor(private sharedService: SharedService, private salidasService: SalidasService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
+  constructor(private datepipe: DatePipe, private sharedService: SharedService, private salidasService: SalidasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
 
   isLoading: boolean = false;
   mediaSize: string;
@@ -38,6 +39,9 @@ export class ListaComponent implements OnInit {
   reportTitle:string;
   reportIncludeSigns:boolean = false;
 
+  filtroAplicado: boolean;
+  filtros: any = {almacen_id:false, tipo_movimiento_id:false, rango_fechas:{inicio:null, fin:null}};
+  filtrosCatalogos: any = {almacenes:[],tipos_movimiento:[]};
   searchQuery: string = '';
 
   pageEvent: PageEvent;
@@ -63,6 +67,29 @@ export class ListaComponent implements OnInit {
     });
     
     this.loadListadoMovimientos();
+
+    let lista_catalogos:any = {almacenes:'*',tipos_movimiento:'movimiento.SAL'};
+
+    this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error.message;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          this.filtrosCatalogos.almacenes = response.data.almacenes;
+          this.filtrosCatalogos.tipos_movimiento = response.data.tipos_movimiento;
+        }
+        this.isLoading = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoading = false;
+      }
+    );
   }
 
   loadListadoMovimientos(event?){
@@ -84,6 +111,19 @@ export class ListaComponent implements OnInit {
     params.query = this.searchQuery;
     this.listadoMovimientos = [];
     this.resultsLength = 0;
+
+    if(this.filtros.almacen_id){
+      params.almacen_id = this.filtros.almacen_id;
+    }
+
+    if(this.filtros.tipo_movimiento_id){
+      params.tipo_movimiento_id = this.filtros.tipo_movimiento_id;
+    }
+
+    if(this.filtros.rango_fechas.inicio){
+      params.fecha_inicio = this.datepipe.transform(this.filtros.rango_fechas.inicio, 'yyyy-MM-dd');
+      params.fecha_fin = this.datepipe.transform(this.filtros.rango_fechas.fin, 'yyyy-MM-dd');
+    }
     
     this.salidasService.getListadoSalidas(params).subscribe(
       response =>{
@@ -105,7 +145,7 @@ export class ListaComponent implements OnInit {
               }else if(element.area_servicio_destino){
                 element.destino = element.area_servicio_destino;
               }else if(element.paciente_id){
-                element.destino = 'Paciente';
+                element.destino = 'Folio '+element.documento_folio;
               }
 
               if(element.eliminado_por_usuario_id){
@@ -256,6 +296,24 @@ export class ListaComponent implements OnInit {
 
   }
 
+  limpiarFiltro(){
+    this.filtros.almacen_id = false;
+    this.filtros.tipo_movimiento_id = false;
+    this.filtros.rango_fechas = {inicio:null, fin:null};
+    this.aplicarFiltro();
+  }
+
+  checarFechasFiltro(){
+    if(this.filtros.rango_fechas.inicio && !this.filtros.rango_fechas.fin){
+      this.filtros.rango_fechas.fin = this.filtros.rango_fechas.inicio;
+    }
+    this.aplicarFiltro();
+  }
+
+  aplicarFiltro(){
+    this.loadListadoMovimientos();
+    //console.log(this.filtros);
+  }
 
 
   generarSalidaPDF(obj){
