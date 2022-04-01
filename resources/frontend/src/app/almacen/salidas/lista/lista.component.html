@@ -146,13 +146,18 @@
                             <mat-icon color="primary">content_copy</mat-icon>
                             <span>Duplicar Salida</span>
                         </button>
-                        <ng-template [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
+                        <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
+                        <button mat-menu-item *ngIf="estatus == 'FIN'" (click)="activarModificacionSalida(id)">
+                            <mat-icon color="admin">admin_panel_settings</mat-icon>
+                            <span>Modificar Salida</span>
+                        </button>
+                        <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
                             <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
                             <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarSalida(id)">
                                 <mat-icon color="warn">cancel</mat-icon>
                                 <span>Cancelar</span>
                             </button>
-                        </ng-template>
+                        </div>
                         <mat-divider *ngIf="estatus == 'BOR'"></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus == 'BOR'" (click)="eliminarSalida(id)">
                             <mat-icon color="warn">delete</mat-icon>

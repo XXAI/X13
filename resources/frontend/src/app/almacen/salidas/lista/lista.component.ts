@@ -14,6 +14,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { DatePipe } from '@angular/common';
+import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -190,6 +191,24 @@ export class ListaComponent implements OnInit {
 
   cleanSearch(){
     this.searchQuery = '';
+  }
+
+  activarModificacionSalida(id){
+    let configDialog = {
+      width: '400px',
+      maxHeight: '90vh',
+      height: '470px',
+      data:{titulo:'Activar Modificación de Salida'},
+      panelClass: 'no-padding-dialog'
+    };
+
+    const dialogRef = this.dialog.open(DialogoModificarMovimientoComponent, configDialog);
+
+    dialogRef.afterClosed().subscribe(dialogResponse => {
+      if(dialogResponse){
+        console.log(dialogResponse);
+      }
+    });
   }
 
   cancelarSalida(id){

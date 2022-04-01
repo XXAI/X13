@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 export class AlmacenService {
   url_articulos = `${environment.base_url}/buscar-articulos`;
   url_catalogos = `${environment.base_url}/almacen-movimientos-catalogos`;
+  url_modificaciones = `${environment.base_url}/almacen-movimientos-administrar-modificacion/`;
 
   constructor(private http: HttpClient) { }
 
@@ -23,6 +24,14 @@ export class AlmacenService {
 
   obtenerMovimientoCatalogos(payload:any = {}):Observable<any> {
     return this.http.get<any>(this.url_catalogos,{params:payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  solicitarModificacion(id,payload):Observable<any> {
+    return this.http.put<any>(this.url_modificaciones+id,payload).pipe(
       map( response => {
         return response;
       })

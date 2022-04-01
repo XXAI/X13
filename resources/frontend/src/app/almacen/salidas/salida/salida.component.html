@@ -35,13 +35,13 @@
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Salida</span>
             </button>
-            <ng-template [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
+            <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
                 <mat-divider *ngIf="estatusMovimiento == 'FIN'"></mat-divider>
                 <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarSalida()">
                     <mat-icon color="warn">cancel</mat-icon>
                     <span>Cancelar Salida</span>
                 </button>
-            </ng-template>
+            </div>
             <mat-divider></mat-divider>
             <button mat-menu-item (click)="generarPDF()">
                 <mat-icon>print</mat-icon>

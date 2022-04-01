@@ -311,6 +311,16 @@ class AlmacenMovimientosController extends Controller{
         }
     }
 
+    public function administrarModificacion(Request $request, $id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $modificacion = Paciente::where('expediente_clinico',$expediente)->first();
+            return response()->json(['data'=>$modificacion],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     public function buscarPaciente(Request $request, $expediente){
         try{
             $loggedUser = auth()->userOrFail();

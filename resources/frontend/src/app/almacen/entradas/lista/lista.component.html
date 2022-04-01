@@ -194,13 +194,13 @@
                             <mat-icon color="primary">reply</mat-icon>
                             <span>Crear Salida</span>
                         </button>
-                        <ng-template [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
+                        <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'" >
                             <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
                             <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">
                                 <mat-icon color="warn">cancel</mat-icon>
                                 <span>Cancelar</span>
                             </button>
-                        </ng-template>
+                        </div>
                         <mat-divider *ngIf="estatus == 'BOR'"></mat-divider>
                         <button mat-menu-item color="warn" *ngIf="estatus == 'BOR'" (click)="eliminarEntrada(id)">
                             <mat-icon color="warn">delete</mat-icon>

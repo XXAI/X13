@@ -1,0 +1,55 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding: 10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex fxLayout="column" style="overflow: auto;" [formGroup]="modificarForm">
+        <div fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
+            Fecha de Solicitud de Modificación:
+        </div>
+        <div fxFlex="none" class="fake-input">
+            {{modificarForm.get('fecha').value | date:'MMMM d, y':'GMT-6'}}
+        </div>
+        <div fxFlex fxLayout="column" *ngIf="isLoading">
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <mat-spinner style="margin:0 auto;"></mat-spinner>
+            </div>
+            <div fxFlex></div>
+        </div>
+        <div fxFlex fxLayout="column" *ngIf="!isLoading">
+            <div fxFlex="none" style="font-weight: 400; font-size: 18px; text-align: left;">
+                Motivo:
+            </div>
+            <mat-form-field fxFlex appearance="outline">
+                <textarea rows="5" cdkFocusInitial matInput #motivo maxlength="255" formControlName="motivo"></textarea>
+                <mat-hint align="end">{{motivo.value.length}}/255</mat-hint>
+            </mat-form-field>
+            <div fxFlex fxLayout="column" class="admin-access">
+                <div fxFlex *ngIf="!aprobarModificacion">
+                    <button fxFlex mat-flat-button color="admin" (click)="toggleAprobarModificacion()"><mat-icon>key</mat-icon> Aprobar</button>
+                </div>
+                <div *ngIf="aprobarModificacion" fxFlex="none" fxLayout="row" style="font-weight: 400; font-size: 18px; text-align: left;">
+                    <div fxFlex fxLayout="column" [style.fontSize.px]="12" #adminCredentials>
+                        <mat-form-field fxFlex appearance="outline" *ngIf="modificarForm.get('usuario')">
+                            <mat-label>Usuario</mat-label>
+                            <input type="text" matInput #username placeholder="Usuario" formControlName="usuario" autocomplete="off">
+                            <mat-error>El usuario no es válido</mat-error>
+                            <mat-icon matPrefix>person</mat-icon>
+                        </mat-form-field>
+                        <mat-form-field fxFlex appearance="outline" *ngIf="modificarForm.get('contrasena')">
+                            <mat-label>Contraseña</mat-label>
+                            <input type="password" matInput placeholder="Contraseña" formControlName="contrasena" (keyup.enter)="aceptar()">
+                            <mat-error>La contraseña es requerida.</mat-error>
+                            <mat-icon matPrefix>vpn_key</mat-icon>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none">
+                        <button mat-icon-button class="small-icon-button" (click)="toggleAprobarModificacion()"><mat-icon>clear</mat-icon></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section fxFlex="none" fxLayout="row" fxLayoutGap="10px">
+        <div fxFlex="none"></div>
+        <button fxFlex="none" mat-flat-button (click)="cerrar()">Cerrar</button>
+        <button fxFlex mat-raised-button color="primary" (click)="aceptar()" [disabled]="isLoading || !modificarForm.valid" [class.button-spinner]="isLoading"> {{(aprobarModificacion)?'Aprobar':'Solicitar'}} Modificación</button>
+    </section>
+</section>
