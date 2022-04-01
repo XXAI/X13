@@ -145,6 +145,16 @@
                     <mat-error *ngIf="formMovimiento.get('documento_folio').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
+                <mat-form-field fxFlex *ngIf="formMovimiento.get('solicitud_tipo_uso_id')">
+                    <mat-label>Tipo de Uso</mat-label>
+                    <mat-select formControlName="solicitud_tipo_uso_id" required>
+                        <mat-option *ngIf="catalogos['recetas_tipos_uso'].length == 0">Sin TIpos Capturados</mat-option>
+                        <mat-option *ngFor="let item of catalogos['recetas_tipos_uso']" [value]="item.id">
+                            {{item.descripcion}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('unidad_medica_movimiento')">
                     <mat-label>Unidad Destino</mat-label>
                     <input type="text" matInput placeholder="Teclee para buscar una unidad" formControlName="unidad_medica_movimiento" (blur)="validarOpcionSeleccionada('unidad_medica_movimiento')" [matAutocomplete]="autoUnidadesMedicas" required  autocomplete="off">
@@ -304,6 +314,9 @@
                     <mat-divider [inset]="true"></mat-divider>
                     <div fxFlex="none" class="folio">
                         <span>{{ movimientoSolicitud.folio }}</span>
+                    </div>
+                    <div fxFlex="none" class="tipo-uso" *ngIf="movimientoSolicitud.tipo_uso">
+                        <span>{{ movimientoSolicitud.tipo_uso.descripcion }}</span>
                     </div>
                     <div fxFlex="none" fxLayout="row" class="demi-table">
                         <div fxFlex="none" fxLayout="column" class="demi-rows-labels">

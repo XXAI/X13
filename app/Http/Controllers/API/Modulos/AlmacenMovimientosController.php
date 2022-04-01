@@ -24,6 +24,7 @@ use App\Models\UnidadMedicaTurno;
 use App\Models\PersonalMedico;
 use App\Models\Paciente;
 use App\Models\TipoSolicitud;
+use App\Models\SolicitudTipoUso;
 use App\Models\Solicitud;
 
 class AlmacenMovimientosController extends Controller{
@@ -46,6 +47,7 @@ class AlmacenMovimientosController extends Controller{
                 'unidades_medicas'  => UnidadMedica::getModel(),
                 'proveedores'       => Proveedor::getModel(),
                 'tipos_movimiento'  => TipoMovimiento::getModel(),
+                'recetas_tipos_uso' => SolicitudTipoUso::where('clave','RCTA'),
                 'marcas'            => Marca::getModel(),
                 'areas_servicios'   => AreaServicio::getModel(),
                 'turnos'            => UnidadMedicaTurno::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id),

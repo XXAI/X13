@@ -288,6 +288,12 @@ table td {
     color: rgba(0,0,0,.80);
 }
 
+.datos-movimiento-solicitud > .tipo-uso{
+    text-align: center;
+    font-weight: 500;
+    padding:2px;
+}
+
 .datos-movimiento-solicitud .etiqueta{
     color: rgba(0,0,0,.70);
     padding-right: 3px;

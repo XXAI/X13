@@ -175,6 +175,9 @@ export class ReporteAlmacenSalida{
           salida.destino = salida.area_servicio_movimiento.descripcion;
         } if(salida.tipo_movimiento?.clave == 'RCTA'){
           salida.destino = 'Receta';
+          if(salida.solicitud && salida.solicitud.tipo_uso){
+            salida.destino += ' ( ' + salida.solicitud.tipo_uso.descripcion + ')';
+          }
         }else{
           salida.destino = 'Sin Destino Indicado';
         }

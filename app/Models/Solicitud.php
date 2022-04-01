@@ -12,7 +12,7 @@ class Solicitud extends Model{
     protected $table = 'solicitudes';
     protected $fillable = [
         'folio','consecutivo','tipo_solicitud_id','fecha_solicitud','mes','anio', 'observaciones', 'estatus','unidad_medica_id','almacen_id','area_servicio_id','programa_id','turno_id','paciente_id','personal_medico_id',
-        'total_claves_solicitadas','total_articulos_solicitados','total_claves_surtidas','total_articulos_surtidos','porcentaje_claves_surtidas','porcentaje_articulos_surtidos',
+        'total_claves_solicitadas','total_articulos_solicitados','total_claves_surtidas','total_articulos_surtidos','porcentaje_claves_surtidas','porcentaje_articulos_surtidos','tipo_uso_id',
         'usuario_captura_id','usuario_finaliza_id','usuario_cancela_id'
     ];
 
@@ -26,6 +26,10 @@ class Solicitud extends Model{
 
     public function tipoSolicitud(){
         return $this->belongsTo('App\Models\TipoSolicitud','tipo_solicitud_id');
+    }
+
+    public function tipoUso(){
+        return $this->belongsTo('App\Models\SolicitudTipoUso','tipo_uso_id');
     }
 
     public function unidadMedica(){

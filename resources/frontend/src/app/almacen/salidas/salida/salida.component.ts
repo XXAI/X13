@@ -133,6 +133,7 @@ export class SalidaComponent implements OnInit {
       'almacenes':[],
       'almacenes_destino':[],
       'programas':[],
+      'recetas_tipos_uso':[],
       'unidades_medicas':[],
       'tipos_movimiento':[],
       'areas_servicios':[],
@@ -160,7 +161,7 @@ export class SalidaComponent implements OnInit {
       agregar_articulos:false
     };
 
-    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',areas_servicios:'*',turnos:'*',personal_medico:'*', filtro_almacenes_movimiento:'SAL'};
+    let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',areas_servicios:'*',turnos:'*',personal_medico:'*', recetas_tipos_uso:'*',filtro_almacenes_movimiento:'SAL'};
     
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -173,7 +174,7 @@ export class SalidaComponent implements OnInit {
           this.catalogos['almacenes_destino'] = response.data.almacenes_todos;
           this.catalogos['programas'] = response.data.programas;
           this.catalogos['unidades_medicas'] = response.data.unidades_medicas;
-          //this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
+          this.catalogos['recetas_tipos_uso'] = response.data.recetas_tipos_uso;
           this.catalogos['areas_servicios'] = response.data.areas_servicios;
           this.catalogos['turnos'] = response.data.turnos;
           this.catalogos['personal_medico'] = response.data.personal_medico;
@@ -521,6 +522,7 @@ export class SalidaComponent implements OnInit {
       'almacen_movimiento_id',
       'area_servicio_movimiento',
       'area_servicio_movimiento_id',
+      'solicitud_tipo_uso_id',
       'personal_medico',
       'personal_medico_id',
       'paciente_id',
@@ -567,6 +569,7 @@ export class SalidaComponent implements OnInit {
           this.formMovimiento.get('es_colectivo').patchValue(true);
         }
       }else if(this.tipoSalida.clave == 'RCTA'){
+        this.formMovimiento.addControl('solicitud_tipo_uso_id', new FormControl('', Validators.required));
         this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
         this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
         this.formMovimiento.addControl('paciente_id', new FormControl(''));
@@ -682,6 +685,8 @@ export class SalidaComponent implements OnInit {
       let formData:any = this.formMovimiento.value;
       this.isSaving = true;
 
+
+
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
 
@@ -695,9 +700,8 @@ export class SalidaComponent implements OnInit {
       let aritculos_en_cero = 0;
       formData.lista_articulos.forEach(articulo => {
         if(this.tieneSolicitud && (articulo.cantidad_solicitado == undefined || articulo.cantidad_solicitado <= 0)){
-          console.log('encontrado',articulo);
-          let index = this.dataSourceArticulos.data.find(x => x.id === articulo.id);
-          let articulo_encontrado = this.dataSourceArticulos.data[index];
+          let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
+          let articulo_encontrado = JSON.parse(JSON.stringify(this.dataSourceArticulos.data[index]));
           this.dataSourceArticulos.data.splice(index,1);
           this.dataSourceArticulos.data.unshift(articulo_encontrado);
           aritculos_en_cero++;
@@ -709,6 +713,7 @@ export class SalidaComponent implements OnInit {
         this.dataSourceArticulos.paginator = this.articulosPaginator;
         this.dataSourceArticulos.sort = this.sort;
         this.isSaving = false;
+        this.idArticuloSeleccionado = this.dataSourceArticulos.data[0].id;
         this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
         return false;
       }

@@ -11,7 +11,7 @@ class Movimiento extends Model{
     use SoftDeletes;
     protected $table = 'movimientos';  
     protected $fillable = [
-        'unidad_medica_id','almacen_id','folio','consecutivo','direccion_movimiento','tipo_movimiento_id','estatus','fecha_movimiento','turno_id',
+        'unidad_medica_id','almacen_id','folio','consecutivo','direccion_movimiento','tipo_movimiento_id','estatus','fecha_movimiento','turno_id','solicitud_tipo_uso_id',
         'documento_folio','programa_id','proveedor_id','descripcion','entrega','recibe','observaciones','unidad_medica_movimiento_id','almacen_movimiento_id','area_servicio_movimiento_id','es_colectivo','paciente_id',
         'personal_medico_id','total_claves','total_articulos','total_monto','referencia_folio','referencia_fecha','cancelado','fecha_cancelacion','motivo_cancelacion','movimiento_padre_id','solicitud_id',
         'creado_por_usuario_id','modificado_por_usuario_id','concluido_por_usuario_id','cancelado_por_usuario_id','eliminado_por_usuario_id'
@@ -71,6 +71,10 @@ class Movimiento extends Model{
 
     public function solicitud(){
         return $this->belongsTo('App\Models\Solicitud','solicitud_id');
+    }
+
+    public function solicitudTipoUso(){
+        return $this->belongsTo('App\Models\SolicitudTipoUso','solicitud_tipo_uso_id');
     }
 
     public function listaArticulos(){

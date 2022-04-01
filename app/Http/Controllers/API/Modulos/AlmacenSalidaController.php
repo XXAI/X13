@@ -144,7 +144,9 @@ class AlmacenSalidaController extends Controller
                                                             ]);
                                     },'movimientoHijo' => function($movimientoHijo){
                                         return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
-                                    },'solicitud.tipoSolicitud','almacen.tiposMovimiento']);
+                                    },'solicitud'=> function($solicitud){
+                                        return $solicitud->with('tipoSolicitud','tipoUso');
+                                    },'almacen.tiposMovimiento']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
                 $programa_id = $movimiento->programa_id;
@@ -239,6 +241,7 @@ class AlmacenSalidaController extends Controller
                 'unidad_medica_movimiento_id' => (isset($parametros['unidad_medica_movimiento_id']) && $parametros['unidad_medica_movimiento_id'])?$parametros['unidad_medica_movimiento_id']:null,
                 'almacen_movimiento_id' => (isset($parametros['almacen_movimiento_id']) && $parametros['almacen_movimiento_id'])?$parametros['almacen_movimiento_id']:null,
                 'area_servicio_movimiento_id' => (isset($parametros['area_servicio_movimiento_id']) && $parametros['area_servicio_movimiento_id'])?$parametros['area_servicio_movimiento_id']:null,
+                'solicitud_tipo_uso_id' =>  (isset($parametros['solicitud_tipo_uso_id']) && $parametros['solicitud_tipo_uso_id'])?$parametros['solicitud_tipo_uso_id']:null,
                 'descripcion' => 'Salida Manual Enviado a Unidad Medica',
                 'documento_folio' => $parametros['documento_folio'],
                 'observaciones' => $parametros['observaciones'],
@@ -289,15 +292,8 @@ class AlmacenSalidaController extends Controller
 
             if($tipo_movimiento->clave == 'RCTA'){
                 $parametros['expediente_clinico']   = trim($parametros['expediente_clinico']);
-                //$parametros['paciente']             = trim($parametros['paciente']);
-                //$parametros['curp']                 = trim($parametros['curp']);
                 $paciente = Paciente::where('expediente_clinico',$parametros['expediente_clinico'])->first();
-                //if($parametros['curp']){
-                //    $paciente = $paciente->where('curp',strtoupper($parametros['curp']))->first();
-                //}else{
-                //    $paciente = $paciente->first();
-                //}
-
+                
                 if(!$paciente){
                     $paciente = Paciente::create([
                         'expediente_clinico'=>$parametros['expediente_clinico'],
@@ -551,6 +547,28 @@ class AlmacenSalidaController extends Controller
                 $solicitud_articulos = [];
                 if($movimiento->solicitud_id){
                     $solicitud = Solicitud::with('listaArticulos')->find($movimiento->solicitud_id);
+
+                    $solicitud = Solicitud::update([
+                        'folio'                         =>$movimiento->documento_folio,
+                        'tipo_solicitud_id'             =>$tipo_solicitud->id,
+                        'tipo_uso_id'                   =>$movimiento->solicitud_tipo_uso_id,
+                        'fecha_solicitud'               =>$movimiento->fecha_movimiento,
+                        'mes'                           =>substr($movimiento->fecha_movimiento,5,2),
+                        'anio'                          =>substr($movimiento->fecha_movimiento,0,4),
+                        'observaciones'                 =>'Elemento generado de forma automatica por el modulo de salidas',
+                        'estatus'                       =>$movimiento->estatus,                        
+                        'unidad_medica_id'              =>$movimiento->unidad_medica_id,
+                        'almacen_id'                    =>$movimiento->almacen_movimiento_id,
+                        'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,
+                        'programa_id'                   =>$movimiento->programa_id,
+                        'turno_id'                      =>$movimiento->turno_id,
+                        'paciente_id'                   =>$movimiento->paciente_id,
+                        'personal_medico_id'            =>$movimiento->personal_medico_id,
+                        'total_claves_solicitadas'      =>$total_claves,
+                        'total_articulos_surtidos'      =>$total_articulos,
+                        'usuario_finaliza_id'           =>($movimiento->estatus == 'FIN')?$loggedUser->id:null,
+                    ]);
+
                     for ($i=0; $i < count($solicitud->listaArticulos) ; $i++) { 
                         $solicitud_articulos[$solicitud->listaArticulos[$i]->bien_servicio_id] = $solicitud->listaArticulos[$i];
                     }
@@ -558,6 +576,7 @@ class AlmacenSalidaController extends Controller
                     $solicitud = Solicitud::create([
                         'folio'                         =>$movimiento->documento_folio,
                         'tipo_solicitud_id'             =>$tipo_solicitud->id,
+                        'tipo_uso_id'                   =>$movimiento->solicitud_tipo_uso_id,
                         'fecha_solicitud'               =>$movimiento->fecha_movimiento,
                         'mes'                           =>substr($movimiento->fecha_movimiento,5,2),
                         'anio'                          =>substr($movimiento->fecha_movimiento,0,4),
@@ -604,12 +623,23 @@ class AlmacenSalidaController extends Controller
                         }
                         if(isset($solicitud_articulos[$articulo['id']])){
                             $solicitud_articulos[$articulo['id']]->update($datos_articulo);
+                            $solicitud_articulos[$articulo['id']] = null;
                         }else{
                             $nuevos_articulos[] = $datos_articulo;
                         }
                     }else{
                         throw new \Exception("Al articulo con Clave: '".$articulo['clave']."' le falta la cantidad solicitada.", 1);
                     }
+                }
+
+                $articulos_solicitud_eliminar = [];
+                for ($i=0; $i < count($solicitud_articulos) ; $i++) { 
+                    if($solicitud_articulos[$i]){
+                        $articulos_solicitud_eliminar[] = $solicitud_articulos[$i]->id;
+                    }
+                }
+                if(count($articulos_solicitud_eliminar)){
+                    $solicitud->listaArticulos()->whereIn('id',$articulos_solicitud_eliminar)->delete();
                 }
 
                 $porcentaje_claves_surtidas = round((($total_claves_surtidas/$total_claves)*100),2);
