@@ -291,6 +291,10 @@ export class ReporteAlmacenEntrada{
           case 'FIN':
             tabla_articulos = entrada.lista_articulos;
             break;
+          case 'PERE':
+            tabla_articulos = entrada.lista_articulos_borrador;
+            watermark = 'PENDIENTE RECEPCIÓN';
+            break;
           case 'BOR':
             tabla_articulos = entrada.lista_articulos_borrador;
             watermark = 'BORRADOR';

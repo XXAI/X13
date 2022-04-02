@@ -145,11 +145,11 @@ export class ReporteAlmacenSalida{
 
         let salida = reportData.items;
         let total_salida = parseFloat(salida.total_monto);
-        let fecha_salida  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(salida.fecha_movimiento));
+        let fecha_salida  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(salida.fecha_movimiento+'T12:00:00'));
 
         let fecha_referencia = '';
         if(salida.referencia_fecha){
-          fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(salida.referencia_fecha));
+          fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(salida.referencia_fecha+'T12:00:00'));
         }
 
         function numberFormat(num,prices:boolean = false) {
@@ -173,7 +173,7 @@ export class ReporteAlmacenSalida{
           salida.destino = salida.unidad_medica_movimiento.nombre;
         }else if(salida.area_servicio_movimiento_id){
           salida.destino = salida.area_servicio_movimiento.descripcion;
-        } if(salida.tipo_movimiento?.clave == 'RCTA'){
+        }else if(salida.tipo_movimiento?.clave == 'RCTA'){
           salida.destino = 'Receta';
           if(salida.solicitud && salida.solicitud.tipo_uso){
             salida.destino += ' ( ' + salida.solicitud.tipo_uso.descripcion + ')';
@@ -296,6 +296,10 @@ export class ReporteAlmacenSalida{
           case 'FIN':
             tabla_articulos = salida.lista_articulos;
               break;
+          case 'PERE':
+            tabla_articulos = salida.lista_articulos;
+            watermark = 'PENDIENTE RECEPCIÓN';
+              break;
           case 'BOR':
             tabla_articulos = salida.lista_articulos_borrador;
             watermark = 'BORRADOR';
@@ -316,7 +320,7 @@ export class ReporteAlmacenSalida{
         for(let i = 0; i < tabla_articulos.length; i++){
           let item  = tabla_articulos[i];
           
-          if(item.cantidad_solicitado > 0){
+          //if(item.cantidad_solicitado > 0){
             se_agrego_lote = false;
             let stocks = [];
             if(item.stocks){
@@ -357,7 +361,7 @@ export class ReporteAlmacenSalida{
                 se_agrego_lote = true;
               }
             }
-          }
+          //}
         }
 
         let base_footer = [

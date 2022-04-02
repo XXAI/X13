@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, Input, SimpleChange, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, SimpleChange, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
 import { CustomValidator } from 'src/app/utils/classes/custom-validator';
@@ -11,6 +11,7 @@ import { CustomValidator } from 'src/app/utils/classes/custom-validator';
 })
 export class InnerArticuloListaLotesComponent implements OnInit {
   @ViewChild(MatInput) inputFormLote: MatInput;
+  @ViewChild('inputValue') inputValue: ElementRef;
 
   @Input() articulo: any;
   @Input() tipoSalida: any;
@@ -93,6 +94,13 @@ export class InnerArticuloListaLotesComponent implements OnInit {
     if(this.articulo.puede_surtir_unidades && this.articulo.surtir_en_unidades){
       this.surtirUnidades(this.articulo.surtir_en_unidades);
     }
+
+    
+    setTimeout(() => {
+      if(this.inputValue){
+      this.inputValue.nativeElement.focus();  
+      }
+    }, 100);
   }
 
   surtirUnidades(checked){

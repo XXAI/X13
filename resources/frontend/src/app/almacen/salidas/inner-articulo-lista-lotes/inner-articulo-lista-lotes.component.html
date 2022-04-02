@@ -10,7 +10,7 @@
                 <th colspan="2"></th>
                 <th *ngIf="tieneSolicitud" class="datos-solicitado">Cantidad Solicitada:</th>
                 <th *ngIf="tieneSolicitud" width="1" class="datos-solicitado">
-                    <input type="number" [ngModel]="articulo.cantidad_solicitado" (keydown.enter)="checarTotalSolicitado($event.target.value)" (blur)="checarTotalSolicitado($event.target.value)" [readonly]="!edicionActiva">
+                    <input #inputValue type="number" [ngModel]="articulo.cantidad_solicitado" (keydown.enter)="checarTotalSolicitado($event.target.value)" (blur)="checarTotalSolicitado($event.target.value)" [readonly]="!edicionActiva">
                 </th>
                 <th *ngIf="!tieneSolicitud" colspan="2"></th>
                 <th></th>
@@ -46,7 +46,7 @@
                 <td>{{lote.programa}}</td>
                 <td>{{lote.existencia | number:'1.0-0'}}</td>
                 <td width="1" style="white-space: nowrap;">
-                    <input type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
+                    <input #inputValue type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
                 </td>
                 <td width="1" style="white-space: nowrap;">{{lote.restante | number:'1.0-0'}}</td>
             </tr>
