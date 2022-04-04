@@ -20,6 +20,17 @@
                 <div fxFlex fxLayout="row" fxLayoutGap="5px">
                     <div fxFlex="none" class="small-select-input">
                         <mat-form-field appearance="outline">
+                            <mat-select [(ngModel)]="filtros.estatus" (selectionChange)="aplicarFiltro()">
+                                <mat-option [value]="false">Todos</mat-option>
+                                <mat-option *ngIf="filtrosCatalogos.estatus.length == 0" [value]="" disabled>Sin Estatus</mat-option>
+                                <mat-option *ngFor="let estatus of filtrosCatalogos.estatus" [value]="estatus.clave">
+                                    {{estatus.descripcion}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none" class="small-select-input">
+                        <mat-form-field appearance="outline">
                             <mat-select [(ngModel)]="filtros.almacen_id" (selectionChange)="aplicarFiltro()">
                                 <mat-option [value]="false">Todos los Almacenes</mat-option>
                                 <mat-option *ngIf="filtrosCatalogos.almacenes.length == 0" [value]="" disabled>Sin Almacenes Asignados</mat-option>

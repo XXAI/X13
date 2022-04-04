@@ -66,6 +66,10 @@ a.item-mini-side-menu div.mat-list-item-content{
     background-color: inherit;
     color: #c342ff;
 }
+.mat-button.mat-admin, .mat-icon-button.mat-admin, .mat-stroked-button.mat-admin {
+    background-color: inherit;
+    color: #c342ff;
+}
 
 .mat-info {
     color: #fff !important;

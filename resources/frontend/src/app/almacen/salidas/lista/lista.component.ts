@@ -41,8 +41,8 @@ export class ListaComponent implements OnInit {
   reportIncludeSigns:boolean = false;
 
   filtroAplicado: boolean;
-  filtros: any = {almacen_id:false, tipo_movimiento_id:false, rango_fechas:{inicio:null, fin:null}};
-  filtrosCatalogos: any = {almacenes:[],tipos_movimiento:[]};
+  filtros: any = {estatus:false,almacen_id:false, tipo_movimiento_id:false, rango_fechas:{inicio:null, fin:null}};
+  filtrosCatalogos: any = {almacenes:[],tipos_movimiento:[],estatus:[]};
   searchQuery: string = '';
 
   pageEvent: PageEvent;
@@ -51,9 +51,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'file_open'};
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'solicitud-modificacion',     'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Solicitud de Modificación',  'MOD':'Modificación Activa'};
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
   displayedColumns: string[] = ['id','folio','almacen_turno','fecha_movimiento','totales_claves','dato_usuario','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
@@ -69,7 +69,7 @@ export class ListaComponent implements OnInit {
     
     this.loadListadoMovimientos();
 
-    let lista_catalogos:any = {almacenes:'*',tipos_movimiento:'movimiento.SAL'};
+    let lista_catalogos:any = {almacenes:'*',tipos_movimiento:'movimiento.SAL',estatus_movimientos:'*'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -79,6 +79,7 @@ export class ListaComponent implements OnInit {
         } else {
           this.filtrosCatalogos.almacenes = response.data.almacenes;
           this.filtrosCatalogos.tipos_movimiento = response.data.tipos_movimiento;
+          this.filtrosCatalogos.estatus = response.data.estatus_movimientos;
         }
         this.isLoading = false;
       },
@@ -121,6 +122,10 @@ export class ListaComponent implements OnInit {
       params.tipo_movimiento_id = this.filtros.tipo_movimiento_id;
     }
 
+    if(this.filtros.estatus){
+      params.estatus = this.filtros.estatus;
+    }
+
     if(this.filtros.rango_fechas.inicio){
       params.fecha_inicio = this.datepipe.transform(this.filtros.rango_fechas.inicio, 'yyyy-MM-dd');
       params.fecha_fin = this.datepipe.transform(this.filtros.rango_fechas.fin, 'yyyy-MM-dd');
@@ -160,10 +165,10 @@ export class ListaComponent implements OnInit {
                 element.usuario = element.eliminado_por;
               }else if(element.cancelado_por_usuario_id){
                 element.usuario = element.cancelado_por;
-              }else if(element.concluido_por_usuario_id){
-                element.usuario = element.concluido_por;
               }else if(element.modificado_por_usuario_id){
                 element.usuario = element.modificado_por;
+              }else if(element.concluido_por_usuario_id){
+                element.usuario = element.concluido_por;
               }
             });
             this.listadoMovimientos = response.data.data;

@@ -18,6 +18,8 @@ import * as FileSaver from 'file-saver';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { DialogoSolicitudRepetidaComponent } from '../dialogo-solicitud-repetida/dialogo-solicitud-repetida.component';
 import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
+import { User } from 'src/app/auth/models/user';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-salida',
@@ -40,6 +42,7 @@ export class SalidaComponent implements OnInit {
   constructor(
     private datepipe: DatePipe,
     private formBuilder: FormBuilder, 
+    private authService: AuthService,
     private almacenService: AlmacenService, 
     private salidasService: SalidasService, 
     private sharedService: SharedService, 
@@ -47,6 +50,8 @@ export class SalidaComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router
   ) { }
+
+  authUser:User;
 
   datosMovimiento:any;
   formMovimiento:FormGroup;
@@ -97,14 +102,16 @@ export class SalidaComponent implements OnInit {
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'file_open'};
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'solicitud-modificacion',     'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Solicitud de Modificación',  'MOD':'Modificación Activa'};
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',        'MOD':'note_alt'};
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',     'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',  'MOD':'Modificación Activa'};
 
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
 
   ngOnInit() {
+    this.authUser = this.authService.getUserData();
+
     this.isLoading = true;
     this.tieneSolicitud = false;
     this.puedeEditarDatosEncabezado = false;
@@ -716,7 +723,7 @@ export class SalidaComponent implements OnInit {
 
   cargarDatosModificacion(modificacion){
     this.estatusMovimiento = modificacion.estatus;
-    if(modificacion.estatus == 'MOD'){
+    if(modificacion.estatus == 'MOD' && modificacion.solicitado_usuario_id == this.authUser.id){
       this.habilitarDatosPaciente = true;
       this.puedeEditarDatosEncabezado = true;
       this.verBoton.concluirModificacion = true;

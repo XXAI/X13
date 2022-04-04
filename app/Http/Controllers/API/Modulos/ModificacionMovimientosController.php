@@ -173,6 +173,10 @@ class ModificacionMovimientosController extends Controller{
 
             $modificacion = MovimientoModificacion::where('movimiento_id',$id)->where('estatus','MOD')->first();
 
+            if($modificacion->solicitado_usuario_id != $loggedUser->id){
+                return response()->json(['error'=>"Solo el usuario que realizó la petición puede editar este movimiento"],HttpResponse::HTTP_OK);
+            }
+
             if(!$modificacion){
                 return response()->json(['error'=>"Solicitud de Modificación no encontrada"],HttpResponse::HTTP_OK);
             }

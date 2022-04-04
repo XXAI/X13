@@ -96,6 +96,16 @@ class AlmacenSalidaController extends Controller
                 $salidas = $salidas->where('movimientos.tipo_movimiento_id',$parametros['tipo_movimiento_id']);
             }
 
+            if(isset($parametros['estatus']) && $parametros['estatus']){
+                if($parametros['estatus'] == 'SOL' || $parametros['estatus'] == 'MOD'){
+                    $salidas = $salidas->whereHas('modificacionActiva',function($query)use($parametros){
+                        $query->where('estatus',$parametros['estatus']);
+                    });
+                }else{
+                    $salidas = $salidas->where('movimientos.estatus',$parametros['estatus'])->doesntHave('modificacionActiva');
+                }
+            }
+
             if(isset($parametros['fecha_inicio']) && $parametros['fecha_inicio']){
                 $salidas = $salidas->where('movimientos.fecha_movimiento','>=',$parametros['fecha_inicio'])
                                     ->where('movimientos.fecha_movimiento','<=',$parametros['fecha_fin']);
