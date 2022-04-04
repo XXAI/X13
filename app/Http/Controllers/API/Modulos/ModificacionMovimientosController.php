@@ -268,6 +268,8 @@ class ModificacionMovimientosController extends Controller{
 
             $modificacion->registro_original = json_encode($datos_originales);
             $modificacion->registro_modificado = json_encode($datos_modificados);
+            $modificacion->modificado_usuario_id = $loggedUser->id;
+            $modificacion->modificado_fecha = $fecha_hoy;
             $modificacion->estatus = 'FIN';
             $modificacion->save();
             

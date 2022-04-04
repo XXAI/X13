@@ -20,10 +20,12 @@ class CreateTableMovimientosModificaciones extends Migration
             $table->string('motivo_revertido')->nullable();
             $table->date('solicitado_fecha');
             $table->date('aprobado_fecha')->nullable();
+            $table->date('modificado_fecha')->nullable();
             $table->date('cancelado_fecha')->nullable();
             $table->date('revertido_fecha')->nullable();
             $table->bigInteger('solicitado_usuario_id');
             $table->bigInteger('aprobado_usuario_id')->nullable();
+            $table->bigInteger('modificado_usuario_id')->nullable();
             $table->bigInteger('cancelado_usuario_id')->nullable();
             $table->bigInteger('revertido_usuario_id')->nullable();
             $table->text('registro_original')->nullable();

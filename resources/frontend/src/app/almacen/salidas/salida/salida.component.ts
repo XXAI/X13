@@ -720,7 +720,7 @@ export class SalidaComponent implements OnInit {
       this.habilitarDatosPaciente = true;
       this.puedeEditarDatosEncabezado = true;
       this.verBoton.concluirModificacion = true;
-      this.verBoton.modificarSalida = false;
+      //this.verBoton.modificarSalida = false;
       this.protegerDatosFormulario();
     }
   }
@@ -789,6 +789,7 @@ export class SalidaComponent implements OnInit {
                 this.habilitarDatosPaciente = false;
                 this.puedeEditarDatosEncabezado = false;
                 this.verBoton.concluirModificacion = false;
+                this.verBoton.modificarSalida = true;
               }
             }
             this.isSaving = false;

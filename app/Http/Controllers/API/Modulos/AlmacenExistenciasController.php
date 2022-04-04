@@ -75,7 +75,7 @@ class AlmacenExistenciasController extends Controller
                     $items = $items->select(
                         //"almacenes.nombre as almacen",
                         //"programas.descripcion as programa",
-                        DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)') as almacen"),
+                        DB::raw("IF(COUNT(DISTINCT stocks.almacen_id) = 1,almacenes.nombre,CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)')) as almacen"),
                         DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),
                         "stocks.bien_servicio_id as id", 
                         DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
