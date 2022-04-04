@@ -107,6 +107,14 @@ color:#ff2a2a;
   color:#dc8503;
 }
 
+.solicitud-modificacion-color{
+  color:#b000e6;
+}
+
+.modificacion-aprobada-color{
+  color:#b000e6;
+}
+
 .cancelado{
   text-decoration: line-through;
 }

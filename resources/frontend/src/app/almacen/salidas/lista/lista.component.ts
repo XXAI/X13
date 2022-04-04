@@ -51,9 +51,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions'};
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción'};
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'file_open'};
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'solicitud-modificacion',     'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Solicitud de Modificación',  'MOD':'Modificación Activa'};
 
   displayedColumns: string[] = ['id','folio','almacen_turno','fecha_movimiento','totales_claves','dato_usuario','actions']; //,'descripcion','proveedor'
   listadoMovimientos: any = [];
@@ -135,9 +135,16 @@ export class ListaComponent implements OnInit {
           if(response.data.total > 0){
             let lista_items = response.data.data;
             lista_items.forEach(element => {
-              element.estatus_clave = this.listaEstatusClaves[element.estatus];
-              element.estatus_label = this.listaEstatusLabels[element.estatus];
-              element.estatus_icono = this.listaEstatusIconos[element.estatus];
+
+              if((element.estatus == 'FIN' || element.estatus == 'PERE') && element.modificacion_activa){
+                element.estatus_clave = this.listaEstatusClaves[element.modificacion_activa.estatus];
+                element.estatus_label = this.listaEstatusLabels[element.modificacion_activa.estatus];
+                element.estatus_icono = this.listaEstatusIconos[element.modificacion_activa.estatus];
+              }else{
+                element.estatus_clave = this.listaEstatusClaves[element.estatus];
+                element.estatus_label = this.listaEstatusLabels[element.estatus];
+                element.estatus_icono = this.listaEstatusIconos[element.estatus];
+              }
 
               if(element.unidad_destino){
                 element.destino = element.unidad_destino;
@@ -196,26 +203,48 @@ export class ListaComponent implements OnInit {
   activarModificacionSalida(id){
     let configDialog = {
       width: '400px',
-      maxHeight: '90vh',
-      height: '470px',
-      data:{titulo:'Activar Modificación de Salida'},
+      //minHeight: '470px',
+      height: 'auto',
+      disableClose: true,
+      data:{id:id, modificacion: null},
       panelClass: 'no-padding-dialog'
     };
 
-    const dialogRef = this.dialog.open(DialogoModificarMovimientoComponent, configDialog);
-
-    dialogRef.afterClosed().subscribe(dialogResponse => {
-      if(dialogResponse){
-        console.log(dialogResponse);
+    let movimiento = this.listadoMovimientos.find(x => x.id == id);
+    if(movimiento){
+      if(movimiento.modificacion_activa){
+        configDialog.data.modificacion = movimiento.modificacion_activa;
       }
-    });
+      const dialogRef = this.dialog.open(DialogoModificarMovimientoComponent, configDialog);
+
+      dialogRef.afterClosed().subscribe(dialogResponse => {
+        if(dialogResponse){
+          let movimiento = this.listadoMovimientos.find(x => x.id == id);
+          if(dialogResponse.estatus != 'CAN'){
+            movimiento.modificacion_activa = dialogResponse;
+            movimiento.estatus_clave = this.listaEstatusClaves[dialogResponse.estatus];
+            movimiento.estatus_label = this.listaEstatusLabels[dialogResponse.estatus];
+            movimiento.estatus_icono = this.listaEstatusIconos[dialogResponse.estatus];
+          }else{
+            movimiento.modificacion_activa = null;
+            movimiento.estatus_clave = this.listaEstatusClaves[movimiento.estatus];
+            movimiento.estatus_label = this.listaEstatusLabels[movimiento.estatus];
+            movimiento.estatus_icono = this.listaEstatusIconos[movimiento.estatus];
+          }
+          
+          //console.log(dialogResponse);
+        }
+      });
+    }else{
+      console.log('no encotnrado');
+    }
   }
 
   cancelarSalida(id){
     let configDialog = {
       width: '350px',
-      maxHeight: '90vh',
-      height: '340px',
+      //maxHeight: '90vh',
+      height: 'auto',
       data:{},
       panelClass: 'no-padding-dialog'
     };

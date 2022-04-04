@@ -75,7 +75,8 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('movimientos-buscar-receta/{folio}',             'API\Modulos\AlmacenMovimientosController@buscarReceta');
     Route::get('movimientos-buscar-paciente/{expediente}',      'API\Modulos\AlmacenMovimientosController@buscarPaciente');
     Route::get('almacen-movimientos-catalogos',                 'API\Modulos\AlmacenMovimientosController@obtenerCatalogos');
-    Route::put('almacen-movimientos-administrar-modificacion',  'API\Modulos\AlmacenMovimientosController@administrarModificacion');
+    Route::put('movimientos-administrar-modificacion/{id}',     'API\Modulos\ModificacionMovimientosController@administrarModificacion');
+    Route::put('guardar-modificacion/{id}',                     'API\Modulos\ModificacionMovimientosController@guardarModificacion');
     Route::apiResource('almacen-entradas',                      'API\Modulos\AlmacenEntradaController');
     Route::put('almacen-entradas-cancelar/{id}',                'API\Modulos\AlmacenEntradaController@cancelarMovimiento');
     Route::apiResource('almacen-salidas',                       'API\Modulos\AlmacenSalidaController');

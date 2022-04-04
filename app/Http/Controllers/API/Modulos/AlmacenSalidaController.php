@@ -70,7 +70,10 @@ class AlmacenSalidaController extends Controller
                                     ->where('movimientos.direccion_movimiento','SAL')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->whereIn('movimientos.almacen_id',$almacenes)
-                                    ->orderBy('updated_at','DESC');
+                                    ->orderBy('updated_at','DESC')
+                                    ->with(['modificacionActiva'=>function($modificacionActiva){
+                                        $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
+                                    }]);
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -97,10 +100,7 @@ class AlmacenSalidaController extends Controller
                 $salidas = $salidas->where('movimientos.fecha_movimiento','>=',$parametros['fecha_inicio'])
                                     ->where('movimientos.fecha_movimiento','<=',$parametros['fecha_fin']);
             }
-            /*if(!(isset($parametros['mostrar_todo']) && $parametros['mostrar_todo'])){
-                $salidas = $salidas->where('estatus','like','ME-%');
-            }*/
-
+            
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
                 $salidas = $salidas->paginate($resultadosPorPagina);
@@ -146,6 +146,8 @@ class AlmacenSalidaController extends Controller
                                         return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
                                     },'solicitud'=> function($solicitud){
                                         return $solicitud->with('tipoSolicitud','tipoUso');
+                                    },'modificacionActiva'=>function($modificacionActiva){
+                                        $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
                                     },'almacen.tiposMovimiento']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
@@ -509,6 +511,7 @@ class AlmacenSalidaController extends Controller
                     'tipo_movimiento_id' => $tipo_movimiento_recepcion->id,
                     'estatus' => 'PERE',
                     'fecha_movimiento' => $movimiento->fecha_movimiento,
+                    'turno_id' => $movimiento->turno_id,
                     'programa_id' => $movimiento->programa_id,
                     'descripcion' => 'Recepción Generada Automaticamente por un Traspaso entre Almacenes',
                     'documento_folio' => ($movimiento->es_colectivo)?$movimiento->documento_folio:$movimiento->folio,
@@ -660,10 +663,16 @@ class AlmacenSalidaController extends Controller
             
             DB::commit();
 
-            if($tipo_movimiento->clave == 'LMCN' && $concluir){
-                $movimiento->load(['movimientoHijo' => function($movimientoHijo){
-                                        return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
-                                    }]);
+            if($concluir){
+                $movimiento = Movimiento::with(['unidadMedica','unidadMedicaMovimiento','almacenMovimiento','areaServicioMovimiento','programa','turno','paciente',
+                                            'personalMedico','tipoMovimiento','almacen',
+                                            'movimientoHijo' => function($movimientoHijo){
+                                                return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
+                                            },'solicitud'=> function($solicitud){
+                                                return $solicitud->with('tipoSolicitud','tipoUso');
+                                            },'modificacionActiva'=>function($modificacionActiva){
+                                                $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
+                                            }])->find($movimiento->id);
             }
             
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);

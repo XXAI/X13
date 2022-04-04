@@ -8,6 +8,9 @@
             <button fxFlex="none" mat-button *ngIf="verBoton['guardar']" [matTooltip]="'Guardar'" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
                 <mat-icon>save</mat-icon>
             </button>
+            <button fxFlex="none" mat-button *ngIf="verBoton['concluirModificacion']" [matTooltip]="'Concluir Modificación'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirModificacion()" [class.button-spinner]="isSaving">
+                <mat-icon>all_inbox</mat-icon>
+            </button>
             <div fxFlex>
             </div>
             <div fxFlex="none" *ngIf="datosMovimiento && datosMovimiento.folio" class="label-info">
@@ -22,26 +25,35 @@
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosMovimiento.id}}">
-                <mat-icon color="primary">content_copy</mat-icon>
-                <span>Duplicar Salida</span>
-            </button>
-            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
-                <mat-icon>all_inbox</mat-icon>
+            <button mat-menu-item *ngIf="verBoton['concluir']" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+                <mat-icon color="primary">all_inbox</mat-icon>
                 <span>Concluir Salida</span>
             </button>
-            <mat-divider *ngIf="estatusMovimiento == 'BOR'"></mat-divider>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarSalida()">
+
+            <button mat-menu-item *ngIf="verBoton['duplicar']" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosMovimiento.id}}">
+                <mat-icon>content_copy</mat-icon>
+                <span>Duplicar Salida</span>
+            </button>
+
+            <mat-divider *ngIf="verBoton['modificarSalida']"></mat-divider>
+            <button mat-menu-item *ngIf="verBoton['modificarSalida']" (click)="activarModificacionSalida()">
+                <mat-icon color="admin">admin_panel_settings</mat-icon>
+                <span>Modificar Salida</span>
+            </button>
+
+            <mat-divider *ngIf="verBoton['eliminar']"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="verBoton['eliminar']" (click)="eliminarSalida()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Salida</span>
             </button>
             <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
-                <mat-divider *ngIf="estatusMovimiento == 'FIN'"></mat-divider>
-                <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarSalida()">
+                <mat-divider *ngIf="verBoton['cancelar']"></mat-divider>
+                <button mat-menu-item style="color:red;" *ngIf="verBoton['cancelar']" (click)="cancelarSalida()">
                     <mat-icon color="warn">cancel</mat-icon>
                     <span>Cancelar Salida</span>
                 </button>
             </div>
+
             <mat-divider></mat-divider>
             <button mat-menu-item (click)="generarPDF()">
                 <mat-icon>print</mat-icon>
@@ -70,12 +82,81 @@
     <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: hidden;"> <!-- Module Body <<<<<<< -->
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
         <section fxFlex="none" fxLayout="column">
-            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" fxLayoutAlign="space-between center" [formGroup]="formMovimiento" [style.fontSize.px]="15">
+            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!puedeEditarDatosEncabezado && datosMovimiento" class="concluido-bg-color">
+                <div fxFlex class="fake-input">
+                    <span class="label">Fecha de Salida:</span>
+                    <span class="value">{{datosMovimiento.fecha_movimiento | date:'MMMM d, y' }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Almacen:</span>
+                    <span class="value">{{datosMovimiento.almacen.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Tipo de Salida:</span>
+                    <span class="value">{{datosMovimiento.tipo_movimiento.descripcion }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Turno:</span>
+                    <span class="value">{{datosMovimiento.turno.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Programa:</span>
+                    <span class="value">{{(datosMovimiento.programa)?datosMovimiento.programa.descripcion:'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosMovimiento.es_colectivo">
+                    <span class="label">&nbsp;</span>
+                    <span class="value">Es Colectivo</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Folio-Documento:</span>
+                    <span class="value">{{ datosMovimiento.documento_folio||'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosMovimiento.unidad_medica_movimiento">
+                    <span class="label">Unidad Médica Destino:</span>
+                    <span class="value">{{ datosMovimiento.unidad_medica_movimiento.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosMovimiento.almacen_movimiento">
+                    <span class="label">Almacén Destino:</span>
+                    <span class="value">{{ datosMovimiento.almacen_movimiento.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosMovimiento.area_servicio_movimiento">
+                    <span class="label">Area/Servicio Destino:</span>
+                    <span class="value">{{ datosMovimiento.area_servicio_movimiento.descripcion }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosMovimiento.solicitud && datosMovimiento.solicitud.tipo_uso">
+                    <span class="label">Tipo de Uso:</span>
+                    <span class="value">{{ datosMovimiento.solicitud.tipo_uso.descripcion }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosMovimiento.personal_medico">
+                    <span class="label">Personal Médico:</span>
+                    <span class="value">{{ datosMovimiento.personal_medico.nombre_completo }}</span>
+                </div>
+                <div fxFlex fxLayout="row" *ngIf="datosMovimiento.personal_medico">
+                    <div fxFlex class="fake-input">
+                        <span class="label">Folio Expediente:</span>
+                        <span class="value">{{ datosMovimiento.paciente.expediente_clinico }}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Paciente:</span>
+                        <span class="value">{{ datosMovimiento.paciente.nombre_completo }}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">CURP:</span>
+                        <span class="value">{{ datosMovimiento.paciente.curp }}</span>
+                    </div>
+                </div>
+                
+                <div fxFlex class="fake-input">
+                    <span class="label">Observaciones:</span>
+                    <span class="value">{{ datosMovimiento.observaciones||'---' }}</span>
+                </div>
+            </mat-card>
+            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" *ngIf="puedeEditarDatosEncabezado" [formGroup]="formMovimiento" [style.fontSize.px]="15">
                 <mat-form-field fxFlex="none">
                     <mat-label>Fecha Salida</mat-label>
                     <input matInput formControlName="fecha_movimiento" [max]="maxFechaMovimiento" [matDatepicker]="picker" required readonly>
                     <mat-datepicker-toggle matPrefix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker #picker [disabled]="!editable"></mat-datepicker>
+                    <mat-datepicker #picker></mat-datepicker>
                     <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
                     <mat-error *ngIf="formMovimiento.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
@@ -140,8 +221,8 @@
 
                 <mat-form-field fxFlex="none">
                     <mat-label>Folio - Documento</mat-label>
-                    <input matInput formControlName="documento_folio" autocomplete="off" [required]="this.formMovimiento.get('documento_folio').validator">
-                    <mat-hint *ngIf="!this.formMovimiento.get('documento_folio').validator">En caso de ser necesario</mat-hint>
+                    <input matInput formControlName="documento_folio" autocomplete="off" [required]="tieneSolicitud">
+                    <mat-hint *ngIf="!tieneSolicitud">En caso de ser necesario</mat-hint>
                     <mat-error *ngIf="formMovimiento.get('documento_folio').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
@@ -256,13 +337,13 @@
                     <mat-label>Fecha de Referencia</mat-label>
                     <input matInput formControlName="referencia_fecha" [max]="maxFechaMovimiento" [matDatepicker]="pickerReferencia" readonly>
                     <mat-datepicker-toggle matPrefix [for]="pickerReferencia"></mat-datepicker-toggle>
-                    <mat-datepicker #pickerReferencia [disabled]="!editable" startView="year"></mat-datepicker>
+                    <mat-datepicker #pickerReferencia startView="year"></mat-datepicker>
                     <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
                 </mat-form-field-->
 
                 <mat-form-field fxFlex>
                     <mat-label>Observaciones</mat-label>
-                    <textarea matInput formControlName="observaciones" rows="1" [readonly]="!editable"></textarea>
+                    <textarea matInput formControlName="observaciones" rows="1"></textarea>
                 </mat-form-field>
             </mat-card>
         </section>
@@ -376,7 +457,8 @@
                             </ng-template>
                         </mat-list>
                     </div>
-                    <div fxFlex fxLayout="column"></div>
+                    <div fxFlex fxLayout="column">
+                    </div>
                 </mat-card>
             </section>
             <section fxFlex fxLayout="column">
@@ -475,14 +557,14 @@
                                                 <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">gpp_good</mat-icon>
                                                 <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">error</mat-icon>
                                                 <div fxFlex></div>
-                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos">
+                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarListaArticulos">
                                                     <mat-icon>delete</mat-icon> Quitar Articulo
                                                 </button>
                                             </div>
                                         </div>
                                         <inner-articulo-lista-lotes     [articulo]="articulo" 
                                                                         [tipoSalida]="tipoSalida"
-                                                                        [edicionActiva]="puedeEditarElementos" 
+                                                                        [edicionActiva]="puedeEditarListaArticulos" 
                                                                         [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
                                                                         [tieneSolicitud]="tieneSolicitud"
                                                                         (cambiosEnLotes)="aplicarCambios($event)">

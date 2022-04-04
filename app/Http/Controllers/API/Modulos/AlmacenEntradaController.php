@@ -232,6 +232,7 @@ class AlmacenEntradaController extends Controller
                 $datos_movimiento = [
                     'estatus' => ($concluir)?'FIN':'PERE',
                     'fecha_movimiento' => $parametros['fecha_movimiento'],
+                    'turno_id' => $parametros['turno_id'],
                     'observaciones' => $parametros['observaciones'],
                     'total_claves' => 0,
                     'total_articulos' => 0,

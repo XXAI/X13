@@ -17,6 +17,14 @@ class Movimiento extends Model{
         'creado_por_usuario_id','modificado_por_usuario_id','concluido_por_usuario_id','cancelado_por_usuario_id','eliminado_por_usuario_id'
     ];
 
+    public function modificacionActiva(){
+        return $this->hasOne('App\Models\MovimientoModificacion','movimiento_id')->whereIn('estatus',['SOL','MOD']);
+    }
+
+    public function modificaciones(){
+        return $this->hasMany('App\Models\MovimientoModificacion','movimiento_id');
+    }
+
     public function tipoMovimiento(){
         return $this->belongsTo('App\Models\TipoMovimiento','tipo_movimiento_id');
     }

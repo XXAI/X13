@@ -17,6 +17,7 @@ import { ReportWorker } from 'src/app/web-workers/report-worker';
 import * as FileSaver from 'file-saver';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { DialogoSolicitudRepetidaComponent } from '../dialogo-solicitud-repetida/dialogo-solicitud-repetida.component';
+import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 
 @Component({
   selector: 'app-salida',
@@ -87,8 +88,8 @@ export class SalidaComponent implements OnInit {
 
   displayedColumns: string[] = ['estatus','clave','nombre','modo_salida','existencias','total_piezas','existencias_restantes','actions'];//'no_lotes',
   
-  editable: boolean;
-  puedeEditarElementos: boolean;
+  puedeEditarDatosEncabezado: boolean;
+  puedeEditarListaArticulos:  boolean;
 
   verBoton: any;
   isLoading: boolean;
@@ -96,18 +97,19 @@ export class SalidaComponent implements OnInit {
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in', 'CAN':'cancel',      'PERE':'pending_actions'};
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',            'CAN':'cancelado',   'PERE':'pendiente-recepcion'};
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',            'CAN':'Cancelado',   'PERE':'Pendiente de Recepción'};
-  
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'file_open'};
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'solicitud-modificacion',     'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Solicitud de Modificación',  'MOD':'Modificación Activa'};
+
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
 
   ngOnInit() {
     this.isLoading = true;
+    this.tieneSolicitud = false;
+    this.puedeEditarDatosEncabezado = false;
+    this.puedeEditarListaArticulos = false;
 
-    this.editable = false;
-    this.puedeEditarElementos = false;
     this.controlArticulosAgregados = {};
 
     this.totalesSalida = {
@@ -156,9 +158,14 @@ export class SalidaComponent implements OnInit {
     });
 
     this.verBoton = {
-      concluir:false,
+      agregar_articulos:false,
       guardar:false,
-      agregar_articulos:false
+      concluir:false,
+      concluirModificacion:false,
+      duplicar:false,
+      eliminar:false,
+      cancelar:false,
+      modificarSalida:false,
     };
 
     let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',areas_servicios:'*',turnos:'*',personal_medico:'*', recetas_tipos_uso:'*',filtro_almacenes_movimiento:'SAL'};
@@ -200,6 +207,7 @@ export class SalidaComponent implements OnInit {
               let datos_recibidos = history.state.data;
               this.estatusMovimiento = 'NV';
 
+              //Si recibimos datos, es por que estamos copiando una salida o el movimiento se esta generando en base a una entrada
               if(datos_recibidos && datos_recibidos.movimiento_id){
                 this.isLoading = true;
                 this.salidasService.verSalida(datos_recibidos.movimiento_id).subscribe(
@@ -209,7 +217,6 @@ export class SalidaComponent implements OnInit {
                     this.catalogos['tipos_movimiento'] = (this.catalogos['almacenes'].find(item => item.id == response.data.almacen_id)).tipos_movimiento;
                     this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
                     this.cambiarTipoSalida();
-                    //this.catalogos['tipos_movimiento'] = response.data.almacen.tipos_movimiento;
 
                     let lista_articulos:any[] = this.cargarArticulos(response.data.lista_articulos,true);
                     this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
@@ -231,14 +238,16 @@ export class SalidaComponent implements OnInit {
                 this.dataSourceArticulos.paginator = this.articulosPaginator;
                 this.dataSourceArticulos.sort = this.sort;
               }
+
+              //Movimiento nuevo sin guardar
+              this.puedeEditarDatosEncabezado = true;
+              this.puedeEditarListaArticulos = true;
+
+              this.verBoton.concluir = true;
+              this.verBoton.guardar = true;
+              this.verBoton.eliminar = true;
+              this.verBoton.agregar_articulos = true;
               
-              this.editable = true;
-              this.puedeEditarElementos = true;
-              this.verBoton = {
-                concluir:true,
-                guardar:true,
-                agregar_articulos:true
-              };
               this.isLoading = false;
             }
           });
@@ -272,7 +281,9 @@ export class SalidaComponent implements OnInit {
           this.cambiarTipoSalida();
 
           this.formMovimiento.patchValue(response.data);
-          this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
+          this.datosMovimiento = response.data;
+          //this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
+          console.log('Datos del Server:',this.datosMovimiento);
 
           if(response.data.es_colectivo){
             this.checarTieneSolicitud(true);
@@ -290,18 +301,26 @@ export class SalidaComponent implements OnInit {
             this.formMovimiento.get('expediente_clinico').patchValue(response.data.paciente.expediente_clinico);
             this.formMovimiento.get('paciente').patchValue(response.data.paciente.nombre_completo);
             this.formMovimiento.get('curp').patchValue(response.data.paciente.curp);
+            this.datosPacienteEstatus = response.data.paciente.expediente_clinico;
           }
 
           this.estatusMovimiento = response.data.estatus;
           if(response.data.estatus == 'BOR'){
-            this.estatusMovimiento = 'BOR';
-            this.editable = true;
-            this.puedeEditarElementos = true;
-            this.verBoton = {
-              concluir:true,
-              guardar:true,
-              agregar_articulos:true
-            };
+            this.puedeEditarDatosEncabezado = true;
+            this.puedeEditarListaArticulos = true;
+
+            this.verBoton.concluir = true;
+            this.verBoton.guardar = true;
+            this.verBoton.eliminar = true;
+            this.verBoton.agregar_articulos = true; 
+          }else{
+            this.verBoton.cancelar = (response.data.estatus == 'CAN')?false:true;
+            this.verBoton.modificarSalida = (response.data.estatus == 'CAN')?false:true;;
+            this.verBoton.duplicar = true;
+          }
+
+          if(this.datosMovimiento.modificacion_activa){
+            this.cargarDatosModificacion(this.datosMovimiento.modificacion_activa);
           }
 
           let articulos_temp = [];
@@ -659,6 +678,134 @@ export class SalidaComponent implements OnInit {
     });
   }
 
+  activarModificacionSalida(){
+    let configDialog = {
+      width: '400px',
+      //minHeight: '470px',
+      height: 'auto',
+      disableClose: true,
+      data:{id:this.datosMovimiento.id, modificacion: null},
+      panelClass: 'no-padding-dialog'
+    };
+
+    if(this.datosMovimiento && (this.datosMovimiento.estatus == 'FIN' || this.datosMovimiento.estatus == 'PERE')){
+      if(this.datosMovimiento.modificacion_activa){
+        configDialog.data.modificacion = this.datosMovimiento.modificacion_activa;
+      }
+      const dialogRef = this.dialog.open(DialogoModificarMovimientoComponent, configDialog);
+
+      dialogRef.afterClosed().subscribe(dialogResponse => {
+        if(dialogResponse){
+          if(dialogResponse.estatus != 'CAN'){
+            this.datosMovimiento.modificacion_activa = dialogResponse;
+            this.cargarDatosModificacion(dialogResponse);
+          }else{
+            this.datosMovimiento.modificacion_activa = null;
+            this.habilitarDatosPaciente = false;
+            this.puedeEditarDatosEncabezado = false;
+            this.verBoton.concluirModificacion = false;
+            this.verBoton.modificarSalida = true;
+            this.estatusMovimiento = this.datosMovimiento.estatus;
+          }
+        }
+      });
+    }else{
+      console.log('no encotnrado');
+    }
+  }
+
+  cargarDatosModificacion(modificacion){
+    this.estatusMovimiento = modificacion.estatus;
+    if(modificacion.estatus == 'MOD'){
+      this.habilitarDatosPaciente = true;
+      this.puedeEditarDatosEncabezado = true;
+      this.verBoton.concluirModificacion = true;
+      this.verBoton.modificarSalida = false;
+      this.protegerDatosFormulario();
+    }
+  }
+
+  protegerDatosFormulario(){
+    if(this.formMovimiento.get('tipo_movimiento_id')){
+      this.formMovimiento.get('tipo_movimiento_id').disable();
+    }
+
+    if(this.formMovimiento.get('programa')){
+      this.formMovimiento.get('programa').disable();
+      this.formMovimiento.get('programa_id').disable();
+    }
+
+    if(this.formMovimiento.get('es_colectivo')){
+      this.formMovimiento.get('es_colectivo').disable();
+    }
+
+    if(this.datosMovimiento.movimiento_hijo){
+      if(this.datosMovimiento.movimiento_hijo.estatus == 'FIN'){
+        if(this.formMovimiento.get('almacen_movimiento_id')){
+          this.formMovimiento.get('almacen_movimiento_id').disable();
+        }
+      }
+    }
+    
+  }
+
+  concluirModificacion(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Concluir Modificación?',dialogMessage:'Esta seguro de concluir las modificaciones? escriba CONCLUIR para confirmar la acción',validationString:'CONCLUIR',btnColor:'admin',btnText:'Concluir'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.isSaving = true;
+        let params:any = this.formMovimiento.value;
+        params.fecha_movimiento = this.datepipe.transform(params.fecha_movimiento, 'yyyy-MM-dd');
+        params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
+        params.area_servicio_movimiento_id = (params.area_servicio_movimiento)?params.area_servicio_movimiento.id:null;
+
+        this.almacenService.guardarModificacion(this.datosMovimiento.id,params).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              if(response.code == 'solicitud_repetida'){
+                let configDialog = {
+                  width: '50%',
+                  maxHeight: '90vh',
+                  height: '343px',
+                  data:{error:response.error, data:response.data},
+                  panelClass: 'no-padding-dialog'
+                };
+                const dialogRef = this.dialog.open(DialogoSolicitudRepetidaComponent, configDialog);
+              }
+            }else{
+              this.sharedService.showSnackBar('Datos Guardados con Éxito', null, 3000);
+              response.data.modificacion.registro_original = JSON.parse(response.data.modificacion.registro_original);
+              response.data.modificacion.registro_modificado = JSON.parse(response.data.modificacion.registro_modificado);
+              console.log('Modificacion Guardada:',response.data.modificacion);
+              if(response.data.modificacion.estatus == 'FIN'){
+                this.datosMovimiento = response.data.movimiento;
+                this.estatusMovimiento = response.data.movimiento.estatus;
+                this.habilitarDatosPaciente = false;
+                this.puedeEditarDatosEncabezado = false;
+                this.verBoton.concluirModificacion = false;
+              }
+            }
+            this.isSaving = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isSaving = false;
+          }
+        );
+      }
+    });
+  }
+
   concluirMovimiento(){
     const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
       width: '500px',
@@ -685,8 +832,6 @@ export class SalidaComponent implements OnInit {
       let formData:any = this.formMovimiento.value;
       this.isSaving = true;
 
-
-
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
 
@@ -697,27 +842,30 @@ export class SalidaComponent implements OnInit {
       formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
       
       //Validamos los articulos
-      let aritculos_en_cero = 0;
-      formData.lista_articulos.forEach(articulo => {
-        if(this.tieneSolicitud && (articulo.cantidad_solicitado == undefined || articulo.cantidad_solicitado <= 0)){
-          let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
-          let articulo_encontrado = JSON.parse(JSON.stringify(this.dataSourceArticulos.data[index]));
-          this.dataSourceArticulos.data.splice(index,1);
-          this.dataSourceArticulos.data.unshift(articulo_encontrado);
-          aritculos_en_cero++;
+      if(this.tieneSolicitud){
+        let aritculos_en_cero = 0;
+
+        formData.lista_articulos.forEach(articulo => {
+          if(this.tieneSolicitud && (articulo.cantidad_solicitado == undefined || articulo.cantidad_solicitado <= 0)){
+            let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
+            let articulo_encontrado = JSON.parse(JSON.stringify(this.dataSourceArticulos.data[index]));
+            this.dataSourceArticulos.data.splice(index,1);
+            this.dataSourceArticulos.data.unshift(articulo_encontrado);
+            aritculos_en_cero++;
+          }
+        });
+
+        if(aritculos_en_cero > 0){
+          this.articulosTable.renderRows();
+          this.dataSourceArticulos.paginator = this.articulosPaginator;
+          this.dataSourceArticulos.sort = this.sort;
+          this.isSaving = false;
+          this.idArticuloSeleccionado = this.dataSourceArticulos.data[0].id;
+          this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
+          return false;
         }
-      });
-
-      if(aritculos_en_cero > 0){
-        this.articulosTable.renderRows();
-        this.dataSourceArticulos.paginator = this.articulosPaginator;
-        this.dataSourceArticulos.sort = this.sort;
-        this.isSaving = false;
-        this.idArticuloSeleccionado = this.dataSourceArticulos.data[0].id;
-        this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
-        return false;
       }
-
+      
       this.salidasService.guardarSalida(formData).subscribe(
         response =>{
           if(response.error) {
@@ -739,7 +887,8 @@ export class SalidaComponent implements OnInit {
             this.formMovimiento.get('id').patchValue(response.data.id);
             this.estatusMovimiento = response.data.estatus;
 
-            this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
+            //this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
+            this.datosMovimiento = response.data;
 
             if(response.data.movimiento_hijo){
               this.movimientoHijo = response.data.movimiento_hijo;
@@ -750,13 +899,17 @@ export class SalidaComponent implements OnInit {
             }
             
             if(this.estatusMovimiento != 'BOR'){
-              this.editable = false;
-              this.puedeEditarElementos = false;
-                this.verBoton = {
-                  concluir:false,
-                  guardar:false,
-                  agregar_articulos:false
-                };
+              this.puedeEditarDatosEncabezado = false;
+              this.puedeEditarListaArticulos = false;
+
+              this.verBoton.concluir = false;
+              this.verBoton.guardar = false,
+              this.verBoton.agregar_articulos = false;
+              this.verBoton.eliminar = false;
+
+              this.verBoton.duplicar = true;
+              this.verBoton.cancelar = true;
+              this.verBoton.modificarSalida = true;
             }
             this.controlArticulosModificados = {};
             this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
@@ -778,8 +931,8 @@ export class SalidaComponent implements OnInit {
   cancelarSalida(){
     let configDialog = {
       width: '350px',
-      maxHeight: '90vh',
-      height: '340px',
+      //maxHeight: '90vh',
+      height: 'auto',
       data:{},
       panelClass: 'no-padding-dialog'
     };
@@ -797,6 +950,8 @@ export class SalidaComponent implements OnInit {
             }else{
               this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
               this.estatusMovimiento = 'CAN';
+              this.verBoton.cancelar = false;
+              this.verBoton.modificarSalida = false;
             }
           },
           errorResponse =>{
@@ -945,8 +1100,8 @@ export class SalidaComponent implements OnInit {
     if(expediente_clinico && expediente_clinico != this.datosPacienteEstatus){
       this.cargandoDatosPaciente = true;
       this.formMovimiento.get('paciente_id').reset();
-      this.formMovimiento.get('paciente').reset();
-      this.formMovimiento.get('curp').reset();
+      //this.formMovimiento.get('paciente').reset();
+      //this.formMovimiento.get('curp').reset();
       this.datosPacienteEstatus = 'Buscando Expediente...';
       this.salidasService.buscarPaciente(expediente_clinico).subscribe(
         response =>{
@@ -956,7 +1111,11 @@ export class SalidaComponent implements OnInit {
             this.cargandoDatosPaciente = false;
           }else{
             if(response.data){
-              this.habilitarDatosPaciente = false;
+              if(this.datosMovimiento && this.datosMovimiento.modificacion_activa && this.datosMovimiento.modificacion_activa.estatus == 'MOD'){
+                this.habilitarDatosPaciente = true;
+              }else{
+                this.habilitarDatosPaciente = false;
+              }
               this.datosPacienteEstatus = response.data.expediente_clinico;
               this.formMovimiento.get('paciente_id').patchValue(response.data.id);
               this.formMovimiento.get('paciente').patchValue(response.data.nombre_completo);

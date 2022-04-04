@@ -145,11 +145,11 @@ export class ReporteAlmacenEntrada{
 
         let entrada:any = reportData.items;
         let total_entrada = parseFloat(entrada.total_monto);
-        let fecha_entrada  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.fecha_movimiento));
+        let fecha_entrada  =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.fecha_movimiento+'T12:00:00'));
 
         let fecha_referencia = '';
         if(entrada.referencia_fecha){
-          fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.referencia_fecha));
+          fecha_referencia =  new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(entrada.referencia_fecha+'T12:00:00'));
         }
 
         function numberFormat(num,prices:boolean = false) {
@@ -292,7 +292,7 @@ export class ReporteAlmacenEntrada{
             tabla_articulos = entrada.lista_articulos;
             break;
           case 'PERE':
-            tabla_articulos = entrada.lista_articulos_borrador;
+            tabla_articulos = entrada.lista_articulos_recepcion;
             watermark = 'PENDIENTE RECEPCIÓN';
             break;
           case 'BOR':

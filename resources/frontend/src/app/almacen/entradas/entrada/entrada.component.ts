@@ -238,7 +238,7 @@ export class EntradaComponent implements OnInit {
                   guardar:true,
                   agregar_articulos:false
                 };
-                this.reconfigurarFormulario(['id','observaciones']);
+                this.reconfigurarFormulario(['id','fecha_movimiento','turno_id','observaciones']);
                 this.modoRecepcion = true;
                 this.totalesRecibidos.recibidos = 0;
               }
@@ -567,7 +567,7 @@ export class EntradaComponent implements OnInit {
       formData.concluir = concluir;
 
       if(this.modoRecepcion){ //El formulario no esta completo asi que se agregan los elementos requeridos
-        formData.fecha_movimiento = this.datepipe.transform(this.datosEntrada.fecha_movimiento, 'yyyy-MM-dd');
+        formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');
         formData.almacen_id = this.datosEntrada.almacen_id;
         formData.tipo_movimiento_id = this.datosEntrada.tipo_movimiento_id;
         formData.programa_id = this.datosEntrada.programa_id;

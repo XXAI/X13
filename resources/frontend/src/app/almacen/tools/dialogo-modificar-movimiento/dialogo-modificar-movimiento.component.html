@@ -1,10 +1,13 @@
-<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding: 10px; height: 100%; overflow: auto; flex: 1 1 0%;">
-    <section fxFlex fxLayout="column" style="overflow: auto;" [formGroup]="modificarForm">
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding: 10px; min-height:470px; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex fxLayout="column" [formGroup]="modificarForm">
         <div fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
-            Fecha de Solicitud de Modificación:
+            Petición para Modificar Movimiento:
         </div>
         <div fxFlex="none" class="fake-input">
-            {{modificarForm.get('fecha').value | date:'MMMM d, y':'GMT-6'}}
+            <span class="label">Fecha:</span> {{modificarForm.get('solicitado_fecha').value | date:'MMMM d, y':'GMT-6'}}
+        </div>
+        <div fxFlex="none" class="fake-input" style="padding-bottom:0.75em;">
+            <span class="label">Usuario:</span>&nbsp;<span class="nombre-usuario">{{usuarioSolicita}}</span>
         </div>
         <div fxFlex fxLayout="column" *ngIf="isLoading">
             <div fxFlex></div>
@@ -13,20 +16,56 @@
             </div>
             <div fxFlex></div>
         </div>
-        <div fxFlex fxLayout="column" *ngIf="!isLoading">
-            <div fxFlex="none" style="font-weight: 400; font-size: 18px; text-align: left;">
-                Motivo:
+        <div fxFlex fxLayout="column" *ngIf="!isLoading && mostrarErrores" class="errors-panel">
+            <div fxFlex fxLayout="row">
+                <div fxFlex></div>
+                <button fxFlex="none" mat-icon-button (click)="mostrarErrores = false"><mat-icon>clear</mat-icon></button>
             </div>
+            <div fxFlex="none" class="icon">
+                <mat-icon>warning</mat-icon>
+            </div>
+            <div fxFlex="none" class="message">
+                {{mensajeError}}
+            </div>
+            <div fxFlex></div>
+        </div>
+        <div fxFlex fxLayout="column" *ngIf="!isLoading && !mostrarErrores">
             <mat-form-field fxFlex appearance="outline">
-                <textarea rows="5" cdkFocusInitial matInput #motivo maxlength="255" formControlName="motivo"></textarea>
+                <mat-label>Motivo:</mat-label>
+                <textarea rows="3" cdkFocusInitial matInput #motivo maxlength="255" formControlName="motivo_modificacion" [readonly]="!puedeEditar"></textarea>
                 <mat-hint align="end">{{motivo.value.length}}/255</mat-hint>
             </mat-form-field>
             <div fxFlex fxLayout="column" class="admin-access">
-                <div fxFlex *ngIf="!aprobarModificacion">
-                    <button fxFlex mat-flat-button color="admin" (click)="toggleAprobarModificacion()"><mat-icon>key</mat-icon> Aprobar</button>
+                <div fxFlex fxLayout="column" fxLayoutGap="5px" *ngIf="!mostrarFormUsuario">
+                    <button fxFlex mat-flat-button color="admin" (click)="toggleMostrarFormUsuario('aprobar')" *ngIf="!datosAprobado" [disabled]="cancelado">
+                        <mat-icon>key</mat-icon> Aprobar
+                    </button>
+                    <div fxFlex mat-stroked-button *ngIf="datosAprobado" class="datos-usuario">
+                        <span class="label">Aprobado:</span><br>
+                        <span class="label">Usuario:</span>&nbsp;{{datosAprobado.nombre}}<br>
+                        <span class="label">Fecha:</span>&nbsp;{{datosAprobado.fecha | date:'MMMM d, y':'GMT-6'}}
+                    </div>
+                    <mat-divider></mat-divider>
+                    <button fxFlex mat-flat-button color="warn" (click)="toggleMostrarFormUsuario('cancelar')" *ngIf="modificacionGuardada && !datosCancelado">
+                        <mat-icon>block</mat-icon> Cancelar
+                    </button>
+                    <div fxFlex mat-stroked-button *ngIf="datosCancelado" class="datos-usuario">
+                        <span class="label">Cancelado:</span><br>
+                        <span class="label">Usuario:</span>&nbsp;{{datosCancelado.nombre}}<br>
+                        <span class="label">Fecha:</span>&nbsp;{{datosCancelado.fecha | date:'MMMM d, y':'GMT-6'}}
+                    </div>
                 </div>
-                <div *ngIf="aprobarModificacion" fxFlex="none" fxLayout="row" style="font-weight: 400; font-size: 18px; text-align: left;">
-                    <div fxFlex fxLayout="column" [style.fontSize.px]="12" #adminCredentials>
+                <div *ngIf="mostrarFormUsuario" fxFlex="none" fxLayout="column">
+                    <div fxFlex="none" fxLayout="row">
+                        <div fxFlex>Usuario que {{(aprobarModificacion)?'Aprueba':'Cancela'}}:</div>
+                        <button fxFlex="none" mat-icon-button class="small-icon-button" (click)="toggleMostrarFormUsuario()"><mat-icon>clear</mat-icon></button>
+                    </div>
+                    <div fxFlex *ngIf="cancelarModificacion && puedeCancelar" class="datos-usuario">
+                        <br>
+                        <span class="label">Usuario:</span>&nbsp;{{authUser.name}}<br>
+                        <span class="label">Fecha:</span>&nbsp;{{hoy | date:'MMMM d, y':'GMT-6'}}
+                    </div>
+                    <div fxFlex fxLayout="column" [style.fontSize.px]="12" *ngIf="aprobarModificacion || (cancelarModificacion && !puedeCancelar)">
                         <mat-form-field fxFlex appearance="outline" *ngIf="modificarForm.get('usuario')">
                             <mat-label>Usuario</mat-label>
                             <input type="text" matInput #username placeholder="Usuario" formControlName="usuario" autocomplete="off">
@@ -40,16 +79,18 @@
                             <mat-icon matPrefix>vpn_key</mat-icon>
                         </mat-form-field>
                     </div>
-                    <div fxFlex="none">
-                        <button mat-icon-button class="small-icon-button" (click)="toggleAprobarModificacion()"><mat-icon>clear</mat-icon></button>
-                    </div>
                 </div>
             </div>
         </div>
     </section>
     <section fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-        <div fxFlex="none"></div>
         <button fxFlex="none" mat-flat-button (click)="cerrar()">Cerrar</button>
-        <button fxFlex mat-raised-button color="primary" (click)="aceptar()" [disabled]="isLoading || !modificarForm.valid" [class.button-spinner]="isLoading"> {{(aprobarModificacion)?'Aprobar':'Solicitar'}} Modificación</button>
+        <div fxFlex *ngIf="cancelado"></div>
+        <button fxFlex mat-raised-button color="primary" (click)="aceptar()" *ngIf="!mostrarFormUsuario && !cancelado" [disabled]="isLoading || !modificarForm.valid || mostrarErrores || !puedeEditar" [class.button-spinner]="isLoading"> 
+            {{(modificacionGuardada)?'Actualizar Motivo':'Solicitar Modificación'}}
+        </button>
+        <button fxFlex mat-raised-button [color]="(aprobarModificacion)?'admin':'warn'" (click)="aceptar()" *ngIf="mostrarFormUsuario && !cancelado" [disabled]="isLoading || !modificarForm.valid || mostrarErrores" [class.button-spinner]="isLoading">
+            {{(aprobarModificacion)?'Aprobar':'Cancelar'}} Modificación
+        </button>
     </section>
 </section>
