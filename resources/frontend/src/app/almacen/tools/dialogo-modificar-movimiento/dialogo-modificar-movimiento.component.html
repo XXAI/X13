@@ -38,7 +38,7 @@
             <div fxFlex fxLayout="column" class="admin-access">
                 <div fxFlex fxLayout="column" fxLayoutGap="5px" *ngIf="!mostrarFormUsuario">
                     <button fxFlex mat-flat-button color="admin" (click)="toggleMostrarFormUsuario('aprobar')" *ngIf="!datosAprobado" [disabled]="cancelado">
-                        <mat-icon>key</mat-icon> Aprobar
+                        <mat-icon>vpn_key</mat-icon> Aprobar
                     </button>
                     <div fxFlex mat-stroked-button *ngIf="datosAprobado" class="datos-usuario">
                         <span class="label">Aprobado:</span><br>
