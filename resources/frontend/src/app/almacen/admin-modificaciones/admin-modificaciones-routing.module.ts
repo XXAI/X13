@@ -4,7 +4,7 @@ import { AuthGuard } from '../../auth/auth.guard';
 import { ListaPeticionesComponent } from './lista-peticiones/lista-peticiones.component';
 
 const routes: Routes = [
-  { path: 'almacen/administrar-modificaciones/lista-peticiones', component: ListaPeticionesComponent, canActivate: [AuthGuard] },
+  { path: 'almacen/administrar-modificaciones', component: ListaPeticionesComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

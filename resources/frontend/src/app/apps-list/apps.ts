@@ -15,11 +15,11 @@ export const APPS:App [] = [
     { name:'Roles',     route: "roles",         icon: "assets/icons/users-roles.svg",        permission:"nrPqEhq2TX0mI7qT7glaOCJ7Iqx2QtPs" },
     { name:'Almacen',   route: "almacen",       icon: "assets/icons/almacen.svg", 
       apps:[
-        { name:'Entradas',                    route: "almacen/entradas",                                    icon: "assets/icons/entrada-almacen.svg",       permission:"snyR2BzbSqXJHVQCgjnWqgseP0pqLnhe"  },
-        { name:'Salidas',                     route: "almacen/salidas",                                     icon: "assets/icons/salida-almacen.svg",        permission:"q6iwrTdBPOSA7ivxWzs21oiEqtWSUVXb"  },
-        { name:'Existencias',                 route: "almacen/existencias",                                 icon: "assets/icons/existencias.svg",           permission:"zFdj3x3UfqRsp5DeAGBVm5elqvkvnIr1"  },
-        { name:'Importar datos',              route: "almacen/importar",                                    icon: "assets/icons/subir.svg",                 permission:"8Az68Smo3I75X4FlfZSwtyRy790CN2Sz"  },
-        { name:'Administrar Modificaciones',  route: "almacen/administrar-modificaciones/lista-peticiones", icon: "assets/icons/admin-modificaciones.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
+        { name:'Entradas',                    route: "almacen/entradas",                    icon: "assets/icons/entrada-almacen.svg",       permission:"snyR2BzbSqXJHVQCgjnWqgseP0pqLnhe"  },
+        { name:'Salidas',                     route: "almacen/salidas",                     icon: "assets/icons/salida-almacen.svg",        permission:"q6iwrTdBPOSA7ivxWzs21oiEqtWSUVXb"  },
+        { name:'Existencias',                 route: "almacen/existencias",                 icon: "assets/icons/existencias.svg",           permission:"zFdj3x3UfqRsp5DeAGBVm5elqvkvnIr1"  },
+        { name:'Importar datos',              route: "almacen/importar",                    icon: "assets/icons/subir.svg",                 permission:"8Az68Smo3I75X4FlfZSwtyRy790CN2Sz"  },
+        { name:'Administrar Modificaciones',  route: "almacen/administrar-modificaciones",  icon: "assets/icons/admin-modificaciones.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         //{ name:'Ajustes',         route: "almacen/ajustes",         icon: "assets/icons/ajustes.svg",         permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         //{ name:'Transferencias',  route: "almacen/transferencias",  icon: "assets/icons/transferencia.svg",   permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         //{ name:'Inventario',      route: "almacen/inventario",      icon: "assets/icons/inventario.svg",      permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
@@ -44,7 +44,7 @@ export const APPS:App [] = [
         { name:'Tipos de Pedidos',     route: "configuracion/tipos-pedidos",    icon: "assets/icons/tipos-pedidos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
       ]
     },
-    { name:'Configuración Unidad',   route: "configuracion-unidad",     icon: "assets/icons/configuracion-unidad.svg", isHub:false, hideHome:false,
+    { name:'Configuración Unidad',   route: "configuracion-unidad",     icon: "assets/icons/configuracion-unidad.svg", isHub:true, hideHome:false,
       children:[
         {name:'Catalogo de Articulos',  route:'configuracion-unidad/catalogo-articulos',  icon:'format_list_bulleted',  permission:"5IGo0daq6vkWxyfesewdq4eBL2aexpCO"},
         {name:'Almacenes',              route:'configuracion-unidad/almacenes',           icon:'inventory',             permission:"g3ZLa9MK5dl0ozpR4zU0pN8l0j7ENgBe"},

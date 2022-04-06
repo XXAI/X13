@@ -18,7 +18,20 @@
 
             <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
                 <div fxFlex fxLayout="row" fxLayoutGap="5px">
-                    <div fxFlex="none" class="small-select-input">
+                    <div fxFlex="none">
+                        <button mat-stroked-button [matMenuTriggerFor]="filtroEstatus" [matTooltipPosition]="'above'" [matTooltip]="(filtros.estatus)?listaEstatusLabels[filtros.estatus]:'Todos'">
+                            <mat-icon>{{(filtros.estatus)?listaEstatusIconos[filtros.estatus]:'clear_all'}}</mat-icon>
+                        </button>
+                        <mat-menu #filtroEstatus="matMenu">
+                            <button mat-menu-item [disabled]="filtros.estatus === false" (click)="filtros.estatus = false; aplicarFiltro()">
+                                <mat-icon>clear_all</mat-icon> Todos
+                            </button>
+                            <button mat-menu-item *ngFor="let estatus of filtrosCatalogos.estatus" [disabled]="filtros.estatus == estatus.clave" (click)="filtros.estatus = estatus.clave; aplicarFiltro()">
+                                <mat-icon>{{listaEstatusIconos[estatus.clave]}}</mat-icon> {{estatus.descripcion}}
+                            </button>
+                        </mat-menu>
+                    </div>
+                    <!--div fxFlex="none" class="small-select-input">
                         <mat-form-field appearance="outline">
                             <mat-select [(ngModel)]="filtros.estatus" (selectionChange)="aplicarFiltro()">
                                 <mat-option [value]="false">Todos</mat-option>
@@ -28,7 +41,7 @@
                                 </mat-option>
                             </mat-select>
                         </mat-form-field>
-                    </div>
+                    </div-->
                     <div fxFlex="none" class="small-select-input">
                         <mat-form-field appearance="outline">
                             <mat-select [(ngModel)]="filtros.almacen_id" (selectionChange)="aplicarFiltro()">

@@ -353,6 +353,7 @@ export class ListaComponent implements OnInit {
     this.filtros.almacen_id = false;
     this.filtros.tipo_movimiento_id = false;
     this.filtros.rango_fechas = {inicio:null, fin:null};
+    this.filtros.estatus = false;
     this.aplicarFiltro();
   }
 

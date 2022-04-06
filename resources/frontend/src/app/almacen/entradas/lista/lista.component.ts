@@ -39,8 +39,8 @@ export class ListaComponent implements OnInit {
   reportIncludeSigns:boolean = false;
 
   filtroAplicado: boolean;
-  filtros: any = {almacen_id:false, tipo_movimiento_id:false, rango_fechas:{inicio:null, fin:null}};
-  filtrosCatalogos: any = {almacenes:[],tipos_movimiento:[]};
+  filtros: any = {estatus:false, almacen_id:false, tipo_movimiento_id:false, rango_fechas:{inicio:null, fin:null}};
+  filtrosCatalogos: any = {almacenes:[],tipos_movimiento:[],estatus:[]};
   searchQuery: string = '';
 
   pageEvent: PageEvent;
@@ -49,9 +49,9 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   selectedItemIndex: number = -1;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',    'PERE':'pending_actions' };
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado', 'PERE':'pendiente-recepcion' };
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado', 'PERE':'Pendiente de Recepción' };
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
   displayedColumns: string[] = ['id','folio','folio_referencia','almacen','fecha_movimiento','totales_claves_articulos','total_monto','dato_usuario','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
   listadoMovimientos: any = [];
@@ -72,7 +72,7 @@ export class ListaComponent implements OnInit {
     
     this.loadListadoMovimientos();
 
-    let lista_catalogos:any = {almacenes:'*',tipos_movimiento:'movimiento.ENT'};
+    let lista_catalogos:any = {almacenes:'*',tipos_movimiento:'movimiento.ENT',estatus_movimientos:'*'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -82,6 +82,7 @@ export class ListaComponent implements OnInit {
         } else {
           this.filtrosCatalogos.almacenes = response.data.almacenes;
           this.filtrosCatalogos.tipos_movimiento = response.data.tipos_movimiento;
+          this.filtrosCatalogos.estatus = response.data.estatus_movimientos;
         }
         this.isLoading = false;
       },
@@ -116,6 +117,10 @@ export class ListaComponent implements OnInit {
     this.listadoMovimientos = [];
     this.resultsLength = 0;
 
+    if(this.filtros.estatus){
+      params.estatus = this.filtros.estatus;
+    }
+
     if(this.filtros.almacen_id){
       params.almacen_id = this.filtros.almacen_id;
     }
@@ -128,7 +133,7 @@ export class ListaComponent implements OnInit {
       params.fecha_inicio = this.datepipe.transform(this.filtros.rango_fechas.inicio, 'yyyy-MM-dd');
       params.fecha_fin = this.datepipe.transform(this.filtros.rango_fechas.fin, 'yyyy-MM-dd');
     }
-    
+
     this.entradasService.getListadoEntradas(params).subscribe(
       response =>{
         if(response.error) {
@@ -318,6 +323,7 @@ export class ListaComponent implements OnInit {
     this.filtros.almacen_id = false;
     this.filtros.tipo_movimiento_id = false;
     this.filtros.rango_fechas = {inicio:null, fin:null};
+    this.filtros.estatus = false;
     this.aplicarFiltro();
   }
 

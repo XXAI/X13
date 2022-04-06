@@ -1,1 +1,28 @@
-<p>lista-peticiones works!</p>
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
+    <section fxFlex="none" fxLayout="column">
+        <div fxLayout="row" fxLayout.xs="column">
+            <div fxFlex fxLayout="row wrap">
+                <mat-form-field fxFill appearance="fill">
+                    <mat-label>Buscar</mat-label>
+                    <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applyFilter()" placeholder="Buscar">
+                    <button matSuffix *ngIf="searchQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                    <button mat-icon-button matSuffix (click)="applyFilter()">
+                        <mat-icon>search</mat-icon>
+                    </button>
+                </mat-form-field>
+            </div>
+        </div>
+
+        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
+        </div>
+    </section>
+    <section fxFlex fxLayout="row">
+        <mat-card fxFlex fxLayout="column" >
+            <div fxFlex style="overflow: auto;">
+            </div>
+        </mat-card>
+    </section>
+</section>

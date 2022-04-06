@@ -85,7 +85,7 @@ class AlmacenMovimientosController extends Controller{
             if(isset($parametros['estatus_movimientos']) && $parametros['estatus_movimientos'] == '*'){
                 $catalogos['estatus_movimientos'] = [
                     ['clave'=>'BOR','descripcion'=>'Borrador'],
-                    ['clave'=>'FIN','descripcion'=>'Finalizado'],
+                    ['clave'=>'FIN','descripcion'=>'Concluido'],
                     ['clave'=>'CAN','descripcion'=>'Cancelado'],
                     ['clave'=>'PERE','descripcion'=>'Pendiente de Recepción'],
                     ['clave'=>'SOL','descripcion'=>'Petición de Modificación'],

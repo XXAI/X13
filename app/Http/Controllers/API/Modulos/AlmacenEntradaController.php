@@ -83,6 +83,16 @@ class AlmacenEntradaController extends Controller
                 });
             }
 
+            if(isset($parametros['estatus']) && $parametros['estatus']){
+                if($parametros['estatus'] == 'SOL' || $parametros['estatus'] == 'MOD'){
+                    $entradas = $entradas->whereHas('modificacionActiva',function($query)use($parametros){
+                        $query->where('estatus',$parametros['estatus']);
+                    });
+                }else{
+                    $entradas = $entradas->where('movimientos.estatus',$parametros['estatus'])->doesntHave('modificacionActiva');
+                }
+            }
+
             if(isset($parametros['almacen_id']) && $parametros['almacen_id']){
                 $entradas = $entradas->where('movimientos.almacen_id',$parametros['almacen_id']);
             }
