@@ -142,6 +142,7 @@ class AlmacenMovimientosController extends Controller{
                                                 ->leftjoin('programas','programas.id','=','stocks.programa_id')
                                                 ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
                                                 ->leftjoin('catalogo_marcas','catalogo_marcas.id','=','stocks.marca_id')
+                                                ->leftjoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
                                                 //Ordenamiento
                                                 ->orderBy('stocks.unidad_medica_id','DESC')
                                                 ->orderBy('stocks.fecha_caducidad','ASC')

@@ -10,7 +10,7 @@ class Stock extends Model{
     
     use SoftDeletes;
     protected $table = 'stocks';  
-    protected $fillable = ['id','unidad_medica_id','almacen_id','bien_servicio_id','programa_id','marca_id','modelo','no_serie','lote','fecha_caducidad','codigo_barras','existencia','existencia_unidades','user_id'];
+    protected $fillable = ['id','unidad_medica_id','almacen_id','bien_servicio_id','empaque_detalle_id','programa_id','marca_id','modelo','no_serie','lote','fecha_caducidad','codigo_barras','existencia','existencia_unidades','user_id'];
 
     public function marca(){
         return $this->belongsTo('App\Models\Marca','marca_id');
@@ -30,6 +30,10 @@ class Stock extends Model{
 
     public function articulo(){
         return $this->belongsTo('App\Models\BienServicio','bien_servicio_id');
+    }
+
+    public function empaqueDetalle(){
+        return $this->belongsTo('App\Models\BienServicioEmpaqueDetalle','empaque_detalle_id');
     }
 
     public function cartaCanje(){

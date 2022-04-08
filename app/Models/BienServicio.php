@@ -11,9 +11,7 @@ class BienServicio extends Model{
     use SoftDeletes;
     protected $table = 'bienes_servicios';  
     protected $fillable = ['clave_partida_especifica','familia_id','tipo_bien_servicio_id','clave_cubs','clave_local','articulo','especificaciones',
-                            'destacar','presentacion_id','empaque_id', 'unidad_medida_id', 'descontinuado',
-                            'tiene_fecha_caducidad','puede_surtir_unidades','unidades_x_empaque'
-                        ];
+                            'destacar','presentacion_id', 'descontinuado','tiene_fecha_caducidad','puede_surtir_unidades'];
 
     public function scopeDatosDescripcion($query,$unidad_medica_id = null){
         return $query->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
@@ -28,6 +26,10 @@ class BienServicio extends Model{
                                 ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
                         })
                         ->orderBy('bienes_servicios.especificaciones');
+    }
+
+    public function empaqueDetalle(){
+        return $this->hasMany('App\Models\BienServicioEmpaqueDetalle','bien_servicio_id');
     }
 
     public function stocks(){
