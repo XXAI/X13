@@ -3,14 +3,15 @@
         <thead>
             <tr>
                 <th colspan="2">
-                    <mat-checkbox *ngIf="(tipoSalida && (tipoSalida.clave == 'RCTA' || tipoSalida.clave == 'PSNL')) && articulo.puede_surtir_unidades" [ngModel]="articulo.surtir_en_unidades" (change)="surtirUnidades($event.checked)" [disabled]="!edicionActiva">
-                        Surtir en Unidades
+                    <mat-checkbox *ngIf="puedeSurtirUnidades && (tipoSalida && (tipoSalida.clave == 'RCTA' || tipoSalida.clave == 'PSNL')) && articulo.puede_surtir_unidades" [ngModel]="articulo.surtir_en_unidades" (change)="surtirUnidades($event.checked)" [disabled]="!edicionActiva">
+                        Surtir [ {{(articulo.unidad_medida)?articulo.unidad_medida:'Pieza'}} ]
                     </mat-checkbox>
                 </th>
                 <th colspan="2"></th>
                 <th *ngIf="tieneSolicitud" class="datos-solicitado">Cantidad Solicitada:</th>
-                <th *ngIf="tieneSolicitud" width="1" class="datos-solicitado">
-                    <input #inputValue type="number" [ngModel]="articulo.cantidad_solicitado" (keydown.enter)="checarTotalSolicitado($event.target.value)" (blur)="checarTotalSolicitado($event.target.value)" [readonly]="!edicionActiva">
+                <th *ngIf="tieneSolicitud" class="datos-solicitado">
+                    <input *ngIf="edicionActiva" #inputValue type="number" [ngModel]="articulo.cantidad_solicitado" (keydown.enter)="checarTotalSolicitado($event.target.value)" (blur)="checarTotalSolicitado($event.target.value)" [readonly]="!edicionActiva">
+                    <span style="border-bottom: 1px solid black; width: 100%; display: block; text-align: center;" *ngIf="!edicionActiva">{{articulo.cantidad_solicitado | number:'1.0-0'}}</span>
                 </th>
                 <th *ngIf="!tieneSolicitud" colspan="2"></th>
                 <th></th>
@@ -37,7 +38,10 @@
             <tr *ngFor="let lote of articulo.lotes; let i = index" class="caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">
                 <td *ngIf="articulo.tipo_formulario == 'MEDS'"><mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon></td>
                 <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.lote}}<br>{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
-                <td *ngIf="articulo.tipo_formulario == 'MEDS'"></td>
+                <td *ngIf="articulo.tipo_formulario == 'MEDS'">
+                    <span *ngIf="!articulo.surtir_en_unidades">{{(lote.empaque_detalle)?lote.empaque_detalle.descripcion:'Sin Detalles'}}</span>
+                    <span *ngIf="articulo.surtir_en_unidades">Pieza{{(articulo.unidad_medida)?': '+articulo.unidad_medida:''}}</span>
+                </td>
 
                 <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.no_serie}}</td>
                 <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.modelo}}</td>
@@ -46,7 +50,8 @@
                 <td>{{lote.programa}}</td>
                 <td>{{lote.existencia | number:'1.0-0'}}</td>
                 <td width="1" style="white-space: nowrap;">
-                    <input #inputValue type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
+                    <input *ngIf="edicionActiva" #inputValue type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
+                    <span *ngIf="!edicionActiva">{{lote.salida | number:'1.0-0'}}</span>
                 </td>
                 <td width="1" style="white-space: nowrap;">{{lote.restante | number:'1.0-0'}}</td>
             </tr>

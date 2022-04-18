@@ -261,7 +261,7 @@ export class ListaComponent implements OnInit {
         this.salidasService.cancelarSalida(id,dialogResponse).subscribe(
           response =>{
             if(response.error) {
-              let errorMessage = response.error.message;
+              let errorMessage = response.error;
               this.sharedService.showSnackBar(errorMessage, null, 3000);
             }else{
               this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);

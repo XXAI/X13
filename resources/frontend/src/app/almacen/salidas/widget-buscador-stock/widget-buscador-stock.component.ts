@@ -115,6 +115,7 @@ export class WidgetBuscadorStockComponent implements OnInit {
               partida_clave: response.data[i].clave_partida_especifica,
               partida_descripcion: response.data[i].partida_especifica,
               familia: response.data[i].familia,
+              unidad_medida: response.data[i].unidad_medida,
               tiene_fecha_caducidad: (response.data[i].tiene_fecha_caducidad)?true:false,
               puede_surtir_unidades: (response.data[i].puede_surtir_unidades)?true:false,
               surtir_en_unidades: false,

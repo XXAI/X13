@@ -15,6 +15,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
 
   @Input() articulo: any;
   @Input() tipoSalida: any;
+  @Input() puedeSurtirUnidades:boolean;
   @Input() edicionActiva: boolean;
   @Input() tieneSolicitud: boolean;
   @Input() fechaMovimiento: Date;

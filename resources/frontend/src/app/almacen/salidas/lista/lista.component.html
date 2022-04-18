@@ -167,9 +167,9 @@
                             <mat-icon color="primary">{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
                             <span>{{(estatus != 'BOR')?'Ver Detalles':'Editar'}}</span>
                         </button>
-                        <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
-                        <button mat-menu-item *ngIf="estatus == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:id}}">
-                            <mat-icon color="primary">content_copy</mat-icon>
+                        <mat-divider *ngIf="estatus == 'FIN' || estatus == 'CAN'"></mat-divider>
+                        <button mat-menu-item *ngIf="estatus == 'FIN' || estatus == 'CAN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:id}}">
+                            <mat-icon>content_copy</mat-icon>
                             <span>Duplicar Salida</span>
                         </button>
                         <mat-divider *ngIf="estatus == 'FIN' || estatus == 'PERE'"></mat-divider>

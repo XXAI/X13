@@ -149,7 +149,7 @@ class AlmacenSalidaController extends Controller
                                                                 'articulo'=>function($articulos)use($loggedUser){
                                                                     return $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
                                                                 },'stock'=>function($stock){
-                                                                    return $stock->with('marca','programa')->withTrashed();
+                                                                    return $stock->with('marca','programa','empaqueDetalle')->withTrashed();
                                                                 }
                                                             ]);
                                     },'movimientoHijo' => function($movimientoHijo){
@@ -158,17 +158,17 @@ class AlmacenSalidaController extends Controller
                                         return $solicitud->with('tipoSolicitud','tipoUso');
                                     },'modificacionActiva'=>function($modificacionActiva){
                                         $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
-                                    },'almacen.tiposMovimiento']);
+                                    },'almacen.tiposMovimiento','creadoPor','modificadoPor','concluidoPor','canceladoPor','eliminadoPor']);
             }else{
                 $almacen_id = $movimiento->almacen_id;
                 $programa_id = $movimiento->programa_id;
                 $movimiento_id = $movimiento->id;
 
-                $movimiento->load('listaArticulosBorrador','almacen.tiposMovimiento');
+                $movimiento->load('listaArticulosBorrador','almacen.tiposMovimiento','creadoPor','modificadoPor');
                 $articulos_ids = $movimiento->listaArticulosBorrador()->pluck('bien_servicio_id');
 
                 $articulos_borrador = BienServicio::datosDescripcion()//->whereIn('bienes_servicios.id',$articulos_ids)
-                                                    ->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
+                                                    ->select('bienes_servicios.*','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia','catalogo_unidades_medida.descripcion as unidad_medida',
                                                     'unidad_medica_catalogo_articulos.es_normativo','unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima',
                                                     'unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form',
                                                     'movimientos_articulos_borrador.cantidad_solicitado','movimientos_articulos_borrador.modo_movimiento')
@@ -186,7 +186,7 @@ class AlmacenSalidaController extends Controller
                                                                         ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
                                                                 })
                                                                 ->where('stocks.existencia','>',0)
-                                                                ->with('marca','programa');
+                                                                ->with('marca','programa','empaqueDetalle');
                                                         if($programa_id){
                                                             $stocks = $stocks->where('programa_id',$programa_id);
                                                         }
@@ -217,8 +217,6 @@ class AlmacenSalidaController extends Controller
             $parametros = $request->all();
             $loggedUser = auth()->userOrFail();
 
-            //return response()->json(['data'=>$parametros],HttpResponse::HTTP_OK);
-
             $mensajes = [
                 'required'      => "required",
                 'email'         => "email",
@@ -236,7 +234,9 @@ class AlmacenSalidaController extends Controller
             $v = Validator::make($parametros, $reglas, $mensajes);
 
             if ($v->fails()){
-                throw new \Exception("Hacen falta campos obligatorios", 1);
+                DB::rollback();
+                return response()->json(['error'=>"Hacen falta campos obligatorios"],HttpResponse::HTTP_OK);
+                //throw new \Exception("Hacen falta campos obligatorios", 1);
             }
 
             $concluir = $parametros['concluir'];
@@ -401,7 +401,9 @@ class AlmacenSalidaController extends Controller
                     $datos_articulo = BienServicio::find($articulo['id']);
 
                     if(!$datos_articulo){
-                        throw new \Exception("No se encontro el articulo: ".$articulo['id'], 1);
+                        DB::rollback();
+                        return response()->json(['error'=>"No se encontro el articulo: ".$articulo['clave']],HttpResponse::HTTP_OK);
+                        //throw new \Exception("No se encontro el articulo: ".$articulo['id'], 1);
                     }
 
                     $total_articulos += $articulo['total_piezas'];
@@ -414,27 +416,37 @@ class AlmacenSalidaController extends Controller
                             $lote = $articulos_lotes[$j];
 
                             if($lote['salida']){
-                                $lote_guardado = Stock::find($lote['id']);
+                                $lote_guardado = Stock::with('empaqueDetalle')->where('id',$lote['id'])->first();
                                 
                                 if(!$lote_guardado){
-                                    throw new \Exception("No se encontro un lote para el medicamento: ".$articulo['clave'], 1);
+                                    DB::rollback();
+                                    return response()->json(['error'=>"No se encontro un lote para el medicamento: ".$articulo['clave']],HttpResponse::HTTP_OK);
+                                    //throw new \Exception("No se encontro un lote para el medicamento: ".$articulo['clave'], 1);
+                                }
+
+                                if($lote_guardado->empaqueDetalle){
+                                    $piezas_x_empaque = $lote_guardado->empaqueDetalle->piezas_x_empaque;
+                                }else{
+                                    $piezas_x_empaque = 1;
                                 }
 
                                 $cantidad_anterior = ($modo_movimiento == 'UNI')?$lote_guardado->existencia_unidades:$lote_guardado->existencia;
                                 if($cantidad_anterior >= $lote['salida']){
                                     if($modo_movimiento == 'UNI'){
                                         $lote_guardado->existencia_unidades -= $lote['salida'];
-                                        $lote_guardado->existencia = floor($lote_guardado->existencia_unidades / $datos_articulo->unidades_x_empaque);
+                                        $lote_guardado->existencia = floor($lote_guardado->existencia_unidades / $piezas_x_empaque);
                                     }else{
                                         $lote_guardado->existencia -= $lote['salida'];
                                         if($datos_articulo->puede_surtir_unidades){
-                                            $lote_guardado->existencia_unidades -= ($lote['salida'] * $datos_articulo->unidades_x_empaque);
+                                            $lote_guardado->existencia_unidades -= ($lote['salida'] * $piezas_x_empaque);
                                         }
                                     }
                                     $lote_guardado->user_id = $loggedUser->id;
                                     $lote_guardado->save();
                                 }else{
-                                    throw new \Exception("Existencias insuficientes para el medicamento: ".$articulo['clave'], 1);
+                                    DB::rollback();
+                                    return response()->json(['error'=>"Existencias insuficientes para el medicamento: ".$articulo['clave']],HttpResponse::HTTP_OK);
+                                    //throw new \Exception("Existencias insuficientes para el medicamento: ".$articulo['clave'], 1);
                                 }
 
                                 if(isset($lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id])){
@@ -510,7 +522,9 @@ class AlmacenSalidaController extends Controller
                 $tipo_movimiento_recepcion = TipoMovimiento::where('clave','RCPCN')->first();
 
                 if(!$tipo_movimiento_recepcion){
-                    throw new \Exception("No se encontro el tipo de movimiento: Recepción", 1);
+                    DB::rollback();
+                    return response()->json(['error'=>"No se encontro el tipo de movimiento: Recepción"],HttpResponse::HTTP_OK);
+                    //throw new \Exception("No se encontro el tipo de movimiento: Recepción", 1);
                 }
 
                 $datos_movimiento_entrada = [
@@ -542,7 +556,9 @@ class AlmacenSalidaController extends Controller
                 }
                 
                 if(!$tipo_solicitud){
-                    throw new \Exception("No se encontro tipo de solicitud", 1);
+                    DB::rollback();
+                    return response()->json(['error'=>"No se encontro el tipo de solicitud especificado"],HttpResponse::HTTP_OK);
+                    //throw new \Exception("No se encontro tipo de solicitud", 1);
                 }
 
                 $buscar_solicitud = Solicitud::where('folio',$movimiento->documento_folio);
@@ -641,7 +657,9 @@ class AlmacenSalidaController extends Controller
                             $nuevos_articulos[] = $datos_articulo;
                         }
                     }else{
-                        throw new \Exception("Al articulo con Clave: '".$articulo['clave']."' le falta la cantidad solicitada.", 1);
+                        DB::rollback();
+                        return response()->json(['error'=>"Al articulo con Clave: '".$articulo['clave']."' le falta la cantidad solicitada."],HttpResponse::HTTP_OK);
+                        //throw new \Exception("Al articulo con Clave: '".$articulo['clave']."' le falta la cantidad solicitada.", 1);
                     }
                 }
 
@@ -728,31 +746,50 @@ class AlmacenSalidaController extends Controller
             $parametros = $request->all();
 
             if(!$this->authorize('has-permission','XwFSazUr0aCZcAYtcdjYkw69N9amlutP')){
-                throw new \Exception("El usuario no tiene permiso para realizar esta acción", 1);
+                DB::rollback();
+                return response()->json(['error'=>"El usuario no tiene permiso para realizar esta acción"],HttpResponse::HTTP_OK);
+                //throw new \Exception("El usuario no tiene permiso para realizar esta acción", 1);
             }
             
-            $movimiento = Movimiento::with('listaArticulos.stock.articulo')->find($id);
+            $movimiento = Movimiento::with(['listaArticulos'=>function($articulos){
+                                                $articulos->with('articulo','stock.empaqueDetalle');
+                                            }])->find($id);
 
-            if($movimiento->estatus != 'FIN'){
-                throw new \Exception("No se puede cancelar este movimiento", 1);
+            if($movimiento->estatus != 'FIN' && $movimiento->estatus != 'PERE' ){
+                DB::rollback();
+                return response()->json(['error'=>"No se puede cancelar este movimiento"],HttpResponse::HTTP_OK);
+                //throw new \Exception("No se puede cancelar este movimiento", 1);
             }
 
             $movimiento_hijo = Movimiento::where('movimiento_padre_id',$id)->first();
-            if($movimiento_hijo && $movimiento_hijo->estatus != 'CAN'){
-                throw new \Exception("No se puede cancelar este movimiento, ya que la recepción sigue activa", 1);
+            if($movimiento_hijo){
+                if($movimiento_hijo->estatus == 'PERE'){
+                    $movimiento_hijo->update(['cancelado_por_usuario_id'=>$loggedUser->id, 'estatus'=>'CAN', 'cancelado'=>true, 'fecha_cancelacion'=>$parametros['fecha'], 'motivo_cancelacion'=>$parametros['motivo']]);
+                }else if($movimiento_hijo->estatus != 'CAN'){
+                    DB::rollback();
+                    return response()->json(['error'=>"No se puede cancelar este movimiento, ya que la recepción sigue activa"],HttpResponse::HTTP_OK);
+                }
+                //throw new \Exception("No se puede cancelar este movimiento, ya que la recepción sigue activa", 1);
             }
             
-            $control_stocks = [];
-            foreach ($movimiento->listaArticulos as $articulo) {
-                if($articulo->stock){
-                    $stock = $articulo->stock;
-                    if($articulo->modo_movimiento == 'UNI'){
-                        $stock->existencia_unidades += $articulo->cantidad;
-                        $stock->existencia += floor($articulo->cantidad / $stock->articulo->unidades_x_empaque);
+            //$control_stocks = [];
+            foreach ($movimiento->listaArticulos as $articulo_movimiento) {
+                if($articulo_movimiento->stock){
+                    $stock = $articulo_movimiento->stock;
+
+                    if($stock->empaqueDetalle){
+                        $piezas_x_empaque = $stock->empaqueDetalle->piezas_x_empaque;
                     }else{
-                        $stock->existencia += $articulo->cantidad;
-                        if($stock->articulo->puede_surtir_unidades){
-                            $stock->existencia_unidades += ($articulo->cantidad * $stock->articulo->unidades_x_empaque);
+                        $piezas_x_empaque = 1;
+                    }
+
+                    if($articulo_movimiento->modo_movimiento == 'UNI'){
+                        $stock->existencia_unidades += $articulo_movimiento->cantidad;
+                        $stock->existencia = floor($stock->existencia_unidades / $piezas_x_empaque);
+                    }else{
+                        $stock->existencia += $articulo_movimiento->cantidad;
+                        if($articulo_movimiento->articulo->puede_surtir_unidades){
+                            $stock->existencia_unidades += ($articulo_movimiento->cantidad * $piezas_x_empaque);
                         }
                     }
                     $stock->save();

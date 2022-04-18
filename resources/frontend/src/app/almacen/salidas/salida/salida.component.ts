@@ -57,6 +57,7 @@ export class SalidaComponent implements OnInit {
   formMovimiento:FormGroup;
   catalogos:any;
 
+  puedeSurtirUnidades:boolean;
   tipoSalida:any;
   idArticuloSeleccionado:number;
 
@@ -101,6 +102,8 @@ export class SalidaComponent implements OnInit {
   isSaving: boolean;
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
+  listadoEstatusUsuarios: any[];
+  verListadoUsuarios: boolean;
 
   listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',        'MOD':'note_alt'};
   listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',     'MOD':'modificacion-aprobada'};
@@ -116,6 +119,8 @@ export class SalidaComponent implements OnInit {
     this.tieneSolicitud = false;
     this.puedeEditarDatosEncabezado = false;
     this.puedeEditarListaArticulos = false;
+    this.listadoEstatusUsuarios = [];
+    this.verListadoUsuarios = false;
 
     this.controlArticulosAgregados = {};
 
@@ -225,6 +230,9 @@ export class SalidaComponent implements OnInit {
                     this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
                     this.cambiarTipoSalida();
 
+                    let almacen = this.catalogos['almacenes'].find(item => item.id == response.data.almacen_id);
+                    this.puedeSurtirUnidades = almacen.puede_surtir_unidades;
+
                     let lista_articulos:any[] = this.cargarArticulos(response.data.lista_articulos,true);
                     this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
                     this.dataSourceArticulos.paginator = this.articulosPaginator;
@@ -283,7 +291,9 @@ export class SalidaComponent implements OnInit {
             response.data.referencia_fecha = new Date(response.data.referencia_fecha+'T12:00:00');
           }
 
-          this.catalogos['tipos_movimiento'] = (this.catalogos['almacenes'].find(item => item.id == response.data.almacen_id)).tipos_movimiento;
+          let almacen = this.catalogos['almacenes'].find(item => item.id == response.data.almacen_id);
+          this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
+          this.puedeSurtirUnidades = almacen.puede_surtir_unidades;
           this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
           this.cambiarTipoSalida();
 
@@ -346,6 +356,7 @@ export class SalidaComponent implements OnInit {
                   partida_clave: lista_articulos[i].clave_partida_especifica,
                   partida_descripcion: lista_articulos[i].partida_especifica,
                   familia: lista_articulos[i].familia,
+                  unidad_medida: lista_articulos[i].unidad_medida,
                   tiene_fecha_caducidad: (lista_articulos[i].tiene_fecha_caducidad)?true:false,
                   puede_surtir_unidades: (lista_articulos[i].puede_surtir_unidades)?true:false,
                   surtir_en_unidades: (lista_articulos[i].modo_movimiento == 'UNI')?true:false,
@@ -377,6 +388,7 @@ export class SalidaComponent implements OnInit {
 
                   articulo.lotes.push({
                     id: stock.id,
+                    empaque_detalle: stock.empaque_detalle,
                     lote: stock.lote,
                     codigo_barras: stock.codigo_barras,
                     fecha_caducidad: stock.fecha_caducidad,
@@ -410,6 +422,9 @@ export class SalidaComponent implements OnInit {
           this.dataSourceArticulos.paginator = this.articulosPaginator;
           this.dataSourceArticulos.sort = this.sort;
         }
+
+        this.cargarDatosUsuarios(response.data);
+
         this.isLoading = false;
       },
       errorResponse =>{
@@ -421,6 +436,44 @@ export class SalidaComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  cerrarListaUsuarios(event){
+    if(event.code == 'Escape'){
+      this.verListadoUsuarios = false;
+    }
+  }
+
+  cargarDatosUsuarios(datos_movimiento){
+    if(datos_movimiento.cancelado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Cancelado por',
+        'nombre': datos_movimiento.cancelado_por.name,
+        'fecha': new Date(datos_movimiento.fecha_cancelacion+'T12:00:00'),
+      });
+    }
+
+    if(datos_movimiento.concluido_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Concluido por',
+        'nombre': datos_movimiento.concluido_por.name,
+        'fecha': new Date(datos_movimiento.updated_at),
+      });
+    }else if(datos_movimiento.modificado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Modificado por',
+        'nombre': datos_movimiento.modificado_por.name,
+        'fecha': new Date(datos_movimiento.updated_at),
+      });
+    }
+
+    if(datos_movimiento.creado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Creado por',
+        'nombre': datos_movimiento.creado_por.name,
+        'fecha': new Date(datos_movimiento.created_at),
+      });
+    }
   }
 
   cargarArticulos(lista_articulos: any[], precarga:boolean = false): any[]{
@@ -439,6 +492,7 @@ export class SalidaComponent implements OnInit {
           partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
           partida_descripcion: lista_articulos[i].articulo.partida_especifica,
           familia: lista_articulos[i].articulo.familia,
+          unidad_medida: lista_articulos[i].articulo.unidad_medida,
           tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
           puede_surtir_unidades: (lista_articulos[i].articulo.puede_surtir_unidades)?true:false,
           surtir_en_unidades: (lista_articulos[i].modo_movimiento == 'UNI')?true:false,
@@ -472,6 +526,7 @@ export class SalidaComponent implements OnInit {
       if(lista_articulos[i].stock){
         let lote:any = {
           id: lista_articulos[i].stock.id,
+          empaque_detalle: lista_articulos[i].stock.empaque_detalle,
           lote: lista_articulos[i].stock.lote,
           codigo_barras: lista_articulos[i].stock.codigo_barras,
           fecha_caducidad: lista_articulos[i].stock.fecha_caducidad,
@@ -514,8 +569,8 @@ export class SalidaComponent implements OnInit {
 
   checarAlmacenSeleccionado(){
     let almacen = this.catalogos['almacenes'].find(item => item.id == this.formMovimiento.get('almacen_id').value);
-
     this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
+    this.puedeSurtirUnidades = (almacen.puede_surtir_unidades == 1);
     if(this.catalogos['tipos_movimiento'].length == 1){
       this.formMovimiento.get('tipo_movimiento_id').patchValue(this.catalogos['tipos_movimiento'][0].id);
       this.cambiarTipoSalida();
@@ -953,7 +1008,7 @@ export class SalidaComponent implements OnInit {
         this.salidasService.cancelarSalida(id,dialogResponse).subscribe(
           response =>{
             if(response.error) {
-              let errorMessage = response.error.message;
+              let errorMessage = response.error;
               this.sharedService.showSnackBar(errorMessage, null, 3000);
             }else{
               this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);

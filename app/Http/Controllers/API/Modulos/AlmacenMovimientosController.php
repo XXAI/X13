@@ -112,10 +112,11 @@ class AlmacenMovimientosController extends Controller{
 
             $stock_existencias = BienServicio::select('stocks.*','bienes_servicios.id AS articulo_id','bienes_servicios.clave_partida_especifica','bienes_servicios.familia_id','bienes_servicios.clave_cubs',
                                                     'bienes_servicios.clave_local','bienes_servicios.articulo','bienes_servicios.especificaciones','bienes_servicios.descontinuado','bienes_servicios.puede_surtir_unidades',
-                                                    'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia',
+                                                    'bienes_servicios.tiene_fecha_caducidad','cog_partidas_especificas.descripcion AS partida_especifica','familias.nombre AS familia','catalogo_unidades_medida.descripcion as unidad_medida',
                                                     'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo','catalogo_marcas.nombre AS marca',
                                                     'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
-                                                    'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form')
+                                                    'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form',
+                                                    'bienes_servicios_empaque_detalles.descripcion as empaquetado')
                                                 //Relaciones de filtrado
                                                 ->leftjoin('stocks',function($join)use($unidad_medica_id,$parametros){
                                                     $join = $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
@@ -142,6 +143,7 @@ class AlmacenMovimientosController extends Controller{
                                                 ->leftjoin('programas','programas.id','=','stocks.programa_id')
                                                 ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
                                                 ->leftjoin('catalogo_marcas','catalogo_marcas.id','=','stocks.marca_id')
+                                                ->leftjoin('catalogo_unidades_medida','catalogo_unidades_medida.id','=','bienes_servicios.unidad_medida_id')
                                                 ->leftjoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
                                                 //Ordenamiento
                                                 ->orderBy('stocks.unidad_medica_id','DESC')
@@ -247,6 +249,7 @@ class AlmacenMovimientosController extends Controller{
                         'clave_form' => $value->clave_form,
                         'partida_especifica'=>$value->partida_especifica,
                         'familia' => $value->familia,
+                        'unidad_medida' => $value->unidad_medida,
                         'es_normativo' => $value->es_normativo,
                         'cantidad_minima' => $value->cantidad_minima,
                         'cantidad_maxima' => $value->cantidad_maxima,
@@ -283,6 +286,7 @@ class AlmacenMovimientosController extends Controller{
                             'modelo'                => $value->modelo,
                             'marca_id'              => $value->marca_id,
                             'marca'                 => $value->marca,
+                            'empaque_detalle'       => $value->empaquetado,
                             'existencia'            => $value->existencia,
                             'existencia_empaque'    => $value->existencia,
                             'existencia_unidades'   => $value->existencia_unidades,
@@ -303,6 +307,7 @@ class AlmacenMovimientosController extends Controller{
                             'modelo'                => $value->modelo,
                             'marca_id'              => $value->marca_id,
                             'marca'                 => $value->marca,
+                            'empaque_detalle'       => ['descripcion'=>$value->empaquetado],
                             'existencia'            => $value->existencia,
                             'existencia_empaque'    => $value->existencia,
                             'existencia_unidades'   => $value->existencia_unidades,

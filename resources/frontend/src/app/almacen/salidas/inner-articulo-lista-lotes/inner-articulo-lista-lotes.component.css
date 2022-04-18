@@ -39,6 +39,10 @@
     background-color:white;
 }
 
+.contenido-tabla-lotes table tbody tr:hover  {
+    font-weight: bold;
+}
+
 .contenido-tabla-lotes table tbody tr td{
     text-align: center;
     border: 1px solid rgb(181, 179, 179);

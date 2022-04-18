@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { SharedModule } from '../../shared/shared.module';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { SalidasRoutingModule } from './salidas-routing.module';
 import { ListaComponent } from './lista/lista.component';
 import { SalidaComponent } from './salida/salida.component';
@@ -14,7 +15,8 @@ import { DialogoSolicitudRepetidaComponent } from './dialogo-solicitud-repetida/
   imports: [
     CommonModule,
     SharedModule,
-    SalidasRoutingModule
+    SalidasRoutingModule,
+    OverlayModule
   ]
 })
 export class SalidasModule { }

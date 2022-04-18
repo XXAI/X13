@@ -16,12 +16,26 @@
             <div fxFlex="none" *ngIf="datosMovimiento && datosMovimiento.folio" class="label-info">
                 <span>{{datosMovimiento.folio}}</span>
             </div>
-            <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
-                <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
+            <div fxFlex="none" fxLayout="column" (click)="verListadoUsuarios = !verListadoUsuarios" cdkOverlayOrigin style="cursor: help !important;" #verListaUsuarios="cdkOverlayOrigin">
+                <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color" *ngIf="estatusMovimiento">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
                     <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[estatusMovimiento]}}</span>
                 </div>
             </div>
+            <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="verListaUsuarios" [cdkConnectedOverlayOpen]="verListadoUsuarios" yPosition="below" xPosition="before" (overlayKeydown)="cerrarListaUsuarios($event)" (overlayOutsideClick)="verListadoUsuarios = false">
+                <mat-card class="lista-usuarios-estatus">
+                    <mat-list dense>
+                        <mat-list-item class="usuario" *ngFor="let usuario of listadoEstatusUsuarios">
+                          <div class="etiqueta" mat-line>{{usuario.etiqueta}} :</div>
+                          <div class="datos" mat-line>{{usuario.nombre}} <span class="fecha">[ {{usuario.fecha | date:'MMMM d, y'}} ]</span></div>
+                          <mat-divider [inset]="true"></mat-divider>
+                        </mat-list-item>
+                        <mat-list-item class="usuario" *ngIf="listadoEstatusUsuarios.length == 0">
+                            <div class="datos" mat-line><span class="fecha">No hay registros de Usuarios</span></div>
+                          </mat-list-item>
+                    </mat-list>
+                </mat-card>
+            </ng-template>
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
@@ -131,7 +145,7 @@
                     <span class="label">Personal Médico:</span>
                     <span class="value">{{ datosMovimiento.personal_medico.nombre_completo }}</span>
                 </div>
-                <div fxFlex fxLayout="row" *ngIf="datosMovimiento.personal_medico">
+                <div fxFlex fxLayout="row" *ngIf="datosMovimiento.paciente">
                     <div fxFlex class="fake-input">
                         <span class="label">Folio Expediente:</span>
                         <span class="value">{{ datosMovimiento.paciente.expediente_clinico }}</span>
@@ -564,6 +578,7 @@
                                         </div>
                                         <inner-articulo-lista-lotes     [articulo]="articulo" 
                                                                         [tipoSalida]="tipoSalida"
+                                                                        [puedeSurtirUnidades]="puedeSurtirUnidades"
                                                                         [edicionActiva]="puedeEditarListaArticulos" 
                                                                         [fechaMovimiento]="formMovimiento.get('fecha_movimiento').value"
                                                                         [tieneSolicitud]="tieneSolicitud"

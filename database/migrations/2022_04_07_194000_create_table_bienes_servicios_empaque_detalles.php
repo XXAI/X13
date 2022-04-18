@@ -34,6 +34,12 @@ class CreateTableBienesServiciosEmpaqueDetalles extends Migration
 
             $table->foreign('empaque_detalle_id')->references('id')->on('bienes_servicios_empaque_detalles');
         });
+
+        Schema::table('movimientos_articulos_borrador', function (Blueprint $table) {
+            $table->bigInteger('empaque_detalle_id')->unsigned()->after('bien_servicio_id')->nullable();
+
+            $table->foreign('empaque_detalle_id')->references('id')->on('bienes_servicios_empaque_detalles');
+        });
     }
 
     /**
@@ -44,6 +50,11 @@ class CreateTableBienesServiciosEmpaqueDetalles extends Migration
     public function down()
     {
         Schema::table('stocks', function (Blueprint $table) {
+            $table->dropForeign(['empaque_detalle_id']);
+            $table->dropColumn('empaque_detalle_id');
+        });
+
+        Schema::table('movimientos_articulos_borrador', function (Blueprint $table) {
             $table->dropForeign(['empaque_detalle_id']);
             $table->dropColumn('empaque_detalle_id');
         });

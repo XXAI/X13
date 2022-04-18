@@ -116,7 +116,11 @@ color:#ff2a2a;
 }
 
 .cancelado{
-  text-decoration: line-through;
+  color:#ff2a2a !important;
+}
+
+.cancelado > td{
+  color:#ff2a2a !important;
 }
 
 :host ::ng-deep .small-select-input .mat-form-field-wrapper {
