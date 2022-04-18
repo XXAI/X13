@@ -737,7 +737,7 @@ class AlmacenSalidaController extends Controller
                 throw new \Exception("No se puede cancelar este movimiento", 1);
             }
 
-            $movimiento_hijo = Movimiento::where('movimiento_padre_id')->first();
+            $movimiento_hijo = Movimiento::where('movimiento_padre_id',$id)->first();
             if($movimiento_hijo && $movimiento_hijo->estatus != 'CAN'){
                 throw new \Exception("No se puede cancelar este movimiento, ya que la recepción sigue activa", 1);
             }

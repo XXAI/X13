@@ -17,8 +17,8 @@
             </tr>
             <tr class="header">
                 <th *ngIf="articulo.tipo_formulario == 'MEDS'" width="1">Estatus</th>
-                <th *ngIf="articulo.tipo_formulario == 'MEDS'">Lote</th>
-                <th *ngIf="articulo.tipo_formulario == 'MEDS'">Fecha Caducidad</th>
+                <th *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">Lote /<br>Fecha Caducidad</th>
+                <th *ngIf="articulo.tipo_formulario == 'MEDS'">Empaquetado</th>
 
                 <th *ngIf="articulo.tipo_formulario == 'ACTVO'">No. Serie</th>
                 <th *ngIf="articulo.tipo_formulario == 'ACTVO'">Modelo</th>
@@ -36,8 +36,8 @@
             </tr>
             <tr *ngFor="let lote of articulo.lotes; let i = index" class="caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">
                 <td *ngIf="articulo.tipo_formulario == 'MEDS'"><mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon></td>
-                <td *ngIf="articulo.tipo_formulario == 'MEDS'">{{lote.lote}}</td>
-                <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
+                <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.lote}}<br>{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
+                <td *ngIf="articulo.tipo_formulario == 'MEDS'"></td>
 
                 <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.no_serie}}</td>
                 <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.modelo}}</td>
