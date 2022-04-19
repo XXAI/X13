@@ -94,6 +94,7 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
               partida_clave: response.data[i].clave_partida_especifica,
               partida_descripcion: response.data[i].partida_especifica,
               familia: response.data[i].familia,
+              empaque_detalle: response.data[i].empaque_detalle,
               tiene_fecha_caducidad: (response.data[i].tiene_fecha_caducidad)?true:false,
               tipo_articulo: response.data[i].tipo_bien_servicio,
               tipo_formulario: response.data[i].clave_form,

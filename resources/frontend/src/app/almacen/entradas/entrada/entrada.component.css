@@ -216,7 +216,6 @@ table td {
 }
 
 .estatus-movimiento{
-    cursor: default;
     padding:5px;
     text-align: center;
     background-color: #dddddd;
@@ -417,4 +416,25 @@ tr.tabla-row-articulo-detalle{
     text-align: center;
     padding:2px;
     border-bottom: 1px solid #8c8c8c;
+}
+
+.lista-usuarios-estatus{
+    padding:0px !important;
+}
+
+.lista-usuarios-estatus .usuario{
+    cursor: default;
+}
+
+.lista-usuarios-estatus .usuario:hover{
+    background-color: whitesmoke;
+}
+
+.lista-usuarios-estatus .etiqueta{
+    font-weight: bold;
+}
+
+.lista-usuarios-estatus .datos .fecha{
+    font-size: small;
+    color: rgba(0,0,0,.60);
 }

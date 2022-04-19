@@ -567,9 +567,9 @@
                                                 {{articulo.descripcion}}
                                             </div>
                                             <div fxFlex="none" fxLayout="row">
-                                                <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">gpp_good</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">error</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo">fact_check</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo">gpp_good</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado">error</mat-icon>
                                                 <div fxFlex></div>
                                                 <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarListaArticulos">
                                                     <mat-icon>delete</mat-icon> Quitar Articulo

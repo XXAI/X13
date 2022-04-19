@@ -37,7 +37,8 @@ class BienesServiciosController extends Controller{
                                                 ->leftjoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
                                                 ->orderBy('unidad_medica_catalogo_articulos.id','DESC')
                                                 ->orderBy('unidad_medica_catalogo_articulos.es_normativo','DESC')
-                                                ->orderBy('bienes_servicios.especificaciones');
+                                                ->orderBy('bienes_servicios.especificaciones')
+                                                ->with('empaqueDetalle');
 
             if(isset($parametros['buscar_catalogo_completo']) && $parametros['buscar_catalogo_completo']){
                 $catalogo_articulos = $catalogo_articulos->leftJoin('unidad_medica_catalogo_articulos',function($join)use($loggedUser){

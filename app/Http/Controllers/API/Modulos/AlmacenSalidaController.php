@@ -702,6 +702,8 @@ class AlmacenSalidaController extends Controller
                                                 $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
                                             }])->find($movimiento->id);
             }
+
+            $movimiento->load('creadoPor','modificadoPor','concluidoPor');
             
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -757,7 +759,7 @@ class AlmacenSalidaController extends Controller
 
             if($movimiento->estatus != 'FIN' && $movimiento->estatus != 'PERE' ){
                 DB::rollback();
-                return response()->json(['error'=>"No se puede cancelar este movimiento"],HttpResponse::HTTP_OK);
+                return response()->json(['error'=>"No se puede cancelar este movimiento, no tiene el estatus requerido para dicha acción"],HttpResponse::HTTP_OK);
                 //throw new \Exception("No se puede cancelar este movimiento", 1);
             }
 
@@ -765,6 +767,7 @@ class AlmacenSalidaController extends Controller
             if($movimiento_hijo){
                 if($movimiento_hijo->estatus == 'PERE'){
                     $movimiento_hijo->update(['cancelado_por_usuario_id'=>$loggedUser->id, 'estatus'=>'CAN', 'cancelado'=>true, 'fecha_cancelacion'=>$parametros['fecha'], 'motivo_cancelacion'=>$parametros['motivo']]);
+                    $movimiento_hijo->listaArticulosBorrador()->delete();
                 }else if($movimiento_hijo->estatus != 'CAN'){
                     DB::rollback();
                     return response()->json(['error'=>"No se puede cancelar este movimiento, ya que la recepción sigue activa"],HttpResponse::HTTP_OK);
@@ -772,7 +775,6 @@ class AlmacenSalidaController extends Controller
                 //throw new \Exception("No se puede cancelar este movimiento, ya que la recepción sigue activa", 1);
             }
             
-            //$control_stocks = [];
             foreach ($movimiento->listaArticulos as $articulo_movimiento) {
                 if($articulo_movimiento->stock){
                     $stock = $articulo_movimiento->stock;
@@ -799,6 +801,8 @@ class AlmacenSalidaController extends Controller
             $movimiento->update(['cancelado_por_usuario_id'=>$loggedUser->id, 'estatus'=>'CAN', 'cancelado'=>true, 'fecha_cancelacion'=>$parametros['fecha'], 'motivo_cancelacion'=>$parametros['motivo']]);
 
             DB::commit();
+
+            $movimiento->load('creadoPor','modificadoPor','concluidoPor','canceladoPor');
 
             return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

@@ -13,12 +13,26 @@
             <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.folio" class="label-info">
                 <span>{{datosEntrada.folio}}</span>
             </div>
-            <div fxFlex="none" fxLayout="column" *ngIf="estatusMovimiento">
-                <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color">
+            <div fxFlex="none" fxLayout="column" (click)="verListadoUsuarios = !verListadoUsuarios" cdkOverlayOrigin style="cursor: help !important;" #verListaUsuarios="cdkOverlayOrigin">
+                <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color" *ngIf="estatusMovimiento">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>
                     <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[estatusMovimiento]}}</span>
                 </div>
             </div>
+            <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="verListaUsuarios" [cdkConnectedOverlayOpen]="verListadoUsuarios" yPosition="below" xPosition="before" (overlayKeydown)="cerrarListaUsuarios($event)" (overlayOutsideClick)="verListadoUsuarios = false">
+                <mat-card class="lista-usuarios-estatus">
+                    <mat-list dense>
+                        <mat-list-item class="usuario" *ngFor="let usuario of listadoEstatusUsuarios">
+                          <div class="etiqueta" mat-line>{{usuario.etiqueta}} :</div>
+                          <div class="datos" mat-line>{{usuario.nombre}} <span class="fecha">[ {{usuario.fecha | date:'MMMM d, y'}} ]</span></div>
+                          <mat-divider [inset]="true"></mat-divider>
+                        </mat-list-item>
+                        <mat-list-item class="usuario" *ngIf="listadoEstatusUsuarios.length == 0">
+                            <div class="datos" mat-line><span class="fecha">No hay registros de Usuarios</span></div>
+                          </mat-list-item>
+                    </mat-list>
+                </mat-card>
+            </ng-template>
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
@@ -40,8 +54,8 @@
                 <span>Eliminar Entrada</span>
             </button>
             <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
-                <mat-divider *ngIf="estatusMovimiento == 'FIN'"></mat-divider>
-                <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN'" (click)="cancelarEntrada()">
+                <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'PERE'"></mat-divider>
+                <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'PERE'" (click)="cancelarEntrada()">
                     <mat-icon color="warn">cancel</mat-icon>
                     <span>Cancelar Entrada</span>
                 </button>
@@ -86,7 +100,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.fecha_movimiento && datosEntrada">
                     <mat-label>Fecha Entrada</mat-label>
-                    <input matInput value="{{datosEntrada.fecha_movimiento | date:'MMMM d, y'}}" readonly>
+                    <input matInput value="{{datosEntrada.fecha_movimiento | date:'MMMM d, y'}}" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.almacen_id">
@@ -101,7 +115,7 @@
 
                 <mat-form-field fxFlex *ngIf="!datosForm.almacen_id && datosEntrada">
                     <mat-label>Almacén</mat-label>
-                    <input matInput [value]="(datosEntrada.almacen)?datosEntrada.almacen.nombre:'Sin Almacén'" readonly>
+                    <input matInput [value]="(datosEntrada.almacen)?datosEntrada.almacen.nombre:'Sin Almacén'" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.tipo_movimiento_id">
@@ -116,7 +130,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.tipo_movimiento_id && datosEntrada">
                     <mat-label>Tipo Entrada</mat-label>
-                    <input matInput [value]="(datosEntrada.tipo_movimiento)?datosEntrada.tipo_movimiento.descripcion:'Sin Tipo Asignado'" readonly>
+                    <input matInput [value]="(datosEntrada.tipo_movimiento)?datosEntrada.tipo_movimiento.descripcion:'Sin Tipo Asignado'" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.turno_id">
@@ -131,7 +145,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.turno_id && datosEntrada">
                     <mat-label>Turno</mat-label>
-                    <input matInput [value]="(datosEntrada.turno)?datosEntrada.turno.nombre:'Sin Turno Asignado'" readonly>
+                    <input matInput [value]="(datosEntrada.turno)?datosEntrada.turno.nombre:'Sin Turno Asignado'" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.programa">
@@ -151,7 +165,7 @@
 
                 <mat-form-field fxFlex *ngIf="!datosForm.programa && datosEntrada">
                     <mat-label>Programa</mat-label>
-                    <input matInput [value]="(datosEntrada.programa)?datosEntrada.programa.descripcion:'Sin Programa'" readonly>
+                    <input matInput [value]="(datosEntrada.programa)?datosEntrada.programa.descripcion:'Sin Programa'" disabled>
                 </mat-form-field>
                 
                 <mat-form-field fxFlex *ngIf="datosForm.documento_folio">
@@ -162,7 +176,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.documento_folio && datosEntrada">
                     <mat-label>Folio - Documento</mat-label>
-                    <input matInput [value]="(datosEntrada.documento_folio)?datosEntrada.documento_folio:'---'" readonly>
+                    <input matInput [value]="(datosEntrada.documento_folio)?datosEntrada.documento_folio:'---'" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.proveedor">
@@ -183,7 +197,7 @@
 
                 <mat-form-field fxFlex *ngIf="!datosForm.proveedor && datosEntrada">
                     <mat-label>Proveedor</mat-label>
-                    <input matInput [value]="(datosEntrada.proveedor)?datosEntrada.proveedor.nombre:'Sin Proveedor'" readonly>
+                    <input matInput [value]="(datosEntrada.proveedor)?datosEntrada.proveedor.nombre:'Sin Proveedor'" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex="none" *ngIf="datosForm.referencia_folio">
@@ -194,7 +208,7 @@
 
                 <mat-form-field fxFlex *ngIf="!datosForm.referencia_folio && datosEntrada">
                     <mat-label>No de Referencia</mat-label>
-                    <input matInput [value]="(datosEntrada.referencia_folio)?datosEntrada.referencia_folio:'---'" readonly>
+                    <input matInput [value]="(datosEntrada.referencia_folio)?datosEntrada.referencia_folio:'---'" disabled>
                     <mat-hint>Folio de Referencia o Factura</mat-hint>
                 </mat-form-field>
 
@@ -208,7 +222,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="!datosForm.referencia_fecha && datosEntrada">
                     <mat-label>Fecha de Referencia</mat-label>
-                    <input matInput [value]="(datosEntrada.referencia_fecha)?(datosEntrada.referencia_fecha | date:'MMMM d, y'):'---'" readonly>
+                    <input matInput [value]="(datosEntrada.referencia_fecha)?(datosEntrada.referencia_fecha | date:'MMMM d, y'):'---'" disabled>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="datosForm.observaciones">
@@ -218,7 +232,7 @@
 
                 <mat-form-field fxFlex *ngIf="!datosForm.observaciones && datosEntrada">
                     <mat-label>Observaciones</mat-label>
-                    <textarea matInput rows="1" readonly>{{(datosEntrada.observaciones)?datosEntrada.observaciones:'---'}}</textarea>
+                    <textarea matInput rows="1" disabled>{{(datosEntrada.observaciones)?datosEntrada.observaciones:'---'}}</textarea>
                 </mat-form-field>
             </mat-card>
         </section>
@@ -389,9 +403,9 @@
                                                 {{articulo.descripcion}}
                                             </div>
                                             <div fxFlex="none" fxLayout="row">
-                                                <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo" style="color:blue;">fact_check</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo" style="color:green;">notification_important</mat-icon>
-                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado" style="color:red;">warning</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo">fact_check</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo">gpp_good</mat-icon>
+                                                <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado">error</mat-icon>
                                                 <div fxFlex></div>
                                                 <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos && !modoRecepcion">
                                                     <mat-icon>delete</mat-icon> Eliminar Articulo

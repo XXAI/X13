@@ -445,6 +445,7 @@ export class SalidaComponent implements OnInit {
   }
 
   cargarDatosUsuarios(datos_movimiento){
+    this.listadoEstatusUsuarios = [];
     if(datos_movimiento.cancelado_por){
       this.listadoEstatusUsuarios.push({
         'etiqueta': 'Cancelado por',
@@ -952,6 +953,7 @@ export class SalidaComponent implements OnInit {
 
             //this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
             this.datosMovimiento = response.data;
+            this.cargarDatosUsuarios(response.data);
 
             if(response.data.movimiento_hijo){
               this.movimientoHijo = response.data.movimiento_hijo;
@@ -1015,6 +1017,7 @@ export class SalidaComponent implements OnInit {
               this.estatusMovimiento = 'CAN';
               this.verBoton.cancelar = false;
               this.verBoton.modificarSalida = false;
+              this.cargarDatosUsuarios(response.data);
             }
           },
           errorResponse =>{

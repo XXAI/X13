@@ -5,6 +5,7 @@ import { EntradasRoutingModule } from './entradas-routing.module';
 import { ListaComponent } from './lista/lista.component';
 import { EntradaComponent } from './entrada/entrada.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { InnerArticuloAdminListaLotesComponent } from './inner-articulo-admin-lista-lotes/inner-articulo-admin-lista-lotes.component';
 import { WidgetBuscadorArticulosComponent } from './widget-buscador-articulos/widget-buscador-articulos.component';
 import { DialogoCancelarResultadoComponent } from './dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
@@ -16,7 +17,8 @@ import { DialogoSubirArchivoComponent } from './dialogo-subir-archivo/dialogo-su
     CommonModule,
     SharedModule,
     EntradasRoutingModule,
-    ScrollingModule
+    ScrollingModule,
+    OverlayModule
   ]
 })
 export class EntradasModule { }

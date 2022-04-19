@@ -185,7 +185,7 @@
                     </ng-container>
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row class="{{row.estatus_clave}}-color" [ngClass]="{'selected-item': i==selectedItemIndex,'cancelado':row.estatus_clave == 'cancelado'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                    <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex,'cancelado':row.estatus_clave == 'cancelado'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
 
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoMovimientos!=null && listadoMovimientos.length==0)}"></tr>
                 </table>
@@ -197,7 +197,6 @@
                             <mat-icon>{{(estatus != 'BOR')?'visibility':'edit'}}</mat-icon>
                             <span>{{(estatus != 'BOR')?'Ver Detalles':'Editar'}}</span>
                         </button>
-                        <mat-divider *ngIf="estatus == 'PERE'"></mat-divider>
                         <button mat-menu-item [routerLink]="'/almacen/entradas/editar/'+id" *ngIf="estatus == 'PERE'">
                             <mat-icon color="accent">inventory</mat-icon>
                             <span>Recibir</span>
@@ -208,10 +207,10 @@
                             <span>Crear Salida</span>
                         </button>
                         <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'" >
-                            <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
-                            <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarEntrada(id)">
+                            <mat-divider *ngIf="estatus == 'FIN' || estatus == 'PERE'"></mat-divider>
+                            <button mat-menu-item color="warn" *ngIf="estatus == 'FIN' || estatus == 'PERE'" (click)="cancelarEntrada(id)">
                                 <mat-icon color="warn">cancel</mat-icon>
-                                <span>Cancelar</span>
+                                <span>Cancelar Entrada</span>
                             </button>
                         </div>
                         <mat-divider *ngIf="estatus == 'BOR'"></mat-divider>

@@ -348,7 +348,8 @@ class AlmacenMovimientosController extends Controller{
 
             $tipoSolicitud = TipoSolicitud::where('clave','RCTA')->first();
             if(!$tipoSolicitud){
-                throw new \Exception("Tipo de solicitud no encontrado", 1);
+                return response()->json(['error'=>"Tipo de solicitud no encontrado"],HttpResponse::HTTP_OK);
+                //throw new \Exception("Tipo de solicitud no encontrado", 1);
             }
 
             $receta = Solicitud::where('tipo_solicitud_id',$tipoSolicitud->id)->where('folio',$folio)->first();

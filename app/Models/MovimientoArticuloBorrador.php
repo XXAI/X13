@@ -11,6 +11,7 @@ class MovimientoArticuloBorrador extends Model{
     protected $fillable = [
         'movimiento_id',
         'bien_servicio_id',
+        'empaque_detalle_id',
         'stock_id',
         'direccion_movimiento',
         'modo_movimiento',
@@ -39,5 +40,9 @@ class MovimientoArticuloBorrador extends Model{
 
     public function marca(){
         return $this->belongsTo('App\Models\Marca','marca_id');
+    }
+
+    public function empaqueDetalle(){
+        return $this->belongsTo('App\Models\BienServicioEmpaqueDetalle','empaque_detalle_id');
     }
 }

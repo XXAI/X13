@@ -108,7 +108,11 @@ table tr:hover{
 }
 
 .cancelado{
-  text-decoration: line-through;
+  color:#ff2a2a !important;
+}
+
+.cancelado > td{
+  color:#ff2a2a !important;
 }
 
 .my-stepper{
@@ -212,7 +216,6 @@ table tr:hover{
 :host ::ng-deep .small-select-input .mat-select-arrow-wrapper {
   display: block;
 }
-
 
 :host ::ng-deep .small-filter-input > .mat-form-field{
   width: 100%;

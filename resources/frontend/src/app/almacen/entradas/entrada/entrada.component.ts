@@ -90,6 +90,8 @@ export class EntradaComponent implements OnInit {
   isSaving: boolean;
   estatusMovimiento: string;
   maxFechaMovimiento: Date;
+  listadoEstatusUsuarios: any[];
+  verListadoUsuarios: boolean;
 
   listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in', 'CAN':'cancel',     'PERE':'pending_actions'};
   listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',            'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
@@ -103,6 +105,9 @@ export class EntradaComponent implements OnInit {
 
     this.editable = false;
     this.puedeEditarElementos = false;
+
+    this.listadoEstatusUsuarios = [];
+    this.verListadoUsuarios = false;
 
     this.displayedColumns = [];
     this.datosForm = {};
@@ -285,6 +290,7 @@ export class EntradaComponent implements OnInit {
                     partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
                     partida_descripcion: lista_articulos[i].articulo.partida_especifica,
                     familia: lista_articulos[i].articulo.familia,
+                    empaque_detalle: lista_articulos[i].articulo.empaque_detalle,
                     tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
                     tipo_articulo: lista_articulos[i].articulo.tipo_bien_servicio,
                     tipo_formulario: lista_articulos[i].articulo.clave_form,
@@ -313,20 +319,26 @@ export class EntradaComponent implements OnInit {
                   articulo.total_monto += lista_articulos[i].total_monto;
 
                   let lote:any = {
-                    lote:             (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                    fecha_caducidad:  (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:    (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                    no_serie:         (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
-                    modelo:           (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
-                    marca_id:         (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
-                    marca:            (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
-                    precio_unitario:   lista_articulos[i].precio_unitario,
-                    iva:               lista_articulos[i].iva,
-                    total_monto:       lista_articulos[i].total_monto,
-                    memo_folio:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    memo_fecha:       (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    vigencia_meses:   (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
+                    lote:               (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
+                    fecha_caducidad:    (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
+                    codigo_barras:      (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
+                    no_serie:           (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
+                    modelo:             (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
+                    marca_id:           (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
+                    marca:              (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
+                    empaque_detalle_id: (lista_articulos[i].stock)?lista_articulos[i].stock.empaque_detalle_id:lista_articulos[i].empaque_detalle_id,
+                    empaque_detalle:    (lista_articulos[i].stock)?lista_articulos[i].stock.empaque_detalle:null,
+                    precio_unitario:    lista_articulos[i].precio_unitario,
+                    iva:                lista_articulos[i].iva,
+                    total_monto:        lista_articulos[i].total_monto,
+                    memo_folio:         (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+                    memo_fecha:         (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+                    vigencia_meses:     (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
                   };
+                  
+                  if(lote.empaque_detalle_id && articulo.empaque_detalle){
+                    lote.empaque_detalle = articulo.empaque_detalle.find(x => x.id == lote.empaque_detalle_id);
+                  }
 
                   if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN' && this.datosEntrada.estatus == 'PERE'){
                     lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
@@ -360,6 +372,8 @@ export class EntradaComponent implements OnInit {
               this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
               this.dataSourceArticulos.paginator = this.articulosPaginator;
               this.dataSourceArticulos.sort = this.sort;
+
+              this.cargarDatosUsuarios(response.data);
             }
             this.isLoading = false;
           },
@@ -388,6 +402,45 @@ export class EntradaComponent implements OnInit {
         this.cargarColumnasArticulos();
       }
     });
+  }
+
+  cerrarListaUsuarios(event){
+    if(event.code == 'Escape'){
+      this.verListadoUsuarios = false;
+    }
+  }
+
+  cargarDatosUsuarios(datos_movimiento){
+    this.listadoEstatusUsuarios = [];
+    if(datos_movimiento.cancelado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Cancelado por',
+        'nombre': datos_movimiento.cancelado_por.name,
+        'fecha': new Date(datos_movimiento.fecha_cancelacion+'T12:00:00'),
+      });
+    }
+
+    if(datos_movimiento.concluido_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Concluido por',
+        'nombre': datos_movimiento.concluido_por.name,
+        'fecha': new Date(datos_movimiento.updated_at),
+      });
+    }else if(datos_movimiento.modificado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Modificado por',
+        'nombre': datos_movimiento.modificado_por.name,
+        'fecha': new Date(datos_movimiento.updated_at),
+      });
+    }
+
+    if(datos_movimiento.creado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Creado por',
+        'nombre': datos_movimiento.creado_por.name,
+        'fecha': new Date(datos_movimiento.created_at),
+      });
+    }
   }
 
   cargarColumnasArticulos(){
@@ -590,6 +643,7 @@ export class EntradaComponent implements OnInit {
             this.formMovimiento.get('id').patchValue(response.data.id);
             this.estatusMovimiento = response.data.estatus;
             this.datosEntrada = response.data;
+            this.cargarDatosUsuarios(response.data);
             
             if(this.estatusMovimiento != 'BOR' && this.estatusMovimiento != 'PERE'){
               this.editable = false;
@@ -676,18 +730,24 @@ export class EntradaComponent implements OnInit {
         this.entradasService.cancelarEntrada(id,dialogResponse).subscribe(
           response =>{
             if(response.error) {
-              let configDialog = {
-                width: '50%',
-                maxHeight: '90vh',
-                height: '343px',
-                data:{error:response.error, data:response.data},
-                panelClass: 'no-padding-dialog'
-              };
-          
-              const dialogRef = this.dialog.open(DialogoCancelarResultadoComponent, configDialog);
+              if(response.data){
+                let configDialog = {
+                  width: '50%',
+                  maxHeight: '90vh',
+                  height: '343px',
+                  data:{error:response.error, data:response.data},
+                  panelClass: 'no-padding-dialog'
+                };
+            
+                const dialogRef = this.dialog.open(DialogoCancelarResultadoComponent, configDialog);
+              }else{
+                let errorMessage = response.error;
+                this.sharedService.showSnackBar(errorMessage, null, 4000);
+              }
             }else{
               this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
               this.estatusMovimiento = 'CAN';
+              this.cargarDatosUsuarios(response.data);
             }
           },
           errorResponse =>{

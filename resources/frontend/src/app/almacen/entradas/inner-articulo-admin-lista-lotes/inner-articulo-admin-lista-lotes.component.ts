@@ -55,6 +55,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         lote:['',Validators.required],
         codigo_barras:[''],
         cantidad:['',Validators.required],
+        empaque_detalle_id:[''],
         precio_unitario:[''],
         iva:[''],
       };
@@ -72,6 +73,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         modelo:['',],
         no_serie:['',Validators.required],
         cantidad:['',Validators.required],
+        empaque_detalle_id:[''],
         precio_unitario:[''],
         iva:[''],
       };
@@ -271,6 +273,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         loteData.marca_id = loteData.marca.id;
       }
 
+      if(loteData.empaque_detalle_id && this.articulo.empaque_detalle){
+        loteData.empaque_detalle = this.articulo.empaque_detalle.find(x => x.id == loteData.empaque_detalle_id);
+      }
+
       if(loteData.fecha_caducidad){
         loteData.fecha_caducidad = this.datePipe.transform(loteData.fecha_caducidad, 'yyyy-MM-dd');
         if(loteData.memo_fecha){
@@ -385,6 +391,9 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     this.articulo.lotes.push({});
     this.loteEditIndex = this.articulo.lotes.length-1;
     setTimeout(() => {
+      if(this.articulo.empaque_detalle && this.articulo.empaque_detalle.length > 0){
+        this.formLote.get('empaque_detalle_id').patchValue(this.articulo.empaque_detalle[0].id);
+      }
       this.inputFormField.focus();  
     }, 10);
   }

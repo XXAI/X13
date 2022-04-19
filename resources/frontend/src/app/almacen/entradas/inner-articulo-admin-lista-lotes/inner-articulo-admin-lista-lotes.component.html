@@ -3,13 +3,12 @@
         <thead>
             <tr>
                 <th *ngIf="articulo.tipo_formulario == 'MEDS'" width="1">Estatus</th>
-                <th *ngIf="articulo.tipo_formulario == 'MEDS'">Lote</th>
-                <th *ngIf="articulo.tipo_formulario == 'MEDS'">Fecha Caducidad</th>
+                <th *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">Lote / <br>Fecha Caducidad</th>
 
-                <th *ngIf="articulo.tipo_formulario == 'ACTVO'">No. Serie</th>
-                <th *ngIf="articulo.tipo_formulario == 'ACTVO'">Modelo</th>
+                <th *ngIf="articulo.tipo_formulario == 'ACTVO'" width="1" style="white-space: nowrap;">No. Serie / <br>Modelo</th>
                 <th *ngIf="articulo.tipo_formulario == 'ACTVO'">Marca</th>
 
+                <th>Detalles</th>
                 <th>Cantidad</th>
                 <th>{{(modoRecepcion)?'Recibido':'Monto'}}</th>
                 <th *ngIf="edicionActiva && !modoRecepcion">Control</th>
@@ -22,12 +21,12 @@
             <tr *ngFor="let lote of articulo.lotes; let i = index" class="caducidad-{{coloresCaducidad[lote.estatus_caducidad]">
                 <ng-container *ngIf="loteEditIndex != i">
                     <td *ngIf="articulo.tipo_formulario == 'MEDS'"><mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon></td>
-                    <td *ngIf="articulo.tipo_formulario == 'MEDS'">{{lote.lote}}</td>
-                    <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
+                    <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.lote}}<br>{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
 
-                    <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.no_serie}}</td>
-                    <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.modelo}}</td>
+                    <td *ngIf="articulo.tipo_formulario == 'ACTVO'" width="1" style="white-space: nowrap;">{{lote.no_serie}}<br>{{lote.modelo}}</td>
                     <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.marca?.nombre}}</td>
+
+                    <td>{{(lote.empaque_detalle)?lote.empaque_detalle.descripcion:'Sin Detalles'}}</td>
 
                     <td *ngIf="!modoRecepcion">{{lote.cantidad | number:'1.0-0'}}</td>
                     <td *ngIf="!modoRecepcion">$ {{lote.total_monto | number:'1.2-2'}}</td>
@@ -71,6 +70,15 @@
                                     <mat-error *ngIf="formLote.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
                                 </mat-form-field>
                                 <mat-form-field fxFlex>
+                                    <mat-label>Detalles</mat-label>
+                                    <mat-select formControlName="empaque_detalle_id">
+                                        <mat-option *ngIf="!articulo.empaque_detalle || articulo.empaque_detalle.length == 0">Sin Detalles Asignados</mat-option>
+                                        <mat-option *ngFor="let detalle of articulo.empaque_detalle" [value]="detalle.id">
+                                            {{detalle.descripcion}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                <mat-form-field fxFlex>
                                     <mat-label>Precio Unitario</mat-label>
                                     <input matInput formControlName="precio_unitario" (keydown.enter)="guardarCambiosLote()" type="number" autocomplete="off">
                                     <span matPrefix>$&nbsp;</span>
@@ -79,7 +87,6 @@
                                     <mat-label>IVA</mat-label>
                                     <input matInput formControlName="iva" (keydown.enter)="guardarCambiosLote()" type="number" autocomplete="off">
                                 </mat-form-field>
-                                <div fxFlex></div>
                             </div>
                             <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" fxLayoutAlign="space-between center" *ngIf="articulo.tipo_formulario == 'ACTVO'">
                                 <mat-form-field fxFlex>

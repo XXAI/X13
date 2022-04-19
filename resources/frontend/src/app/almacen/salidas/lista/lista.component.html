@@ -178,10 +178,10 @@
                             <span>Modificar Salida</span>
                         </button>
                         <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
-                            <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
-                            <button mat-menu-item color="warn" *ngIf="estatus == 'FIN'" (click)="cancelarSalida(id)">
+                            <mat-divider *ngIf="estatus == 'FIN' || estatus == 'PERE'"></mat-divider>
+                            <button mat-menu-item color="warn" *ngIf="estatus == 'FIN' || estatus == 'PERE'" (click)="cancelarSalida(id)">
                                 <mat-icon color="warn">cancel</mat-icon>
-                                <span>Cancelar</span>
+                                <span>Cancelar Salida</span>
                             </button>
                         </div>
                         <mat-divider *ngIf="estatus == 'BOR'"></mat-divider>
