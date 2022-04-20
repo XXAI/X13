@@ -29,6 +29,10 @@ table {
     flex: 1 1 auto;
 }
 
+.tabla-resumen thead th{
+    border-bottom: 1px solid black !important;
+}
+
 .mat-column-direccion_movimiento {
     width: 45px;
 }

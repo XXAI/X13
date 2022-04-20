@@ -67,8 +67,17 @@ class AlmacenExistenciasController extends Controller
                             ->leftJoin("programas","programas.id","=","stocks.programa_id")
                             ->leftJoin("familias","familias.id","=","bienes_servicios.familia_id")
                             ->where('stocks.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
-                            ->where('stocks.existencia','>',0)
                             ->whereIn('stocks.almacen_id',$almacenes);
+            
+            if(isset($params['incluir_existencias_cero']) && $params['incluir_existencias_cero']){
+                $items = $items->where(function($where){
+                    $where->where('stocks.existencia','>=',0);
+                });
+            }else{
+                $items = $items->where(function($where){
+                    $where->where('stocks.existencia','>',0)->orWhere('existencia_unidades','>',0);
+                });
+            }
 
             if(isset($params['groupBy']) && trim($params['groupBy']) != ""){
                 if($params['groupBy'] == 'articulo'){
@@ -81,6 +90,7 @@ class AlmacenExistenciasController extends Controller
                         DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                         "bienes_servicios.articulo as articulo",
                         "bienes_servicios.especificaciones as especificaciones",
+                        "bienes_servicios.puede_surtir_unidades",
                         "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
                         "cog_partidas_especificas.clave as clave_partida_especifica",
                         "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
@@ -99,6 +109,7 @@ class AlmacenExistenciasController extends Controller
                     "stocks.bien_servicio_id as bien_servicio_id", 
                     "bienes_servicios.articulo as articulo",
                     "bienes_servicios.especificaciones as especificaciones",
+                    "bienes_servicios.puede_surtir_unidades",
                     "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
                     "cog_partidas_especificas.clave as clave_partida_especifica",
                     "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
