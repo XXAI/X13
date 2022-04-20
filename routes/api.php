@@ -69,6 +69,11 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::post('json-csv',                          'API\Admin\DevJsonFilesController@exportCSV');
 
     /**
+     * Modulos Visor
+     */
+    Route::get('visor-abasto-surtimiento/datos-visor',                          'API\Modulos\VisorAbastoSurtimientoController@obtenerDatosVisor');
+
+    /**
      * Modulos Almacen
      */
     Route::get('almacen-buscar-stock',                          'API\Modulos\AlmacenMovimientosController@buscarStock');

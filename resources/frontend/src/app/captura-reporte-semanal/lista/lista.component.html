@@ -31,7 +31,7 @@
                     <span style="display: block;">{{unidadMedica.clues}}</span>
                     <span style="display: block;">
                         <mat-chip-list aria-label="Listado Activo">
-                            <mat-chip *ngIf="archivoCargado" style="cursor: pointer;" color="primary" selected (click)="verArchivo()" [disableRipple]="true"><mat-icon>attach_file</mat-icon> Ver Archivo Cargado</mat-chip>
+                            <!--mat-chip *ngIf="archivoCargado" style="cursor: pointer;" color="primary" selected (click)="verArchivo()" [disableRipple]="true"><mat-icon>attach_file</mat-icon> Ver Archivo Cargado</mat-chip-->
                             <mat-chip *ngIf="totalesCatalogo" color="accent" selected [disableRipple]="true">Medicamentos en Catalogo: {{totalesCatalogo.claves_medicamentos_catalogo | number:'1.0-0'}}</mat-chip>
                             <mat-chip *ngIf="totalesCatalogo" color="accent" selected [disableRipple]="true">Mat. Curación en Catalogo: {{totalesCatalogo.claves_material_curacion_catalogo | number:'1.0-0'}}</mat-chip>
                         </mat-chip-list>
@@ -43,13 +43,13 @@
     <section fxFlex fxLayout="row">
         <mat-card fxFlex fxLayout="column" >
             <div fxFlex="none" fxLayout="row">
-                <div fxFlex="none">
+                <!--div fxFlex="none">
                     <a mat-stroked-button href="http://saludchiapas.gob.mx/storage/app/media/Documentos/catalogo_medicamentos.xlsx" target="_blank"><mat-icon>download</mat-icon>Catalogo Medicamentos</a>
                 </div>
                 <div fxFlex="none">
                     &nbsp;
                     <button mat-stroked-button color="primary" (click)="subirArchivo()"><mat-icon>upload</mat-icon> Subir Archivo</button>
-                </div>
+                </div-->
                 <div fxFlex></div>
                 <div fxFlex="none" *ngIf="semanaActiva">
                     <button mat-raised-button color="info" (click)="nuevoRegistro()"><mat-icon>add_circle</mat-icon>&nbsp;<span fxHide.xs>Capturar Registro</span></button>

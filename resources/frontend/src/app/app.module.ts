@@ -26,8 +26,7 @@ import { TokenInterceptor, ErrorInterceptor } from './token.service';
 import { MAT_STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { ForbiddenComponent } from './forbidden/forbidden.component';
-
-
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 import { SecurityModule } from './security/security.module';
 import { ProfileModule } from './profile/profile.module';
@@ -35,12 +34,12 @@ import { DevToolsModule } from './dev-tools/dev-tools.module';
 
 //Modulos del Sistema
 import { AlmacenModule } from './almacen/almacen.module';
+import { VisorAbastoSurtimientoModule } from './visores/visor-abasto-surtimiento/visor-abasto-surtimiento.module';
 import { CatalogosModule } from './catalogos/catalogos.module';
 import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { CapturaReporteSemanalModule } from './captura-reporte-semanal/captura-reporte-semanal.module';
 import { ConfiguracionUnidadModule } from './configuracion-unidad/configuracion-unidad.module';
-import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 //Para el Lenguaje de las Fechas
 import { registerLocaleData } from '@angular/common';
@@ -68,6 +67,7 @@ registerLocaleData(locale);
     SecurityModule,
     DevToolsModule,
     AlmacenModule,
+    VisorAbastoSurtimientoModule,
     CatalogosModule,
     ConfiguracionModule,
     PedidosModule,

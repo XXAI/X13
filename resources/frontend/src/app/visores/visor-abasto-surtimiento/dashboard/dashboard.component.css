@@ -1,0 +1,179 @@
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sin-unidad{
+    font-size: larger;
+    font-weight: 700;
+    text-align: center;
+    padding: 15px;
+    color:rgba(0, 0, 0, 0.45);
+    cursor: default;
+}
+
+.encabezado .icono .mat-icon{
+    font-size: 80px;
+    width: 80px !important;
+    height: 80px !important;
+    line-height: 80px !important;
+}
+
+.encabezado .informacion{
+    font-family: "Roboto Mono" , "Roboto" !important;
+    font-weight: 400;
+    font-size: 0.9em;
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+    padding-left: 10px;
+}
+
+.dashboard-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.dashboard-toolbar-icono{
+    cursor:default;
+    padding:5px;
+    text-align: center;
+    background-color: #dddddd;
+    font-weight: bold;
+    color:black;
+}
+
+.seccion{
+    padding: 0px;
+    margin-bottom: 5px;
+}
+
+.encabezado-seccion{
+    padding: 5px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: rgb(44, 148, 200);
+    color:rgb(241, 240, 240);
+    font-weight: 500;
+    cursor:default;
+    border-radius: 4px 4px 0px 0px;
+}
+
+.encabezado-seccion .icono .mat-icon{
+    font-size: 28px;
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 24px !important;
+}
+
+.encabezado-seccion .titulo{
+    line-height: 24px !important;
+    height: auto;
+    padding-left: 5px;
+}
+
+.contenido-seccion{
+    padding: 0px;
+}
+
+.tabla-datos{
+    width: 100%;
+    cursor: default;
+}
+
+.tabla-datos thead {
+    background-color: black;
+    color:whitesmoke;
+}
+
+.tabla-datos thead tr > th{
+    padding: 0 10px;
+    font-weight: 500;
+}
+
+.tabla-datos tbody tr > td:not(:first-of-type){
+    text-align: center;
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.tabla-datos tbody{
+    background-color: whitesmoke;
+}
+
+.tabla-datos tbody tr:nth-child(odd) {
+    background-color:white;
+}
+
+.lista-articulos-table{
+    width: 100%;
+    cursor: default;
+}
+
+.lista-articulos-table tr.mat-row:hover {
+    background-color: #F5F5F5;
+}
+
+.lista-articulos-table .descripcion{
+    font-size: small;
+    padding: 2px 0;
+}
+
+.tabla-contenido{
+    min-height: 105px;
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.small-search-input{
+    padding: 0px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: whitesmoke;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.desabasto{
+    color: red;
+    font-weight: bold;
+}
+
+.abasto{
+    color:green;
+    font-weight: bold;
+}
+
+.hide{
+    display: none;
+}
+
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+}
