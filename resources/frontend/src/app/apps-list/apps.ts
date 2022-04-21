@@ -25,7 +25,7 @@ export const APPS:App [] = [
         //{ name:'Inventario',      route: "almacen/inventario",      icon: "assets/icons/inventario.svg",      permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
       ]
     },
-    { name:'Visor: Abasto y Surtimiento',  route: "visor-abasto-surtimiento",      icon: "assets/icons/visor-reportes.svg",    permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
+    { name:'Visor: Abasto y Surtimiento',  route: "visor-abasto-surtimiento",      icon: "assets/icons/visor-reportes.svg",    permission:"RXHuHkXWQZ4YKfhcHo3a948y8NKhP516" },
     /*{ name:'Pedidos',   route: "pedidos",       icon: "assets/icons/pedidos-hub.svg",
       apps:[
         { name:'Pedidos Ordinarios',        route: "pedidos/pedidos-ordinarios",     icon: "assets/icons/pedidos.svg",           permission:"ibafSHvu8BUE5lc4FO0xvl4ZvFFvHcJZ" },

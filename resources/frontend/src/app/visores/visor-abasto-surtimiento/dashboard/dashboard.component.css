@@ -105,6 +105,10 @@
     background-color: whitesmoke;
 }
 
+.tabla-datos tbody tr:hover{
+    background-color: rgb(159, 233, 255) !important;
+}
+
 .tabla-datos tbody tr:nth-child(odd) {
     background-color:white;
 }
