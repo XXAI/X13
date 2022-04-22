@@ -173,11 +173,11 @@ export class SalidaComponent implements OnInit {
       agregar_articulos:false,
       guardar:false,
       concluir:false,
-      concluirModificacion:false,
+      concluir_modificacion:false,
       duplicar:false,
       eliminar:false,
       cancelar:false,
-      modificarSalida:false,
+      modificar_salida:false,
     };
 
     let lista_catalogos:any = {almacenes:'*',almacenes_todos:'*',programas:'*',unidades_medicas:'*',areas_servicios:'*',turnos:'*',personal_medico:'*', recetas_tipos_uso:'*',filtro_almacenes_movimiento:'SAL'};
@@ -332,7 +332,7 @@ export class SalidaComponent implements OnInit {
             this.verBoton.agregar_articulos = true; 
           }else{
             this.verBoton.cancelar = (response.data.estatus == 'CAN')?false:true;
-            this.verBoton.modificarSalida = (response.data.estatus == 'CAN')?false:true;;
+            this.verBoton.modificar_salida = (response.data.estatus == 'CAN')?false:true;;
             this.verBoton.duplicar = true;
           }
 
@@ -766,8 +766,8 @@ export class SalidaComponent implements OnInit {
             this.datosMovimiento.modificacion_activa = null;
             this.habilitarDatosPaciente = false;
             this.puedeEditarDatosEncabezado = false;
-            this.verBoton.concluirModificacion = false;
-            this.verBoton.modificarSalida = true;
+            this.verBoton.concluir_modificacion = false;
+            this.verBoton.modificar_salida = true;
             this.estatusMovimiento = this.datosMovimiento.estatus;
           }
         }
@@ -782,8 +782,8 @@ export class SalidaComponent implements OnInit {
     if(modificacion.estatus == 'MOD' && modificacion.solicitado_usuario_id == this.authUser.id){
       this.habilitarDatosPaciente = true;
       this.puedeEditarDatosEncabezado = true;
-      this.verBoton.concluirModificacion = true;
-      //this.verBoton.modificarSalida = false;
+      this.verBoton.concluir_modificacion = true;
+      //this.verBoton.modificar_salida = false;
       this.protegerDatosFormulario();
     }
   }
@@ -851,8 +851,8 @@ export class SalidaComponent implements OnInit {
                 this.estatusMovimiento = response.data.movimiento.estatus;
                 this.habilitarDatosPaciente = false;
                 this.puedeEditarDatosEncabezado = false;
-                this.verBoton.concluirModificacion = false;
-                this.verBoton.modificarSalida = true;
+                this.verBoton.concluir_modificacion = false;
+                this.verBoton.modificar_salida = true;
               }
             }
             this.isSaving = false;
@@ -974,7 +974,7 @@ export class SalidaComponent implements OnInit {
 
               this.verBoton.duplicar = true;
               this.verBoton.cancelar = true;
-              this.verBoton.modificarSalida = true;
+              this.verBoton.modificar_salida = true;
             }
             this.controlArticulosModificados = {};
             this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
@@ -1016,7 +1016,7 @@ export class SalidaComponent implements OnInit {
               this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
               this.estatusMovimiento = 'CAN';
               this.verBoton.cancelar = false;
-              this.verBoton.modificarSalida = false;
+              this.verBoton.modificar_salida = false;
               this.cargarDatosUsuarios(response.data);
             }
           },

@@ -18,6 +18,7 @@ export interface MovimientoData {
     motivo_cancelacion?:string;
 
     //Relacione a otros Objetos
+    modificacion_activa?:any;
     solicitud?: any;
     movimiento_hijo?:MovimientoData;
     movimiento_padre_id?:Number;

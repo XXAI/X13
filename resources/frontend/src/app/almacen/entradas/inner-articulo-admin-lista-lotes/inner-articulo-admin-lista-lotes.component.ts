@@ -103,6 +103,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       if(estatus_articulo < loteData.estatus_caducidad){
         estatus_articulo = loteData.estatus_caducidad;
       }
+
+      if(typeof loteData.empaque_detalle === 'string'){
+        loteData.empaque_detalle = {descripcion: loteData.empaque_detalle};
+      }
     });
     this.articulo.estatus = estatus_articulo;
 

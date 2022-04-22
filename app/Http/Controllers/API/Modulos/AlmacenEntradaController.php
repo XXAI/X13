@@ -65,7 +65,10 @@ class AlmacenEntradaController extends Controller
                                     ->where('movimientos.direccion_movimiento','ENT')
                                     ->where('movimientos.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
                                     ->whereIn('movimientos.almacen_id',$almacenes)
-                                    ->orderBy('updated_at','DESC');
+                                    ->orderBy('updated_at','DESC')
+                                    ->with(['modificacionActiva'=>function($modificacionActiva){
+                                        $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
+                                    }]);
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -134,6 +137,18 @@ class AlmacenEntradaController extends Controller
             $loggedUser = auth()->userOrFail();
             $movimiento = Movimiento::with(['unidadMedica','almacen','almacenMovimiento','unidadMedicaMovimiento','proveedor','programa','tipoMovimiento','turno','creadoPor','modificadoPor','concluidoPor','canceladoPor','eliminadoPor'])->find($id);
 
+            if($movimiento->movimiento_padre_id){
+                $movimiento->load(['movimientoPadre'=>function($movimientoPadre){
+                    return $movimientoPadre->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
+                }]);
+            }
+
+            if($movimiento->estatus == 'FIN'){
+                $movimiento->load(['modificacionActiva'=>function($modificacionActiva){
+                    $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
+                }]);
+            }
+
             if($movimiento->estatus == 'PERE'){
                 $movimiento_hijo_id = $movimiento->id;
                 $solicitud_id = $movimiento->solicitud_id;
@@ -164,7 +179,7 @@ class AlmacenEntradaController extends Controller
                                                                 ->where('solicitudes_articulos.solicitud_id',$solicitud_id);
                                                 })
                                                 ->with(['articulo'=>function($articulos)use($loggedUser){
-                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                                    $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id)->with('empaqueDetalle');
                                                 },'stock'=>function($stock){
                                                     $stock->with('marca','empaqueDetalle')->withTrashed();
                                                 },'cartaCanje']);
@@ -649,6 +664,16 @@ class AlmacenEntradaController extends Controller
             }
             
             DB::commit();
+
+            if($concluir){
+                $movimiento = Movimiento::with(['unidadMedica','unidadMedicaMovimiento','almacenMovimiento','programa','turno','tipoMovimiento',
+                                            'almacen','proveedor',
+                                            'movimientoPadre' => function($movimientoPadre){
+                                                return $movimientoPadre->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
+                                            },'modificacionActiva'=>function($modificacionActiva){
+                                                $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
+                                            }])->find($movimiento->id);
+            }
 
             $movimiento->load('creadoPor','modificadoPor','concluidoPor');
             

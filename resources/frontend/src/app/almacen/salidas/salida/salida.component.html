@@ -49,8 +49,8 @@
                 <span>Duplicar Salida</span>
             </button>
 
-            <mat-divider *ngIf="verBoton['modificarSalida']"></mat-divider>
-            <button mat-menu-item *ngIf="verBoton['modificarSalida']" (click)="activarModificacionSalida()">
+            <mat-divider *ngIf="verBoton['modificar_salida']"></mat-divider>
+            <button mat-menu-item *ngIf="verBoton['modificar_salida']" (click)="activarModificacionSalida()">
                 <mat-icon color="admin">admin_panel_settings</mat-icon>
                 <span>Modificar Salida</span>
             </button>
@@ -78,25 +78,13 @@
                 <mat-icon>add_circle</mat-icon>
                 <span>Nueva Salida</span>
             </button>
-            <!--button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
-                <mat-icon>settings_applications</mat-icon>
-                <span>Configurar Firmantes</span>
-            </button>
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
-                <mat-icon>border_color</mat-icon>
-                <span>Firmar</span>
-            </button>
-            <button mat-menu-item *ngIf="verBoton['enviar_revision'] && estatusMovimiento == 'BOR'">
-                <mat-icon>outbox</mat-icon>
-                <span>Enviar a Revisión</span>
-            </button-->
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
 
     <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: hidden;"> <!-- Module Body <<<<<<< -->
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
         <section fxFlex="none" fxLayout="column">
-            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!puedeEditarDatosEncabezado && datosMovimiento" class="concluido-bg-color">
+            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!puedeEditarDatosEncabezado && datosMovimiento" class="{{listaEstatusClaves[estatusMovimiento]}}-bg-color">
                 <div fxFlex class="fake-input">
                     <span class="label">Fecha de Salida:</span>
                     <span class="value">{{datosMovimiento.fecha_movimiento | date:'MMMM d, y' }}</span>

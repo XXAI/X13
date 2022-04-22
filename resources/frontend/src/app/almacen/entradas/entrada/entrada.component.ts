@@ -19,6 +19,9 @@ import * as FileSaver from 'file-saver';
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { MovimientoData } from '../../tools/entrada';
+import { User } from 'src/app/auth/models/user';
+import { AuthService } from 'src/app/auth/auth.service';
+import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 
 @Component({
   selector: 'app-entrada',
@@ -43,6 +46,7 @@ export class EntradaComponent implements OnInit {
   constructor(
     private datepipe: DatePipe,
     private formBuilder: FormBuilder, 
+    private authService: AuthService,
     private almacenService: AlmacenService, 
     private entradasService: EntradasService, 
     private sharedService: SharedService, 
@@ -51,10 +55,14 @@ export class EntradaComponent implements OnInit {
     private router: Router
   ) { }
 
+  authUser:User;
+
   formMovimiento:FormGroup;
   catalogos:any;
 
   idArticuloSeleccionado:number;
+
+  movimientoPadre:any;
 
   controlArticulosAgregados:any;
   controlArticulosModificados:any;
@@ -78,8 +86,11 @@ export class EntradaComponent implements OnInit {
 
   displayedColumns: string[]; //= ['estatus','clave','nombre','no_lotes','total_piezas','total_monto','actions'];
   
-  editable: boolean;
-  puedeEditarElementos: boolean;
+  puedeEditarDatosEncabezado: boolean;
+  puedeEditarListaArticulos:  boolean;
+
+  //editable: boolean;
+  //puedeEditarElementos: boolean;
 
   datosForm:any;
   datosEntrada:MovimientoData;
@@ -93,18 +104,19 @@ export class EntradaComponent implements OnInit {
   listadoEstatusUsuarios: any[];
   verListadoUsuarios: boolean;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in', 'CAN':'cancel',     'PERE':'pending_actions'};
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',            'CAN':'cancelado',  'PERE':'pendiente-recepcion'};
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',            'CAN':'Cancelado',  'PERE':'Pendiente de Recepción'};
+  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',        'MOD':'note_alt'};
+  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',     'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',  'MOD':'Modificación Activa'};
   
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
   
   ngOnInit() {
-    this.isLoading = true;
+    this.authUser = this.authService.getUserData();
 
-    this.editable = false;
-    this.puedeEditarElementos = false;
+    this.isLoading = true;
+    this.puedeEditarDatosEncabezado = false;
+    this.puedeEditarListaArticulos = false;
 
     this.listadoEstatusUsuarios = [];
     this.verListadoUsuarios = false;
@@ -141,35 +153,27 @@ export class EntradaComponent implements OnInit {
       'programas':[],
       'proveedores':[],
       'tipos_movimiento':[],
+      'unidades_medicas':[],
       'turnos':[],
       'marcas':[],
     };
 
     this.maxFechaMovimiento = new Date();
     this.formMovimiento = this.formBuilder.group({});
-    /*this.formMovimiento = this.formBuilder.group({
-      id:[''],
-      tipo_movimiento_id:['',Validators.required],
-      fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
-      almacen_id: ['',Validators.required],
-      documento_folio:[''],
-      programa: [''],
-      programa_id: [''],
-      proveedor:[''],
-      proveedor_id: [''],
-      referencia_folio:[''],
-      referencia_fecha:[''],
-      observaciones: [''],
-    });*/
-    //this.reconfigurarFormulario();
 
     this.verBoton = {
-      concluir:false,
+      agregar_articulos:false,
       guardar:false,
-      agregar_articulos:false
+      concluir:false,
+      concluir_modificacion:false,
+      duplicar:false,
+      crear_salida:false,
+      eliminar:false,
+      cancelar:false,
+      modificar_entrada:false,
     };
 
-    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',turnos:'*',filtro_almacenes_movimiento:'ENT'};
+    let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',turnos:'*',unidades_medicas:'*',filtro_almacenes_movimiento:'ENT'};
 
     this.almacenService.obtenerMovimientoCatalogos(lista_catalogos).subscribe(
       response =>{
@@ -180,7 +184,7 @@ export class EntradaComponent implements OnInit {
           this.catalogos['almacenes'] = response.data.almacenes;
           this.catalogos['programas'] = response.data.programas;
           this.catalogos['proveedores'] = response.data.proveedores;
-          //this.catalogos['tipos_movimiento'] = response.data.tipos_movimiento;
+          this.catalogos['unidades_medicas'] = response.data.unidades_medicas;
           this.catalogos['marcas'] = response.data.marcas;
           this.catalogos['turnos'] = response.data.turnos;
 
@@ -200,13 +204,22 @@ export class EntradaComponent implements OnInit {
   }
 
   checarAlmacenSeleccionado(){
-    let almacen = this.catalogos['almacenes'].find(item => item.id == this.formMovimiento.get('almacen_id').value);
-
-    this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
-    if(this.catalogos['tipos_movimiento'].length == 1){
-      this.formMovimiento.get('tipo_movimiento_id').patchValue(this.catalogos['tipos_movimiento'][0].id);
+    let almacen_id;
+    if(this.formMovimiento.get('almacen_id')){
+      almacen_id = this.formMovimiento.get('almacen_id').value;
     }else{
-      this.formMovimiento.get('tipo_movimiento_id').reset();
+      almacen_id = this.datosEntrada.almacen_id;
+    }
+
+    let almacen = this.catalogos['almacenes'].find(item => item.id == almacen_id);
+
+    if(this.formMovimiento.get('tipo_movimiento_id')){
+      this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
+      if(this.catalogos['tipos_movimiento'].length == 1){
+        this.formMovimiento.get('tipo_movimiento_id').patchValue(this.catalogos['tipos_movimiento'][0].id);
+      }else{
+        this.formMovimiento.get('tipo_movimiento_id').reset();
+      }
     }
   }
 
@@ -226,40 +239,63 @@ export class EntradaComponent implements OnInit {
               }
 
               this.estatusMovimiento = response.data.estatus;
+
+              if(response.data.movimiento_padre){
+                this.movimientoPadre = response.data.movimiento_padre;
+              }
+
               if(response.data.estatus == 'BOR'){
-                this.editable = true;
-                this.puedeEditarElementos = true;
-                this.verBoton = {
-                  concluir:true,
-                  guardar:true,
-                  agregar_articulos:true
-                };
+                this.puedeEditarDatosEncabezado = true;
+                this.puedeEditarListaArticulos = true;
+
+                this.verBoton.concluir = true;
+                this.verBoton.guardar = true;
+                this.verBoton.eliminar = true;
+                this.verBoton.agregar_articulos = true;
+
                 this.reconfigurarFormulario();
               }else if(response.data.estatus == 'PERE'){
-                this.editable = true;
-                this.puedeEditarElementos = true;
-                this.verBoton = {
-                  concluir:true,
-                  guardar:true,
-                  agregar_articulos:false
-                };
+                this.puedeEditarDatosEncabezado = true;
+                this.puedeEditarListaArticulos = true;
+                
+                this.verBoton.concluir = true;
+                this.verBoton.guardar = true;
+                this.verBoton.cancelar = true;
+                this.verBoton.agregar_articulos = false;
+                
                 this.reconfigurarFormulario(['id','fecha_movimiento','turno_id','observaciones']);
                 this.modoRecepcion = true;
                 this.totalesRecibidos.recibidos = 0;
+              }else{
+                this.verBoton.duplicar = true;
+                this.verBoton.crear_salida = true;
+                this.verBoton.modificar_entrada = true;
+                this.verBoton.cancelar = true;
               }
 
-              if(response.data.tipo_movimiento && response.data.tipo_movimiento.clave == 'RCPCN'){
+              /*if(response.data.tipo_movimiento && response.data.tipo_movimiento.clave == 'RCPCN'){
+                //TODO: Creo que esta de mas, habra que validarlo
                 this.modoRecepcion = true;
                 this.totalesRecibidos.recibidos = 0;
-              }
+              }*/
 
-              this.formMovimiento.patchValue(response.data);
-              if(response.data.estatus == 'BOR'){
-                this.checarAlmacenSeleccionado();
-                this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
+              this.datosEntrada = response.data;
+
+              if(this.datosEntrada.modificacion_activa){
+                this.cargarDatosModificacion(this.datosEntrada.modificacion_activa);
+                this.formMovimiento.patchValue(this.datosEntrada);
+              }else{
+                this.formMovimiento.patchValue(response.data);
               }
               
-              this.datosEntrada = response.data;
+              //if(response.data.estatus == 'BOR'){
+              if(this.puedeEditarDatosEncabezado){
+                this.checarAlmacenSeleccionado();
+                if(this.formMovimiento.get('tipo_movimiento_id')){
+                  this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
+                }
+              }
+              
               if(response.data.solicitud){
                 this.tieneSolicitado = true;
               }
@@ -276,6 +312,9 @@ export class EntradaComponent implements OnInit {
                 lista_articulos = response.data.lista_articulos;
               }
 
+              articulos_temp = this.cargarListaArticulos(lista_articulos,this.datosEntrada.tipo_movimiento.clave,this.datosEntrada.estatus);
+
+              /*
               for(let i in lista_articulos){
                 lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
                 let articulo:any;
@@ -367,7 +406,7 @@ export class EntradaComponent implements OnInit {
                   }
                   this.totalesRecibidos.monto += lista_articulos[i].total_monto;
                 }
-              }
+              }*/
 
               this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
               this.dataSourceArticulos.paginator = this.articulosPaginator;
@@ -387,21 +426,150 @@ export class EntradaComponent implements OnInit {
           }
         );
       }else{
+        let datos_recibidos = history.state.data;
         this.estatusMovimiento = 'NV';
-        this.dataSourceArticulos = new MatTableDataSource<any>([]);
-        this.dataSourceArticulos.paginator = this.articulosPaginator;
-        this.dataSourceArticulos.sort = this.sort;
-        this.editable = true;
-        this.puedeEditarElementos = true;
-        this.verBoton = {
-          concluir:true,
-          guardar:true,
-          agregar_articulos:true
-        };
+
+        //Si recibimos datos, es por que estamos copiando una salida o el movimiento se esta generando en base a una entrada
+        if(datos_recibidos && datos_recibidos.movimiento_id){
+          this.isLoading = true;
+          this.entradasService.verEntrada(datos_recibidos.movimiento_id).subscribe(
+            response =>{
+              console.log('Respuesta Movimiento a Duplicar:',response);
+              this.modoRecepcion = false;
+              let lista_articulos = this.cargarListaArticulos(response.data.lista_articulos,'ALM','NV');
+
+              this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
+              this.dataSourceArticulos.paginator = this.articulosPaginator;
+              this.dataSourceArticulos.sort = this.sort;
+
+              this.isLoading = false;
+            },
+            errorResponse =>{
+              var errorMessage = "Ocurrió un error.";
+              if(errorResponse.status == 409){
+                errorMessage = errorResponse.error.error.message;
+              }
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.isLoading = false;
+            }
+          );
+        }else{
+          this.dataSourceArticulos = new MatTableDataSource<any>([]);
+          this.dataSourceArticulos.paginator = this.articulosPaginator;
+          this.dataSourceArticulos.sort = this.sort;
+        }
+
+        this.puedeEditarDatosEncabezado = true;
+        this.puedeEditarListaArticulos = true;
+
+        this.verBoton.concluir = true;
+        this.verBoton.guardar = true;
+        this.verBoton.eliminar = true;
+        this.verBoton.agregar_articulos = true;
+
         this.reconfigurarFormulario();
         this.cargarColumnasArticulos();
       }
     });
+  }
+
+  cargarListaArticulos(lista_articulos:any[], tipo_movimiento_clave:string, estatus:string):any[]{
+    let listado_articulos:any = [];
+
+    for(let i in lista_articulos){
+      lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
+      let articulo:any;
+
+      if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
+        articulo = {
+          id: lista_articulos[i].articulo.id,
+          estatus: 1,
+          clave: (lista_articulos[i].articulo.clave_cubs)?lista_articulos[i].articulo.clave_cubs:lista_articulos[i].articulo.clave_local,
+          nombre: lista_articulos[i].articulo.articulo,
+          descripcion: lista_articulos[i].articulo.especificaciones,
+          partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
+          partida_descripcion: lista_articulos[i].articulo.partida_especifica,
+          familia: lista_articulos[i].articulo.familia,
+          empaque_detalle: lista_articulos[i].articulo.empaque_detalle,
+          tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
+          tipo_articulo: lista_articulos[i].articulo.tipo_bien_servicio,
+          tipo_formulario: lista_articulos[i].articulo.clave_form,
+          en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
+          normativo: (lista_articulos[i].articulo.es_normativo)?true:false,
+          descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
+          cantidad_solicitada: lista_articulos[i].cantidad_solicitada,
+          total_monto: 0,
+          no_lotes: 0,
+          total_piezas: 0,
+          total_recibido: 0,
+          lotes: [],
+        };
+        
+        listado_articulos.push(articulo);
+
+        this.controlArticulosAgregados[articulo.id] = true;
+        this.totalesRecibidos.claves += 1;
+      }else{
+        let index = listado_articulos.findIndex(x => x.id == lista_articulos[i].articulo.id);
+        articulo = listado_articulos[index];                  
+      }
+
+      if(lista_articulos[i].cantidad > 0 || lista_articulos[i].cantidad_anterior > 0){
+        articulo.no_lotes += 1;
+        articulo.total_monto += lista_articulos[i].total_monto;
+
+        let lote:any = {
+          lote:               (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
+          fecha_caducidad:    (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
+          codigo_barras:      (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
+          no_serie:           (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
+          modelo:             (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
+          marca_id:           (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
+          marca:              (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
+          empaque_detalle_id: (lista_articulos[i].stock)?lista_articulos[i].stock.empaque_detalle_id:lista_articulos[i].empaque_detalle_id,
+          empaque_detalle:    (lista_articulos[i].stock)?lista_articulos[i].stock.empaque_detalle:null,
+          precio_unitario:    lista_articulos[i].precio_unitario,
+          iva:                lista_articulos[i].iva,
+          total_monto:        lista_articulos[i].total_monto,
+          memo_folio:         (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
+          memo_fecha:         (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
+          vigencia_meses:     (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
+        };
+        
+        if(lote.empaque_detalle_id && articulo.empaque_detalle){
+          lote.empaque_detalle = articulo.empaque_detalle.find(x => x.id == lote.empaque_detalle_id);
+        }
+
+        if(tipo_movimiento_clave == 'RCPCN' && estatus == 'PERE'){
+          lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
+          lote.cantidad = (lista_articulos[i].cantidad_recibida === null)?lista_articulos[i].cantidad:lista_articulos[i].cantidad_recibida;
+          lote.cantidad_enviada = lista_articulos[i].cantidad;
+          lote.cantidad_recibida_anterior = lote.cantidad_enviada - lote.cantidad;
+          articulo.total_recibido += lote.cantidad;
+          articulo.total_piezas += lote.cantidad_enviada;
+        }else if(tipo_movimiento_clave == 'RCPCN'){
+          lote.cantidad = lista_articulos[i].cantidad;
+          lote.cantidad_enviada = lista_articulos[i].cantidad_anterior;
+          articulo.total_recibido += lote.cantidad;
+          articulo.total_piezas += lote.cantidad_enviada;
+        }else{
+          articulo.total_piezas += lista_articulos[i].cantidad;
+          lote.cantidad = lista_articulos[i].cantidad;
+        }
+
+        articulo.lotes.push(lote);
+
+        if(this.modoRecepcion){
+          this.totalesRecibidos.recibidos += lote.cantidad;
+          this.totalesRecibidos.articulos += lote.cantidad_enviada;
+        }else{
+          this.totalesRecibidos.articulos += lote.cantidad;//lista_articulos[i].cantidad;
+        }
+        this.totalesRecibidos.monto += lista_articulos[i].total_monto;
+      }
+    }
+
+    return listado_articulos;
   }
 
   cerrarListaUsuarios(event){
@@ -510,6 +678,7 @@ export class EntradaComponent implements OnInit {
                             map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
                           );
     }
+
     if(this.formMovimiento.get('programa')){
       this.filteredProgramas = this.formMovimiento.get('programa').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
                           map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
@@ -598,6 +767,110 @@ export class EntradaComponent implements OnInit {
       }
     }
   }
+
+  activarModificacionEntrada(){
+    let configDialog = {
+      width: '400px',
+      //minHeight: '470px',
+      height: 'auto',
+      disableClose: true,
+      data:{id:this.datosEntrada.id, modificacion: null},
+      panelClass: 'no-padding-dialog'
+    };
+
+    if(this.datosEntrada && (this.datosEntrada.estatus == 'FIN' || this.datosEntrada.estatus == 'PERE')){
+      if(this.datosEntrada.modificacion_activa){
+        configDialog.data.modificacion = this.datosEntrada.modificacion_activa;
+      }
+      const dialogRef = this.dialog.open(DialogoModificarMovimientoComponent, configDialog);
+
+      dialogRef.afterClosed().subscribe(dialogResponse => {
+        if(dialogResponse){
+          if(dialogResponse.estatus != 'CAN'){
+            this.datosEntrada.modificacion_activa = dialogResponse;
+            this.cargarDatosModificacion(dialogResponse);
+
+            this.checarAlmacenSeleccionado();
+            this.formMovimiento.patchValue(this.datosEntrada);
+          }else{
+            this.datosEntrada.modificacion_activa = null;
+            this.puedeEditarDatosEncabezado = false;
+            this.verBoton.concluir_modificacion = false;
+            this.verBoton.modificar_entrada = true;
+            this.estatusMovimiento = this.datosEntrada.estatus;
+          }
+        }
+      });
+    }else{
+      console.log('no encotnrado');
+    }
+  }
+
+  cargarDatosModificacion(modificacion){
+    this.estatusMovimiento = modificacion.estatus;
+    if(modificacion.estatus == 'MOD' && modificacion.solicitado_usuario_id == this.authUser.id){
+      this.puedeEditarDatosEncabezado = true;
+      this.verBoton.concluir_modificacion = true;
+      this.protegerDatosFormulario();
+    }
+  }
+
+  protegerDatosFormulario(){
+    let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','documento_folio','observaciones'];
+    if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
+      mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+    }
+    this.reconfigurarFormulario(mostrar_campos);
+  }
+
+  concluirModificacion(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Concluir Modificación?',dialogMessage:'Esta seguro de concluir las modificaciones? escriba CONCLUIR para confirmar la acción',validationString:'CONCLUIR',btnColor:'admin',btnText:'Concluir'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.isSaving = true;
+        let params:any = this.formMovimiento.value;
+        params.fecha_movimiento = this.datepipe.transform(params.fecha_movimiento, 'yyyy-MM-dd');
+        params.proveedor_id = (params.proveedor)?params.proveedor.id:null;
+        //params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
+
+        this.almacenService.guardarModificacion(this.datosEntrada.id,params).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Datos Guardados con Éxito', null, 3000);
+
+              response.data.modificacion.registro_original = JSON.parse(response.data.modificacion.registro_original);
+              response.data.modificacion.registro_modificado = JSON.parse(response.data.modificacion.registro_modificado);
+              console.log('Modificacion Guardada:',response.data.modificacion);
+              
+              if(response.data.modificacion.estatus == 'FIN'){
+                this.datosEntrada = response.data.movimiento;
+                this.estatusMovimiento = response.data.movimiento.estatus;
+                this.puedeEditarDatosEncabezado = false;
+                this.verBoton.concluir_modificacion = false;
+                this.verBoton.modificar_entrada = true;
+              }
+            }
+            this.isSaving = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isSaving = false;
+          }
+        );
+      }
+    });
+  }
   
   concluirMovimiento(){
     const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
@@ -644,15 +917,24 @@ export class EntradaComponent implements OnInit {
             this.estatusMovimiento = response.data.estatus;
             this.datosEntrada = response.data;
             this.cargarDatosUsuarios(response.data);
+
+            if(response.data.movimiento_padre){
+              this.movimientoPadre = response.data.movimiento_padre;
+            }
             
             if(this.estatusMovimiento != 'BOR' && this.estatusMovimiento != 'PERE'){
-              this.editable = false;
-              this.puedeEditarElementos = false;
-                this.verBoton = {
-                  concluir:false,
-                  guardar:false,
-                  agregar_articulos:false
-                };
+              this.puedeEditarDatosEncabezado = false;
+              this.puedeEditarListaArticulos = false;
+
+              this.verBoton.concluir = false;
+              this.verBoton.guardar = false,
+              this.verBoton.agregar_articulos = false;
+              this.verBoton.eliminar = false;
+
+              this.verBoton.duplicar = true;
+              this.verBoton.cancelar = true;
+              this.verBoton.modificar_entrada = true;
+              this.verBoton.crear_salida = true;
             }
             this.controlArticulosModificados = {};
             this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
@@ -860,5 +1142,10 @@ export class EntradaComponent implements OnInit {
         //this.isLoadingPDF = false;
       }
     );
+  }
+
+  cargarNuevaEntrada(uri:string){
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>
+    this.router.navigate([uri]));
   }
 }

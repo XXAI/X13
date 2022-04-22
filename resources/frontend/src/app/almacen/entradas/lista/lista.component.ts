@@ -16,6 +16,7 @@ import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-subir-archivo.component';
 import { DatePipe } from '@angular/common';
+import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -25,7 +26,11 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
   styleUrls: ['./lista.component.css']
 })
 export class ListaComponent implements OnInit {
-  
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatTable) usersTable: MatTable<any>;
+
+  constructor(private datepipe: DatePipe, private sharedService: SharedService, private entradasService: EntradasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
+
   isLoading: boolean = false;
   mediaSize: string;
   isLoadingPDF: boolean = false;
@@ -58,11 +63,6 @@ export class ListaComponent implements OnInit {
   objetoMovimiento:any;
 
   fechaActual:Date = new Date();
-
-  constructor(private datepipe: DatePipe, private sharedService: SharedService, private entradasService: EntradasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
-
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatTable) usersTable: MatTable<any>;
 
   ngOnInit() {
     this.mediaObserver.media$.subscribe(
@@ -143,9 +143,16 @@ export class ListaComponent implements OnInit {
           if(response.data.total > 0){
             let lista_items = response.data.data;
             lista_items.forEach(element => {
-              element.estatus_clave = this.listaEstatusClaves[element.estatus];
-              element.estatus_label = this.listaEstatusLabels[element.estatus];
-              element.estatus_icono = this.listaEstatusIconos[element.estatus];
+
+              if((element.estatus == 'FIN') && element.modificacion_activa){
+                element.estatus_clave = this.listaEstatusClaves[element.modificacion_activa.estatus];
+                element.estatus_label = this.listaEstatusLabels[element.modificacion_activa.estatus];
+                element.estatus_icono = this.listaEstatusIconos[element.modificacion_activa.estatus];
+              }else{
+                element.estatus_clave = this.listaEstatusClaves[element.estatus];
+                element.estatus_label = this.listaEstatusLabels[element.estatus];
+                element.estatus_icono = this.listaEstatusIconos[element.estatus];
+              }
 
               if(!element.folio){
                 element.folio = 'Sin Folio';
@@ -223,6 +230,46 @@ export class ListaComponent implements OnInit {
         );
       }
     });
+  }
+
+  activarModificacionEntrada(id){
+    let configDialog = {
+      width: '400px',
+      //minHeight: '470px',
+      height: 'auto',
+      disableClose: true,
+      data:{id:id, modificacion: null},
+      panelClass: 'no-padding-dialog'
+    };
+
+    let movimiento = this.listadoMovimientos.find(x => x.id == id);
+    if(movimiento){
+      if(movimiento.modificacion_activa){
+        configDialog.data.modificacion = movimiento.modificacion_activa;
+      }
+      const dialogRef = this.dialog.open(DialogoModificarMovimientoComponent, configDialog);
+
+      dialogRef.afterClosed().subscribe(dialogResponse => {
+        if(dialogResponse){
+          let movimiento = this.listadoMovimientos.find(x => x.id == id);
+          if(dialogResponse.estatus != 'CAN'){
+            movimiento.modificacion_activa = dialogResponse;
+            movimiento.estatus_clave = this.listaEstatusClaves[dialogResponse.estatus];
+            movimiento.estatus_label = this.listaEstatusLabels[dialogResponse.estatus];
+            movimiento.estatus_icono = this.listaEstatusIconos[dialogResponse.estatus];
+          }else{
+            movimiento.modificacion_activa = null;
+            movimiento.estatus_clave = this.listaEstatusClaves[movimiento.estatus];
+            movimiento.estatus_label = this.listaEstatusLabels[movimiento.estatus];
+            movimiento.estatus_icono = this.listaEstatusIconos[movimiento.estatus];
+          }
+          
+          //console.log(dialogResponse);
+        }
+      });
+    }else{
+      console.log('no encotnrado');
+    }
   }
 
   cancelarEntrada(id){

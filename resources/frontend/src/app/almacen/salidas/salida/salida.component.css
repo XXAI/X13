@@ -425,7 +425,13 @@ tr.tabla-row-articulo-detalle{
 }
 
 .pendiente-recepcion-bg-color{
-    background-color:#dc8503;
+    background-color:#bf7200;
+    color:whitesmoke;
+}
+
+.peticion-modificacion-bg-color{
+    background-color:#9404c0;
+    color:whitesmoke;
 }
 
 .concluido-bg-color{
@@ -435,6 +441,7 @@ tr.tabla-row-articulo-detalle{
 
 .cancelado-bg-color{
     background-color:#ff2a2a;
+    color:whitesmoke;
 }
 
 .fake-input{
@@ -451,7 +458,7 @@ tr.tabla-row-articulo-detalle{
 }
 
 .fake-input:hover{
-    background-color: #3e92e13d;
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .fake-input .label{

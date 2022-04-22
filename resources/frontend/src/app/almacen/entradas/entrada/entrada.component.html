@@ -8,6 +8,9 @@
             <button fxFlex="none" mat-button *ngIf="verBoton['guardar']" [matTooltip]="'Guardar'" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
                 <mat-icon>save</mat-icon>
             </button>
+            <button fxFlex="none" mat-button *ngIf="verBoton['concluir_modificacion']" [matTooltip]="'Concluir Modificación'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirModificacion()" [class.button-spinner]="isSaving">
+                <mat-icon>all_inbox</mat-icon>
+            </button>
             <div fxFlex>
             </div>
             <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.folio" class="label-info">
@@ -36,64 +39,121 @@
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuMovimiento="matMenu">
-            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'BOR'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+            <button mat-menu-item *ngIf="verBoton['concluir']" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
                 <mat-icon>all_inbox</mat-icon>
-                <span>Concluir Movimiento</span>
+                <span>Concluir Entrada</span>
             </button>
-            <button mat-menu-item *ngIf="verBoton['concluir'] && estatusMovimiento == 'PERE'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
+
+            <button mat-menu-item *ngIf="verBoton['concluir_recepcion']" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirMovimiento()">
                 <mat-icon>all_inbox</mat-icon>
                 <span>Concluir Recepción</span>
             </button>
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosEntrada.id}}">
+
+            <button mat-menu-item *ngIf="verBoton['duplicar']" [routerLink]="'/almacen/entradas/nueva'" [state]="{data:{movimiento_id:datosEntrada.id}}">
+                <mat-icon>content_copy</mat-icon>
+                <span>Duplicar Entrada</span>
+            </button>
+
+            <mat-divider *ngIf="verBoton['modificar_entrada']"></mat-divider>
+            <button mat-menu-item *ngIf="verBoton['modificar_entrada']" (click)="activarModificacionEntrada()">
+                <mat-icon color="admin">admin_panel_settings</mat-icon>
+                <span>Modificar Entrada</span>
+            </button>
+
+            <mat-divider *ngIf="verBoton['crear_salida']"></mat-divider>
+            <button mat-menu-item *ngIf="verBoton['crear_salida']" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosEntrada.id}}">
                 <mat-icon color="primary">reply</mat-icon>
                 <span>Crear Salida</span>
             </button>
-            <mat-divider *ngIf="estatusMovimiento == 'BOR'"></mat-divider>
-            <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'BOR'" (click)="eliminarEntrada()">
+
+            <mat-divider *ngIf="verBoton['eliminar']"></mat-divider>
+            <button mat-menu-item style="color:red;" *ngIf="verBoton['eliminar']" (click)="eliminarEntrada()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Entrada</span>
             </button>
+
             <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
-                <mat-divider *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'PERE'"></mat-divider>
-                <button mat-menu-item style="color:red;" *ngIf="estatusMovimiento == 'FIN' || estatusMovimiento == 'PERE'" (click)="cancelarEntrada()">
+                <mat-divider *ngIf="verBoton['cancelar']"></mat-divider>
+                <button mat-menu-item style="color:red;" *ngIf="verBoton['cancelar']" (click)="cancelarEntrada()">
                     <mat-icon color="warn">cancel</mat-icon>
                     <span>Cancelar Entrada</span>
                 </button>
             </div>
+
             <mat-divider></mat-divider>
             <button mat-menu-item (click)="generarPDF()">
                 <mat-icon>print</mat-icon>
                 <span>Imprimir</span>
             </button>
             <mat-divider></mat-divider>
-            <button mat-menu-item [routerLink]="'/almacen/entradas/nueva'">
+            <button mat-menu-item (click)="cargarNuevaEntrada('/almacen/entradas/nueva')">
                 <mat-icon>add_circle</mat-icon>
                 <span>Nueva Entrada</span>
             </button>
-            <!--button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
-                <mat-icon>settings_applications</mat-icon>
-                <span>Configurar Firmantes</span>
-            </button>
-            <button mat-menu-item *ngIf="estatusMovimiento == 'FIN'">
-                <mat-icon>border_color</mat-icon>
-                <span>Firmar</span>
-            </button>
-            <button mat-menu-item *ngIf="verBoton['enviar_revision'] && estatusMovimiento == 'BOR'">
-                <mat-icon>outbox</mat-icon>
-                <span>Enviar a Revisión</span>
-            </button-->
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
 
     <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: hidden;"> <!-- Module Body <<<<<<< -->
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
         <section fxFlex="none" fxLayout="column">
-            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" fxLayoutAlign="space-between center" [formGroup]="formMovimiento" [style.fontSize.px]="15">
+            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!puedeEditarDatosEncabezado && datosEntrada" class="{{listaEstatusClaves[estatusMovimiento]}}-bg-color">
+                <div fxFlex class="fake-input">
+                    <span class="label">Fecha Entrada:</span>
+                    <span class="value">{{datosEntrada.fecha_movimiento | date:'MMMM d, y' }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Almacen:</span>
+                    <span class="value">{{datosEntrada.almacen.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Tipo de Entrada:</span>
+                    <span class="value">{{datosEntrada.tipo_movimiento.descripcion }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Turno:</span>
+                    <span class="value">{{datosEntrada.turno.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Programa:</span>
+                    <span class="value">{{(datosEntrada.programa)?datosEntrada.programa.descripcion:'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Folio-Documento:</span>
+                    <span class="value">{{ datosEntrada.documento_folio||'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosEntrada.proveedor">
+                    <span class="label">Proveedor:</span>
+                    <span class="value">{{ datosEntrada.proveedor.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosEntrada.unidad_medica_movimiento">
+                    <span class="label">Unidad Médica Origen:</span>
+                    <span class="value">{{ datosEntrada.unidad_medica_movimiento.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="datosEntrada.almacen_movimiento">
+                    <span class="label">Almacén Origen:</span>
+                    <span class="value">{{ datosEntrada.almacen_movimiento.nombre }}</span>
+                </div>
+                <div fxFlex="none" fxLayout="row">
+                    <div fxFlex class="fake-input">
+                        <span class="label">No de Referencia:</span>
+                        <span class="value">{{ datosEntrada.referencia_folio||'---' }}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Fecha de Referencia:</span>
+                        <span class="value">{{(datosEntrada.referencia_fecha)?(datosEntrada.referencia_fecha | date:'MMMM d, y'):'---' }}</span>
+                    </div>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Observaciones:</span>
+                    <span class="value">{{ datosEntrada.observaciones||'---' }}</span>
+                </div>
+            </mat-card>
+            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" fxLayoutAlign="space-between center" *ngIf="puedeEditarDatosEncabezado" [formGroup]="formMovimiento" [style.fontSize.px]="15">
                 <mat-form-field fxFlex="none" *ngIf="datosForm.fecha_movimiento">
                     <mat-label>Fecha Entrada</mat-label>
                     <input matInput formControlName="fecha_movimiento" [max]="maxFechaMovimiento" [matDatepicker]="picker" required readonly>
                     <mat-datepicker-toggle matPrefix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker #picker [disabled]="!editable"></mat-datepicker>
+                    <mat-datepicker #picker></mat-datepicker>
                     <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
                     <mat-error *ngIf="formMovimiento.get('fecha_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
@@ -170,7 +230,7 @@
                 
                 <mat-form-field fxFlex *ngIf="datosForm.documento_folio">
                     <mat-label>Folio - Documento</mat-label>
-                    <input matInput formControlName="documento_folio" autocomplete="off" [readonly]="!editable">
+                    <input matInput formControlName="documento_folio" autocomplete="off">
                     <mat-hint align="end">En caso de ser necesario</mat-hint>
                 </mat-form-field>
 
@@ -202,7 +262,7 @@
 
                 <mat-form-field fxFlex="none" *ngIf="datosForm.referencia_folio">
                     <mat-label>No de Referencia</mat-label>
-                    <input matInput formControlName="referencia_folio" [readonly]="!editable" autocomplete="off">
+                    <input matInput formControlName="referencia_folio" autocomplete="off">
                     <mat-hint>Folio de Referencia o Factura</mat-hint>
                 </mat-form-field>
 
@@ -216,7 +276,7 @@
                     <mat-label>Fecha de Referencia</mat-label>
                     <input matInput formControlName="referencia_fecha" [max]="maxFechaMovimiento" [matDatepicker]="pickerReferencia" readonly>
                     <mat-datepicker-toggle matPrefix [for]="pickerReferencia"></mat-datepicker-toggle>
-                    <mat-datepicker #pickerReferencia [disabled]="!editable" startView="year"></mat-datepicker>
+                    <mat-datepicker #pickerReferencia startView="year"></mat-datepicker>
                     <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click en icono para seleccionar</mat-hint>
                 </mat-form-field>
 
@@ -227,7 +287,7 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.observaciones">
                     <mat-label>Observaciones</mat-label>
-                    <textarea matInput formControlName="observaciones" rows="1" [readonly]="!editable"></textarea>
+                    <textarea matInput formControlName="observaciones" rows="1"></textarea>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="!datosForm.observaciones && datosEntrada">
@@ -241,6 +301,34 @@
             <section fxFlex="25" fxLayout="column">
                 <mat-card fxFlex="none" fxLayout="column" *ngIf="verBoton['agregar_articulos']" style="padding:0px; margin-bottom: 5px;">
                     <widget-buscador-articulos fxFlex="none" [mostrarExistencias]="false" (articuloSeleccionado)="agregarArticulo($event)"></widget-buscador-articulos>
+                </mat-card>
+                <mat-card fxFlex="none" fxLayout="column" *ngIf="movimientoPadre" class="datos-movimiento-padre">
+                    <div fxFlex="none">
+                        <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[movimientoPadre.estatus]}}-color">
+                            <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[movimientoPadre.estatus]}}</mat-icon></span>
+                            <span fxFlex="none" style="padding-top:5px;">{{listaEstatusLabels[movimientoPadre.estatus]}}</span>
+                        </div>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" class="folio">
+                        <span>{{(movimientoPadre.folio)?movimientoPadre.folio:'Sin Folio'}}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Tipo de Movimiento:</span> <span>{{ movimientoPadre.tipo_movimiento.descripcion }}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Total de Claves:</span> <span>{{ movimientoPadre.total_claves | number:'1.0-0'}}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Total de Articulos:</span> <span>{{ movimientoPadre.total_articulos | number:'1.0-0'}}</span>
+                    </div>
+                    <div fxFlex="none">
+                        <span class="etiqueta">Concluido Por:</span> <span>{{(movimientoPadre.concluido_por)?movimientoPadre.concluido_por.name:'En Proceso'}}</span>
+                    </div>
+                    <mat-divider [inset]="true"></mat-divider>
+                    <div fxFlex="none" class="fecha">
+                        <span>{{ movimientoPadre.updated_at | date:'d MMM, y' }}</span>
+                    </div>
                 </mat-card>
                 <mat-card fxFlex="none" fxLayout="column" *ngIf="tieneSolicitado" class="datos-movimiento-solicitud">
                     <div fxFlex="none">
@@ -340,7 +428,7 @@
                         </div>
                     </div>
                     <mat-divider [inset]="true"></mat-divider>
-                    <div fxFlex style="overflow: auto;">
+                    <div fxFlex style="overflow: auto;" *ngIf="dataSourceArticulos">
                         <table mat-table [dataSource]="dataSourceArticulos" class="data-table" matSort multiTemplateDataRows>
                             
                             <ng-container matColumnDef="estatus" >
@@ -407,13 +495,13 @@
                                                 <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.normativo">gpp_good</mat-icon>
                                                 <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado">error</mat-icon>
                                                 <div fxFlex></div>
-                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarElementos && !modoRecepcion">
+                                                <button fxFlex="none" class="medium-button" color="warn" mat-button (click)="quitarArticulo(articulo)" *ngIf="puedeEditarListaArticulos && !modoRecepcion">
                                                     <mat-icon>delete</mat-icon> Eliminar Articulo
                                                 </button>
                                             </div>
                                         </div>
                                         <inner-articulo-admin-lista-lotes   [articulo]="articulo" 
-                                                                            [edicionActiva]="puedeEditarElementos" 
+                                                                            [edicionActiva]="puedeEditarListaArticulos" 
                                                                             [fechaMovimiento]="(formMovimiento.get('fecha_movimiento'))?formMovimiento.get('fecha_movimiento').value:datosEntrada.fecha_movimiento"
                                                                             [catalogoMarcas]="catalogos['marcas']"
                                                                             [modoRecepcion]="modoRecepcion"

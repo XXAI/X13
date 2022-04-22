@@ -111,6 +111,14 @@ table tr:hover{
   color:#ff2a2a !important;
 }
 
+.peticion-modificacion-color{
+  color:#b000e6;
+}
+
+.modificacion-aprobada-color{
+  color:#b000e6;
+}
+
 .cancelado > td{
   color:#ff2a2a !important;
 }

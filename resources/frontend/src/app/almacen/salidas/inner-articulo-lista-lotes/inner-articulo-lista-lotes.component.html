@@ -3,8 +3,8 @@
         <thead>
             <tr>
                 <th colspan="2">
-                    <mat-checkbox *ngIf="puedeSurtirUnidades && (tipoSalida && (tipoSalida.clave == 'RCTA' || tipoSalida.clave == 'PSNL')) && articulo.puede_surtir_unidades" [ngModel]="articulo.surtir_en_unidades" (change)="surtirUnidades($event.checked)" [disabled]="!edicionActiva">
-                        Surtir [ {{(articulo.unidad_medida)?articulo.unidad_medida:'Pieza'}} ]
+                    <mat-checkbox *ngIf="puedeSurtirUnidades && articulo.puede_surtir_unidades" [ngModel]="articulo.surtir_en_unidades" (change)="surtirUnidades($event.checked)" [disabled]="!edicionActiva"> <!-- (tipoSalida && (tipoSalida.clave == 'RCTA' || tipoSalida.clave == 'PSNL')) && -->
+                        Surtir por {{(articulo.unidad_medida)?articulo.unidad_medida:'Pieza'}}
                     </mat-checkbox>
                 </th>
                 <th colspan="2"></th>

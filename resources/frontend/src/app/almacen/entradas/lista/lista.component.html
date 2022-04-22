@@ -206,6 +206,18 @@
                             <mat-icon color="primary">reply</mat-icon>
                             <span>Crear Salida</span>
                         </button>
+
+                        <mat-divider *ngIf="estatus == 'FIN' || estatus == 'CAN'"></mat-divider>
+                        <button mat-menu-item *ngIf="estatus == 'FIN' || estatus == 'CAN'" [routerLink]="'/almacen/entradas/nueva'" [state]="{data:{movimiento_id:id}}">
+                            <mat-icon>content_copy</mat-icon>
+                            <span>Duplicar Entrada</span>
+                        </button>
+                        <mat-divider *ngIf="estatus == 'FIN'"></mat-divider>
+                        <button mat-menu-item *ngIf="estatus == 'FIN'" (click)="activarModificacionEntrada(id)">
+                            <mat-icon color="admin">admin_panel_settings</mat-icon>
+                            <span>Modificar Entrada</span>
+                        </button>
+
                         <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'" >
                             <mat-divider *ngIf="estatus == 'FIN' || estatus == 'PERE'"></mat-divider>
                             <button mat-menu-item color="warn" *ngIf="estatus == 'FIN' || estatus == 'PERE'" (click)="cancelarEntrada(id)">

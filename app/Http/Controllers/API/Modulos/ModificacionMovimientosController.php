@@ -96,9 +96,6 @@ class ModificacionMovimientosController extends Controller{
                 $modificacion->cancelado_usuario_id = ($adminUsuario)?$adminUsuario->id:$loggedUser->id;
                 $modificacion->estatus = 'CAN';
                 $modificacion->save();
-
-                //$movimiento->estatus = 'FIN';
-                //$movimiento->save();
             }else if($cancelarModificacion){
                 DB::rollback();
                 return response()->json(['error'=>"No se puede cancelar esta petición, solo puede ser cancelada por el usuario que la creo o un usuario con los permisos correspondientes"],HttpResponse::HTTP_OK);
@@ -109,9 +106,6 @@ class ModificacionMovimientosController extends Controller{
                 $modificacion->aprobado_usuario_id = $adminUsuario->id;
                 $modificacion->estatus = 'MOD';
                 $modificacion->save();
-
-                //$movimiento->estatus = 'MOD';
-                //$movimiento->save();
             }else if($aprobarModificacion){
                 DB::rollback();
                 return response()->json(['error'=>"No se puede aprobar esta petición, solo puede ser aprobada por un usuario con los permisos correspondientes"],HttpResponse::HTTP_OK);
@@ -130,9 +124,6 @@ class ModificacionMovimientosController extends Controller{
     public function guardarModificacion(Request $request, $id){
         try{
             $campos_editables = [
-                //'curp',
-                //'expediente_clinico',
-                //'paciente',
                 'documento_folio',
                 'fecha_movimiento',
                 'observaciones',
@@ -143,6 +134,10 @@ class ModificacionMovimientosController extends Controller{
                 'almacen_movimiento_id',
                 'unidad_medica_movimiento_id',
                 'area_servicio_movimiento_id',
+                'tipo_movimiento_id',
+                'proveedor_id',
+                'referencia_folio',
+                'referencia_fecha'
             ];
 
             DB::beginTransaction();
@@ -189,6 +184,10 @@ class ModificacionMovimientosController extends Controller{
                     $datos_originales[$key] = $movimiento_original[$key];
                     $datos_modificados[$key] = $parametros[$key];
                 }
+            }
+
+            if(isset($parametros['proveedor_id']) && $datos_originales['proveedor_id'] != $datos_modificados['proveedor_id']){
+                $datos_modificados['proveedor'] = $parametros['proveedor'];
             }
 
             if(isset($parametros['personal_medico']) && $parametros['personal_medico']){
@@ -283,7 +282,7 @@ class ModificacionMovimientosController extends Controller{
             DB::commit();
 
             $movimiento = Movimiento::with(['unidadMedica','unidadMedicaMovimiento','almacenMovimiento','areaServicioMovimiento','programa','turno','paciente','personalMedico',
-                                            'tipoMovimiento','almacen',
+                                            'tipoMovimiento','almacen','proveedor',
                                             'movimientoHijo' => function($movimientoHijo){
                                                 return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
                                             },'solicitud'=> function($solicitud){

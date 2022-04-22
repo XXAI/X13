@@ -250,6 +250,14 @@ table td {
     color:#fdcd2f;
 }
 
+.peticion-modificacion-color{
+    color:#b000e6;
+}
+
+.modificacion-aprobada-color{
+    color:#b000e6;
+}
+
 tr.tabla-row-articulo{
     cursor: pointer;
 }
@@ -353,6 +361,34 @@ tr.tabla-row-articulo-detalle{
     border-bottom: 1px solid rgba(0,0,0,.54);
 }
 
+.datos-movimiento-padre{
+    cursor: default;
+    overflow: auto; 
+    padding:0px; 
+    margin-bottom: 5px;
+    font-size: small;
+    font-weight: 400;
+}
+
+.datos-movimiento-padre > .folio{
+    text-align: center;
+    font-weight: 500;
+    padding:2px;
+}
+
+.datos-movimiento-padre > .fecha{
+    text-align: center;
+    font-style: italic;
+    font-weight: 500;
+    padding:2px;
+    color: rgba(0,0,0,.80);
+}
+
+.datos-movimiento-padre .etiqueta{
+    color: rgba(0,0,0,.70);
+    padding-right: 3px;
+}
+
 .solicitud-tipo{
     cursor: default;
     padding:5px;
@@ -437,4 +473,60 @@ tr.tabla-row-articulo-detalle{
 .lista-usuarios-estatus .datos .fecha{
     font-size: small;
     color: rgba(0,0,0,.60);
+}
+
+.pendiente-recepcion-bg-color{
+    background-color:#bf7200;
+    color:whitesmoke;
+}
+
+.pendiente-recepcion-bg-color{
+    background-color:#bf7200;
+    color:whitesmoke;
+}
+
+.peticion-modificacion-bg-color{
+    background-color:#9404c0;
+    color:whitesmoke;
+}
+
+.concluido-bg-color{
+    background-color:#004062;
+    color:whitesmoke;
+}
+
+.cancelado-bg-color{
+    background-color:#ff2a2a;
+    color:whitesmoke;
+}
+
+.fake-input{
+    border-radius: 4px;
+    padding: 0.75em;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: 1.125;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    letter-spacing: normal;
+    color: rgba(255,255,255,.87);
+    cursor:default;
+    /*background-color: rgba(0,0,0,.04);*/
+}
+
+.fake-input:hover{
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.fake-input .label{
+    display: block;
+    font-size: small;
+    color: rgba(255,255,255,.54);
+    white-space: nowrap;
+}
+
+.fake-input .value{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    white-space: nowrap;
+    padding: 0 5px;
 }
