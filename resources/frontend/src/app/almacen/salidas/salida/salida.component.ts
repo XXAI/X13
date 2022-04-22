@@ -1218,4 +1218,9 @@ export class SalidaComponent implements OnInit {
     return this.catalogos[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
   }
 
+  cargarNuevaSalida(uri:string){
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>
+    this.router.navigate([uri]));
+  }
+
 }

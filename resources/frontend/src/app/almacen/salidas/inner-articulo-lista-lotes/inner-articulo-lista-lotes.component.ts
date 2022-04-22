@@ -90,6 +90,10 @@ export class InnerArticuloListaLotesComponent implements OnInit {
         loteData.restante = loteData.existencia;
         loteData.salida = null;  
       }
+
+      if(typeof loteData.empaque_detalle === 'string'){
+        loteData.empaque_detalle = {descripcion: loteData.empaque_detalle};
+      }
     });
     this.articulo.estatus = estatus_articulo;
     if(this.articulo.puede_surtir_unidades && this.articulo.surtir_en_unidades){

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -11,7 +12,8 @@ export class DialogoCancelarMovimientoComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<DialogoCancelarMovimientoComponent>,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private datepipe: DatePipe,
   ) { }
 
   cancelarForm: FormGroup;
@@ -30,7 +32,9 @@ export class DialogoCancelarMovimientoComponent implements OnInit {
 
   aceptar(){
     if(this.cancelarForm.valid){
-      this.dialogRef.close(this.cancelarForm.value);
+      let formValue = this.cancelarForm.value;
+      formValue.fecha = this.datepipe.transform(formValue.fecha, 'yyyy-MM-dd');
+      this.dialogRef.close(formValue);
     }
   }
 

@@ -74,7 +74,7 @@
                 <span>Imprimir</span>
             </button>
             <mat-divider></mat-divider>
-            <button mat-menu-item [routerLink]="'/almacen/salidas/nueva'">
+            <button mat-menu-item (click)="cargarNuevaSalida('/almacen/salidas/nueva')">
                 <mat-icon>add_circle</mat-icon>
                 <span>Nueva Salida</span>
             </button>
