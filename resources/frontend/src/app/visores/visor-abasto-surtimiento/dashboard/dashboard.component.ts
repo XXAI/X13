@@ -60,6 +60,7 @@ export class DashboardComponent implements OnInit {
           this.datosTablas.porcetaje_surtimiento = response.data.porcetaje_surtimiento;
 
           this.datosTablas.movimientos = response.data.movimientos;
+          this.datosTablas.articulos_estado_caducidades = response.data.articulos_estado_caducidades;
 
           this.dataSourceArticulos = new MatTableDataSource<any>(response.data.catalogo_normativo);
           this.dataSourceArticulos.paginator = this.articulosPaginator;

@@ -123,6 +123,40 @@ class VisorAbastoSurtimientoController extends Controller
                                                                 ->get();
             $datos_return['catalogo_normativo'] = $catalogo_normativo;
 
+            /* Lista de articulos con caducidad  */
+            $articulos_caducidades = Stock::select('bienes_servicios.clave_local AS clave','bienes_servicios.articulo','bienes_servicios.especificaciones AS descripcion','almacenes.nombre as almacen','stocks.lote', 'stocks.fecha_caducidad', 
+                                                DB::raw('SUM(stocks.existencia) as existencia'), DB::raw('SUM(stocks.existencia_unidades) as existencia_unidades'),DB::raw('TIMESTAMPDIFF(MONTH, current_date(), stocks.fecha_caducidad) as meses'),
+                                                DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0) as caducado'))
+                                                                ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
+                                                                ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                                                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                                                ->where('stocks.existencia','>',0)
+                                                                ->whereNotNull('stocks.fecha_caducidad')
+                                                                ->groupBy('stocks.id')
+                                                                ->orderBy('stocks.fecha_caducidad','ASC')
+                                                                ->orderBy('bienes_servicios.especificaciones')
+                                                                ->having('meses','<',3)
+                                                                ->get();
+            $articulos_estado_caducidades = [
+                'caducados'     =>  ['etiqueta'=>'Caducados',               'total_lotes'=>0, 'total_existencia'=>0, 'total_existencia_unidades'=>0,'lista'=>[]],
+                'por_caducar'   =>  ['etiqueta'=>'Por Caducar (< 3 Meses)', 'total_lotes'=>0, 'total_existencia'=>0, 'total_existencia_unidades'=>0,'lista'=>[]],
+            ];
+            for($i = 0; $i < count($articulos_caducidades); $i++){
+                $articulo = $articulos_caducidades[$i];
+                if($articulo->caducado){
+                    $articulos_estado_caducidades['caducados']['total_lotes'] += 1;
+                    $articulos_estado_caducidades['caducados']['total_existencia'] += $articulo->existencia;
+                    $articulos_estado_caducidades['caducados']['total_existencia_unidades'] += $articulo->existencia_unidades;
+                    $articulos_estado_caducidades['caducados']['lista'][] = $articulo;
+                }else{
+                    $articulos_estado_caducidades['por_caducar']['total_lotes'] += 1;
+                    $articulos_estado_caducidades['por_caducar']['total_existencia'] += $articulo->existencia;
+                    $articulos_estado_caducidades['por_caducar']['total_existencia_unidades'] += $articulo->existencia_unidades;
+                    $articulos_estado_caducidades['por_caducar']['lista'][] = $articulo;
+                }
+            }
+            $datos_return['articulos_estado_caducidades'] = array_values($articulos_estado_caducidades);
+
             return response()->json(['data'=>$datos_return],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);

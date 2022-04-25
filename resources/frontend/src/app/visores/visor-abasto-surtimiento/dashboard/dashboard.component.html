@@ -43,6 +43,11 @@
                 <div fxFlex fxLayout="row" class="encabezado-seccion">
                     <div fxFlex="none" class="icono"><mat-icon>analytics</mat-icon></div>
                     <div fxFlex class="titulo">% Abasto en base a Catalogo Normativo:</div>
+                    <div fxFlex="none">
+                        <button mat-icon-button>
+                            <mat-icon>preview</mat-icon>
+                        </button>
+                    </div>
                 </div>
                 <div fxFlex class="contenido-seccion">
                     <table class="tabla-datos">
@@ -131,6 +136,32 @@
                                 <td>{{registro.total_solicitudes | number:'1.0-0'}}</td>
                                 <td>{{registro.total_completos | number:'1.0-0'}}</td>
                                 <td [ngClass]="{'desabasto':registro.porcentaje<70,'abasto':registro.porcentaje>=70}" >{{registro.porcentaje | number:'1.0-2'}} %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </mat-card>
+
+            <mat-card fxFlex="none" fxLayout="column" class="seccion">
+                <div fxFlex fxLayout="row" class="encabezado-seccion">
+                    <div fxFlex="none" class="icono"><mat-icon>analytics</mat-icon></div>
+                    <div fxFlex class="titulo">Estado de caducidades:</div>
+                </div>
+                <div fxFlex class="contenido-seccion">
+                    <table class="tabla-datos">
+                        <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th>Total Lotes</th>
+                                <th>Total Existencias</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngIf="!datosTablas.articulos_estado_caducidades || datosTablas.articulos_estado_caducidades.lenght == 0"><td colspan="3" class="no-results-found">Sin Datos</td></tr>
+                            <tr *ngFor="let registro of datosTablas.articulos_estado_caducidades">
+                                <td>{{registro.etiqueta}}</td>
+                                <td>{{registro.total_lotes | number:'1.0-0'}}</td>
+                                <td>{{registro.total_existencia | number:'1.0-0'}}</td>
                             </tr>
                         </tbody>
                     </table>
