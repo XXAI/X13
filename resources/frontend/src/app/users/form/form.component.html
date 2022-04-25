@@ -1,296 +1,299 @@
-<br fxHide.xs="true">
-<section class="profile" >
-    <div  fxFill>
-        <section fxLayout fxLayoutAlign="center">
-            <mat-card fxFlex.xs="100%" fxFlex="90%">
-                <mat-card-content>
-                    <div class="edit-container" [formGroup]="usuarioForm">
-                        <div class="edit-loading-shade" *ngIf="isLoading">
-                            <mat-spinner *ngIf="isLoading"></mat-spinner>
-                        </div>
-
-                        <div class="edit-loading-shade" *ngIf="!isLoading && !usuario">No se encontraron los datos del usuario</div>
-
-                        <div fxLayout="row" fxLayout.xs="column">
-                            <mat-form-field fxFlex fxFlex.xs="100">
-                                <input matInput id="name" formControlName="name" placeholder="Nombre Completo" required>
-                                <mat-error *ngIf="usuarioForm.get('name').invalid && (usuarioForm.get('name').dirty || usuarioForm.get('name').touched)">
-                                    <span *ngIf="usuarioForm.get('name').errors.required">El Nombre Completo es obligatorio</span>
-                                </mat-error>
-                            </mat-form-field>
-
-                            <mat-form-field fxFlex fxFlex.xs="100">
-                                <input matInput id="email" formControlName="email" placeholder="Correo Electronico" required>
-                                <mat-error *ngIf="usuarioForm.get('email').invalid && (usuarioForm.get('email').dirty || usuarioForm.get('email').touched)">
-                                    <span *ngIf="usuarioForm.get('email').errors.required">El Correo Electronico es obligatorio</span>
-                                    <span *ngIf="usuarioForm.get('email').errors.email">Formato incorrecto</span>
-                                </mat-error>
-                            </mat-form-field>
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex fxLayout="column">
+        <mat-card fxFlex fxLayout="column" style="overflow: auto;">
+            <mat-card-content fxFlex fxLayout="column">
+                <section fxFlex="none" fxLayout="column" [formGroup]="usuarioForm">
+                    <mat-progress-bar mode="indeterminate" *ngIf="isLoading" ></mat-progress-bar>
+                    <div class="edit-loading-shade" *ngIf="!isLoading && !usuario">No se encontraron los datos del usuario</div>
+                    <div fxLayout="row" fxLayout.xs="column">
+                        <mat-form-field fxFlex fxFlex.xs="100">
+                            <input matInput id="name" formControlName="name" placeholder="Nombre Completo" required>
+                            <mat-error *ngIf="usuarioForm.get('name').invalid && (usuarioForm.get('name').dirty || usuarioForm.get('name').touched)">
+                                <span *ngIf="usuarioForm.get('name').errors.required">El Nombre Completo es obligatorio</span>
+                            </mat-error>
+                        </mat-form-field>
                         
-                        
-                            <mat-form-field fxFlex fxFlex.xs="100">
-                                <input matInput id="username" formControlName="username" placeholder="Nombre de Usuario" required>
-                                <mat-hint align="end">{{usuarioForm.get('username').value.length || 0}}</mat-hint>
-                                <mat-error *ngIf="usuarioForm.get('username').invalid && (usuarioForm.get('username').dirty || usuarioForm.get('username').touched)">
-                                    <span *ngIf="usuarioForm.get('username').errors.required">El Nombre de Usuario es obligatorio</span>
-                                    <span *ngIf="usuarioForm.get('username').errors.minlength">Debe contener al menos 4 caracteres</span>
-                                </mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxLayout="row" fxLayout.xs="column">
-                            <mat-form-field  fxFlex fxFlex.xs="100" appearance="fill">
-                                <mat-label>Contraseña</mat-label>
-                                <input matInput id="password" formControlName="password" placeholder="Contraseña" [type]="hidePassword ? 'password' : 'text'" >
-                                <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
-                                    <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-                                </button>
-                                <mat-hint align="end">{{usuarioForm.get('password').value.length || 0}}</mat-hint>
-                                <mat-error *ngIf="usuarioForm.get('password').invalid && (usuarioForm.get('password').dirty || usuarioForm.get('password').touched)">
-                                    <span *ngIf="usuarioForm.get('password').errors.minlength">Debe contener al menos 6 caracteres</span>
-                                    <span *ngIf="usuarioForm.get('password').errors.required">La Contraseña es obligatoria</span>
-                                </mat-error>
-                            </mat-form-field>
+                        <mat-form-field fxFlex fxFlex.xs="100">
+                            <input matInput id="email" formControlName="email" placeholder="Correo Electronico" required>
+                            <mat-error *ngIf="usuarioForm.get('email').invalid && (usuarioForm.get('email').dirty || usuarioForm.get('email').touched)">
+                                <span *ngIf="usuarioForm.get('email').errors.required">El Correo Electronico es obligatorio</span>
+                                <span *ngIf="usuarioForm.get('email').errors.email">Formato incorrecto</span>
+                            </mat-error>
+                        </mat-form-field>
 
-                            <section fxFlex fxFlex.xs="100" class="checkbox-section" *ngIf="authUser.is_superuser">
+                        <mat-form-field fxFlex fxFlex.xs="100">
+                            <input matInput id="username" formControlName="username" placeholder="Nombre de Usuario" required>
+                            <mat-hint align="end">{{usuarioForm.get('username').value.length || 0}}</mat-hint>
+                            <mat-error *ngIf="usuarioForm.get('username').invalid && (usuarioForm.get('username').dirty || usuarioForm.get('username').touched)">
+                                <span *ngIf="usuarioForm.get('username').errors.required">El Nombre de Usuario es obligatorio</span>
+                                <span *ngIf="usuarioForm.get('username').errors.minlength">Debe contener al menos 4 caracteres</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+
+                    <div fxLayout="row" fxLayout.xs="column">
+                        <mat-form-field  fxFlex fxFlex.xs="100" appearance="fill">
+                            <mat-label>Contraseña</mat-label>
+                            <input matInput id="password" formControlName="password" placeholder="Contraseña" [type]="hidePassword ? 'password' : 'text'" >
+                            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+                                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                            </button>
+                            <mat-hint align="end">{{usuarioForm.get('password').value.length || 0}}</mat-hint>
+                            <mat-error *ngIf="usuarioForm.get('password').invalid && (usuarioForm.get('password').dirty || usuarioForm.get('password').touched)">
+                                <span *ngIf="usuarioForm.get('password').errors.minlength">Debe contener al menos 6 caracteres</span>
+                                <span *ngIf="usuarioForm.get('password').errors.required">La Contraseña es obligatoria</span>
+                            </mat-error>
+                        </mat-form-field>
+
+                        <div fxflex fxFlex.xs="100" fxLayout="row">
+                            <section fxFlex fxFlex.xs="50" class="checkbox-section" *ngIf="authUser.is_superuser">
                                 <mat-checkbox #isSuperUser formControlName="is_superuser" (change)="(isSuperUser.checked)?(metaData.selectedIndex = 2):(metaData.selectedIndex = 0)">Es super-usuario</mat-checkbox>
                             </section>
-                        </div>
-
-                        <div fxLayout.gt-sm="row" fxLayout="column" fxLayoutGap.gt-sm="10px">
-                            
-                            <mat-form-field fxFlex *ngIf="catalogos['unidades_medicas']">
-                                <mat-label>Unidad Medica:</mat-label>
-                                <input type="text" aria-label="unidad_medica_asignada" matInput formControlName="unidad_medica_asignada" [matAutocomplete]="unidadMedicaAutocomplete">
-                                <mat-autocomplete #unidadMedicaAutocomplete="matAutocomplete" [displayWith]="getDisplayFn('nombre')">
-                                    <mat-option *ngFor="let item of filteredCatalogs['unidades_medicas'] | async" [value]="item">
-                                        ({{ item.clues }}) - {{ item.nombre }}
+                            <mat-form-field fxFlex fxFlex.xs="50">
+                                <mat-label>Estatus del usuario</mat-label>
+                                <mat-select formControlName="status">
+                                    <mat-option *ngFor="let estatus of listaEstatus" [value]="estatus.clave">
+                                        {{estatus.descripcion}}
                                     </mat-option>
-                                </mat-autocomplete>
-                                <mat-hint *ngIf="!usuarioForm.get('unidad_medica_asignada').value">Selecciona una Unidad Medica de la lista</mat-hint>
-                                <mat-hint align="start" *ngIf="usuarioForm.get('unidad_medica_asignada').value">Clave Clues: [{{usuarioForm.get('unidad_medica_asignada').value.clues}}]</mat-hint>
-                                <mat-error *ngIf="usuarioForm.get('unidad_medica_asignada').hasError('required')">Este campo es obligatorio</mat-error>
+                                </mat-select>
                             </mat-form-field>
-
                         </div>
-                        
-                        <br>
-                        <mat-tab-group #metaData [color]="'primary'" [backgroundColor]="'accent'" [selectedIndex]="(usuarioForm.get('is_superuser').value)?(2):(0)" dynamicHeight >
-                            <mat-tab [disabled]="(usuarioForm.get('is_superuser').value == true)">
-                                <ng-template mat-tab-label>
-                                    <span matBadge="{{selectedRoles.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedRoles.length <= 0">Roles</span>
-                                </ng-template>
-                                <div fxLayout="row" fxLayout.xs="column" class="edit-container">
-                                    <div fxFlex="49" fxFlex.xs="100">
-                                        <div fxLayout="row">
-                                            <mat-form-field fxFlex>
-                                                <input matInput placeholder="Filtrar Roles" aria-label="filtrar" [formControl]="filterInputRoles">
-                                                <mat-icon *ngIf="!filterInputRoles.value" matSuffix>filter_list</mat-icon>
-                                                <button mat-icon-button matSuffix *ngIf="filterInputRoles.value"  (click)="clearRolesFilter()">
-                                                    <mat-icon>clear</mat-icon>
-                                                </button>
-                                            </mat-form-field>
-                                        </div>
-                                        <div fxLayout="row">
-                                            <mat-action-list fxFlex [ngClass]="'roles-list'" [ngClass.xs]="{'roles-list':false}" [style.xs]="{'height':'auto'}" dense>
-                                                <button mat-list-item *ngFor="let role of filteredRoles$ | async" (click)="showPermissionsList(role)">
-                                                    <mat-icon matListIcon *ngIf="(selectedRoleChipId == role.id)">arrow_right</mat-icon>
-                                                    <h3 matLine>
-                                                        {{role.name}}
-                                                    </h3>
-                                                    <button mat-icon-button (click)="selectRole(role)">
-                                                        <mat-icon>{{(selectedRolesControl[role.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
-                                                    </button>
-                                                    <mat-divider></mat-divider>
-                                                </button>
-                                            </mat-action-list>
-                                        </div>
-                                    </div>
-                                    <div fxFlex></div>
-                                    <div fxFlex="49" fxFlex.xs="100">
-                                        <div fxLayout="column">
-                                            <mat-form-field fxFlex fxHide.xs="true">
-                                                <mat-chip-list #chipList aria-label="Roles Seleccionados">
-                                                    <mat-chip *ngFor="let role of selectedRoles; let i = index" [selected]="(selectedRoleChipId == role.id)" [removable]="true" (removed)="removeRole(i)" (click)="showPermissionsList(role)" > <!-- (focusin)="onFocusRoleIn(role)" (focusout)="onFocusRoleOut(role)" -->
-                                                        {{role.name}}
-                                                        <mat-icon matChipRemove>cancel</mat-icon>
-                                                    </mat-chip>
-                                                </mat-chip-list>
-                                                <mat-hint align="end">{{selectedRoles.length}}</mat-hint>
-                                            </mat-form-field>
-                                            <br>
-                                            <mat-card fxFlex *ngIf="selectedRoleChipId != 0">
-                                                <mat-card-header>
-                                                    <div fxFlex></div>
-                                                    <button mat-icon-button aria-label="Cerrar lista de permisos" (click)="selectedRoleChipId = 0" class="close-card-icon-button">
-                                                        <mat-icon>close</mat-icon>
-                                                    </button>
-                                                </mat-card-header>
-                                                <mat-card-content>
-                                                    <div fxFlexFill fxLayoutGap class="permissions-edit-list">
-                                                        <span fxFlex="50" *ngFor="let permission of selectedRolePermissions;" class="permission-slide-toggle">
-                                                            <mat-slide-toggle (change)="changePermissionStatus(permission)" [checked]="permission.active" [disabled]="permission.disabled" matTooltip="{{permission.description}}">{{permission.description}}</mat-slide-toggle>
-                                                        </span>
-                                                    </div>
-                                                </mat-card-content>
-                                            </mat-card>
-                                        </div>
-                                    </div>
-                                </div>
-                            </mat-tab>
-                            <mat-tab [disabled]="(usuarioForm.get('is_superuser').value == true)">
-                                <ng-template mat-tab-label>
-                                        <span matBadge="{{selectedPermissions.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedPermissions.length <= 0">Permisos</span>
-                                </ng-template>
-                                <div fxLayout="row" class="edit-container">
-                                    <div fxFlex="49" fxFlex.xs="100">
-                                        <div fxLayout="row">
-                                            <mat-form-field fxFlex>
-                                                <input matInput placeholder="Filtrar Permisos" aria-label="filtrar" [formControl]="filterInputPermissions">
-                                                <mat-icon *ngIf="!filterInputPermissions.value" matSuffix>filter_list</mat-icon>
-                                                <button mat-icon-button matSuffix *ngIf="filterInputPermissions.value"  (click)="clearPermissionsFilter()">
-                                                    <mat-icon>clear</mat-icon>
-                                                </button>
-                                            </mat-form-field>
-                                        </div>
-                                        <div fxLayout="row">
-                                            <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
-                                                <button mat-list-item *ngFor="let permission of filteredPermissions$ | async" (click)="selectPermission(permission)" [disabled]="assignedPermissions[permission.id] && assignedPermissions[permission.id].inRoles.length > 0">
-                                                    <p matLine>
-                                                        <span fxHide.xs="true">[{{permission.group}}]</span> <span> {{permission.description}} </span>
-                                                    </p>
-                                                    <button mat-icon-button  *ngIf="assignedPermissions[permission.id] && assignedPermissions[permission.id].inRoles.length > 0">
-                                                            <mat-icon>{{(assignedPermissions[permission.id].active)?'supervised_user_circle':'block'}}</mat-icon>
-                                                    </button>
-                                                    <button mat-icon-button  *ngIf="!assignedPermissions[permission.id] || assignedPermissions[permission.id].inRoles.length <= 0" >
-                                                        <mat-icon>{{(assignedPermissions[permission.id] && assignedPermissions[permission.id].active)?'check_box':'check_box_outline_blank'}}</mat-icon>
-                                                    </button>
-                                                    <mat-divider></mat-divider>
-                                                </button>
-                                            </mat-action-list>
-                                        </div>
-                                    </div>
-                                    <div fxFlex fxHide.xs="true"></div>
-                                    <div fxFlex="49" fxHide.xs="true">
-                                        <mat-form-field fxFlex>
-                                            <mat-chip-list #chipList aria-label="Permisos Seleccionados">
-                                                <mat-chip [color]="'accent'" *ngFor="let permission of selectedPermissions; let i = index" [removable]="true" (removed)="removePermission(i)">
-                                                    {{permission.description}}
-                                                    <mat-icon matChipRemove>cancel</mat-icon>
-                                                </mat-chip>
-                                            </mat-chip-list>
-                                            <mat-hint align="end">{{selectedPermissions.length}}</mat-hint>
-                                        </mat-form-field>
-                                    </div>
-                                </div>
-                            </mat-tab>
-                            
-                            <mat-tab>
-                                <ng-template mat-tab-label>
-                                        <span matBadge="{{selectedGroups.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedGroups.length <= 0">Grupos</span>
-                                </ng-template>
-                                <div fxLayout="row" class="edit-container">
-                                    <div fxFlex="49" fxFlex.xs="100">
-                                        <div fxLayout="row">
-                                            <mat-form-field fxFlex>
-                                                <input matInput placeholder="Filtrar Grupos" aria-label="filtrar" [formControl]="filterInputGroups">
-                                                <mat-icon *ngIf="!filterInputGroups.value" matSuffix>filter_list</mat-icon>
-                                                <button mat-icon-button matSuffix *ngIf="filterInputGroups.value"  (click)="clearGroupsFilter()">
-                                                    <mat-icon>clear</mat-icon>
-                                                </button>
-                                            </mat-form-field>
-                                        </div>
-                                        <div fxLayout="row">
-                                            <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
-                                                <button mat-list-item *ngFor="let group of filteredGroups$ | async" (click)="selectGroup(group)">
-                                                    <p matLine>
-                                                        <span> {{group.descripcion}} </span>
-                                                    </p>
-                                                    <button mat-icon-button  >
-                                                        <mat-icon>{{(assignedGroups[group.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
-                                                    </button>
-                                                    <mat-divider></mat-divider>
-                                                </button>
-                                            </mat-action-list>
-                                        </div>
-                                    </div>
-                                    <div fxFlex fxHide.xs="true"></div>
-                                    <div fxFlex="49" fxHide.xs="true">
-                                        <mat-form-field fxFlex>
-                                            <mat-chip-list #chipList aria-label="Grupos Seleccionados">
-                                                <mat-chip [color]="'accent'" *ngFor="let group of selectedGroups; let i = index" [removable]="true" (removed)="removeGroup(i)">
-                                                    {{group.descripcion}}
-                                                    <mat-icon matChipRemove>cancel</mat-icon>
-                                                </mat-chip>
-                                            </mat-chip-list>
-                                            <mat-hint align="end">{{selectedGroups.length}}</mat-hint>
-                                        </mat-form-field>
-                                    </div>
-                                </div>
-                            </mat-tab>
-
-                            <mat-tab>
-                                <ng-template mat-tab-label>
-                                        <span matBadge="{{selectedProgramas.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedProgramas.length <= 0">Programas</span>
-                                </ng-template>
-                                <div fxLayout="row" class="edit-container">
-                                    <div fxFlex="49" fxFlex.xs="100">
-                                        <div fxLayout="row">
-                                            <mat-form-field fxFlex>
-                                                <input matInput placeholder="Filtrar Programas" aria-label="filtrar" [formControl]="filterInputProgramas">
-                                                <mat-icon *ngIf="!filterInputProgramas.value" matSuffix>filter_list</mat-icon>
-                                                <button mat-icon-button matSuffix *ngIf="filterInputProgramas.value"  (click)="clearProgramasFilter()">
-                                                    <mat-icon>clear</mat-icon>
-                                                </button>
-                                            </mat-form-field>
-                                        </div>
-                                        <div fxLayout="row">
-                                            <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
-                                                <button mat-list-item *ngFor="let programa of filteredProgramas$ | async" (click)="selectPrograma(programa)">
-                                                    <p matLine>
-                                                        <span> {{programa.descripcion}} </span>
-                                                    </p>
-                                                    <button mat-icon-button  >
-                                                        <mat-icon>{{(assignedProgramas[programa.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
-                                                    </button>
-                                                    <mat-divider></mat-divider>
-                                                </button>
-                                            </mat-action-list>
-                                        </div>
-                                    </div>
-                                    <div fxFlex fxHide.xs="true"></div>
-                                    <div fxFlex="49" fxHide.xs="true">
-                                        <mat-form-field fxFlex>
-                                            <mat-chip-list #chipList aria-label="Programas Seleccionados">
-                                                <mat-chip [color]="'accent'" *ngFor="let programa of selectedProgramas; let i = index" [removable]="true" (removed)="removeProgramas(i)">
-                                                    {{programa.descripcion}}
-                                                    <mat-icon matChipRemove>cancel</mat-icon>
-                                                </mat-chip>
-                                            </mat-chip-list>
-                                            <mat-hint align="end">{{selectedProgramas.length}}</mat-hint>
-                                        </mat-form-field>
-                                    </div>
-                                </div>
-                            </mat-tab>
-
-                            <mat-tab label="Avatar">
-                                <br>
-                                <div fxLayoutGap class="avatars-list">
-                                    <div fxFlex="10" fxFlex.xs="25" *ngFor="let avatar of avatarList" class="avatar-item" >
-                                        <button mat-raised-button (click)="selectedAvatar = avatar.file" [color]="(selectedAvatar == avatar.file)?'primary':''">
-                                            <mat-icon fxFlexFill svgIcon="{{avatar.id}}"></mat-icon>
-                                        </button>
-                                    </div>
-                                </div>
-                            </mat-tab>
-                        </mat-tab-group>
                     </div>
-                </mat-card-content>
-                <mat-card-actions>
+                    
+                    <mat-form-field fxFlex *ngIf="catalogos['unidades_medicas']">
+                        <mat-label>Unidad Medica:</mat-label>
+                        <input type="text" aria-label="unidad_medica_asignada" matInput formControlName="unidad_medica_asignada" [matAutocomplete]="unidadMedicaAutocomplete">
+                        <mat-autocomplete #unidadMedicaAutocomplete="matAutocomplete" [displayWith]="getDisplayFn('nombre')">
+                            <mat-option *ngFor="let item of filteredCatalogs['unidades_medicas'] | async" [value]="item">
+                                ({{ item.clues }}) - {{ item.nombre }}
+                            </mat-option>
+                        </mat-autocomplete>
+                        <mat-hint *ngIf="!usuarioForm.get('unidad_medica_asignada').value">Selecciona una Unidad Medica de la lista</mat-hint>
+                        <mat-hint align="start" *ngIf="usuarioForm.get('unidad_medica_asignada').value">Clave Clues: [{{usuarioForm.get('unidad_medica_asignada').value.clues}}]</mat-hint>
+                        <mat-error *ngIf="usuarioForm.get('unidad_medica_asignada').hasError('required')">Este campo es obligatorio</mat-error>
+                    </mat-form-field>
+                </section>
+
+                <section fxFlex="none" fxLayout="row" fxLayoutGap="10px">
                     <span fxFlex></span>
-                    <button mat-raised-button routerLink="/usuarios">Cancelar</button>
-                    <button mat-raised-button (click)="accionGuardar()" color="accent" [disabled]="!usuarioForm.valid || isLoading"><mat-icon>save</mat-icon> Guardar</button>
-                </mat-card-actions>
-            </mat-card>
-        </section>
-    </div>
+                    <button fxFlex="none" mat-raised-button routerLink="/usuarios">Cancelar</button>
+                    <button fxFlex="none" mat-raised-button (click)="accionGuardar()" color="primary" [disabled]="!usuarioForm.valid || isLoading"><mat-icon>save</mat-icon> Guardar</button>
+                </section>
+                
+                <div fxFlex fxLayout="column" class="edit-container" [formGroup]="usuarioForm">
+                    <mat-tab-group fxFlex fxLayout="column"  #metaData [color]="'primary'" [backgroundColor]="'accent'" [selectedIndex]="(usuarioForm.get('is_superuser').value)?(2):(0)" dynamicHeight>
+                        <mat-tab fxLayout="row"  [disabled]="(usuarioForm.get('is_superuser').value == true)">
+                            <ng-template mat-tab-label>
+                                <span matBadge="{{selectedRoles.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedRoles.length <= 0">Roles</span>
+                            </ng-template>
+                            <div fxFlex fxLayout="row" fxLayout.xs="column" class="edit-container">
+                                <div fxFlex="49" fxFlex.xs="100">
+                                    <div fxLayout="row">
+                                        <mat-form-field fxFlex>
+                                            <input matInput placeholder="Filtrar Roles" aria-label="filtrar" [formControl]="filterInputRoles">
+                                            <mat-icon *ngIf="!filterInputRoles.value" matSuffix>filter_list</mat-icon>
+                                            <button mat-icon-button matSuffix *ngIf="filterInputRoles.value"  (click)="clearRolesFilter()">
+                                                <mat-icon>clear</mat-icon>
+                                            </button>
+                                        </mat-form-field>
+                                    </div>
+                                    <div fxLayout="row">
+                                        <mat-action-list fxFlex [ngClass]="'roles-list'" [ngClass.xs]="{'roles-list':false}" [style.xs]="{'height':'auto'}" dense>
+                                            <button mat-list-item *ngFor="let role of filteredRoles$ | async" (click)="showPermissionsList(role)">
+                                                <mat-icon matListIcon *ngIf="(selectedRoleChipId == role.id)">arrow_right</mat-icon>
+                                                <h3 matLine>
+                                                    {{role.name}}
+                                                </h3>
+                                                <button mat-icon-button (click)="selectRole(role)">
+                                                    <mat-icon>{{(selectedRolesControl[role.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                </button>
+                                                <mat-divider></mat-divider>
+                                            </button>
+                                        </mat-action-list>
+                                    </div>
+                                </div>
+                                <div fxFlex></div>
+                                <div fxFlex="49" fxFlex.xs="100">
+                                    <div fxLayout="column">
+                                        <mat-form-field fxFlex fxHide.xs="true">
+                                            <mat-chip-list #chipList aria-label="Roles Seleccionados">
+                                                <mat-chip *ngFor="let role of selectedRoles; let i = index" [selected]="(selectedRoleChipId == role.id)" [removable]="true" (removed)="removeRole(i)" (click)="showPermissionsList(role)" > <!-- (focusin)="onFocusRoleIn(role)" (focusout)="onFocusRoleOut(role)" -->
+                                                    {{role.name}}
+                                                    <mat-icon matChipRemove>cancel</mat-icon>
+                                                </mat-chip>
+                                            </mat-chip-list>
+                                            <mat-hint align="end">{{selectedRoles.length}}</mat-hint>
+                                        </mat-form-field>
+                                        <br>
+                                        <mat-card fxFlex *ngIf="selectedRoleChipId != 0">
+                                            <mat-card-header>
+                                                <div fxFlex></div>
+                                                <button mat-icon-button aria-label="Cerrar lista de permisos" (click)="selectedRoleChipId = 0" class="close-card-icon-button">
+                                                    <mat-icon>close</mat-icon>
+                                                </button>
+                                            </mat-card-header>
+                                            <mat-card-content>
+                                                <div fxFlexFill fxLayoutGap class="permissions-edit-list">
+                                                    <span fxFlex="50" *ngFor="let permission of selectedRolePermissions;" class="permission-slide-toggle">
+                                                        <mat-slide-toggle (change)="changePermissionStatus(permission)" [checked]="permission.active" [disabled]="permission.disabled" matTooltip="{{permission.description}}">{{permission.description}}</mat-slide-toggle>
+                                                    </span>
+                                                </div>
+                                            </mat-card-content>
+                                        </mat-card>
+                                    </div>
+                                </div>
+                            </div>
+                        </mat-tab>
+                        <mat-tab fxLayout="row" [disabled]="(usuarioForm.get('is_superuser').value == true)">
+                            <ng-template mat-tab-label>
+                                    <span matBadge="{{selectedPermissions.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedPermissions.length <= 0">Permisos</span>
+                            </ng-template>
+                            <div fxFlex fxLayout="row" class="edit-container">
+                                <div fxFlex="49" fxLayout="column" fxFlex.xs="100" style="height: auto;">
+                                    <div fxFlex="none" fxLayout="row">
+                                        <mat-form-field fxFlex>
+                                            <input matInput placeholder="Filtrar Permisos" aria-label="filtrar" [formControl]="filterInputPermissions">
+                                            <mat-icon *ngIf="!filterInputPermissions.value" matSuffix>filter_list</mat-icon>
+                                            <button mat-icon-button matSuffix *ngIf="filterInputPermissions.value"  (click)="clearPermissionsFilter()">
+                                                <mat-icon>clear</mat-icon>
+                                            </button>
+                                        </mat-form-field>
+                                    </div>
+                                    <div fxLayout="row" style="overflow: auto;">
+                                        <mat-action-list fxFlex fxFlex.xs="100" dense>
+                                            <button mat-list-item *ngFor="let permission of filteredPermissions$ | async" (click)="selectPermission(permission)" [disabled]="assignedPermissions[permission.id] && assignedPermissions[permission.id].inRoles.length > 0">
+                                                <p matLine>
+                                                    <span fxHide.xs="true">[{{permission.group}}]</span> <span> {{permission.description}} </span>
+                                                </p>
+                                                <button mat-icon-button  *ngIf="assignedPermissions[permission.id] && assignedPermissions[permission.id].inRoles.length > 0">
+                                                        <mat-icon>{{(assignedPermissions[permission.id].active)?'supervised_user_circle':'block'}}</mat-icon>
+                                                </button>
+                                                <button mat-icon-button  *ngIf="!assignedPermissions[permission.id] || assignedPermissions[permission.id].inRoles.length <= 0" >
+                                                    <mat-icon>{{(assignedPermissions[permission.id] && assignedPermissions[permission.id].active)?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                </button>
+                                                <mat-divider></mat-divider>
+                                            </button>
+                                        </mat-action-list>
+                                    </div>
+                                </div>
+                                <div fxFlex fxHide.xs="true"></div>
+                                <div fxFlex="49" fxHide.xs="true" style="overflow: auto; height: auto; padding:5px;">
+                                    <mat-form-field fxFlex>
+                                        <mat-chip-list #chipList aria-label="Permisos Seleccionados">
+                                            <mat-chip [color]="'accent'" *ngFor="let permission of selectedPermissions; let i = index" [removable]="true" (removed)="removePermission(i)">
+                                                {{permission.description}}
+                                                <mat-icon matChipRemove>cancel</mat-icon>
+                                            </mat-chip>
+                                        </mat-chip-list>
+                                        <mat-hint align="end">{{selectedPermissions.length}}</mat-hint>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </mat-tab>
+                        
+                        <mat-tab fxLayout="row">
+                            <ng-template mat-tab-label>
+                                    <span matBadge="{{selectedGroups.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedGroups.length <= 0">Grupos</span>
+                            </ng-template>
+                            <div fxFlex fxLayout="row" class="edit-container">
+                                <div fxFlex="49" fxFlex.xs="100" style="height: auto;">
+                                    <div fxLayout="row">
+                                        <mat-form-field fxFlex>
+                                            <input matInput placeholder="Filtrar Grupos" aria-label="filtrar" [formControl]="filterInputGroups">
+                                            <mat-icon *ngIf="!filterInputGroups.value" matSuffix>filter_list</mat-icon>
+                                            <button mat-icon-button matSuffix *ngIf="filterInputGroups.value"  (click)="clearGroupsFilter()">
+                                                <mat-icon>clear</mat-icon>
+                                            </button>
+                                        </mat-form-field>
+                                    </div>
+                                    <div fxLayout="row" style="overflow: auto;">
+                                        <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
+                                            <button mat-list-item *ngFor="let group of filteredGroups$ | async" (click)="selectGroup(group)">
+                                                <p matLine>
+                                                    <span> {{group.descripcion}} </span>
+                                                </p>
+                                                <button mat-icon-button  >
+                                                    <mat-icon>{{(assignedGroups[group.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                </button>
+                                                <mat-divider></mat-divider>
+                                            </button>
+                                        </mat-action-list>
+                                    </div>
+                                </div>
+                                <div fxFlex fxHide.xs="true"></div>
+                                <div fxFlex="49" fxHide.xs="true" style="overflow: auto; height: auto; padding:5px;">
+                                    <mat-form-field fxFlex>
+                                        <mat-chip-list #chipList aria-label="Grupos Seleccionados">
+                                            <mat-chip [color]="'accent'" *ngFor="let group of selectedGroups; let i = index" [removable]="true" (removed)="removeGroup(i)">
+                                                {{group.descripcion}}
+                                                <mat-icon matChipRemove>cancel</mat-icon>
+                                            </mat-chip>
+                                        </mat-chip-list>
+                                        <mat-hint align="end">{{selectedGroups.length}}</mat-hint>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </mat-tab>
+
+                        <mat-tab fxLayout="row">
+                            <ng-template mat-tab-label>
+                                    <span matBadge="{{selectedProgramas.length}}" matBadgeSize="medium" matBadgeColor="primary" matBadgePosition="above after" matBadgeOverlap="false" [matBadgeHidden]="selectedProgramas.length <= 0">Programas</span>
+                            </ng-template>
+                            <div fxFlex fxLayout="row" class="edit-container">
+                                <div fxFlex="49" fxFlex.xs="100" style="height: auto;">
+                                    <div fxLayout="row">
+                                        <mat-form-field fxFlex>
+                                            <input matInput placeholder="Filtrar Programas" aria-label="filtrar" [formControl]="filterInputProgramas">
+                                            <mat-icon *ngIf="!filterInputProgramas.value" matSuffix>filter_list</mat-icon>
+                                            <button mat-icon-button matSuffix *ngIf="filterInputProgramas.value"  (click)="clearProgramasFilter()">
+                                                <mat-icon>clear</mat-icon>
+                                            </button>
+                                        </mat-form-field>
+                                    </div>
+                                    <div fxLayout="row" style="overflow: auto;">
+                                        <mat-action-list fxFlex fxFlex.xs="100" dense class="permissions-list">
+                                            <button mat-list-item *ngFor="let programa of filteredProgramas$ | async" (click)="selectPrograma(programa)">
+                                                <p matLine>
+                                                    <span> {{programa.descripcion}} </span>
+                                                </p>
+                                                <button mat-icon-button  >
+                                                    <mat-icon>{{(assignedProgramas[programa.id])?'check_box':'check_box_outline_blank'}}</mat-icon>
+                                                </button>
+                                                <mat-divider></mat-divider>
+                                            </button>
+                                        </mat-action-list>
+                                    </div>
+                                </div>
+                                <div fxFlex fxHide.xs="true"></div>
+                                <div fxFlex="49" fxHide.xs="true" style="overflow: auto; height: auto; padding:5px;">
+                                    <mat-form-field fxFlex>
+                                        <mat-chip-list #chipList aria-label="Programas Seleccionados">
+                                            <mat-chip [color]="'accent'" *ngFor="let programa of selectedProgramas; let i = index" [removable]="true" (removed)="removeProgramas(i)">
+                                                {{programa.descripcion}}
+                                                <mat-icon matChipRemove>cancel</mat-icon>
+                                            </mat-chip>
+                                        </mat-chip-list>
+                                        <mat-hint align="end">{{selectedProgramas.length}}</mat-hint>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </mat-tab>
+
+                        <mat-tab fxLayout="column" label="Avatar">
+                            <div fxFlex="none" class="avatars-list">
+                                <div fxFlex="10" fxFlex.xs="25" *ngFor="let avatar of avatarList" class="avatar-item" >
+                                    <button mat-raised-button (click)="selectedAvatar = avatar.file" [color]="(selectedAvatar == avatar.file)?'primary':''">
+                                        <mat-icon fxFlexFill svgIcon="{{avatar.id}}"></mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </mat-tab>
+                    </mat-tab-group>
+                </div>
+            </mat-card-content>
+            <mat-card-actions>
+                
+            </mat-card-actions>
+        </mat-card>
+    </section>
 </section>

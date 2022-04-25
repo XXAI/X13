@@ -25,9 +25,34 @@ class AuthController extends Controller{
      */
     public function login(){
         $credentials = request(['username', 'password']);
+        $user = User::where('username',$credentials['username'])->first();
+
+        if(!$user){
+            return response()->json(['error' => 'Nombre de usuario no encontrado'], 401);
+        }
+
+        if($user->status != 'OK'){
+            if($user->status == 'BLCKD'){
+                return response()->json(['error' => 'El usuario ha sido bloqueado por 5 intentos fallidos de inicio de sesión','status'=>"BLCKD"], 401);
+            }else if($user->status == 'BAN'){
+                return response()->json(['error' => 'El usuario ha sido baneado del sistema','status'=>"BAN"], 401);
+            }else{
+                return response()->json(['error' => 'Estatus usuario: '.$user->status], 401);
+            }
+        }
 
         if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Credenciales no válidas'], 401);
+            $user->failed_attempts += 1;
+            if($user->failed_attempts == 5){
+                $user->status = 'BLCKD';
+            }
+            $user->save();
+
+            return response()->json(['error' => 'Contraseña incorrecta'], 401);
+        }else{
+            $user->last_login = date("Y-m-d H:i:s", strtotime('now'));
+            $user->failed_attempts = 0;
+            $user->save();
         }
 
         return $this->respondWithToken($token, $credentials);

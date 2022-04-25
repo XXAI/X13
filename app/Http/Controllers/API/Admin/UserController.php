@@ -101,6 +101,18 @@ class UserController extends Controller
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
             if($resultado->passes()){
+                $search_user = User::where('email',$parametros['email'])->orWhere('username',$parametros['username'])->first();
+
+                if($search_user){
+                    if($search_user->email == $parametros['email']){
+                        return response()->json(['mensaje' => 'El correo electronico debe ser unico'], HttpResponse::HTTP_CONFLICT);
+                    }
+
+                    if($search_user->username == $parametros['username']){
+                        return response()->json(['mensaje' => 'El nombre de usuario debe ser unico'], HttpResponse::HTTP_CONFLICT);
+                    }
+                }
+
                 DB::beginTransaction();
 
                 $usuario = new User();
@@ -109,8 +121,9 @@ class UserController extends Controller
                 $usuario->username = $parametros['username'];
                 $usuario->password = Hash::make($parametros['password']);
                 $usuario->is_superuser = $parametros['is_superuser'];
+                $usuario->status = $parametros['status'];
                 $usuario->avatar = $parametros['avatar'];
-                $usuario->unidad_medica_asignada_id = $parametros['unidad_medica_asignada']['id'];
+                $usuario->unidad_medica_asignada_id = (isset($parametros['unidad_medica_asignada']))?$parametros['unidad_medica_asignada']['id']:null;
                 
                 $usuario->save();
 
@@ -165,12 +178,16 @@ class UserController extends Controller
         try{
             $validation_rules = [
                 'name' => 'required',
-                'email' => 'required'                
+                'username' => 'required',
+                'email' => 'required'
             ];
         
             $validation_eror_messages = [
                 'name.required' => 'El nombre es obligatorio',
-                'email.required' => 'Es correo electronico es obligatorio'
+                'email.required' => 'El correo electronico es obligatorio',
+                'email.unique' => 'El correo electronico debe ser unico',
+                'username.required' => 'El nombre de usuario es obligatorio',
+                'username.unique' => 'El nombre de usuario debe ser unico',
             ];
 
             $usuario = User::with('roles','permissions','grupos','unidadMedicaAsignada')->find($id);
@@ -180,14 +197,29 @@ class UserController extends Controller
             $resultado = Validator::make($parametros,$validation_rules,$validation_eror_messages);
 
             if($resultado->passes()){
+                $search_user = User::where(function($where)use($parametros){
+                                            $where->where('email',$parametros['email'])->orWhere('username',$parametros['username']);
+                                        })->where('id','!=',$usuario->id)->first();
+
+                if($search_user){
+                    if($search_user->email == $parametros['email']){
+                        return response()->json(['mensaje' => 'El correo electronico debe ser unico'], HttpResponse::HTTP_CONFLICT);
+                    }
+
+                    if($search_user->username == $parametros['username']){
+                        return response()->json(['mensaje' => 'El nombre de usuario debe ser unico'], HttpResponse::HTTP_CONFLICT);
+                    }
+                }
+
                 DB::beginTransaction();
 
                 $usuario->name = $parametros['name'];
                 $usuario->email = $parametros['email'];
                 $usuario->username = $parametros['username'];
                 $usuario->is_superuser = $parametros['is_superuser'];
+                $usuario->status = $parametros['status'];
                 $usuario->avatar = $parametros['avatar'];
-                $usuario->unidad_medica_asignada_id = $parametros['unidad_medica_asignada']['id'];
+                $usuario->unidad_medica_asignada_id = (isset($parametros['unidad_medica_asignada']))?$parametros['unidad_medica_asignada']['id']:null;
                 
                 if($parametros['password']){
                     $usuario->password = Hash::make($parametros['password']);

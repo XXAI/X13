@@ -25,7 +25,11 @@ export class ConfirmPasswordDialogComponent implements OnInit{
     this.recievedPassword = this.data.password;
   }
 
-
+  onYesClick(): void{
+    if(this.confirmPasword == this.recievedPassword){
+      this.dialogRef.close(true);
+    }
+  }
 
   onNoClick(): void {
     this.dialogRef.close();

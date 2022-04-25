@@ -201,6 +201,7 @@ export class SalidaComponent implements OnInit {
           if(this.catalogos['almacenes'].length == 1){
             this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
             this.catalogos['tipos_movimiento'] = this.catalogos['almacenes'][0].tipos_movimiento;
+            this.puedeSurtirUnidades = (this.catalogos['almacenes'][0].puede_surtir_unidades == 1);
           }
 
           if(this.catalogos['tipos_movimiento'].length == 1){

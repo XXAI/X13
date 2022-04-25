@@ -42,6 +42,7 @@ export class FormComponent implements OnInit {
     'username': ['',[Validators.required, Validators.minLength(4)]],
     'password': ['',[Validators.minLength(6)]],
     'is_superuser': [false],
+    'status':['OK'],
     'avatar': [''],
     'unidad_medica_asignada':[''],
     'unidad_medica_asignada_id':[''],
@@ -50,6 +51,12 @@ export class FormComponent implements OnInit {
     'groups': [[]],
     'programas': [[]]
   });
+
+  listaEstatus:any[] = [
+    {clave:'OK', descripcion:'Normal'},
+    {clave:'BLCKD', descripcion:'Bloqueado'},
+    {clave:'BAN', descripcion:'Baneado'},
+  ];
 
   avatarList: any[] = [];
 
@@ -533,7 +540,12 @@ export class FormComponent implements OnInit {
               this.authService.updateUserData(response.usuario);
             }
           }
-          
+          this.isLoading = false;
+        },
+        responseError => {
+          console.log(responseError);
+          var errorMessage = responseError.error.mensaje;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
           this.isLoading = false;
         }
       );
@@ -544,6 +556,12 @@ export class FormComponent implements OnInit {
           this.sharedService.showSnackBar('Datos guardados con éxito', null, 3000);
           this.router.navigate(['/usuarios']);
           this.usuario = response.data;
+          this.isLoading = false;
+        },
+        responseError => {
+          console.log(responseError);
+          var errorMessage = responseError.error.mensaje;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
           this.isLoading = false;
         }
       );

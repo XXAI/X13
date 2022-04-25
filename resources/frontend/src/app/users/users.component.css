@@ -26,18 +26,16 @@
 table {
     width: 100%;
 }
-  
+
+tr.mat-row:hover {
+  background-color: #F5F5F5;
+}
+
 .mat-form-field {
 font-size: 14px;
 width: 100%;
 }
 
-/* Column Widths */
-.mat-column-actions{
-  max-width: 115px;
-  min-width: 115px;
-  
-}
 
 .not-results-found{
   text-align: center;
