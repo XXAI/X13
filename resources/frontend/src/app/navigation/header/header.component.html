@@ -24,6 +24,10 @@
       </button>
 
       <mat-menu #menuApps="matMenu">
+        <button mat-menu-item style="text-align:center" routerLink="/apps">
+          <mat-icon>home</mat-icon>
+        </button>
+        <mat-divider></mat-divider>
         <div class="apps" fxLayout="row" fxLayoutAlign="center center">
           <ng-container *ngFor="let app of apps; let i = index">
               <figure [routerLink]="['/'+app.route]">
@@ -32,10 +36,6 @@
               </figure>
           </ng-container>
         </div>
-        <mat-divider></mat-divider>
-        <button mat-menu-item style="text-align:center" routerLink="/apps">
-          <mat-icon>home</mat-icon>
-        </button>
       </mat-menu>
 
       <mat-menu #menuAccount="matMenu">

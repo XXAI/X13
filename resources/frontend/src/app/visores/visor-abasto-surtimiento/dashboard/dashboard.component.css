@@ -54,6 +54,33 @@
     margin-bottom: 5px;
 }
 
+.encabezado-detalles{
+    padding: 5px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: rgb(48, 134, 209);
+    color:rgb(241, 240, 240);
+    font-weight: 500;
+    cursor:default;
+}
+
+.encabezado-detalles .icono{
+    margin: auto;
+}
+
+.encabezado-detalles .icono .mat-icon{
+    font-size: 28px;
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 24px !important;
+}
+
+.encabezado-detalles .titulo{
+    line-height: 24px !important;
+    height: auto;
+    padding-left: 5px;
+    margin: auto;
+}
+
 .encabezado-seccion{
     padding: 5px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.15);
@@ -86,9 +113,14 @@
     padding: 0px;
 }
 
+.caducado > td{
+    color:red;
+}
+
 .tabla-datos{
     width: 100%;
     cursor: default;
+    
 }
 
 .tabla-datos thead {
@@ -128,7 +160,8 @@
 }
 
 .lista-articulos-table .descripcion{
-    font-size: small;
+    font-size: smaller;
+    text-align: justify;
     padding: 2px 0;
 }
 

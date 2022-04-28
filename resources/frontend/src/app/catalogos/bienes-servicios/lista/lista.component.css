@@ -1,0 +1,93 @@
+.data-loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-container{
+    padding: 0px;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;    
+}
+
+th, td {
+    overflow: hidden;
+    width:auto;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+table th {
+    padding:0 5px;
+    text-align: center;
+}
+
+table td {
+    padding:0 5px;
+}
+
+.descontinuado{
+    color:orange;
+}
+
+.con-existencias{
+    font-weight: bold;
+}
+
+.inactivo{
+    color:rgb(154, 153, 153);
+}
+
+table .mat-row:hover{
+    background-color: whitesmoke;
+    cursor: default;
+}
+
+.mat-column-descontinuado{
+    width:65px;
+}
+
+.mat-column-tipo_familia{
+    width:155px;
+}
+
+.mat-column-clave{
+    width:110px;
+}
+
+.mat-column-puede_surtir_unidades{
+    width:85px;
+    text-align: center;
+}
+
+.mat-column-existencias{
+    width:80px;
+}
+
+.mat-column-actions{
+    width:48px;
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.added-data{
+    font-size: smaller;
+    color:rgb(129, 125, 125);
+}

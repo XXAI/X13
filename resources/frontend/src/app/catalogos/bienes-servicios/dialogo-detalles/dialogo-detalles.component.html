@@ -1,0 +1,208 @@
+<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
+    <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
+        <div fxLayout="row">
+            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon> Cerrar</button>
+            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo">
+                <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
+            </button>
+            <button fxFlex="none" mat-button [matTooltip]="'Guardar'" [disabled]="isSaving || !formArticulo.valid" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
+                <mat-icon>save</mat-icon> Guardar
+            </button>
+            <div fxFlex>
+            </div>
+            <div fxFlex="none" class="label-info">
+                <span>{{(ultimaActualizacion)?ultimaActualizacion:'Articulo - Nuevo'}}</span>
+            </div>
+        </div>
+        <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
+        <mat-menu #menuArticulo="matMenu">
+            <button mat-menu-item (click)="nuevoArticulo()">
+                <mat-icon>add_circle</mat-icon>
+                <span>Nuevo Articulo</span>
+            </button>
+        </mat-menu>
+    </section> <!-- <<<<<<< Toolbar Menu -->
+    <section fxFlex fxLayout="column" style="padding: 10px;">
+        <div fxFlex fxLayout="row wrap" fxLayoutGap="5px" [formGroup]="formArticulo" [style.fontSize.px]="15">
+            <div fxFlex="100" fxLayout="row" fxLayoutGap="5px">
+                <mat-form-field fxFlex>
+                    <mat-label>Partida Especifica</mat-label>
+                    <input type="text" matInput aria-label="Partida Especifica" placeholder="Teclee para buscar una partida" formControlName="partida_especifica" (blur)="validarOpcionSeleccionada('partida_especifica')" [matAutocomplete]="autoPartidas" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-error *ngIf="formArticulo.get('partida_especifica').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-autocomplete autoActiveFirstOption #autoPartidas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                        <mat-option *ngIf="catalogo_autocomplete['partidas'].length == 0" value="">No hay Partidas capturados</mat-option>
+                        <mat-option *ngFor="let partida of filteredPartidas | async" [value]="partida">
+                            [{{partida.clave}}] {{partida.descripcion}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formArticulo.get('partida_especifica').value">
+                        <mat-icon>[ {{formArticulo.get('partida_especifica').value.clave}} ]</mat-icon>
+                    </mat-hint>
+                    <mat-hint align="end" *ngIf="formArticulo.get('partida_especifica').value && formArticulo.get('partida_especifica').value.id">
+                        Partida Seleccionada
+                    </mat-hint>
+                    <mat-error *ngIf="formArticulo.get('partida_especifica').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                </mat-form-field>
+
+                <mat-form-field fxFlex="30">
+                    <mat-label>Familia</mat-label>
+                    <input type="text" matInput aria-label="Familia" placeholder="Teclee para buscar una familia" formControlName="familia" (blur)="validarOpcionSeleccionada('familia')" [matAutocomplete]="autoFamilias" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-error *ngIf="formArticulo.get('familia').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-autocomplete autoActiveFirstOption #autoFamilias="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
+                        <mat-option *ngIf="catalogo_autocomplete['familias'].length == 0" value="">No hay Familias capturadas</mat-option>
+                        <mat-option *ngFor="let familia of filteredFamilias | async" [value]="familia">
+                            {{familia.nombre}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formArticulo.get('familia').value">
+                        <mat-icon>{{(formArticulo.get('familia').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                    </mat-hint>
+                    <mat-hint align="end" *ngIf="formArticulo.get('familia').value && formArticulo.get('familia').value.id">
+                        Familia Seleccionada
+                    </mat-hint>
+                    <mat-error *ngIf="formArticulo.get('familia').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                </mat-form-field>
+            </div>
+
+            <mat-form-field fxFlex>
+                <mat-label>Tipo Articulo</mat-label>
+                <mat-select formControlName="tipo_bien_servicio_id" required>
+                    <mat-option *ngIf="select_tipos_articulo.length == 0">Sin Tipos Registados</mat-option>
+                    <mat-option *ngFor="let item of select_tipos_articulo" [value]="item.id">
+                        {{item.descripcion}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field fxFlex>
+                <mat-label>Clave CUBS</mat-label>
+                <input matInput formControlName="clave_cubs" autocomplete="off">
+                <mat-error *ngIf="formArticulo.get('clave_cubs').hasError('required')">Este campo es obligatorio</mat-error>
+            </mat-form-field>
+
+            <mat-form-field fxFlex>
+                <mat-label>Clave Local</mat-label>
+                <input matInput formControlName="clave_local" autocomplete="off">
+                <mat-error *ngIf="formArticulo.get('clave_local').hasError('required')">Este campo es obligatorio</mat-error>
+            </mat-form-field>
+
+            <mat-form-field fxFlex="100">
+                <mat-label>Articulo</mat-label>
+                <input matInput #articulo formControlName="articulo" autocomplete="off" required>
+                <mat-hint align="end">{{articulo.value?.length || 0}}/255</mat-hint>
+                <mat-error *ngIf="formArticulo.get('articulo').hasError('required')">Este campo es obligatorio</mat-error>
+            </mat-form-field>
+
+            <mat-form-field fxFlex="100" appearance="outline">
+                <mat-label>Especificaciones</mat-label>
+                <textarea matInput formControlName="especificaciones" rows="3" required></textarea>
+            </mat-form-field>
+
+            <mat-form-field fxFlex="100" appearance="outline">
+                <mat-label>Destacar:</mat-label>
+                <textarea matInput formControlName="destacar" rows="1"></textarea>
+            </mat-form-field>
+
+            <div fxFlex fxLayout="row" fxLayoutGap="5px">
+                <div class="mat-form-field" fxFlex="none">
+                    <mat-checkbox formControlName="descontinuado">
+                        Descontinuado
+                    </mat-checkbox>
+                </div>
+
+                <div class="mat-form-field" fxFlex="none">
+                    <mat-checkbox formControlName="tiene_fecha_caducidad">
+                        Requiere Fecha de Caducidad
+                    </mat-checkbox>
+                </div>
+
+                <div class="mat-form-field" fxFlex="none">
+                    <mat-checkbox formControlName="puede_surtir_unidades">
+                        Puede Surtir por Piezas
+                    </mat-checkbox>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+        <mat-card class="empaque-detalles" fxFlex fxLayout="column">
+            <div class="titulo" fxflex="none">Empaque Detalles:</div>
+            <div class="formulario" fxFlex fxLayout="row wrap" [formGroup]="formDetalles">
+                <mat-form-field fxFlex="50">
+                    <mat-label>Empaque</mat-label>
+                    <input type="text" matInput aria-label="Empaque" placeholder="Teclee para buscar un Empaque" formControlName="empaque" (blur)="validarOpcionSeleccionadaDetalles('empaque')" [matAutocomplete]="autoEmpaques" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-error *ngIf="formDetalles.get('empaque').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-autocomplete autoActiveFirstOption #autoEmpaques="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                        <mat-option *ngIf="catalogo_autocomplete['empaques'].length == 0" value="">No hay Empaques capturados</mat-option>
+                        <mat-option *ngFor="let empaque of filteredEmpaques | async" [value]="empaque">
+                            {{empaque.descripcion}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formDetalles.get('empaque').value">
+                        <mat-icon>{{(formDetalles.get('empaque').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                    </mat-hint>
+                    <mat-hint align="end" *ngIf="formDetalles.get('empaque').value && formDetalles.get('empaque').value.id">
+                        Empaque Seleccionado
+                    </mat-hint>
+                    <mat-error *ngIf="formDetalles.get('empaque').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                </mat-form-field>
+
+                <mat-form-field fxFlex="50">
+                    <mat-label>Unidad de Medida</mat-label>
+                    <input type="text" matInput aria-label="Unidad de Medida" placeholder="Teclee para buscar una Unidad de Medida" formControlName="unidad_medida" (blur)="validarOpcionSeleccionadaDetalles('unidad_medida')" [matAutocomplete]="autoUnidadesMedida" autocomplete="off" required>
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-error *ngIf="formDetalles.get('unidad_medida').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-autocomplete autoActiveFirstOption #autoUnidadesMedida="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                        <mat-option *ngIf="catalogo_autocomplete['unidades_medida'].length == 0" value="">No hay Unidades de Medida capturadas</mat-option>
+                        <mat-option *ngFor="let unidad_medida of filteredUnidadesMedida | async" [value]="unidad_medida">
+                            {{unidad_medida.descripcion}}
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formDetalles.get('unidad_medida').value">
+                        <mat-icon>{{(formDetalles.get('unidad_medida').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                    </mat-hint>
+                    <mat-hint align="end" *ngIf="formDetalles.get('unidad_medida').value && formDetalles.get('unidad_medida').value.id">
+                        Unidad de Medida Seleccionada
+                    </mat-hint>
+                    <mat-error *ngIf="formDetalles.get('unidad_medida').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                </mat-form-field>
+
+                <mat-form-field fxFlex>
+                    <mat-label>Descripcion</mat-label>
+                    <input matInput #descripcion formControlName="descripcion" autocomplete="off" required>
+                    <mat-hint align="end">{{descripcion.value?.length || 0}}/255</mat-hint>
+                    <mat-error *ngIf="formDetalles.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+                <mat-form-field fxFlex="none">
+                    <mat-label>Piezas x Empaque</mat-label>
+                    <input matInput #descripcion type="number" formControlName="piezas_x_empaque" autocomplete="off" required>
+                    <mat-error *ngIf="formDetalles.get('piezas_x_empaque').hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+                <div class="mat-form-field" fxFlex="none">
+                    <mat-checkbox formControlName="en_especificaciones">
+                        En  Especificaciones
+                    </mat-checkbox>
+                </div>
+                <div fxFlex="100" fxLayout="row" fxLayoutGap="10px">
+                    <div fxFlex></div>
+                    <button fxFlex="none" mat-stroked-button color="accent">Aceptar</button>
+                    <button fxFlex="none" mat-stroked-button>Cancelar</button>
+                    <div fxFlex="none"></div>
+                </div>
+            </div>
+            <div class="detalles" fxFlex>
+                lita Detalles
+            </div>
+        </mat-card>
+    </section>
+</section>

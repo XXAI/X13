@@ -32,13 +32,15 @@ export const APPS:App [] = [
         { name:'Recepción de Pedidos',      route: "pedidos/recepcion-pedidos",      icon: "assets/icons/recepcion-pedidos.svg", permission:"5ZbNLsYUWx6w6mTY4wcJlcaBrrNYr85D" },
       ]
     },*/
-    { name:'Captura Semanal: Abasto y Surtimiento',  route: "captura-reporte-semanal",      icon: "assets/icons/captura-reporte.svg",    permission:"BA4rXXfPIcaePRspIOTl88I4HH00INQa" },
+    { name:'Captura Semanal: Abasto y Surtimiento',  route: "captura-reporte-semanal",            icon: "assets/icons/captura-reporte.svg",          permission:"BA4rXXfPIcaePRspIOTl88I4HH00INQa" },
     { name:'Admin Captura: Abasto y Surtimiento',    route: "admin-captura-reporte-semanal",      icon: "assets/icons/admin-captura-reporte.svg",    permission:"BjvroJXhbaJvcKrBnxHpRRBq2u6BovUN" },
-    /*{ name:'Catalogos',       route: "catalogos",             icon: "assets/icons/catalogos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",
+    { name:'Admin: Catalogos',                       route: "catalogos",                          icon: "assets/icons/catalogos.svg",                permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",
       apps:[
-        { name:'Almacenes',   route: "catalogos/almacenes",   icon: "assets/icons/catalogo-almacenes.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
+        { name:'Catalogos Simples',   route: "catalogos/catalogos-simples",   icon: "assets/icons/catalogos-simples.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
+        { name:'Bienes Servicios',    route: "catalogos/bienes-servicios",    icon: "assets/icons/bienes-servicios.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
+        { name:'Unidades Medicas',    route: "catalogos/unidades-medicas",    icon: "assets/icons/unidades-medicas.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
       ]
-    },*/
+    },
     { name:'Configuración Sistema',   route: "configuracion",  icon: "assets/icons/configuracion-sistema.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK",
       apps:[
         { name:'Grupos de Unidades',   route: "configuracion/grupos",           icon: "assets/icons/catalogo-grupos.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },

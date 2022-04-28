@@ -58,6 +58,10 @@ a + a::before {
     cursor: pointer; 
 }
 
+.apps figure:hover {
+    background-color: whitesmoke;
+}
+
  
 .apps figure img {
     display: block;

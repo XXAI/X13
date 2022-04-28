@@ -1,0 +1,40 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.salida-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+}
+
+.boton-accion{
+    border-right: 1px solid whitesmoke;
+    background-color: #787878;
+    border-radius: 0px;
+}
+
+.empaque-detalles{
+    padding: 0px;
+    margin-top: 10px;
+}
+
+.empaque-detalles .titulo{
+    background-color: cadetblue;
+    padding: 5px;
+    border-radius: 4px 4px 0px 0px;
+    font-weight: 500;
+    color:whitesmoke;
+}
+
+.empaque-detalles .detalles{
+    padding: 5px;
+}

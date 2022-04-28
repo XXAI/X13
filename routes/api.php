@@ -74,6 +74,12 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('visor-abasto-surtimiento/datos-visor',                          'API\Modulos\VisorAbastoSurtimientoController@obtenerDatosVisor');
 
     /**
+     *  Modulo de Catalogos: Bienes Servicios
+     */
+    Route::apiResource('catalogos/bienes-servicios',            'API\AdminCatalogos\AdminBienesServiciosController');
+    Route::get('catalogos/bienes-servicios-catalogos',          'API\AdminCatalogos\AdminBienesServiciosController@obtenerCatalogos');
+
+    /**
      * Modulos Almacen
      */
     Route::get('almacen-buscar-stock',                          'API\Modulos\AlmacenMovimientosController@buscarStock');

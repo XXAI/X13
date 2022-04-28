@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { VisorAbastoSurtimientoService } from '../visor-abasto-surtimiento.service';
 import { SharedService } from 'src/app/shared/shared.service';
 
@@ -11,6 +11,7 @@ import { SharedService } from 'src/app/shared/shared.service';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+  @ViewChild(MatTable) detallesTable: MatTable<any>;
   @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   
@@ -29,14 +30,23 @@ export class DashboardComponent implements OnInit {
   resultsLength: number = 0;
   currentPage: number = 0;
   pageSize: number = 30;
-  displayedColumns: string[] = ['tipo','clave','descripcion','existencia'];
+  displayedColumns: string[];
   dataSourceArticulos: MatTableDataSource<any>;
 
-  datosTablas:any;
+  datosTablas: any;
+  detallesClave: string;
+  detallesTitulo: string;
 
   ngOnInit(): void {
     this.isLoading = true;
-    this.datosTablas = {};
+
+    this.datosTablas = {
+      ABAPRNTJ:{datos:[],detalles:{datos:[],titulo:'',columnas:[]}},
+      STATSCAD:{datos:[],detalles:{datos:[],titulo:'',columnas:[]}},
+      RCTSCTVS:{datos:[]},
+    };
+
+    this.displayedColumns = ['sin_seleccion'];
     this.dataSourceArticulos = new MatTableDataSource<any>([]);
     this.dataSourceArticulos.paginator = this.articulosPaginator;
     this.dataSourceArticulos.sort = this.sort;
@@ -52,19 +62,22 @@ export class DashboardComponent implements OnInit {
           response.data.porcentaje_abasto.forEach(element => {
             element.porcentaje = ( element.total_claves_existencia / element.total_claves ) * 100;
           });
-          this.datosTablas.porcentaje_abasto = response.data.porcentaje_abasto;
+          this.datosTablas.ABAPRNTJ.datos = response.data.porcentaje_abasto;
+          this.datosTablas.ABAPRNTJ.detalles.datos = response.data.catalogo_normativo;
+          this.datosTablas.ABAPRNTJ.detalles.columnas = ['tipo','clave','descripcion','existencia'];
+          this.datosTablas.ABAPRNTJ.detalles.titulo = 'Existencias por Articulo (Normativos):';
 
           response.data.porcetaje_surtimiento.forEach(element => {
             element.porcentaje = ( element.total_completos / element.total_solicitudes ) * 100;
           });
-          this.datosTablas.porcetaje_surtimiento = response.data.porcetaje_surtimiento;
+          this.datosTablas.RCTSCTVS.datos = response.data.porcetaje_surtimiento;
 
-          this.datosTablas.movimientos = response.data.movimientos;
-          this.datosTablas.articulos_estado_caducidades = response.data.articulos_estado_caducidades;
+          this.datosTablas.STATSCAD.datos = response.data.articulos_estado_caducidades;
+          this.datosTablas.STATSCAD.detalles.datos = response.data.articulos_detalle_caducidades;
+          this.datosTablas.STATSCAD.detalles.columnas = ['almacen','clave','articulo','lote','fecha_caducidad','existencia','dias'];
+          this.datosTablas.STATSCAD.detalles.titulo = 'Lista de Articulos por Caducidad:';
 
-          this.dataSourceArticulos = new MatTableDataSource<any>(response.data.catalogo_normativo);
-          this.dataSourceArticulos.paginator = this.articulosPaginator;
-          this.dataSourceArticulos.sort = this.sort;
+          //this.datosTablas.movimientos = response.data.movimientos;
         }
         this.isLoading = false;
       },
@@ -77,6 +90,22 @@ export class DashboardComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  seleccionaDetalles(clave:string){
+    this.detallesClave = clave;
+
+    if(this.datosTablas[clave].detalles){
+      let detalles = this.datosTablas[clave].detalles;
+    
+      this.currentPage = 1;
+      this.detallesTitulo = detalles.titulo;
+      this.displayedColumns = detalles.columnas;
+
+      this.dataSourceArticulos.data = detalles.datos;
+      this.dataSourceArticulos.paginator = this.articulosPaginator;
+      this.dataSourceArticulos.sort = this.sort;
+    }
   }
 
   aplicarFiltro(event){
