@@ -1,7 +1,6 @@
 <section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
     <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
-            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon> Cerrar</button>
             <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo">
                 <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
             </button>
@@ -13,6 +12,7 @@
             <div fxFlex="none" class="label-info">
                 <span>{{(ultimaActualizacion)?ultimaActualizacion:'Articulo - Nuevo'}}</span>
             </div>
+            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon> Cerrar</button>
         </div>
         <mat-progress-bar *ngIf="isLoading || isSaving" mode="indeterminate" [color]="(isSaving)?'accent':'primary'"></mat-progress-bar>
         <mat-menu #menuArticulo="matMenu">
@@ -33,7 +33,7 @@
                     </button>
                     <mat-error *ngIf="formArticulo.get('partida_especifica').hasError('required')">Este campo es obligatorio</mat-error>
                     <mat-autocomplete autoActiveFirstOption #autoPartidas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
-                        <mat-option *ngIf="catalogo_autocomplete['partidas'].length == 0" value="">No hay Partidas capturados</mat-option>
+                        <mat-option *ngIf="catalogoAutocomplete['partidas'].length == 0" value="">No hay Partidas capturados</mat-option>
                         <mat-option *ngFor="let partida of filteredPartidas | async" [value]="partida">
                             [{{partida.clave}}] {{partida.descripcion}}
                         </mat-option>
@@ -55,7 +55,7 @@
                     </button>
                     <mat-error *ngIf="formArticulo.get('familia').hasError('required')">Este campo es obligatorio</mat-error>
                     <mat-autocomplete autoActiveFirstOption #autoFamilias="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
-                        <mat-option *ngIf="catalogo_autocomplete['familias'].length == 0" value="">No hay Familias capturadas</mat-option>
+                        <mat-option *ngIf="catalogoAutocomplete['familias'].length == 0" value="">No hay Familias capturadas</mat-option>
                         <mat-option *ngFor="let familia of filteredFamilias | async" [value]="familia">
                             {{familia.nombre}}
                         </mat-option>
@@ -73,8 +73,8 @@
             <mat-form-field fxFlex>
                 <mat-label>Tipo Articulo</mat-label>
                 <mat-select formControlName="tipo_bien_servicio_id" required>
-                    <mat-option *ngIf="select_tipos_articulo.length == 0">Sin Tipos Registados</mat-option>
-                    <mat-option *ngFor="let item of select_tipos_articulo" [value]="item.id">
+                    <mat-option *ngIf="selectTiposArticulo.length == 0">Sin Tipos Registados</mat-option>
+                    <mat-option *ngFor="let item of selectTiposArticulo" [value]="item.id">
                         {{item.descripcion}}
                     </mat-option>
                 </mat-select>
@@ -88,6 +88,9 @@
 
             <mat-form-field fxFlex>
                 <mat-label>Clave Local</mat-label>
+                <button mat-icon-button matPrefix (click)="toggleClaveLocal()">
+                    <mat-icon>{{autoClaveLocal ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
+                </button>
                 <input matInput formControlName="clave_local" autocomplete="off">
                 <mat-error *ngIf="formArticulo.get('clave_local').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
@@ -132,76 +135,90 @@
         <mat-divider></mat-divider>
         <mat-card class="empaque-detalles" fxFlex fxLayout="column">
             <div class="titulo" fxflex="none">Empaque Detalles:</div>
-            <div class="formulario" fxFlex fxLayout="row wrap" [formGroup]="formDetalles">
-                <mat-form-field fxFlex="50">
-                    <mat-label>Empaque</mat-label>
-                    <input type="text" matInput aria-label="Empaque" placeholder="Teclee para buscar un Empaque" formControlName="empaque" (blur)="validarOpcionSeleccionadaDetalles('empaque')" [matAutocomplete]="autoEmpaques" autocomplete="off" required>
-                    <button mat-icon-button matPrefix>
-                        <mat-icon>list_alt</mat-icon>
-                    </button>
-                    <mat-error *ngIf="formDetalles.get('empaque').hasError('required')">Este campo es obligatorio</mat-error>
-                    <mat-autocomplete autoActiveFirstOption #autoEmpaques="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
-                        <mat-option *ngIf="catalogo_autocomplete['empaques'].length == 0" value="">No hay Empaques capturados</mat-option>
-                        <mat-option *ngFor="let empaque of filteredEmpaques | async" [value]="empaque">
-                            {{empaque.descripcion}}
-                        </mat-option>
-                    </mat-autocomplete>
-                    <mat-hint *ngIf="formDetalles.get('empaque').value">
-                        <mat-icon>{{(formDetalles.get('empaque').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
-                    </mat-hint>
-                    <mat-hint align="end" *ngIf="formDetalles.get('empaque').value && formDetalles.get('empaque').value.id">
-                        Empaque Seleccionado
-                    </mat-hint>
-                    <mat-error *ngIf="formDetalles.get('empaque').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
-                </mat-form-field>
-
-                <mat-form-field fxFlex="50">
-                    <mat-label>Unidad de Medida</mat-label>
-                    <input type="text" matInput aria-label="Unidad de Medida" placeholder="Teclee para buscar una Unidad de Medida" formControlName="unidad_medida" (blur)="validarOpcionSeleccionadaDetalles('unidad_medida')" [matAutocomplete]="autoUnidadesMedida" autocomplete="off" required>
-                    <button mat-icon-button matPrefix>
-                        <mat-icon>list_alt</mat-icon>
-                    </button>
-                    <mat-error *ngIf="formDetalles.get('unidad_medida').hasError('required')">Este campo es obligatorio</mat-error>
-                    <mat-autocomplete autoActiveFirstOption #autoUnidadesMedida="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
-                        <mat-option *ngIf="catalogo_autocomplete['unidades_medida'].length == 0" value="">No hay Unidades de Medida capturadas</mat-option>
-                        <mat-option *ngFor="let unidad_medida of filteredUnidadesMedida | async" [value]="unidad_medida">
-                            {{unidad_medida.descripcion}}
-                        </mat-option>
-                    </mat-autocomplete>
-                    <mat-hint *ngIf="formDetalles.get('unidad_medida').value">
-                        <mat-icon>{{(formDetalles.get('unidad_medida').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
-                    </mat-hint>
-                    <mat-hint align="end" *ngIf="formDetalles.get('unidad_medida').value && formDetalles.get('unidad_medida').value.id">
-                        Unidad de Medida Seleccionada
-                    </mat-hint>
-                    <mat-error *ngIf="formDetalles.get('unidad_medida').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
-                </mat-form-field>
-
-                <mat-form-field fxFlex>
-                    <mat-label>Descripcion</mat-label>
-                    <input matInput #descripcion formControlName="descripcion" autocomplete="off" required>
-                    <mat-hint align="end">{{descripcion.value?.length || 0}}/255</mat-hint>
-                    <mat-error *ngIf="formDetalles.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
-                </mat-form-field>
-                <mat-form-field fxFlex="none">
-                    <mat-label>Piezas x Empaque</mat-label>
-                    <input matInput #descripcion type="number" formControlName="piezas_x_empaque" autocomplete="off" required>
-                    <mat-error *ngIf="formDetalles.get('piezas_x_empaque').hasError('required')">Este campo es obligatorio</mat-error>
-                </mat-form-field>
-                <div class="mat-form-field" fxFlex="none">
-                    <mat-checkbox formControlName="en_especificaciones">
-                        En  Especificaciones
-                    </mat-checkbox>
+            <div fxFlex fxLayout="row">
+                <div class="formulario" fxFlex fxLayout="column">
+                    <div fxFlex="none" fxLayout="row wrap" [formGroup]="formDetalles">
+                        <mat-form-field fxFlex="50">
+                            <mat-label>Empaque</mat-label>
+                            <input type="text" matInput aria-label="Empaque" placeholder="Teclee para buscar un Empaque" formControlName="empaque" (blur)="validarOpcionSeleccionadaDetalles('empaque')" [matAutocomplete]="autoEmpaques" autocomplete="off" required>
+                            <button mat-icon-button matPrefix>
+                                <mat-icon>list_alt</mat-icon>
+                            </button>
+                            <mat-error *ngIf="formDetalles.get('empaque').hasError('required')">Este campo es obligatorio</mat-error>
+                            <mat-autocomplete autoActiveFirstOption #autoEmpaques="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                                <mat-option *ngIf="catalogoAutocomplete['empaques'].length == 0" value="">No hay Empaques capturados</mat-option>
+                                <mat-option *ngFor="let empaque of filteredEmpaques | async" [value]="empaque">
+                                    {{empaque.descripcion}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-hint *ngIf="formDetalles.get('empaque').value">
+                                <mat-icon>{{(formDetalles.get('empaque').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                            </mat-hint>
+                            <mat-hint align="end" *ngIf="formDetalles.get('empaque').value && formDetalles.get('empaque').value.id">
+                                Empaque Seleccionado
+                            </mat-hint>
+                            <mat-error *ngIf="formDetalles.get('empaque').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                        </mat-form-field>
+        
+                        <mat-form-field fxFlex="50">
+                            <mat-label>Unidad de Medida</mat-label>
+                            <input type="text" matInput aria-label="Unidad de Medida" placeholder="Teclee para buscar una Unidad de Medida" formControlName="unidad_medida" (blur)="validarOpcionSeleccionadaDetalles('unidad_medida')" [matAutocomplete]="autoUnidadesMedida" autocomplete="off" required>
+                            <button mat-icon-button matPrefix>
+                                <mat-icon>list_alt</mat-icon>
+                            </button>
+                            <mat-error *ngIf="formDetalles.get('unidad_medida').hasError('required')">Este campo es obligatorio</mat-error>
+                            <mat-autocomplete autoActiveFirstOption #autoUnidadesMedida="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                                <mat-option *ngIf="catalogoAutocomplete['unidades_medida'].length == 0" value="">No hay Unidades de Medida capturadas</mat-option>
+                                <mat-option *ngFor="let unidad_medida of filteredUnidadesMedida | async" [value]="unidad_medida">
+                                    {{unidad_medida.descripcion}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-hint *ngIf="formDetalles.get('unidad_medida').value">
+                                <mat-icon>{{(formDetalles.get('unidad_medida').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                            </mat-hint>
+                            <mat-hint align="end" *ngIf="formDetalles.get('unidad_medida').value && formDetalles.get('unidad_medida').value.id">
+                                Unidad de Medida Seleccionada
+                            </mat-hint>
+                            <mat-error *ngIf="formDetalles.get('unidad_medida').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                        </mat-form-field>
+        
+                        <mat-form-field fxFlex>
+                            <mat-label>Descripcion</mat-label>
+                            <input matInput #descripcion formControlName="descripcion" autocomplete="off" required>
+                            <mat-hint align="end">{{descripcion.value?.length || 0}}/255</mat-hint>
+                            <mat-error *ngIf="formDetalles.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
+                        </mat-form-field>
+                        <mat-form-field fxFlex="none">
+                            <mat-label>Piezas x Empaque</mat-label>
+                            <input matInput #descripcion type="number" formControlName="piezas_x_empaque" autocomplete="off" required>
+                            <mat-error *ngIf="formDetalles.get('piezas_x_empaque').hasError('required')">Este campo es obligatorio</mat-error>
+                        </mat-form-field>
+                        <div class="mat-form-field" fxFlex="none">
+                            <mat-checkbox formControlName="en_especificaciones">
+                                En  Especificaciones
+                            </mat-checkbox>
+                        </div>
+                        <div fxFlex="100" fxLayout="row" fxLayoutGap="10px" class="botones">
+                            <button fxFlex="none" mat-stroked-button color="warn" [disabled]="!formDetalles.get('id').value">Quitar</button>
+                            <div fxFlex></div>
+                            <button fxFlex="none" mat-stroked-button (click)="aceptarDetalles()" color="accent" [disabled]="!formDetalles.valid">Aceptar</button>
+                            <button fxFlex="none" mat-stroked-button (click)="cancelarDetalles(); listaDetalles.deselectAll();">Cancelar</button>
+                        </div>
+                    </div>
                 </div>
-                <div fxFlex="100" fxLayout="row" fxLayoutGap="10px">
-                    <div fxFlex></div>
-                    <button fxFlex="none" mat-stroked-button color="accent">Aceptar</button>
-                    <button fxFlex="none" mat-stroked-button>Cancelar</button>
-                    <div fxFlex="none"></div>
+                <div class="detalles" fxFlex>
+                    <mat-selection-list [multiple]="false" #listaDetalles (selectionChange)="seleccionarDetalle($event)">
+                        <mat-list-option *ngIf="empaqueDetalles.length == 0" [disabled]="true">
+                            Sin elementos registrados
+                        </mat-list-option>
+                        <mat-list-option *ngFor="let detalle of empaqueDetalles" [value]="detalle">
+                            <mat-icon mat-list-icon *ngIf="detalle.id">{{(detalle.editado)?'save_as':'save'}}</mat-icon>
+                            <mat-icon mat-list-icon *ngIf="!detalle.id">sticky_note_2</mat-icon>
+                            <div mat-line>{{detalle.descripcion}}</div>
+                            <div mat-line> {{detalle.piezas_x_empaque | number:'1.0-0'}} </div>
+                        </mat-list-option>
+                    </mat-selection-list>
                 </div>
-            </div>
-            <div class="detalles" fxFlex>
-                lita Detalles
             </div>
         </mat-card>
     </section>

@@ -30,9 +30,14 @@ export class DialogoDetallesComponent implements OnInit {
   formArticulo: FormGroup;
   formDetalles: FormGroup;
   ultimaActualizacion: Date;
+  empaqueDetalles:any[];
 
-  catalogo_autocomplete:any = {partidas:[], familias:[], empaques:[], unidades_medida:[]};
-  select_tipos_articulo:any[];
+  selectedDetalleIndex:number;
+
+  autoClaveLocal:boolean;
+
+  catalogoAutocomplete:any = {partidas:[], familias:[], empaques:[], unidades_medida:[]};
+  selectTiposArticulo:any[];
 
   filteredPartidas: Observable<any[]>;
   filteredFamilias: Observable<any[]>;
@@ -40,7 +45,10 @@ export class DialogoDetallesComponent implements OnInit {
   filteredUnidadesMedida: Observable<any[]>;
 
   ngOnInit(): void {
-    this.select_tipos_articulo = [];
+    this.selectTiposArticulo = [];
+    this.empaqueDetalles = [];
+    this.autoClaveLocal = false;
+    this.selectedDetalleIndex = -1;
 
     this.formArticulo = this.formBuilder.group({
       'id':                         [''],
@@ -70,33 +78,61 @@ export class DialogoDetallesComponent implements OnInit {
       'en_especificaciones':        [''],
     });
 
+    this.isLoading = true;
     this.bienesServiciosService.getCatalogos().subscribe(
       response =>{
+        let keep:boolean = false;
         if(response.error) {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          this.select_tipos_articulo = response.data.tipos_bien_servicio;
-          this.catalogo_autocomplete['partidas'] = response.data.partidas_especificas;
-          this.catalogo_autocomplete['familias'] = response.data.familias;
-          this.catalogo_autocomplete['empaques'] = response.data.empaques;
-          this.catalogo_autocomplete['unidades_medida'] = response.data.unidades_medida;
+          this.selectTiposArticulo = response.data.tipos_bien_servicio;
+          this.catalogoAutocomplete['partidas'] = response.data.partidas_especificas;
+          this.catalogoAutocomplete['familias'] = response.data.familias;
+          this.catalogoAutocomplete['empaques'] = response.data.empaques;
+          this.catalogoAutocomplete['unidades_medida'] = response.data.unidades_medida;
 
           this.filteredPartidas = this.formArticulo.get('partida_especifica').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                      map(descripcion => descripcion ? this._filter('partidas',descripcion,'descripcion') : this.catalogo_autocomplete['partidas'].slice())
+                                      map(descripcion => descripcion ? this._filter('partidas',descripcion,'descripcion') : this.catalogoAutocomplete['partidas'].slice())
                                     );
           this.filteredFamilias = this.formArticulo.get('familia').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
-                                    map(nombre => nombre ? this._filter('familias',nombre,'nombre') : this.catalogo_autocomplete['familias'].slice())
+                                    map(nombre => nombre ? this._filter('familias',nombre,'nombre') : this.catalogoAutocomplete['familias'].slice())
                                   );
           this.filteredEmpaques = this.formDetalles.get('empaque').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                    map(descripcion => descripcion ? this._filter('empaques',descripcion,'descripcion') : this.catalogo_autocomplete['empaques'].slice())
+                                    map(descripcion => descripcion ? this._filter('empaques',descripcion,'descripcion') : this.catalogoAutocomplete['empaques'].slice())
                                   );
           this.filteredUnidadesMedida = this.formDetalles.get('unidad_medida').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
-                                    map(descripcion => descripcion ? this._filter('unidades_medida',descripcion,'descripcion') : this.catalogo_autocomplete['unidades_medida'].slice())
+                                    map(descripcion => descripcion ? this._filter('unidades_medida',descripcion,'descripcion') : this.catalogoAutocomplete['unidades_medida'].slice())
                                   );
           //
+          if(this.data.id){
+            keep = true;
+            this.bienesServiciosService.getBienServicio(this.data.id).subscribe(
+              response =>{
+                if(response.error) {
+                  let errorMessage = response.error;
+                  this.sharedService.showSnackBar(errorMessage, null, 3000);
+                } else {
+                  if(response.data.clave_local.slice(0,3) == 'CL-'){
+                    this.toggleClaveLocal();
+                  }
+                  this.formArticulo.patchValue(response.data);
+                  this.empaqueDetalles = response.data.empaque_detalle;
+                }
+                this.isLoading = false;
+              },
+              errorResponse =>{
+                var errorMessage = "Ocurrió un error.";
+                if(errorResponse.status == 409){
+                  errorMessage = errorResponse.error.error.message;
+                }
+                this.sharedService.showSnackBar(errorMessage, null, 3000);
+                this.isLoading = false;
+              }
+            );
+          }
         }
-        this.isLoading = false;
+        this.isLoading = keep;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -115,6 +151,44 @@ export class DialogoDetallesComponent implements OnInit {
 
   guardarArticulo(){
     //
+  }
+
+  aceptarDetalles(){
+    if(this.formDetalles.valid){
+      let datosDetalle = this.formDetalles.value;
+      if(datosDetalle.id){
+        datosDetalle.editado = true;
+        let index = this.empaqueDetalles.findIndex(x => x.id == datosDetalle.id);
+        this.empaqueDetalles[index] = datosDetalle;
+      }else{
+        this.empaqueDetalles.push(datosDetalle);
+      }
+    }
+    this.formDetalles.reset();
+  }
+
+  cancelarDetalles(){
+    this.formDetalles.reset();
+  }
+
+  seleccionarDetalle(event){
+    console.log('event',event);
+    console.log('option',event.option);
+    let detalle = event.option.value;
+    this.formDetalles.patchValue(detalle);
+  }
+
+  toggleClaveLocal(){
+    this.autoClaveLocal = !this.autoClaveLocal;
+    if(this.autoClaveLocal){
+      this.formArticulo.get('clave_local').patchValue('Generar clave CL-000...');
+      this.formArticulo.get('clave_local').disable();
+    }else{
+      this.formArticulo.get('clave_local').patchValue('');
+      this.formArticulo.get('clave_local').enable();
+      this.formArticulo.get('clave_local').markAsDirty();
+      this.formArticulo.get('clave_local').markAsTouched();
+    }
   }
 
   validarOpcionSeleccionada(campo:string){
@@ -143,7 +217,7 @@ export class DialogoDetallesComponent implements OnInit {
 
   private _filter(catalogo: string, value: string, field: string): any[] {
     const filterValue = value.toLowerCase();
-    return this.catalogo_autocomplete[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
+    return this.catalogoAutocomplete[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
   }
 
   cerrar(){

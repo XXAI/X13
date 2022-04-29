@@ -122,7 +122,9 @@ class AdminBienesServiciosController extends Controller{
     public function show($id)
     {
         try{
-            $bien_servicio = BienServicio::with('empaqueDetalle')->find($id);
+            $bien_servicio = BienServicio::with(['familia','partidaEspecifica','empaqueDetalle'=>function($empaqueDetalle){
+                                                                                                    $empaqueDetalle->with('unidadMedida','empaque');
+                                                                                                }])->find($id);
 
             return response()->json(['data'=>$bien_servicio],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

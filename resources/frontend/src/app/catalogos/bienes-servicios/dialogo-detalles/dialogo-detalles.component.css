@@ -17,7 +17,7 @@
 }
 
 .boton-accion{
-    border-right: 1px solid whitesmoke;
+    border-left: 1px solid whitesmoke;
     background-color: #787878;
     border-radius: 0px;
 }
@@ -37,4 +37,13 @@
 
 .empaque-detalles .detalles{
     padding: 5px;
+    overflow: auto;
+}
+
+.empaque-detalles .formulario{
+    padding: 10px;
+}
+
+.empaque-detalles .botones{
+    padding-top: 10px;
 }
