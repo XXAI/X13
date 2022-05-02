@@ -1,0 +1,62 @@
+<div class="small-search-input agregar-articulos" (document:keydown.control.alt.B)="prepararBuscarArticulo()">
+    <mat-form-field appearance="outline" style="width: 100%;" [floatLabel]="'always'">
+        <mat-label>Buscador de Articulos <span *ngIf="modoBusqueda">{{modoBusqueda}}</span></mat-label>
+        <input matInput #inputQuery [formControl]="inputBuscadorArticulos" placeholder="Buscar Articulo..." type="text" (keyup)="tecleandoTermino($event)" (keyup.escape)="limpiarBusqueda()" (keyup.enter)="buscarArticulo()" [matAutocomplete]="articulosAutocomplete">
+        <span matSuffix *ngIf="!inputQuery.value"><mat-icon>manage_search</mat-icon></span>
+        <button class="small-icon-button" mat-icon-button matSuffix *ngIf="inputQuery.value" (click)="limpiarBusqueda()" [attr.aria-label]="'Limpiar Busqueda'" [attr.aria-pressed]="inputQuery.value">
+            <mat-icon>clear</mat-icon>
+        </button>
+        <mat-autocomplete #articulosAutocomplete="matAutocomplete" [displayWith]="displayTerminoFn" (optionSelected)="itemSeleccionado($event.option.value)" [panelWidth]="'50%'">
+            <mat-option *ngIf="buscarStock && !almacenId" style="text-align: center;" disabled>
+                Debe seleccionar un Almacén
+            </mat-option>
+            <mat-option *ngIf="estatusBusqueda == 'over' && resultadoArticulos.length == 0" style="text-align: center;" disabled>
+                No se encontraron resultados para <span style="font-style: italic; font-weight: bold;">"{{inputQuery.value}}"</span>
+            </mat-option>
+            <mat-option class="loading-data" *ngIf="estatusBusqueda == 'searching'" disabled>
+                Buscando.....
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </mat-option>
+            <mat-option class="loading-error" *ngIf="estatusBusqueda == 'error'" disabled>
+                Ocurrió un error al intentar la busqueda
+            </mat-option>
+            <ng-container *ngIf="estatusBusqueda == 'over'">
+                <mat-option class="item-resultados-busqueda" *ngFor="let articulo of resultadoArticulos" [value]="articulo">
+                    <div fxLayout="column" class="articulo-container">
+                        <div fxFlex fxLayout="row" class="articulo-header">
+                            <div fxFlex="none" class="articulo-iconos">
+                                <mat-icon class="icono" matTooltip="En Catalogo"   [ngClass]="{'activo':articulo.en_catalogo}">fact_check</mat-icon>
+                                <mat-icon class="icono" matTooltip="Normativo"     [ngClass]="{'activo':articulo.normativo}">gpp_good</mat-icon>
+                                <mat-icon class="icono" matTooltip="Descontinuado" [ngClass]="{'activo':articulo.descontinuado}">error</mat-icon>
+                            </div>
+                            <div fxFlex></div>
+                            <div fxFlex="none" class="articulo-titulo">
+                                {{articulo.partida_descripcion}}<br>
+                                {{articulo.familia}}
+                            </div>
+                        </div>
+                        <div fxFlex fxLayout="column" class="articulo-descripcion">
+                            <div fxFlex fxLayout="column" class="articulo-informacion">
+                                <div fxFlex class="articulo-clave">{{articulo.clave}}</div>
+                                <div fxFlex class="articulo-nombre" [innerHTML]="articulo.nombre_html"></div>
+                            </div>
+                            <div fxFlex class="articulo-texto" [innerHTML]="articulo.descripcion_html"></div>
+                        </div>
+                        <div fxFlex="none" fxLayout="row" class="articulo-footer">
+                            <div fxFlex="none" class="articulo-info" *ngIf="!buscarStock && mostrarExistencias">
+                                Existencias ( {{ articulo.exsitencias||0 | number }} <span *ngIf="articulo.cantidad_minima">/ {{articulo.cantidad_minima||0 | number}}</span> )
+                            </div>
+                            <div fxFlex="none" class="articulo-info" *ngIf="buscarStock">
+                                #Lotes: {{ articulo.total_lotes | number }} | Existencias: {{ articulo.existencias | number }} <span *ngIf="articulo.puede_surtir_unidades">({{articulo.existencias_unidades | number}})</span>
+                            </div>
+                            <div fxFlex>&nbsp;</div>
+                            <div fxFlex="none" class="keyboard-info">
+                                Presione *Enter* para seleccionar
+                            </div>
+                        </div>
+                    </div>
+                </mat-option>
+            </ng-container>
+        </mat-autocomplete>
+    </mat-form-field>
+</div>

@@ -167,16 +167,65 @@ class AlmacenMovimientosController extends Controller{
 
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
-                $stock_existencias = $stock_existencias->where(function($query)use($parametros){
-                    return $query->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('familias.nombre','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.clave_cubs','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.clave_local','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.articulo','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('stocks.lote','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('stocks.codigo_barras','LIKE','%'.$parametros['query'].'%');
-                });
+                $params_query = strtolower(urldecode($parametros['query']));
+
+                $buscar_por_lote = strpos($params_query,'l:');
+                $buscar_por_codigo_barras = strpos($params_query,'cb:');
+
+                if($buscar_por_lote === 0){
+                    $search_query = str_replace('l:','',$params_query);
+                    $stock_existencias = $stock_existencias->where(function($query)use($search_query){
+                        return $query->Where('stocks.lote','LIKE','%'.$search_query.'%');
+                    });
+                }else if($buscar_por_codigo_barras === 0){
+                    $search_query = trim(str_replace('cb:','',$params_query));
+                    $stock_existencias = $stock_existencias->where(function($query)use($search_query){
+                        return $query->Where('stocks.codigo_barras','LIKE','%'.$search_query.'%');
+                    });
+                }else{
+                    $search_queries = explode('+',$params_query);
+
+                    $stock_existencias = $stock_existencias->where(function($query)use($search_queries){
+                        return $query//->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
+                                    //->where('familias.nombre','LIKE','%'.$parametros['query'].'%')
+                                    ->where(function($where)use($search_queries){
+                                        for($i = 0; $i < count($search_queries); $i++){
+                                            $where = $where->where('bienes_servicios.clave_cubs','LIKE','%'.$search_queries[$i].'%');
+                                        }
+                                        return $where;
+                                    })
+                                    ->orWhere(function($where)use($search_queries){
+                                        for($i = 0; $i < count($search_queries); $i++){
+                                            $where = $where->where('bienes_servicios.clave_local','LIKE','%'.$search_queries[$i].'%');
+                                        }
+                                        return $where;
+                                    })
+                                    ->orWhere(function($where)use($search_queries){
+                                        for($i = 0; $i < count($search_queries); $i++){
+                                            $where = $where->where('bienes_servicios.articulo','LIKE','%'.$search_queries[$i].'%');
+                                        }
+                                        return $where;
+                                    })
+                                    ->orWhere(function($where)use($search_queries){
+                                        for($i = 0; $i < count($search_queries); $i++){
+                                            $where = $where->where('bienes_servicios.especificaciones','LIKE','%'.$search_queries[$i].'%');
+                                        }
+                                        return $where;
+                                    })
+                                    ->orWhere(function($where)use($search_queries){
+                                        for($i = 0; $i < count($search_queries); $i++){
+                                            $where = $where->where('stocks.lote','LIKE','%'.$search_queries[$i].'%');
+                                        }
+                                        return $where;
+                                    })
+                                    ->orWhere(function($where)use($search_queries){
+                                        for($i = 0; $i < count($search_queries); $i++){
+                                            $where = $where->where('stocks.codigo_barras','LIKE','%'.$search_queries[$i].'%');
+                                        }
+                                        return $where;
+                                    });
+                    });
+                }
             }
 
             /*if(isset($parametros['programa_id']) && $parametros['programa_id'] != null){

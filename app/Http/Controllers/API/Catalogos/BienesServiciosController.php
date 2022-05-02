@@ -56,13 +56,37 @@ class BienesServiciosController extends Controller{
 
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
-                $catalogo_articulos = $catalogo_articulos->where(function($query)use($parametros){
-                    return $query->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('familias.nombre','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.clave_cubs','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.clave_local','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.articulo','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$parametros['query'].'%');
+                $params_query = urldecode($parametros['query']);
+
+                $search_queries = explode('+',$params_query);
+
+                $catalogo_articulos = $catalogo_articulos->where(function($query)use($search_queries){
+                    //->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
+                    //->where('familias.nombre','LIKE','%'.$parametros['query'].'%')
+                    return $query->where(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->where('bienes_servicios.clave_cubs','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->where('bienes_servicios.clave_local','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->where('bienes_servicios.articulo','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->where('bienes_servicios.especificaciones','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                });
                 });
             }
 

@@ -353,12 +353,12 @@
         <section fxFlex fxLayout="row" fxLayoutGap="10px">
             <section fxFlex="25" fxLayout="column">
                 <mat-card fxFlex="none" fxLayout="column" *ngIf="verBoton['agregar_articulos']" style="padding:0px; margin-bottom: 5px;">
-                    <widget-buscador-stock fxFlex="none" 
-                            [mostrarExistencias]="true" 
+                    <widget-buscador-articulos fxFlex="none" 
+                            [buscarStock]="true" 
                             [almacenId]="formMovimiento.get('almacen_id').value" 
                             [programaId]="(formMovimiento.get('programa').value)?formMovimiento.get('programa').value.id:0"
                             (articuloSeleccionado)="agregarArticulo($event)">
-                    </widget-buscador-stock>
+                    </widget-buscador-articulos>
                 </mat-card>
                 <mat-card fxFlex="none" fxLayout="column" *ngIf="movimientoHijo" class="datos-movimiento-hijo">
                     <div fxFlex="none">
