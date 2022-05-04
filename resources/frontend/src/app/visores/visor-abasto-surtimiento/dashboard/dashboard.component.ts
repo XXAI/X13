@@ -4,6 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { VisorAbastoSurtimientoService } from '../visor-abasto-surtimiento.service';
 import { SharedService } from 'src/app/shared/shared.service';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,6 +21,7 @@ export class DashboardComponent implements OnInit {
     private visorAbastoSurtimientoService: VisorAbastoSurtimientoService,
   ) { }
 
+  isLoadingExcel:boolean;
   isLoading:boolean;
   unidadMedica: any;
 
@@ -65,7 +67,7 @@ export class DashboardComponent implements OnInit {
           this.datosTablas.ABAPRNTJ.datos = response.data.porcentaje_abasto;
           this.datosTablas.ABAPRNTJ.detalles.datos = response.data.catalogo_normativo;
           this.datosTablas.ABAPRNTJ.detalles.columnas = ['tipo','clave','descripcion','existencia'];
-          this.datosTablas.ABAPRNTJ.detalles.titulo = 'Existencias por Articulo (Normativos):';
+          this.datosTablas.ABAPRNTJ.detalles.titulo = 'Existencias por Articulo (Normativos)';
 
           response.data.porcetaje_surtimiento.forEach(element => {
             element.porcentaje = ( element.total_completos / element.total_solicitudes ) * 100;
@@ -75,7 +77,7 @@ export class DashboardComponent implements OnInit {
           this.datosTablas.STATSCAD.datos = response.data.articulos_estado_caducidades;
           this.datosTablas.STATSCAD.detalles.datos = response.data.articulos_detalle_caducidades;
           this.datosTablas.STATSCAD.detalles.columnas = ['almacen','clave','articulo','lote','fecha_caducidad','existencia','dias'];
-          this.datosTablas.STATSCAD.detalles.titulo = 'Lista de Articulos por Caducidad:';
+          this.datosTablas.STATSCAD.detalles.titulo = 'Lista de Articulos por Caducidad';
 
           //this.datosTablas.movimientos = response.data.movimientos;
         }
@@ -123,6 +125,25 @@ export class DashboardComponent implements OnInit {
     this.textoFiltro = '';
     this.dataSourceArticulos.filter = '';
     this.filtroAplicado = false;
+  }
+
+  exportarExcel(){
+    this.isLoadingExcel = true;
+    let params:any = {
+      clave_datos: this.detallesClave,
+    };
+
+    this.visorAbastoSurtimientoService.exportarExcel(params).subscribe(
+      response => {
+        FileSaver.saveAs(response,this.detallesTitulo);
+        this.isLoadingExcel = false;
+      },
+      errorResponse =>{
+        console.log(errorResponse);
+        console.log('Ocurrio un error al intentar descargar el archivo');
+        this.isLoadingExcel = false;
+      }
+    );
   }
 
 }

@@ -8,7 +8,7 @@
             <button fxFlex="none" mat-button *ngIf="verBoton['guardar']" [matTooltip]="'Guardar'" [disabled]="isSaving || !formMovimiento.valid" (click)="guardarMovimiento()" [class.button-spinner]="isSaving">
                 <mat-icon>save</mat-icon>
             </button>
-            <button fxFlex="none" mat-button *ngIf="verBoton['concluirModificacion']" [matTooltip]="'Concluir Modificación'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirModificacion()" [class.button-spinner]="isSaving">
+            <button fxFlex="none" mat-button *ngIf="verBoton['concluir_modificacion']" [matTooltip]="'Concluir Modificación'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirModificacion()" [class.button-spinner]="isSaving">
                 <mat-icon>all_inbox</mat-icon>
             </button>
             <div fxFlex>
@@ -270,7 +270,7 @@
 
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('area_servicio_movimiento')">
                     <mat-label>Area/Servicio Destino</mat-label>
-                    <input type="text" matInput aria-label="Area-Servicio" placeholder="Teclee para buscar un area/servicio" formControlName="area_servicio_movimiento" (blur)="validarOpcionSeleccionada('area_servicio_movimiento')" [matAutocomplete]="autoAreasServicios" autocomplete="off" required>
+                    <input type="text" matInput aria-label="Area-Servicio" placeholder="Teclee para buscar un area/servicio" formControlName="area_servicio_movimiento" (blur)="validarOpcionSeleccionada('area_servicio_movimiento')" [matAutocomplete]="autoAreasServicios" autocomplete="off" [required]="tipoSalida && tipoSalida.clave != 'RCTA'">
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
@@ -293,7 +293,7 @@
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('personal_medico')">
                     <mat-label *ngIf="tipoSalida && tipoSalida.clave == 'RCTA'">Médico</mat-label>
                     <mat-label *ngIf="tipoSalida && tipoSalida.clave == 'PSNL'">Personal</mat-label>
-                    <input type="text" matInput aria-label="Personal-Medico" placeholder="Buscar Médico" formControlName="personal_medico" (blur)="validarOpcionSeleccionada('personal_medico')" [matAutocomplete]="autoPersonalMedico" autocomplete="off" required>
+                    <input type="text" matInput aria-label="Personal-Medico" placeholder="Buscar Médico" formControlName="personal_medico" (blur)="validarOpcionSeleccionada('personal_medico')" [matAutocomplete]="autoPersonalMedico" autocomplete="off" [required]="tipoSalida && tipoSalida.clave == 'PSNL'">
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
@@ -318,13 +318,13 @@
 
                 <mat-form-field fxFlex="none" *ngIf="formMovimiento.get('expediente_clinico')">
                     <mat-label>Folio Expediente</mat-label>
-                    <input matInput formControlName="expediente_clinico" (blur)="buscarExpediente()" autocomplete="off" required>
+                    <input matInput formControlName="expediente_clinico" (blur)="buscarExpediente()" autocomplete="off">
                     <mat-error *ngIf="formMovimiento.get('expediente_clinico').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="formMovimiento.get('paciente')" [floatLabel]="'always'">
                     <mat-label>Paciente</mat-label>
-                    <input matInput formControlName="paciente" placeholder="{{datosPacienteEstatus}}" autocomplete="off" required [readonly]="!habilitarDatosPaciente">
+                    <input matInput formControlName="paciente" placeholder="{{datosPacienteEstatus}}" autocomplete="off" [readonly]="!habilitarDatosPaciente">
                     <button mat-icon-button matPrefix *ngIf="cargandoDatosPaciente" [class.button-spinner]="cargandoDatosPaciente" [disabled]="true"></button>
                     <mat-error *ngIf="formMovimiento.get('paciente').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>

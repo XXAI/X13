@@ -9,9 +9,9 @@
         </div>
         <div fxFlex fxLayout="row">
             <div fxFlex="15">Paciente:</div>
-            <div fxFlex>{{data.data.paciente.nombre_completo}}</div>
+            <div fxFlex>{{(data.data.paciente)?data.data.paciente.nombre_completo:'Sin Paciente Capturado'}}</div>
             <div fxFlex="15">Médico:</div>
-            <div fxFlex>{{data.data.personal_medico.nombre_completo}}</div>
+            <div fxFlex>{{(data.data.personal_medico)?data.data.personal_medico.nombre_completo:'Sin Médico Capturado'}}</div>
         </div>
     </div>
     <div fxFlex style="overflow: auto;">

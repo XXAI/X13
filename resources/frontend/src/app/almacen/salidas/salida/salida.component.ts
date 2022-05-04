@@ -653,12 +653,14 @@ export class SalidaComponent implements OnInit {
         }
       }else if(this.tipoSalida.clave == 'RCTA'){
         this.formMovimiento.addControl('solicitud_tipo_uso_id', new FormControl('', Validators.required));
-        this.formMovimiento.addControl('personal_medico', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('personal_medico', new FormControl(''));
         this.formMovimiento.addControl('personal_medico_id', new FormControl(''));
         this.formMovimiento.addControl('paciente_id', new FormControl(''));
-        this.formMovimiento.addControl('expediente_clinico', new FormControl('', Validators.required));
-        this.formMovimiento.addControl('paciente', new FormControl('', Validators.required));
+        this.formMovimiento.addControl('expediente_clinico', new FormControl(''));
+        this.formMovimiento.addControl('paciente', new FormControl(''));
         this.formMovimiento.addControl('curp', new FormControl(''));
+        this.formMovimiento.addControl('area_servicio_movimiento', new FormControl(''));
+        this.formMovimiento.addControl('area_servicio_movimiento_id', new FormControl(''));
         this.formMovimiento.get('documento_folio').setValidators(Validators.required);
         this.tieneSolicitud = true;      
       }else if(this.tipoSalida.clave == 'PSNL'){

@@ -292,7 +292,7 @@ class AlmacenEntradaController extends Controller
                     $consecutivo = 1;
                 }
 
-                $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+                $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($parametros['almacen_id'],4,'0',STR_PAD_LEFT) . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
             }
 
             //if(isset($parametros['id']) && $parametros['id']){
@@ -419,6 +419,10 @@ class AlmacenEntradaController extends Controller
 
                             if(isset($lote['empaque_detalle_id']) && $lote['empaque_detalle_id']){
                                 $detalles_empaques = $articulo_data->empaqueDetalle()->pluck('piezas_x_empaque','id');
+                                if(!isset($detalles_empaques[$lote['empaque_detalle_id']])){
+                                    DB::rollback();
+                                    return response()->json(['error'=>"Error al intentar recuperar el detalle de la clave: ".$articulo['clave']],HttpResponse::HTTP_OK);
+                                }
                                 $piezas_x_empaque = $detalles_empaques[$lote['empaque_detalle_id']];
                             }else{
                                 $piezas_x_empaque = 1;
@@ -763,7 +767,7 @@ class AlmacenEntradaController extends Controller
 
             $movimiento->update(['eliminado_por_usuario_id'=>$loggedUser->id]);
             
-            $movimiento->listaArticulos->cartaCanje()->delete();
+            CartaCanje::where('movimiento_id',$movimiento->id)->delete();
             $movimiento->listaArticulos()->delete();
             $movimiento->listaArticulosBorrador()->delete();
             $movimiento->delete();

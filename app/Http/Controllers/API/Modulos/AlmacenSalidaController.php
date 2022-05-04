@@ -303,18 +303,20 @@ class AlmacenSalidaController extends Controller
             }
 
             if($tipo_movimiento->clave == 'RCTA'){
-                $parametros['expediente_clinico']   = trim($parametros['expediente_clinico']);
-                $paciente = Paciente::where('expediente_clinico',$parametros['expediente_clinico'])->first();
-                
-                if(!$paciente){
-                    $paciente = Paciente::create([
-                        'expediente_clinico'=>$parametros['expediente_clinico'],
-                        'nombre_completo'=>strtoupper($parametros['paciente']),
-                        'curp'=>strtoupper($parametros['curp'])
-                    ]);
+                if(isset($parametros['expediente_clinico']) && $parametros['expediente_clinico']){
+                    $parametros['expediente_clinico']   = trim($parametros['expediente_clinico']);
+                    $paciente = Paciente::where('expediente_clinico',$parametros['expediente_clinico'])->first();
+                    
+                    if(!$paciente){
+                        $paciente = Paciente::create([
+                            'expediente_clinico'=>$parametros['expediente_clinico'],
+                            'nombre_completo'=>strtoupper($parametros['paciente']),
+                            'curp'=>strtoupper($parametros['curp'])
+                        ]);
+                    }
+                    $datos_movimiento['paciente_id'] = $paciente->id;
+                    $datos_movimiento['personal_medico_id'] = $parametros['personal_medico_id'];
                 }
-                $datos_movimiento['paciente_id'] = $paciente->id;
-                $datos_movimiento['personal_medico_id'] = $parametros['personal_medico_id'];
             }
 
             if(isset($parametros['id']) && $parametros['id']){
@@ -585,7 +587,7 @@ class AlmacenSalidaController extends Controller
                         'mes'                           =>substr($movimiento->fecha_movimiento,5,2),
                         'anio'                          =>substr($movimiento->fecha_movimiento,0,4),
                         'observaciones'                 =>'Elemento generado de forma automatica por el modulo de salidas',
-                        'estatus'                       =>$movimiento->estatus,                        
+                        'estatus'                       =>$movimiento->estatus,
                         'unidad_medica_id'              =>$movimiento->unidad_medica_id,
                         'almacen_id'                    =>$movimiento->almacen_movimiento_id,
                         'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,
@@ -610,7 +612,7 @@ class AlmacenSalidaController extends Controller
                         'mes'                           =>substr($movimiento->fecha_movimiento,5,2),
                         'anio'                          =>substr($movimiento->fecha_movimiento,0,4),
                         'observaciones'                 =>'Elemento generado de forma automatica por el modulo de salidas',
-                        'estatus'                       =>$movimiento->estatus,                        
+                        'estatus'                       =>$movimiento->estatus,
                         'unidad_medica_id'              =>$movimiento->unidad_medica_id,
                         'almacen_id'                    =>$movimiento->almacen_movimiento_id,
                         'area_servicio_id'              =>$movimiento->area_servicio_movimiento_id,

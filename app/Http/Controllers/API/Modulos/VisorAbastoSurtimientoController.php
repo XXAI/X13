@@ -171,8 +171,8 @@ class VisorAbastoSurtimientoController extends Controller
         try{
             $loggedUser = auth()->userOrFail();
             $params = $request->all();
-
-            if(isset($params['almacenes_ids']) && trim($params['almacenes_ids']) != ''){
+            //clave_datos: ABAPRNTJ
+            /*if(isset($params['almacenes_ids']) && trim($params['almacenes_ids']) != ''){
                 $almacenes = explode('|',$params['almacenes_ids']);
             }else{
                 if($loggedUser->is_superuser){
@@ -180,44 +180,57 @@ class VisorAbastoSurtimientoController extends Controller
                 }else{
                     $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
                 }
-            }
+            }*/
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
-            
-            $stocks = Stock::select('almacenes.nombre as ALMACEN','programas.descripcion as PROGRAMA','catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO',
-                                'bienes_servicios.clave_local as CLAVE','bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
-                                'stocks.lote as LOTE','stocks.fecha_caducidad as FECHA_CADUCIDAD','stocks.existencia as EXISTENCIA',
-                                'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
-                            ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
-                            ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
-                            ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
-                            ->leftJoin('programas','programas.id','=','stocks.programa_id')
-                            ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
-                                $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','stocks.bien_servicio_id')
-                                    ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
-                                    ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
-                            })
-                            ->whereIn('stocks.almacen_id',$almacenes)
-                            ->orderBy('almacenes.nombre','ASC')
-                            ->orderBy('programas.descripcion','ASC')
-                            ->orderBy('bienes_servicios.articulo','ASC')
-                            ->orderBy('bienes_servicios.clave_local','ASC')
-                            ->orderBy('stocks.fecha_caducidad','ASC');
-            //
-            if(isset($params['agrupar_por']) && trim($params['agrupar_por']) != ''){
-                if($params['agrupar_por'] == 'articulo'){
-                    $stocks = $stocks->select('catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO','bienes_servicios.clave_local as CLAVE',
-                                            'bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
-                                            DB::raw('count(stocks.lote) as NO_LOTES'),DB::raw('SUM(stocks.existencia) as EXISTENCIAS'),
-                                            'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
-                                    ->groupBy('stocks.bien_servicio_id');
-                }
+            $excel_data = [];
+            if($params['clave_datos'] == 'ABAPRNTJ'){
+                /* Lista de existencias para articulos normativos  */
+                $excel_data = UnidadMedicaCatalogoArticulo::select('catalogo_tipos_bien_servicio.descripcion AS TIPO','bienes_servicios.clave_local AS CLAVE',
+                                                                'bienes_servicios.especificaciones AS DESCRIPCION', DB::raw('SUM(stocks.existencia) AS EXISTENCIA'))
+                                                    ->leftJoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
+                                                    ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
+                                                    ->leftJoin('stocks',function($joinStocks){
+                                                        $joinStocks->on('stocks.bien_servicio_id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
+                                                                    ->on('stocks.unidad_medica_id','=','unidad_medica_catalogo_articulos.unidad_medica_id')
+                                                                    ->where(function($where){
+                                                                        $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                    })->whereNull('stocks.deleted_at');
+                                                    })
+                                                    ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                                                    ->where('unidad_medica_catalogo_articulos.es_normativo',1)
+                                                    ->groupBy('unidad_medica_catalogo_articulos.bien_servicio_id')
+                                                    ->orderBy('catalogo_tipos_bien_servicio.descripcion','DESC')
+                                                    ->orderBy('bienes_servicios.especificaciones')
+                                                    ->get();
+            }else if($params['clave_datos'] == 'STATSCAD'){
+                /* Lista de existencias para articulos normativos  */
+                $excel_data = Stock::select('almacenes.nombre as ALMACEN','bienes_servicios.clave_local AS CLAVE',
+                                            'bienes_servicios.especificaciones AS DESCRIPCION','stocks.lote as LOTE','stocks.fecha_caducidad as FECHA_CADUCIDAD', 
+                                            DB::raw('SUM(stocks.existencia) as EXISTENCIA'),
+                                            DB::raw('TIMESTAMPDIFF(DAY, current_date(), stocks.fecha_caducidad) as DIAS_CADUCIDAD'),
+                                            DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0) as CADUCADO'))
+                                ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
+                                ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                ->where(function($where){
+                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                })
+                                ->whereNotNull('stocks.fecha_caducidad')
+                                ->groupBy('stocks.id')
+                                ->orderBy('stocks.fecha_caducidad','ASC')
+                                ->orderBy('bienes_servicios.especificaciones')
+                                ->having('DIAS_CADUCIDAD','<',90)
+                                ->get();
             }
-            $resultado = $stocks->get();
-            $columnas = array_keys(collect($resultado[0])->toArray());
-
-            $filename = 'Existencias Por Almacen';
-
-            return (new DevReportExport($resultado,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
+            //
+            if(count($excel_data)){
+                $resultado = $excel_data;
+                $columnas = array_keys(collect($resultado[0])->toArray());
+                $filename = 'Catalogo Articulos Normativos';
+                return (new DevReportExport($resultado,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
+            }else{
+                return response()->json(['data'=>'Sin datos'],HttpResponse::HTTP_OK);
+            }
         }catch(\Exception $e){
             return response()->json(['error' => $e->getMessage(),'line'=>$e->getLine()], HttpResponse::HTTP_CONFLICT);
         }

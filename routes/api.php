@@ -72,6 +72,7 @@ Route::group(['middleware'=>'auth'],function($router){
      * Modulos Visor
      */
     Route::get('visor-abasto-surtimiento/datos-visor',                          'API\Modulos\VisorAbastoSurtimientoController@obtenerDatosVisor');
+    Route::get('visor-abasto-surtimiento/datos-visor-excel',                    'API\Modulos\VisorAbastoSurtimientoController@exportExcel');
 
     /**
      *  Modulo de Catalogos: Bienes Servicios

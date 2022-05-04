@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
 })
 export class VisorAbastoSurtimientoService {
   url_datos_visor = `${environment.base_url}/visor-abasto-surtimiento/datos-visor`;
+  url_datos_excel = `${environment.base_url}/visor-abasto-surtimiento/datos-visor-excel`;
 
   constructor(private http: HttpClient) { }
 
@@ -18,5 +19,9 @@ export class VisorAbastoSurtimientoService {
         return response;
       })
     );
+  }
+
+  exportarExcel(payload:any={}):Observable<any> {
+    return this.http.get<any>(this.url_datos_excel, {params:payload, responseType: 'blob' as 'json'});
   }
 }

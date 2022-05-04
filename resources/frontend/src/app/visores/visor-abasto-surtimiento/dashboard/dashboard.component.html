@@ -181,6 +181,13 @@
             </div>
             <div fxFlex fxLayout="column">
                 <div fxFlex="none" fxLayout="row" style="padding-top:4px;">
+                    <div fxFlex="none" *ngIf="dataSourceArticulos && dataSourceArticulos.filteredData.length > 0">
+                        <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+                        <mat-menu #menu="matMenu">
+                            <button mat-menu-item (click)="exportarExcel()"><mat-icon>file_download</mat-icon> Exportar a Excel</button>
+                            <!--button mat-menu-item>Exportar a PDF</button-->
+                        </mat-menu>
+                    </div>
                     <div fxFlex class="small-search-input">
                         <mat-form-field fxFlex appearance="outline">
                             <input matInput [(ngModel)]="textoFiltro" autocomplete="off" (keyup)="aplicarFiltro($event)" placeholder="Filtrar por clave o nombre">
