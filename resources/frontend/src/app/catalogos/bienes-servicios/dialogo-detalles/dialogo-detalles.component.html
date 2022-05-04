@@ -4,13 +4,18 @@
             <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo">
                 <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
             </button>
-            <button fxFlex="none" mat-button [matTooltip]="'Guardar'" [disabled]="isSaving || !formArticulo.valid" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
+            <button fxFlex="none" mat-button [disabled]="isSaving || !formArticulo.valid" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
                 <mat-icon>save</mat-icon> Guardar
             </button>
             <div fxFlex>
             </div>
+            <button *ngIf="modificarEnExistencias" fxFlex="none" class="boton-accion-medio" mat-flat-button color="accent" [disabled]="isSaving || !formArticulo.valid" (click)="modificarLotes()">
+                <mat-icon>sync_alt</mat-icon> Modificar Lotes
+            </button>
+            <div fxFlex>
+            </div>
             <div fxFlex="none" class="label-info">
-                <span>{{(ultimaActualizacion)?ultimaActualizacion:'Articulo - Nuevo'}}</span>
+                <span>{{(ultimaActualizacion)?(ultimaActualizacion | date:'long'):'Articulo - Nuevo'}}</span>
             </div>
             <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon> Cerrar</button>
         </div>
@@ -19,6 +24,11 @@
             <button mat-menu-item (click)="nuevoArticulo()">
                 <mat-icon>add_circle</mat-icon>
                 <span>Nuevo Articulo</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="eliminaArticulo()" class="para-borrar" *ngIf="formArticulo && formArticulo.get('id').value">
+                <mat-icon color="warn">delete</mat-icon>
+                <span>Eliminar Articulo</span>
             </button>
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
@@ -91,7 +101,7 @@
                 <button mat-icon-button matPrefix (click)="toggleClaveLocal()">
                     <mat-icon>{{autoClaveLocal ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
                 </button>
-                <input matInput formControlName="clave_local" autocomplete="off">
+                <input matInput formControlName="clave_local" autocomplete="off" required>
                 <mat-error *ngIf="formArticulo.get('clave_local').hasError('required')">Este campo es obligatorio</mat-error>
             </mat-form-field>
 
@@ -184,13 +194,16 @@
         
                         <mat-form-field fxFlex>
                             <mat-label>Descripcion</mat-label>
-                            <input matInput #descripcion formControlName="descripcion" autocomplete="off" required>
+                            <button mat-icon-button matPrefix (click)="toggleDescripcionAutomatica(!autoDescripcion)">
+                                <mat-icon>{{autoDescripcion ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
+                            </button>
+                            <input matInput #descripcion formControlName="descripcion" autocomplete="off" (keyup.enter)="aceptarDetalles()" required>
                             <mat-hint align="end">{{descripcion.value?.length || 0}}/255</mat-hint>
                             <mat-error *ngIf="formDetalles.get('descripcion').hasError('required')">Este campo es obligatorio</mat-error>
                         </mat-form-field>
                         <mat-form-field fxFlex="none">
                             <mat-label>Piezas x Empaque</mat-label>
-                            <input matInput #descripcion type="number" formControlName="piezas_x_empaque" autocomplete="off" required>
+                            <input matInput #descripcion type="number" formControlName="piezas_x_empaque" autocomplete="off" (keyup.enter)="aceptarDetalles()" required>
                             <mat-error *ngIf="formDetalles.get('piezas_x_empaque').hasError('required')">Este campo es obligatorio</mat-error>
                         </mat-form-field>
                         <div class="mat-form-field" fxFlex="none">
@@ -199,9 +212,11 @@
                             </mat-checkbox>
                         </div>
                         <div fxFlex="100" fxLayout="row" fxLayoutGap="10px" class="botones">
-                            <button fxFlex="none" mat-stroked-button color="warn" [disabled]="!formDetalles.get('id').value">Quitar</button>
+                            <div fxFlex="none">
+                                <mat-slide-toggle formControlName="eliminar" color="warn" [disabled]="selectedDetalleIndex < 0">Marcar para Eliminar</mat-slide-toggle>
+                            </div>
                             <div fxFlex></div>
-                            <button fxFlex="none" mat-stroked-button (click)="aceptarDetalles()" color="accent" [disabled]="!formDetalles.valid">Aceptar</button>
+                            <button fxFlex="none" mat-stroked-button (click)="aceptarDetalles()" color="primary" [disabled]="!formDetalles.valid">Aceptar</button>
                             <button fxFlex="none" mat-stroked-button (click)="cancelarDetalles(); listaDetalles.deselectAll();">Cancelar</button>
                         </div>
                     </div>
@@ -211,11 +226,25 @@
                         <mat-list-option *ngIf="empaqueDetalles.length == 0" [disabled]="true">
                             Sin elementos registrados
                         </mat-list-option>
-                        <mat-list-option *ngFor="let detalle of empaqueDetalles" [value]="detalle">
-                            <mat-icon mat-list-icon *ngIf="detalle.id">{{(detalle.editado)?'save_as':'save'}}</mat-icon>
-                            <mat-icon mat-list-icon *ngIf="!detalle.id">sticky_note_2</mat-icon>
-                            <div mat-line>{{detalle.descripcion}}</div>
-                            <div mat-line> {{detalle.piezas_x_empaque | number:'1.0-0'}} </div>
+                        <mat-list-option *ngFor="let detalle of empaqueDetalles" [value]="detalle" [ngClass]="{'para-borrar':detalle.eliminar}">
+                            <div fxLayout="row">
+                                <div fxFlex="none">
+                                    <mat-icon mat-list-icon *ngIf="detalle.eliminar">delete_sweep</mat-icon>
+                                    <mat-icon mat-list-icon *ngIf="!detalle.eliminar && detalle.id">{{(detalle.editado)?'save_as':'save'}}</mat-icon>
+                                    <mat-icon mat-list-icon *ngIf="!detalle.eliminar && !detalle.id">sticky_note_2</mat-icon>
+                                </div>
+                                <div fxFlex="none">
+                                    <div mat-line>{{detalle.descripcion}}</div>
+                                    <div mat-line>{{detalle.empaque.descripcion}} - {{detalle.piezas_x_empaque | number:'1.0-0'}} - {{detalle.unidad_medida.descripcion}}</div>
+                                </div>
+                                <div fxFlex></div>
+                                <div fxFlex="none" class="icono-dato">
+                                    <mat-icon mat-list-icon color="accent">{{(detalle.en_especificaciones)?'radio_button_checked':'radio_button_unchecked'}}</mat-icon>
+                                </div>
+                                <div fxFlex="none" class="icono-dato">
+                                    <mat-icon mat-list-icon>{{(detalle.existencias)?'inventory':'content_paste_off'}}</mat-icon>
+                                </div>
+                            </div>
                         </mat-list-option>
                     </mat-selection-list>
                 </div>

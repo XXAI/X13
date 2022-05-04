@@ -28,7 +28,7 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   pageSizeOptions: number[] = [10, 20, 30, 50];
   listaArticulos: any[];
-  displayedColumns:string[] = ['descontinuado','tipo_familia','clave','articulo','puede_surtir_unidades','existencias','actions'];
+  displayedColumns:string[] = ['descontinuado','tipo_familia','clave','articulo','puede_surtir_unidades','existencias'];
 
   ngOnInit(): void {
     this.searchQuery = '';

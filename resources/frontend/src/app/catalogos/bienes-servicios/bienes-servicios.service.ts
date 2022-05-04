@@ -36,16 +36,8 @@ export class BienesServiciosService {
       }
     ));
   }
-
-  updateBienServicio(id,payload) {
-    return this.http.put<any>(this.url_bienes_servicios+'/'+id,payload).pipe(
-      map( (response) => {
-        return response;
-      }
-    ));
-  }
-
-  createBienServicio(payload) {
+  
+  saveBienServicio(payload) {
     return this.http.post<any>(this.url_bienes_servicios,payload).pipe(
       map( (response) => {
         return response;

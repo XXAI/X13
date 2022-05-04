@@ -26,4 +26,8 @@ class BienServicioEmpaqueDetalle extends Model{
     public function unidadMedida(){
         return $this->belongsTo('App\Models\UnidadMedida','unidad_medida_id');
     }
+
+    public function stocks(){
+        return $this->hasMany('App\Models\Stock','empaque_detalle_id');
+    }
 }

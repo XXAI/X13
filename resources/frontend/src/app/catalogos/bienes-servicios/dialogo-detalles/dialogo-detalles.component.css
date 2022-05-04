@@ -22,6 +22,10 @@
     border-radius: 0px;
 }
 
+.boton-accion-medio{
+    border-radius: 0px;
+}
+
 .empaque-detalles{
     padding: 0px;
     margin-top: 10px;
@@ -38,6 +42,11 @@
 .empaque-detalles .detalles{
     padding: 5px;
     overflow: auto;
+    border-left: 1px solid rgba(0,0,0,.12);
+}
+
+::ng-deep .empaque-detalles .detalles .mat-list-text{
+    padding: 0px !important;
 }
 
 .empaque-detalles .formulario{
@@ -46,4 +55,13 @@
 
 .empaque-detalles .botones{
     padding-top: 10px;
+}
+
+.para-borrar{
+    color:red;
+}
+
+.icono-dato{
+    padding: 0px 5px;
+    border-left: 1px solid rgba(0,0,0,.12);
 }

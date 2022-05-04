@@ -36,8 +36,21 @@ table td {
     padding:0 5px;
 }
 
-.descontinuado{
-    color:orange;
+.added-data{
+    font-size: smaller;
+    color:rgb(129, 125, 125);
+}
+
+.descontinuado > td{
+    color:rgb(250, 70, 4);
+}
+
+.descontinuado > td .added-data{
+    color:rgba(250, 70, 4,0.75);
+}
+
+.descontinuado > td .inactivo{
+    color:rgba(250, 70, 4,0.75);
 }
 
 .con-existencias{
@@ -50,7 +63,7 @@ table td {
 
 table .mat-row:hover{
     background-color: whitesmoke;
-    cursor: default;
+    cursor: pointer;
 }
 
 .mat-column-descontinuado{
@@ -85,9 +98,4 @@ table .mat-row:hover{
 
 .hide{
     display: none;
-}
-
-.added-data{
-    font-size: smaller;
-    color:rgb(129, 125, 125);
 }

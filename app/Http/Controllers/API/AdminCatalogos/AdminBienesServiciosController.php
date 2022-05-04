@@ -17,6 +17,7 @@ use App\Models\PartidaEspecifica;
 use App\Models\TipoBienServicio;
 use App\Models\Empaque;
 use App\Models\UnidadMedida;
+use Response, Validator;
 
 class AdminBienesServiciosController extends Controller{
 
@@ -53,12 +54,17 @@ class AdminBienesServiciosController extends Controller{
                 $parametros['buscar_catalogo_completo'] = true;
             }*/
 
-            $catalogo_articulos = BienServicio::select('bienes_servicios.*','familias.nombre AS familia','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio',DB::raw('SUM(stocks.existencia+stocks.existencia_unidades) as existencias'))
+            $catalogo_articulos = BienServicio::select('bienes_servicios.*','familias.nombre AS familia','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
                                                 ->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
                                                 ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
-                                                ->leftJoin('stocks','stocks.bien_servicio_id','=','bienes_servicios.id')
+                                                ->leftJoin('stocks',function($join){
+                                                    $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
+                                                            ->where(function($where){
+                                                                $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                            });
+                                                })
                                                 ->groupBy('bienes_servicios.id')
-                                                ->orderBy('bienes_servicios.especificaciones');
+                                                ->orderBy('bienes_servicios.updated_at','desc');
 
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
@@ -122,12 +128,98 @@ class AdminBienesServiciosController extends Controller{
     public function show($id)
     {
         try{
-            $bien_servicio = BienServicio::with(['familia','partidaEspecifica','empaqueDetalle'=>function($empaqueDetalle){
-                                                                                                    $empaqueDetalle->with('unidadMedida','empaque');
-                                                                                                }])->find($id);
-
+            $bien_servicio = BienServicio::select('bienes_servicios.*',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
+                                        ->leftJoin('stocks',function($join){
+                                            $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
+                                                ->where(function($where){
+                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                });
+                                        })
+                                        ->with(['familia','partidaEspecifica',
+                                                'empaqueDetalle'=>function($empaqueDetalle){
+                                                    $empaqueDetalle->select('bienes_servicios_empaque_detalles.*',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
+                                                                    ->leftJoin('stocks',function($join){
+                                                                        $join->on('stocks.empaque_detalle_id','=','bienes_servicios_empaque_detalles.id')->where(function($where){
+                                                                            $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                        });
+                                                                    })
+                                                                    ->groupBy('bienes_servicios_empaque_detalles.id')
+                                                                    ->with('unidadMedida','empaque');
+                                                }])->find($id);
             return response()->json(['data'=>$bien_servicio],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request){
+        try {
+            $reglas = [
+                'clave_partida_especifica'  =>'required',
+                'familia_id'                =>'required',
+                'tipo_bien_servicio_id'     =>'required',
+                'articulo'                  =>'required',
+                'especificaciones'          =>'required',
+            ];
+            
+            $mensajes = [
+                'clave_partida_especifica.required'  =>'El campo clave_partida_especifica es obligatorio',
+                'familia_id.required'                =>'El campo familia_id es obligatorio',
+                'tipo_bien_servicio_id.required'     =>'El campo tipo_bien_servicio_id es obligatorio',
+                'articulo.required'                  =>'El campo articulo es obligatorio',
+                'especificaciones.required'          =>'El campo especificaciones es obligatorio',
+            ];
+
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            $v = Validator::make($parametros, $reglas, $mensajes);
+            
+            if ($v->fails()) {
+                return response()->json(['error'=>'Datos de formulario incorrectors','data'=>$v->errors()],HttpResponse::HTTP_OK);
+            }
+
+            if(isset($parametros['id']) && $parametros['id']){
+                $articulo = BienServicio::find($parametros['id']);
+                if(!$articulo){
+                    return response()->json(['error'=>'No se encontro el registro guardado'],HttpResponse::HTTP_OK);
+                }
+            }
+
+            if(isset($parametros['clave_local']) && $parametros['clave_local']){
+                $encontrado = BienServicio::where('clave_local',$parametros['clave_local']);
+                if(isset($parametros['id']) && $parametros['id']){
+                    $encontrado = $encontrado->where('id','!=',$parametros['id']);
+                }
+                $encontrado = $encontrado->first();
+
+                if($encontrado){
+                    return response()->json(['error'=>'Esta clave ya se encuentra asignada a otro registro'],HttpResponse::HTTP_OK);
+                }
+            }
+
+            if(isset($parametros['generar_clave_local']) && $parametros['generar_clave_local']){
+                //generar clave local automatica
+                $max_clave_local = BienServicio::where('clave_local','like','CL-%')->max('clave_local');
+                $max_clave_local = intval(str_replace('CL-','',$max_clave_local)) + 1;
+                $clave_local = 'CL-' . str_pad($max_clave_local,7,'0',STR_PAD_LEFT);
+                $parametros['clave_local'] = $clave_local;
+            }
+
+            if(isset($articulo)){
+                $articulo->update($parametros);
+            }else{
+                $articulo = BienServicio::create($parametros);
+            }
+            
+            return response()->json(['data'=>$articulo],HttpResponse::HTTP_OK);
+        } catch (\Exception $e) {
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }

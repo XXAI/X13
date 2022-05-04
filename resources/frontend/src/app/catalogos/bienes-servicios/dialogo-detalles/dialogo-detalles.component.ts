@@ -29,12 +29,16 @@ export class DialogoDetallesComponent implements OnInit {
   isSaving:boolean;
   formArticulo: FormGroup;
   formDetalles: FormGroup;
+
   ultimaActualizacion: Date;
+  modificarEnExistencias: boolean;
+
   empaqueDetalles:any[];
 
   selectedDetalleIndex:number;
 
   autoClaveLocal:boolean;
+  autoDescripcion:boolean;
 
   catalogoAutocomplete:any = {partidas:[], familias:[], empaques:[], unidades_medida:[]};
   selectTiposArticulo:any[];
@@ -48,6 +52,7 @@ export class DialogoDetallesComponent implements OnInit {
     this.selectTiposArticulo = [];
     this.empaqueDetalles = [];
     this.autoClaveLocal = false;
+    this.modificarEnExistencias = false;
     this.selectedDetalleIndex = -1;
 
     this.formArticulo = this.formBuilder.group({
@@ -58,7 +63,7 @@ export class DialogoDetallesComponent implements OnInit {
       'familia_id':                 [''],
       'tipo_bien_servicio_id':      ['',Validators.required],
       'clave_cubs':                 [''],
-      'clave_local':                [''],
+      'clave_local':                ['',Validators.required],
       'articulo':                   ['',Validators.required],
       'especificaciones':           ['',Validators.required],
       'destacar':                   [''],
@@ -76,7 +81,10 @@ export class DialogoDetallesComponent implements OnInit {
       'unidad_medida_id':           [''],
       'piezas_x_empaque':           ['',Validators.required],
       'en_especificaciones':        [''],
+      'eliminar':                   [false],
     });
+
+    this.toggleDescripcionAutomatica(true);
 
     this.isLoading = true;
     this.bienesServiciosService.getCatalogos().subscribe(
@@ -113,11 +121,20 @@ export class DialogoDetallesComponent implements OnInit {
                   let errorMessage = response.error;
                   this.sharedService.showSnackBar(errorMessage, null, 3000);
                 } else {
-                  if(response.data.clave_local.slice(0,3) == 'CL-'){
-                    this.toggleClaveLocal();
-                  }
+                  
                   this.formArticulo.patchValue(response.data);
                   this.empaqueDetalles = response.data.empaque_detalle;
+
+                  if(response.data.updated_at){
+                    this.ultimaActualizacion = new Date(response.data.updated_at);
+                  }else{
+                    this.ultimaActualizacion = new Date();
+                  }
+
+                  if(response.data.existencias){
+                    this.modificarEnExistencias = true;
+                  }
+                  
                 }
                 this.isLoading = false;
               },
@@ -145,36 +162,112 @@ export class DialogoDetallesComponent implements OnInit {
     );
   }
 
+  modificarLotes(){
+    //
+  }
+
   nuevoArticulo(){
+    this.formArticulo.reset();
+    this.formDetalles.reset();
+    this.modificarEnExistencias = false;
+    this.ultimaActualizacion = null;
+    this.empaqueDetalles = [];
+    this.autoClaveLocal = false;
+    this.selectedDetalleIndex = -1;
+  }
+
+  eliminaArticulo(){
     //
   }
 
   guardarArticulo(){
-    //
+    if(this.formArticulo.valid){
+      this.isSaving = true;
+
+      let datosArticulo:any = JSON.parse(JSON.stringify(this.formArticulo.value));
+      if(this.autoClaveLocal){
+        datosArticulo.generar_clave_local = true;
+      }
+
+      datosArticulo.familia_id = datosArticulo.familia.id;
+      datosArticulo.clave_partida_especifica = datosArticulo.partida_especifica.clave;
+      
+      delete datosArticulo.familia;
+      delete datosArticulo.partida_especifica;
+
+      datosArticulo.detalles = [];
+      this.empaqueDetalles.forEach(item =>{
+        let detalle = JSON.parse(JSON.stringify(item));
+        //let detalle = item;
+        detalle.empaque_id = detalle.empaque.id;
+        detalle.unidad_medida_id = detalle.unidad_medida.id;
+        delete detalle.empaque;
+        delete detalle.unidad_medida;
+        datosArticulo.detalles.push(detalle);
+      });
+      
+      this.bienesServiciosService.saveBienServicio(datosArticulo).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          } else {
+            this.formArticulo.get('id').patchValue(response.data.id);
+            //this.empaqueDetalles = response.data.empaque_detalle;
+            this.ultimaActualizacion = new Date(response.data.updated_at);
+          }
+          this.isSaving = false;
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isSaving = false;
+        }
+      );
+    }
   }
 
   aceptarDetalles(){
     if(this.formDetalles.valid){
       let datosDetalle = this.formDetalles.value;
-      if(datosDetalle.id){
-        datosDetalle.editado = true;
-        let index = this.empaqueDetalles.findIndex(x => x.id == datosDetalle.id);
-        this.empaqueDetalles[index] = datosDetalle;
+
+      if(this.autoDescripcion){
+        datosDetalle.descripcion = datosDetalle.empaque.descripcion + ' con ' + datosDetalle.piezas_x_empaque + ' ( ' + datosDetalle.unidad_medida.descripcion + ' )';
+      }
+
+      if(this.selectedDetalleIndex >= 0){
+        if(datosDetalle.id){
+          datosDetalle.editado = true;
+        }
+        this.empaqueDetalles[this.selectedDetalleIndex] = datosDetalle;
       }else{
         this.empaqueDetalles.push(datosDetalle);
       }
     }
+    this.selectedDetalleIndex = -1;
     this.formDetalles.reset();
+    this.toggleDescripcionAutomatica(true);
+  }
+
+  toggleMarcarEliminar(){
+    let eliminar = this.formDetalles.get('eliminar').value;
+    this.formDetalles.get('eliminar').patchValue(!eliminar);
   }
 
   cancelarDetalles(){
+    this.selectedDetalleIndex = -1;
     this.formDetalles.reset();
+    this.toggleDescripcionAutomatica(true);
   }
 
   seleccionarDetalle(event){
-    console.log('event',event);
-    console.log('option',event.option);
     let detalle = event.option.value;
+    let index = this.empaqueDetalles.indexOf(detalle);
+    this.selectedDetalleIndex = index;
+    this.toggleDescripcionAutomatica(false);
     this.formDetalles.patchValue(detalle);
   }
 
@@ -188,6 +281,19 @@ export class DialogoDetallesComponent implements OnInit {
       this.formArticulo.get('clave_local').enable();
       this.formArticulo.get('clave_local').markAsDirty();
       this.formArticulo.get('clave_local').markAsTouched();
+    }
+  }
+
+  toggleDescripcionAutomatica(value:boolean){
+    this.autoDescripcion = value;
+    if(this.autoDescripcion){
+      this.formDetalles.get('descripcion').patchValue('Descripcion automatica...');
+      this.formDetalles.get('descripcion').disable();
+    }else{
+      this.formDetalles.get('descripcion').patchValue('');
+      this.formDetalles.get('descripcion').enable();
+      this.formDetalles.get('descripcion').markAsDirty();
+      this.formDetalles.get('descripcion').markAsTouched();
     }
   }
 

@@ -281,7 +281,7 @@ class AlmacenSalidaController extends Controller
                     $consecutivo = 1;
                 }
 
-                $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
+                $folio = $unidad_medica->clues . '-' . $fecha->format('Y') . '-' . $fecha->format('m') . '-' . $tipo_movimiento->movimiento . '-' . $tipo_movimiento->clave . '-' . str_pad($parametros['almacen_id'],4,'0',STR_PAD_LEFT) . '-' . str_pad($consecutivo,4,'0',STR_PAD_LEFT);
             }
 
             if($tipo_movimiento->clave == 'RCTA' || $tipo_movimiento->clave == 'PSNL'){
