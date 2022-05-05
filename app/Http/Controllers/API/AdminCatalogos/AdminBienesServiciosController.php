@@ -17,6 +17,9 @@ use App\Models\PartidaEspecifica;
 use App\Models\TipoBienServicio;
 use App\Models\Empaque;
 use App\Models\UnidadMedida;
+use App\Models\UnidadMedica;
+use App\Models\Almacen;
+use App\Models\Stock;
 use Response, Validator;
 
 class AdminBienesServiciosController extends Controller{
@@ -35,6 +38,36 @@ class AdminBienesServiciosController extends Controller{
             ];
 
             return response()->json(['data'=>$catalogos],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function obtenerLotes(Request $request, $id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            $lotes = Stock::select('stocks.*','catalogo_unidades_medicas.nombre as unidad_medica','almacenes.nombre as almacen',
+                                    DB::raw('COUNT(DISTINCT movimientos_articulos.id) as movimientos'))
+                            ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','stocks.unidad_medica_id')
+                            ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                            ->leftJoin('movimientos_articulos','movimientos_articulos.stock_id','=','stocks.id')
+                            ->groupBy('stocks.id')
+                            ->where(function($where){
+                                $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                            })
+                            ->where('stocks.bien_servicio_id',$id)->get();
+            $unidades_medicas_ids = $lotes->pluck('unidad_medica_id');
+            $almacenes_ids = $lotes->pluck('almacen_id');
+
+            $return_data = [
+                'unidades_medicas' => UnidadMedica::whereIn('id',$unidades_medicas_ids)->get(),
+                'almacenes' => Almacen::whereIn('id',$almacenes_ids)->get(),
+                'lotes' => $lotes,
+            ];
+
+            return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
@@ -212,14 +245,66 @@ class AdminBienesServiciosController extends Controller{
                 $parametros['clave_local'] = $clave_local;
             }
 
+            DB::beginTransaction();
+
             if(isset($articulo)){
                 $articulo->update($parametros);
             }else{
                 $articulo = BienServicio::create($parametros);
             }
+            $articulo->load('empaqueDetalle');
+
+            if(isset($parametros['detalles']) && $parametros['detalles'] && count($parametros['detalles'])){
+                $nuevos_detalles = [];
+                $editar_detalles = [];
+
+                $detalles_raw = $articulo->empaqueDetalle;
+                $total_loop = count($detalles_raw);
+                for($i = 0; $i < $total_loop; $i++){
+                    $editar_detalles[$detalles_raw[$i]->id] = $detalles_raw[$i];
+                }
+
+                $total_loop = count($parametros['detalles']);
+                for($i = 0; $i < $total_loop; $i ++){
+                    $detalle = $parametros['detalles'][$i];
+                    if($detalle['id']){
+                        if(isset($editar_detalles[$detalle['id']])){
+                            $detalle_update = $editar_detalles[$detalle['id']];
+                            if(isset($detalle['eliminar']) && $detalle['eliminar']){
+                                $detalle_update->delete();
+                                Stock::where('empaque_detalle_id',$detalle_update->id)->update(['empaque_detalle_id'=>null]);
+                            }else if(isset($detalle['editado']) && $detalle['editado']){
+                                if($detalle_update->piezas_x_empaque != $detalle['piezas_x_empaque']){
+                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->get();
+                                    if(count($lotes)){
+                                        //
+                                    }
+                                }
+                                $detalle_update->update($detalle);
+                            }
+                        }
+                    }else{
+                        $articulo->empaqueDetalle()->create($detalle);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $articulo->load(['empaqueDetalle'=>function($empaqueDetalle){
+                            $empaqueDetalle->select('bienes_servicios_empaque_detalles.*',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
+                                            ->leftJoin('stocks',function($join){
+                                                $join->on('stocks.empaque_detalle_id','=','bienes_servicios_empaque_detalles.id')->where(function($where){
+                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                });
+                                            })
+                                            ->groupBy('bienes_servicios_empaque_detalles.id')
+                                            ->with('unidadMedida','empaque');
+                        }]);
             
             return response()->json(['data'=>$articulo],HttpResponse::HTTP_OK);
         } catch (\Exception $e) {
+            DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }

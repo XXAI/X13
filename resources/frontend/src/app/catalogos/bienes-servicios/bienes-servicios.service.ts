@@ -10,8 +10,17 @@ import { map } from 'rxjs/operators';
 export class BienesServiciosService {
   url_bienes_servicios = `${environment.base_url}/catalogos/bienes-servicios`;
   url_catalogos = `${environment.base_url}/catalogos/bienes-servicios-catalogos`;
+  url_lotes = `${environment.base_url}/catalogos/bienes-servicios-lotes/`;
 
   constructor(private http: HttpClient) { }
+
+  getLotes(id) {
+    return this.http.get<any>(this.url_lotes+id,{}).pipe(
+      map( (response: any) => {
+        return response;
+      }
+    ));
+  }
 
   getCatalogos():Observable<any> {
     return this.http.get<any>(this.url_catalogos,{}).pipe(

@@ -16,6 +16,15 @@
     padding-right: 5px;
 }
 
+.loading-lotes{
+    padding: 25px;
+    text-align: center;
+    font-size: larger;
+    font-style: italic;
+    color:#4a4848;
+    cursor: default;
+}
+
 .boton-accion{
     border-left: 1px solid whitesmoke;
     background-color: #787878;
@@ -64,4 +73,35 @@
 .icono-dato{
     padding: 0px 5px;
     border-left: 1px solid rgba(0,0,0,.12);
+}
+
+.tabla-contenido{
+    min-height: 150px;
+    max-height: 500px;
+}
+
+.lista-lotes-table{
+    width: 100%;
+    cursor: default;
+}
+
+.lista-lotes-table th{
+    text-align: center;
+}
+
+.lista-lotes-table td{
+    text-align: center;
+}
+
+.lista-lotes-table tr.mat-row:hover {
+    background-color: #F5F5F5;
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
 }

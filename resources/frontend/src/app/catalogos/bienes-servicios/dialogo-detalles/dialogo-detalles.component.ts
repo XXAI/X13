@@ -1,6 +1,9 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { Observable } from 'rxjs';
 import { map, startWith, timeout } from 'rxjs/operators';
 import { SharedService } from 'src/app/shared/shared.service';
@@ -16,6 +19,9 @@ export interface DialogData {
   styleUrls: ['./dialogo-detalles.component.css']
 })
 export class DialogoDetallesComponent implements OnInit {
+  @ViewChild(MatTable) lotesTable: MatTable<any>;
+  @ViewChild(MatPaginator) lotesPaginator: MatPaginator;
+  @ViewChild(MatSort) sort: MatSort;
 
   constructor(
     public dialogRef: MatDialogRef<DialogoDetallesComponent>,
@@ -33,6 +39,9 @@ export class DialogoDetallesComponent implements OnInit {
   ultimaActualizacion: Date;
   modificarEnExistencias: boolean;
 
+  mostrarListaLotes: boolean;
+  listaSelectDetalles: any[];
+
   empaqueDetalles:any[];
 
   selectedDetalleIndex:number;
@@ -48,12 +57,22 @@ export class DialogoDetallesComponent implements OnInit {
   filteredEmpaques: Observable<any[]>;
   filteredUnidadesMedida: Observable<any[]>;
 
+  pageEvent: PageEvent;
+  resultsLength: number = 0;
+  currentPage: number = 0;
+  pageSize: number = 30;
+  displayedColumns: string[];
+  dataSourceLotes: MatTableDataSource<any>;
+
   ngOnInit(): void {
     this.selectTiposArticulo = [];
     this.empaqueDetalles = [];
     this.autoClaveLocal = false;
     this.modificarEnExistencias = false;
+    this.mostrarListaLotes = false;
     this.selectedDetalleIndex = -1;
+
+    this.displayedColumns = ['unidad_medica','almacen','detalle','lote','fecha_caducidad','existencia','movimientos'];
 
     this.formArticulo = this.formBuilder.group({
       'id':                         [''],
@@ -163,7 +182,49 @@ export class DialogoDetallesComponent implements OnInit {
   }
 
   modificarLotes(){
-    //
+    if(!this.dataSourceLotes){
+      this.dataSourceLotes = new MatTableDataSource<any>([]);
+      this.dataSourceLotes.paginator = this.lotesPaginator;
+      this.dataSourceLotes.sort = this.sort;
+    }
+    
+    this.mostrarListaLotes = !this.mostrarListaLotes;
+
+    if(this.mostrarListaLotes){
+      this.listaSelectDetalles = [];
+      this.empaqueDetalles.forEach(item => {
+        if(item.id){
+          this.listaSelectDetalles.push(item);
+        }
+      });
+
+      this.isLoading = true;
+      this.bienesServiciosService.getLotes(this.data.id).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          } else {
+            this.dataSourceLotes.data = response.data.lotes;
+            this.dataSourceLotes.paginator = this.lotesPaginator;
+            this.dataSourceLotes.sort = this.sort;
+          }
+          this.isLoading = false;
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isLoading = false;
+        }
+      );
+    }else{
+      this.dataSourceLotes = new MatTableDataSource<any>([]);
+      this.dataSourceLotes.paginator = this.lotesPaginator;
+      this.dataSourceLotes.sort = this.sort;
+    }
   }
 
   nuevoArticulo(){
@@ -213,8 +274,10 @@ export class DialogoDetallesComponent implements OnInit {
             this.sharedService.showSnackBar(errorMessage, null, 3000);
           } else {
             this.formArticulo.get('id').patchValue(response.data.id);
-            //this.empaqueDetalles = response.data.empaque_detalle;
             this.ultimaActualizacion = new Date(response.data.updated_at);
+            if(response.data.empaque_detalle){
+              this.empaqueDetalles = response.data.empaque_detalle;
+            }
           }
           this.isSaving = false;
         },

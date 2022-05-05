@@ -1,16 +1,16 @@
 <section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
     <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
-            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo">
+            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo" [disabled]="mostrarListaLotes">
                 <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
             </button>
-            <button fxFlex="none" mat-button [disabled]="isSaving || !formArticulo.valid" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
+            <button fxFlex="none" mat-button [disabled]="isSaving || !formArticulo.valid || selectedDetalleIndex >= 0 || mostrarListaLotes" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
                 <mat-icon>save</mat-icon> Guardar
             </button>
             <div fxFlex>
             </div>
             <button *ngIf="modificarEnExistencias" fxFlex="none" class="boton-accion-medio" mat-flat-button color="accent" [disabled]="isSaving || !formArticulo.valid" (click)="modificarLotes()">
-                <mat-icon>sync_alt</mat-icon> Modificar Lotes
+                <mat-icon>sync_alt</mat-icon> {{(mostrarListaLotes)?'Datos Articulo':'Modificar Lotes'}}
             </button>
             <div fxFlex>
             </div>
@@ -32,7 +32,89 @@
             </button>
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
-    <section fxFlex fxLayout="column" style="padding: 10px;">
+    <section fxFlex fxLayout="column" style="padding: 10px;" *ngIf="mostrarListaLotes">
+        <div fxFlex *ngIf="isLoading" class="loading-lotes">
+            Cargando Información de lotes
+        </div>
+        <div fxFlex fxLayout="row wrap" fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!isLoading">
+            formulario de filtros
+        </div>
+        <mat-card fxFlex fxLayout="column" style="padding:0px;">
+            <div fxFlex style="overflow: auto;" class="tabla-contenido">
+                <table mat-table [dataSource]="dataSourceLotes" class="lista-lotes-table" matSort>
+                    <ng-container matColumnDef="unidad_medica">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Unidad Medica </th>
+                        <td mat-cell *matCellDef="let row">
+                            {{row.unidad_medica}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="almacen">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Almacén </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                            {{row.almacen}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="detalle">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Detalle </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                            <mat-form-field>
+                                <mat-select [(ngModel)]="row.empaque_detalle_id">
+                                  <mat-option *ngFor="let detalle of listaSelectDetalles" [value]="detalle.id">
+                                    {{detalle.descripcion}}
+                                  </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="lote">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Lote </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                            {{row.lote}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="fecha_caducidad" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Fecha de<br>Caducidad </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                            {{row.fecha_caducidad | date:'MMMM d, y'}} 
+                        </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="existencia" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Existencia<br>Piezas </th>
+                        <td mat-cell *matCellDef="let row"> 
+                            {{row.existencia||0 | number:'1.0-0'}}<br>
+                            {{row.existencia_unidades||0 | number:'1.0-0'}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="movimientos" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Movimientos </th>
+                        <td mat-cell *matCellDef="let row" class="descripcion"> {{row.movimientos}} </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="noResultsFound">
+                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron Lotes </td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;">
+                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': dataSourceLotes && dataSourceLotes.filteredData.length > 0}"></tr>
+                </table>
+            </div>
+            <div fxFlex="none" fxLayout="row">
+                <div fxFlex="none" style="padding-top: 10px;">
+                </div>
+                <div fxFlex>
+                    <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" showFirstLastButtons></mat-paginator>
+                </div>
+            </div>
+        </mat-card>
+    </section>
+    <section fxFlex fxLayout="column" style="padding: 10px;" *ngIf="!mostrarListaLotes">
         <div fxFlex fxLayout="row wrap" fxLayoutGap="5px" [formGroup]="formArticulo" [style.fontSize.px]="15">
             <div fxFlex="100" fxLayout="row" fxLayoutGap="5px">
                 <mat-form-field fxFlex>
@@ -49,7 +131,7 @@
                         </mat-option>
                     </mat-autocomplete>
                     <mat-hint *ngIf="formArticulo.get('partida_especifica').value">
-                        <mat-icon>[ {{formArticulo.get('partida_especifica').value.clave}} ]</mat-icon>
+                        [ {{formArticulo.get('partida_especifica').value.clave}} ]
                     </mat-hint>
                     <mat-hint align="end" *ngIf="formArticulo.get('partida_especifica').value && formArticulo.get('partida_especifica').value.id">
                         Partida Seleccionada
