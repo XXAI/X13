@@ -87,7 +87,7 @@ class AdminBienesServiciosController extends Controller{
                 $parametros['buscar_catalogo_completo'] = true;
             }*/
 
-            $catalogo_articulos = BienServicio::select('bienes_servicios.*','familias.nombre AS familia','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
+            $catalogo_articulos = BienServicio::select('bienes_servicios.*','familias.nombre AS familia','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio',DB::raw('COUNT(DISTINCT stocks.id) as existencias'),DB::raw('COUNT(DISTINCT bienes_servicios_empaque_detalles.id) as detalles'))
                                                 ->leftJoin('familias','familias.id','=','bienes_servicios.familia_id')
                                                 ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
                                                 ->leftJoin('stocks',function($join){
@@ -96,6 +96,7 @@ class AdminBienesServiciosController extends Controller{
                                                                 $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
                                                             });
                                                 })
+                                                ->leftJoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.bien_servicio_id','=','bienes_servicios.id')
                                                 ->groupBy('bienes_servicios.id')
                                                 ->orderBy('bienes_servicios.updated_at','desc');
 
@@ -275,9 +276,32 @@ class AdminBienesServiciosController extends Controller{
                                 Stock::where('empaque_detalle_id',$detalle_update->id)->update(['empaque_detalle_id'=>null]);
                             }else if(isset($detalle['editado']) && $detalle['editado']){
                                 if($detalle_update->piezas_x_empaque != $detalle['piezas_x_empaque']){
-                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->get();
+                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->where(function($where){
+                                                                                                                $where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);
+                                                                                                            })->get();
                                     if(count($lotes)){
-                                        //
+                                        $total_lotes = count($lotes);
+                                        for($j = 0; $j < $total_lotes; $j++){
+                                            $lote = $lotes[$j];
+                                            if($articulo->puede_surtir_unidades){
+                                                if($lote->existencia_unidades){
+                                                    $diferencia_piezas = ($lote->existencia * $detalle_update->piezas_x_empaque) - $lote->existencia_unidades;
+                                                    $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']) - $diferencia_piezas;
+                                                }else{
+                                                    $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']);
+                                                }
+                                            }else{
+                                                if($lote->existencia_unidades){
+                                                    $diferencia_piezas = ($lote->existencia * $detalle_update->piezas_x_empaque) - $lote->existencia_unidades;
+                                                    if($diferencia_piezas == 0){
+                                                        $lote->existencia_unidades = null;
+                                                    }else{
+                                                        $lote->existencia_unidades = $diferencia_piezas;
+                                                    }
+                                                }
+                                            }
+                                            $lote->save();
+                                        }
                                     }
                                 }
                                 $detalle_update->update($detalle);
@@ -305,6 +329,33 @@ class AdminBienesServiciosController extends Controller{
             return response()->json(['data'=>$articulo],HttpResponse::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id){
+        //$this->authorize('has-permission',\Permissions::ELIMINAR_ROL);
+        try{
+            $articulo = BienServicio::find($id);
+            
+            $validar_stock = Stock::where('bien_servicio_id',$id)->where(function($where){
+                                                                            $where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);
+                                                                        })->groupBy('bien_servicio_id')->first();
+            if($validar_stock){
+                return response()->json(['error'=>'Este articulo no puede eliminarse ya que cuenta con existencias activas'],HttpResponse::HTTP_OK);
+            }
+
+            $articulo->empaqueDetalle()->delete();
+            $articulo->delete();
+
+            return response()->json(['data'=>'Articulo eliminado'], HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }

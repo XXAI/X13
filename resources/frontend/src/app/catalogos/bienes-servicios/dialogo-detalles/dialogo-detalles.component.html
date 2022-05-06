@@ -1,19 +1,19 @@
 <section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
     <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
-            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo" [disabled]="mostrarListaLotes">
+            <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo">
                 <mat-icon>settings</mat-icon> Opciones <mat-icon>arrow_drop_down</mat-icon>
             </button>
-            <button fxFlex="none" mat-button [disabled]="isSaving || !formArticulo.valid || selectedDetalleIndex >= 0 || mostrarListaLotes" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
+            <button fxFlex="none" mat-button [disabled]="isSaving || !formArticulo.valid || selectedDetalleIndex >= 0" (click)="guardarArticulo()" [class.button-spinner]="isSaving">
                 <mat-icon>save</mat-icon> Guardar
             </button>
             <div fxFlex>
             </div>
-            <button *ngIf="modificarEnExistencias" fxFlex="none" class="boton-accion-medio" mat-flat-button color="accent" [disabled]="isSaving || !formArticulo.valid" (click)="modificarLotes()">
+            <!--button *ngIf="modificarEnExistencias" fxFlex="none" class="boton-accion-medio" mat-flat-button color="accent" [disabled]="isSaving || !formArticulo.valid" (click)="modificarLotes()">
                 <mat-icon>sync_alt</mat-icon> {{(mostrarListaLotes)?'Datos Articulo':'Modificar Lotes'}}
             </button>
             <div fxFlex>
-            </div>
+            </div-->
             <div fxFlex="none" class="label-info">
                 <span>{{(ultimaActualizacion)?(ultimaActualizacion | date:'long'):'Articulo - Nuevo'}}</span>
             </div>
@@ -32,11 +32,11 @@
             </button>
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
-    <section fxFlex fxLayout="column" style="padding: 10px;" *ngIf="mostrarListaLotes">
-        <div fxFlex *ngIf="isLoading" class="loading-lotes">
+    <!--section fxFlex fxLayout="column" style="padding: 10px;" *ngIf="mostrarListaLotes">
+        <div fxFlex="none" *ngIf="isLoading" class="loading-lotes">
             Cargando Información de lotes
         </div>
-        <div fxFlex fxLayout="row wrap" fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!isLoading">
+        <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="!isLoading">
             formulario de filtros
         </div>
         <mat-card fxFlex fxLayout="column" style="padding:0px;">
@@ -84,10 +84,10 @@
                     </ng-container>
                     
                     <ng-container matColumnDef="existencia" >
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Existencia<br>Piezas </th>
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Existencia<br>(Piezas) </th>
                         <td mat-cell *matCellDef="let row"> 
                             {{row.existencia||0 | number:'1.0-0'}}<br>
-                            {{row.existencia_unidades||0 | number:'1.0-0'}}
+                            ({{row.existencia_unidades||0 | number:'1.0-0'}})
                         </td>
                     </ng-container>
 
@@ -113,9 +113,9 @@
                 </div>
             </div>
         </mat-card>
-    </section>
-    <section fxFlex fxLayout="column" style="padding: 10px;" *ngIf="!mostrarListaLotes">
-        <div fxFlex fxLayout="row wrap" fxLayoutGap="5px" [formGroup]="formArticulo" [style.fontSize.px]="15">
+    </section-->
+    <section fxFlex fxLayout="column" style="padding: 10px;">
+        <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" [formGroup]="formArticulo" [style.fontSize.px]="15">
             <div fxFlex="100" fxLayout="row" fxLayoutGap="5px">
                 <mat-form-field fxFlex>
                     <mat-label>Partida Especifica</mat-label>
@@ -229,7 +229,7 @@
             <div class="titulo" fxflex="none">Empaque Detalles:</div>
             <div fxFlex fxLayout="row">
                 <div class="formulario" fxFlex fxLayout="column">
-                    <div fxFlex="none" fxLayout="row wrap" [formGroup]="formDetalles">
+                    <div fxFlex="none" fxLayout="row wrap" [formGroup]="formDetalles" class="panel-formulario">
                         <mat-form-field fxFlex="50">
                             <mat-label>Empaque</mat-label>
                             <input type="text" matInput aria-label="Empaque" placeholder="Teclee para buscar un Empaque" formControlName="empaque" (blur)="validarOpcionSeleccionadaDetalles('empaque')" [matAutocomplete]="autoEmpaques" autocomplete="off" required>

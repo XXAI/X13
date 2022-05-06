@@ -58,9 +58,15 @@
     padding: 0px !important;
 }
 
-.empaque-detalles .formulario{
+.panel-formulario{
+    border-bottom: 1px solid rgba(0,0,0,.12);
     padding: 10px;
+    background-color: whitesmoke;
 }
+
+/*.empaque-detalles .formulario{
+    
+}*/
 
 .empaque-detalles .botones{
     padding-top: 10px;
@@ -75,9 +81,13 @@
     border-left: 1px solid rgba(0,0,0,.12);
 }
 
-.tabla-contenido{
+/*.tabla-contenido{
     min-height: 150px;
     max-height: 500px;
+}*/
+
+.extra-data{
+    font-size: smaller;
 }
 
 .lista-lotes-table{

@@ -1,12 +1,13 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { Observable } from 'rxjs';
 import { map, startWith, timeout } from 'rxjs/operators';
 import { SharedService } from 'src/app/shared/shared.service';
+import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { BienesServiciosService } from '../bienes-servicios.service';
 
 export interface DialogData {
@@ -29,6 +30,7 @@ export class DialogoDetallesComponent implements OnInit {
     private bienesServiciosService: BienesServiciosService,
     private formBuilder: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    public dialog: MatDialog,
   ) { }
 
   isLoading:boolean;
@@ -39,8 +41,9 @@ export class DialogoDetallesComponent implements OnInit {
   ultimaActualizacion: Date;
   modificarEnExistencias: boolean;
 
-  mostrarListaLotes: boolean;
-  listaSelectDetalles: any[];
+  actualizado: boolean;
+  //mostrarListaLotes: boolean;
+  //listaSelectDetalles: any[];
 
   empaqueDetalles:any[];
 
@@ -69,8 +72,9 @@ export class DialogoDetallesComponent implements OnInit {
     this.empaqueDetalles = [];
     this.autoClaveLocal = false;
     this.modificarEnExistencias = false;
-    this.mostrarListaLotes = false;
+    //this.mostrarListaLotes = false;
     this.selectedDetalleIndex = -1;
+    this.actualizado = false;
 
     this.displayedColumns = ['unidad_medica','almacen','detalle','lote','fecha_caducidad','existencia','movimientos'];
 
@@ -181,7 +185,7 @@ export class DialogoDetallesComponent implements OnInit {
     );
   }
 
-  modificarLotes(){
+  /*modificarLotes(){
     if(!this.dataSourceLotes){
       this.dataSourceLotes = new MatTableDataSource<any>([]);
       this.dataSourceLotes.paginator = this.lotesPaginator;
@@ -225,7 +229,7 @@ export class DialogoDetallesComponent implements OnInit {
       this.dataSourceLotes.paginator = this.lotesPaginator;
       this.dataSourceLotes.sort = this.sort;
     }
-  }
+  }*/
 
   nuevoArticulo(){
     this.formArticulo.reset();
@@ -238,7 +242,35 @@ export class DialogoDetallesComponent implements OnInit {
   }
 
   eliminaArticulo(){
-    //
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      data:{dialogTitle:'Eliminar Articulo?',dialogMessage:'Esta seguro de eliminar este articulo?',btnColor:'warn',btnText:'Eliminar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.bienesServiciosService.deleteBienServicio(this.data.id).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            }else{
+              this.sharedService.showSnackBar('Articulo eliminado con exito', null, 3000);
+              this.nuevoArticulo();
+              this.actualizado = true;
+            }
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.isLoadingPDF = false;
+          }
+        );
+      }
+    });
   }
 
   guardarArticulo(){
@@ -278,6 +310,7 @@ export class DialogoDetallesComponent implements OnInit {
             if(response.data.empaque_detalle){
               this.empaqueDetalles = response.data.empaque_detalle;
             }
+            this.actualizado = true;
           }
           this.isSaving = false;
         },
@@ -390,6 +423,6 @@ export class DialogoDetallesComponent implements OnInit {
   }
 
   cerrar(){
-    this.dialogRef.close();
+    this.dialogRef.close(this.actualizado);
   }
 }

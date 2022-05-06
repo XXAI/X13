@@ -42,6 +42,7 @@ export class ListaComponent implements OnInit {
     if(!event){
       params = { page: 1, per_page: this.pageSize }
     }else{
+      this.pageEvent = event;
       params = {
         page: event.pageIndex+1,
         per_page: event.pageSize
@@ -82,7 +83,7 @@ export class ListaComponent implements OnInit {
   mostrarDialogoArticulo(id:number = null){
     let configDialog = {
       width: '100%',
-      height: 'auto',
+      height: '100%',
       disableClose: true,
       data:{id: id},
       panelClass: 'no-padding-dialog'
@@ -92,6 +93,7 @@ export class ListaComponent implements OnInit {
     dialogRef.afterClosed().subscribe(dialogResponse => {
       if(dialogResponse){
         console.log('Response: ',dialogResponse);
+        this.loadListadoArticulos(this.pageEvent);
       }
     });
   }
