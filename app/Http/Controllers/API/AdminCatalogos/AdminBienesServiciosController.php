@@ -169,7 +169,7 @@ class AdminBienesServiciosController extends Controller{
                                                     $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
                                                 });
                                         })
-                                        ->with(['familia','partidaEspecifica',
+                                        ->with(['familia','partidaEspecifica','unidadMedida',
                                                 'empaqueDetalle'=>function($empaqueDetalle){
                                                     $empaqueDetalle->select('bienes_servicios_empaque_detalles.*',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
                                                                     ->leftJoin('stocks',function($join){
@@ -180,7 +180,27 @@ class AdminBienesServiciosController extends Controller{
                                                                     ->groupBy('bienes_servicios_empaque_detalles.id')
                                                                     ->with('unidadMedida','empaque');
                                                 }])->find($id);
-            return response()->json(['data'=>$bien_servicio],HttpResponse::HTTP_OK);
+            //
+            $lotes = Stock::select('catalogo_unidades_medicas.nombre as unidad_medica','bienes_servicios_empaque_detalles.descripcion as empaque_detalle',DB::raw('IF(COUNT(DISTINCT stocks.almacen_id) > 1,CONCAT(COUNT(DISTINCT stocks.almacen_id)," Almacen(es)"),almacenes.nombre) as almacen'),
+                                    DB::raw('CONCAT(COUNT(DISTINCT stocks.lote)," Lote(s)") as lote'),'stocks.empaque_detalle_id')
+                            ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','stocks.unidad_medica_id')
+                            ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
+                            ->leftJoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
+                            ->groupBy('stocks.empaque_detalle_id')
+                            ->groupBy('stocks.unidad_medica_id')
+                            ->orderBy('stocks.unidad_medica_id')
+                            ->where(function($where){$where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);})
+                            ->where('stocks.bien_servicio_id',$id)->get();
+            //$unidades_medicas_ids = $lotes->pluck('unidad_medica_id');
+            //$almacenes_ids = $lotes->pluck('almacen_id');
+
+            $return_data = [
+                'articulo' => $bien_servicio,
+                //'unidades_medicas' => UnidadMedica::whereIn('id',$unidades_medicas_ids)->get(),
+                //'almacenes' => Almacen::whereIn('id',$almacenes_ids)->get(),
+                'lotes' => $lotes,
+            ];
+            return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
@@ -255,57 +275,66 @@ class AdminBienesServiciosController extends Controller{
             }
             $articulo->load('empaqueDetalle');
 
+            $detalles_guardados = [];
+            $detalles_raw = $articulo->empaqueDetalle;
+            $total_loop = count($detalles_raw);
+            for($i = 0; $i < $total_loop; $i++){
+                $detalles_guardados[$detalles_raw[$i]->id] = $detalles_raw[$i];
+            }
+
             if(isset($parametros['detalles']) && $parametros['detalles'] && count($parametros['detalles'])){
-                $nuevos_detalles = [];
-                $editar_detalles = [];
-
-                $detalles_raw = $articulo->empaqueDetalle;
-                $total_loop = count($detalles_raw);
-                for($i = 0; $i < $total_loop; $i++){
-                    $editar_detalles[$detalles_raw[$i]->id] = $detalles_raw[$i];
-                }
-
                 $total_loop = count($parametros['detalles']);
                 for($i = 0; $i < $total_loop; $i ++){
                     $detalle = $parametros['detalles'][$i];
                     if($detalle['id']){
-                        if(isset($editar_detalles[$detalle['id']])){
-                            $detalle_update = $editar_detalles[$detalle['id']];
+                        if(isset($detalles_guardados[$detalle['id']])){
+                            $detalle_update = $detalles_guardados[$detalle['id']];
                             if(isset($detalle['eliminar']) && $detalle['eliminar']){
+                                $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->get();
+                                $total_lotes = count($lotes);
+                                if($total_lotes){
+                                    for($j = 0; $j < $total_lotes; $j++){
+                                        $lote = $lotes[$j];
+                                        if($lote->existencia_unidades < $detalle_update->piezas_x_empaque){
+                                            $piezas_extra = $lote->existencia_unidades;
+                                        }else{
+                                            $piezas_extra = $lote->existencia_unidades - ( $lote->existencia * $detalle_update->piezas_x_empaque );
+                                        }
+                                        $lote->existencia_unidades = $lote->existencia + $piezas_extra;
+                                        $lote->empaque_detalle_id = null;
+                                        $lote->save();
+                                    }
+                                }
                                 $detalle_update->delete();
-                                Stock::where('empaque_detalle_id',$detalle_update->id)->update(['empaque_detalle_id'=>null]);
-                            }else if(isset($detalle['editado']) && $detalle['editado']){
+                                $detalles_guardados[$detalle['id']] = null;
+                            }else{
                                 if($detalle_update->piezas_x_empaque != $detalle['piezas_x_empaque']){
-                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->where(function($where){
-                                                                                                                $where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);
-                                                                                                            })->get();
-                                    if(count($lotes)){
-                                        $total_lotes = count($lotes);
+                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->where(function($where){$where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);})->get();
+                                    $total_lotes = count($lotes);
+                                    if($total_lotes){
                                         for($j = 0; $j < $total_lotes; $j++){
                                             $lote = $lotes[$j];
-                                            if($articulo->puede_surtir_unidades){
-                                                if($lote->existencia_unidades){
-                                                    $diferencia_piezas = ($lote->existencia * $detalle_update->piezas_x_empaque) - $lote->existencia_unidades;
-                                                    $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']) - $diferencia_piezas;
+                                            if($lote->existencia_unidades){
+                                                if($lote->existencia_unidades < $detalle_update->piezas_x_empaque){
+                                                    $piezas_extra = $lote->existencia_unidades;
                                                 }else{
-                                                    $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']);
+                                                    $piezas_extra = $lote->existencia_unidades - ( $lote->existencia * $detalle_update->piezas_x_empaque );
                                                 }
+                                                
+                                                $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']) + $piezas_extra;
                                             }else{
-                                                if($lote->existencia_unidades){
-                                                    $diferencia_piezas = ($lote->existencia * $detalle_update->piezas_x_empaque) - $lote->existencia_unidades;
-                                                    if($diferencia_piezas == 0){
-                                                        $lote->existencia_unidades = null;
-                                                    }else{
-                                                        $lote->existencia_unidades = $diferencia_piezas;
-                                                    }
-                                                }
+                                                $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']);
                                             }
                                             $lote->save();
+                                            
                                         }
                                     }
                                 }
                                 $detalle_update->update($detalle);
                             }
+                        }else{
+                            DB::rollback();
+                            return response()->json(['error'=>'No se encontró el detalle del empaque'],HttpResponse::HTTP_OK);
                         }
                     }else{
                         $articulo->empaqueDetalle()->create($detalle);

@@ -57,6 +57,7 @@ export class DialogoDetallesComponent implements OnInit {
 
   filteredPartidas: Observable<any[]>;
   filteredFamilias: Observable<any[]>;
+  filteredUnidadesMedidaArticulo: Observable<any[]>;
   filteredEmpaques: Observable<any[]>;
   filteredUnidadesMedida: Observable<any[]>;
 
@@ -76,7 +77,7 @@ export class DialogoDetallesComponent implements OnInit {
     this.selectedDetalleIndex = -1;
     this.actualizado = false;
 
-    this.displayedColumns = ['unidad_medica','almacen','detalle','lote','fecha_caducidad','existencia','movimientos'];
+    this.displayedColumns = ['unidad_medica','detalle','almacen','lote'];
 
     this.formArticulo = this.formBuilder.group({
       'id':                         [''],
@@ -90,6 +91,8 @@ export class DialogoDetallesComponent implements OnInit {
       'articulo':                   ['',Validators.required],
       'especificaciones':           ['',Validators.required],
       'destacar':                   [''],
+      'unidad_medida':              ['',Validators.required],
+      'unidad_medida_id':           [''],
       'descontinuado':              [''],
       'tiene_fecha_caducidad':      [''],
       'puede_surtir_unidades':      [''],
@@ -108,6 +111,10 @@ export class DialogoDetallesComponent implements OnInit {
     });
 
     this.toggleDescripcionAutomatica(true);
+
+    this.dataSourceLotes = new MatTableDataSource<any>([]);
+    this.dataSourceLotes.paginator = this.lotesPaginator;
+    this.dataSourceLotes.sort = this.sort;
 
     this.isLoading = true;
     this.bienesServiciosService.getCatalogos().subscribe(
@@ -129,6 +136,9 @@ export class DialogoDetallesComponent implements OnInit {
           this.filteredFamilias = this.formArticulo.get('familia').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
                                     map(nombre => nombre ? this._filter('familias',nombre,'nombre') : this.catalogoAutocomplete['familias'].slice())
                                   );
+          this.filteredUnidadesMedidaArticulo = this.formArticulo.get('unidad_medida').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
+                                  map(descripcion => descripcion ? this._filter('unidades_medida',descripcion,'descripcion') : this.catalogoAutocomplete['unidades_medida'].slice())
+                                );
           this.filteredEmpaques = this.formDetalles.get('empaque').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.descripcion:''),
                                     map(descripcion => descripcion ? this._filter('empaques',descripcion,'descripcion') : this.catalogoAutocomplete['empaques'].slice())
                                   );
@@ -145,8 +155,12 @@ export class DialogoDetallesComponent implements OnInit {
                   this.sharedService.showSnackBar(errorMessage, null, 3000);
                 } else {
                   
-                  this.formArticulo.patchValue(response.data);
-                  this.empaqueDetalles = response.data.empaque_detalle;
+                  this.formArticulo.patchValue(response.data.articulo);
+                  this.empaqueDetalles = response.data.articulo.empaque_detalle;
+
+                  this.dataSourceLotes.data = response.data.lotes;
+                  this.dataSourceLotes.paginator = this.lotesPaginator;
+                  this.dataSourceLotes.sort = this.sort;
 
                   if(response.data.updated_at){
                     this.ultimaActualizacion = new Date(response.data.updated_at);
@@ -184,52 +198,6 @@ export class DialogoDetallesComponent implements OnInit {
       }
     );
   }
-
-  /*modificarLotes(){
-    if(!this.dataSourceLotes){
-      this.dataSourceLotes = new MatTableDataSource<any>([]);
-      this.dataSourceLotes.paginator = this.lotesPaginator;
-      this.dataSourceLotes.sort = this.sort;
-    }
-    
-    this.mostrarListaLotes = !this.mostrarListaLotes;
-
-    if(this.mostrarListaLotes){
-      this.listaSelectDetalles = [];
-      this.empaqueDetalles.forEach(item => {
-        if(item.id){
-          this.listaSelectDetalles.push(item);
-        }
-      });
-
-      this.isLoading = true;
-      this.bienesServiciosService.getLotes(this.data.id).subscribe(
-        response =>{
-          if(response.error) {
-            let errorMessage = response.error;
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
-          } else {
-            this.dataSourceLotes.data = response.data.lotes;
-            this.dataSourceLotes.paginator = this.lotesPaginator;
-            this.dataSourceLotes.sort = this.sort;
-          }
-          this.isLoading = false;
-        },
-        errorResponse =>{
-          var errorMessage = "Ocurrió un error.";
-          if(errorResponse.status == 409){
-            errorMessage = errorResponse.error.error.message;
-          }
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
-          this.isLoading = false;
-        }
-      );
-    }else{
-      this.dataSourceLotes = new MatTableDataSource<any>([]);
-      this.dataSourceLotes.paginator = this.lotesPaginator;
-      this.dataSourceLotes.sort = this.sort;
-    }
-  }*/
 
   nuevoArticulo(){
     this.formArticulo.reset();
@@ -284,9 +252,11 @@ export class DialogoDetallesComponent implements OnInit {
 
       datosArticulo.familia_id = datosArticulo.familia.id;
       datosArticulo.clave_partida_especifica = datosArticulo.partida_especifica.clave;
+      datosArticulo.unidad_medida_id = datosArticulo.unidad_medida.id;
       
       delete datosArticulo.familia;
       delete datosArticulo.partida_especifica;
+      delete datosArticulo.unidad_medida;
 
       datosArticulo.detalles = [];
       this.empaqueDetalles.forEach(item =>{
@@ -338,6 +308,7 @@ export class DialogoDetallesComponent implements OnInit {
         if(datosDetalle.id){
           datosDetalle.editado = true;
         }
+        datosDetalle.existencias = this.empaqueDetalles[this.selectedDetalleIndex].existencias;
         this.empaqueDetalles[this.selectedDetalleIndex] = datosDetalle;
       }else{
         this.empaqueDetalles.push(datosDetalle);

@@ -435,7 +435,7 @@ class AlmacenEntradaController extends Controller
                                 'empaque_detalle_id'    => (isset($lote['empaque_detalle_id']))?$lote['empaque_detalle_id']:null,
                                 'programa_id'           => $movimiento->programa_id,
                                 'existencia'            => $lote['cantidad'],
-                                'existencia_unidades'   => ($articulo_data->puede_surtir_unidades)?($piezas_x_empaque * $lote['cantidad']):null,
+                                'existencia_unidades'   => $piezas_x_empaque * $lote['cantidad'],
 
                                 'marca_id'              => (isset($lote['marca_id']))?$lote['marca_id']:null,
                                 'modelo'                => (isset($lote['modelo']))?$lote['modelo']:null,
@@ -484,9 +484,9 @@ class AlmacenEntradaController extends Controller
                             
                             if($lote_guardado){
                                 $lote_guardado->existencia += $stock_lote['existencia'];
-                                if($articulo_data->puede_surtir_unidades){
-                                    $lote_guardado->existencia_unidades += ($piezas_x_empaque * $stock_lote['existencia']);
-                                }
+                                //if($articulo_data->puede_surtir_unidades){
+                                $lote_guardado->existencia_unidades += ($piezas_x_empaque * $stock_lote['existencia']);
+                                //}
                                 $lote_guardado->user_id = $loggedUser->id;
                                 $lote_guardado->save();
                             }else{
@@ -698,7 +698,9 @@ class AlmacenEntradaController extends Controller
                 //throw new \Exception("El usuario no tiene permiso para realizar esta acción", 1);
             }
 
-            $movimiento = Movimiento::with('listaArticulos.stock.articulo')->find($id);
+            $movimiento = Movimiento::with(['listaArticulos.stock'=>function($stock){
+                                                $stock->with('articulo','empaqueDetalle');
+                                            }])->find($id);
 
             if($movimiento->estatus != 'FIN' && $movimiento->estatus != 'PERE'){
                 return response()->json(['error'=>'No se puede cancelar este movimiento, no tiene el estatus requerido para dicha acción'],HttpResponse::HTTP_OK);
@@ -710,14 +712,19 @@ class AlmacenEntradaController extends Controller
             $control_stocks = [];
             foreach ($movimiento->listaArticulos as $articulo) {
                 $stock = $articulo->stock;
+
+                if($stock->empaqueDetalle){
+                    $piezas_x_empaque = $stock->empaqueDetalle->piezas_x_empaque;
+                }else{
+                    $piezas_x_empaque = 1;
+                }
+
                 if($articulo->modo_movimiento == 'UNI'){
                     $stock->existencia_unidades = $stock->existencia_unidades - $articulo->cantidad;
-                    $stock->existencia = $stock->existencia - floor($articulo->cantidad / $stock->articulo->unidades_x_empaque);
+                    $stock->existencia = $stock->existencia - floor($articulo->cantidad / $piezas_x_empaque);
                 }else{
                     $stock->existencia = $stock->existencia - $articulo->cantidad;
-                    if($stock->articulo->puede_surtir_unidades){
-                        $stock->existencia_unidades = $stock->existencia_unidades - ($articulo->cantidad * $stock->articulo->unidades_x_empaque);
-                    }
+                    $stock->existencia_unidades = $stock->existencia_unidades - ($articulo->cantidad * $piezas_x_empaque);
                 }
                 
                 if($stock->existencia < 0){

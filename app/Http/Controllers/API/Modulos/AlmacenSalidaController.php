@@ -439,9 +439,9 @@ class AlmacenSalidaController extends Controller
                                         $lote_guardado->existencia = floor($lote_guardado->existencia_unidades / $piezas_x_empaque);
                                     }else{
                                         $lote_guardado->existencia -= $lote['salida'];
-                                        if($datos_articulo->puede_surtir_unidades){
-                                            $lote_guardado->existencia_unidades -= ($lote['salida'] * $piezas_x_empaque);
-                                        }
+                                        //if($datos_articulo->puede_surtir_unidades){
+                                        $lote_guardado->existencia_unidades -= ($lote['salida'] * $piezas_x_empaque);
+                                        //}
                                     }
                                     $lote_guardado->user_id = $loggedUser->id;
                                     $lote_guardado->save();
@@ -792,9 +792,9 @@ class AlmacenSalidaController extends Controller
                         $stock->existencia = floor($stock->existencia_unidades / $piezas_x_empaque);
                     }else{
                         $stock->existencia += $articulo_movimiento->cantidad;
-                        if($articulo_movimiento->articulo->puede_surtir_unidades){
-                            $stock->existencia_unidades += ($articulo_movimiento->cantidad * $piezas_x_empaque);
-                        }
+                        //if($articulo_movimiento->articulo->puede_surtir_unidades){
+                        $stock->existencia_unidades += ($articulo_movimiento->cantidad * $piezas_x_empaque);
+                        //}
                     }
                     $stock->save();
                 }
