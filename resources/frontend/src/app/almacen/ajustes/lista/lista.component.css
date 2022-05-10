@@ -67,9 +67,9 @@ table td {
     color:rgba(250, 70, 4,0.75);
 }
 
-.con-existencias{
+/*.con-existencias{
     font-weight: bold;
-}
+}*/
 
 .inactivo{
     color:rgb(154, 153, 153);
@@ -80,11 +80,7 @@ table .mat-row:hover{
     cursor: pointer;
 }
 
-.mat-column-descontinuado{
-    width:65px;
-}
-
-.mat-column-tipo_familia{
+.mat-column-almacen{
     width:155px;
 }
 

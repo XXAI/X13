@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlmacenService } from '../../almacen.service';
 import { EntradasService } from '../entradas.service';
 import { SharedService } from '../../../shared/shared.service';
@@ -73,6 +73,7 @@ export class EntradaComponent implements OnInit {
 
   filteredProveedores: Observable<any[]>;
   filteredProgramas: Observable<any[]>;
+  filteredUnidadesMedicas: Observable<any[]>;
 
   totalesRecibidos: any;
   tieneSolicitado: boolean;
@@ -220,6 +221,7 @@ export class EntradaComponent implements OnInit {
       }else{
         this.formMovimiento.get('tipo_movimiento_id').reset();
       }
+      this.checarTipoRecepcion(this.formMovimiento.get('tipo_movimiento_id').value);
     }
   }
 
@@ -293,6 +295,11 @@ export class EntradaComponent implements OnInit {
                 this.checarAlmacenSeleccionado();
                 if(this.formMovimiento.get('tipo_movimiento_id')){
                   this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
+                  this.checarTipoMovimientoSeleccinado();
+                  if(this.formMovimiento.get('unidad_medica_movimiento')){
+                    this.formMovimiento.get('unidad_medica_movimiento').patchValue(response.data.unidad_medica_movimiento);
+                    this.formMovimiento.get('unidad_medica_movimiento_id').patchValue(response.data.unidad_medica_movimiento_id);
+                  }
                 }
               }
               
@@ -685,6 +692,47 @@ export class EntradaComponent implements OnInit {
                         );
     }
   }
+
+  checarTipoMovimientoSeleccinado(){
+    if(this.formMovimiento.get('tipo_movimiento_id') && this.formMovimiento.get('tipo_movimiento_id').value){
+      this.checarTipoRecepcion(this.formMovimiento.get('tipo_movimiento_id').value);
+    }
+  }
+
+  checarTipoRecepcion(tipo_movimiento_id:any){
+    let tipo_movimiento = this.catalogos['tipos_movimiento'].find(x => x.id == tipo_movimiento_id);
+    if(tipo_movimiento && tipo_movimiento.clave == 'RUMD'){
+      if(!this.formMovimiento.get('unidad_medica_movimiento')){
+        this.formMovimiento.addControl('unidad_medica_movimiento',new FormControl('',Validators.required));
+        this.formMovimiento.addControl('unidad_medica_movimiento_id',new FormControl(''));          
+        this.filteredUnidadesMedicas = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
+                              map(nombre => nombre ? this._filter('unidades_medicas',nombre,'nombre') : this.catalogos['unidades_medicas'].slice())
+                            );
+        this.formMovimiento.removeControl('proveedor');
+        this.formMovimiento.removeControl('proveedor_id');
+        this.filteredProveedores = null;
+        this.datosForm.proveedor = false;
+        this.datosForm.proveedor_id = false;
+        this.datosForm.unidad_medica_movimiento = true;
+        this.datosForm.unidad_medica_movimiento_id = true;
+      }
+    }else{
+      if(!this.formMovimiento.get('proveedor')){
+        this.formMovimiento.addControl('proveedor',new FormControl('',Validators.required));
+        this.formMovimiento.addControl('proveedor_id',new FormControl(''));          
+        this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
+                          map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
+                        );
+        this.formMovimiento.removeControl('unidad_medica_movimiento');
+        this.formMovimiento.removeControl('unidad_medica_movimiento_id');
+        this.filteredUnidadesMedicas = null;
+        this.datosForm.proveedor = true;
+        this.datosForm.proveedor_id = true;
+        this.datosForm.unidad_medica_movimiento = false;
+        this.datosForm.unidad_medica_movimiento_id = false;
+      }
+    }
+  }
   
   agregarArticulo(articulo){ 
     //console.log(articulo);
@@ -791,6 +839,7 @@ export class EntradaComponent implements OnInit {
             this.cargarDatosModificacion(dialogResponse);
 
             this.checarAlmacenSeleccionado();
+            this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
             this.formMovimiento.patchValue(this.datosEntrada);
           }else{
             this.datosEntrada.modificacion_activa = null;
@@ -835,7 +884,7 @@ export class EntradaComponent implements OnInit {
         let params:any = this.formMovimiento.value;
         params.fecha_movimiento = this.datepipe.transform(params.fecha_movimiento, 'yyyy-MM-dd');
         params.proveedor_id = (params.proveedor)?params.proveedor.id:null;
-        //params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
+        params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
 
         this.almacenService.guardarModificacion(this.datosEntrada.id,params).subscribe(
           response =>{
@@ -899,6 +948,7 @@ export class EntradaComponent implements OnInit {
         formData.programa_id = this.datosEntrada.programa_id;
       }else{
         formData.proveedor_id = (formData.proveedor)?formData.proveedor.id:null;
+        formData.unidad_medica_movimiento_id = (formData.unidad_medica_movimiento)?formData.unidad_medica_movimiento.id:null;
         formData.programa_id = (formData.programa)?formData.programa.id:null;
 
         formData.fecha_movimiento = this.datepipe.transform(formData.fecha_movimiento, 'yyyy-MM-dd');

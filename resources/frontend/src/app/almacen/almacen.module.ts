@@ -11,6 +11,7 @@ import { ExistenciasModule } from './existencias/existencias.module';
 import { ImportarModule } from "./importar/importar.module";
 import { ToolsModule } from './tools/tools.module';
 import { AdminModificacionesModule } from './admin-modificaciones/admin-modificaciones.module';
+import { AjustesModule } from './ajustes/ajustes.module';
 
 
 @NgModule({
@@ -23,6 +24,7 @@ import { AdminModificacionesModule } from './admin-modificaciones/admin-modifica
     AlmacenRoutingModule,
     ExistenciasModule,
     AdminModificacionesModule,
+    AjustesModule,
     ImportarModule,
     ToolsModule
   ]

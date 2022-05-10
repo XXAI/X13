@@ -180,7 +180,7 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.tipo_movimiento_id">
                     <mat-label>Tipo de Entrada</mat-label>
-                    <mat-select formControlName="tipo_movimiento_id" required>
+                    <mat-select formControlName="tipo_movimiento_id" (selectionChange)="checarTipoMovimientoSeleccinado()" required>
                         <mat-option *ngIf="catalogos['tipos_movimiento'].length == 0" disabled>Sin Tipos de Movimiento</mat-option>
                         <mat-option *ngFor="let item of catalogos['tipos_movimiento']" [value]="item.id">
                             {{item.descripcion}}
@@ -255,9 +255,25 @@
                     <mat-hint align="end" *ngIf="formMovimiento.get('proveedor').value">[{{formMovimiento.get('proveedor').value.rfc}}]</mat-hint>
                 </mat-form-field>
 
-                <mat-form-field fxFlex *ngIf="!datosForm.proveedor && datosEntrada">
+                <mat-form-field fxFlex *ngIf="!datosForm.proveedor && datosEntrada && !datosForm.unidad_medica_movimiento">
                     <mat-label>Proveedor</mat-label>
                     <input matInput [value]="(datosEntrada.proveedor)?datosEntrada.proveedor.nombre:'Sin Proveedor'" disabled>
+                </mat-form-field>
+
+                <mat-form-field fxFlex *ngIf="datosForm.unidad_medica_movimiento">
+                    <mat-label>Unidad Médica Origen</mat-label>
+                    <input #unidadMedicaInput type="text" placeholder="Teclee para buscar una Unidad Médica" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas">
+                    <button mat-icon-button matPrefix>
+                        <mat-icon>list_alt</mat-icon>
+                    </button>
+                    <mat-autocomplete #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
+                        <mat-option *ngIf="catalogos['unidades_medicas'].length == 0" value="">No hay unidades médicas capturados</mat-option>
+                        <mat-option *ngFor="let unidad_medica of filteredUnidadesMedicas | async" [value]="unidad_medica">
+                            {{unidad_medica.nombre}} <mat-hint>[{{unidad_medica.clues}}]</mat-hint>
+                        </mat-option>
+                    </mat-autocomplete>
+                    <mat-hint *ngIf="formMovimiento.get('unidad_medica_movimiento').value"><mat-icon>{{(formMovimiento.get('unidad_medica_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                    <mat-hint align="end" *ngIf="formMovimiento.get('unidad_medica_movimiento').value">[{{formMovimiento.get('unidad_medica_movimiento').value.clues}}]</mat-hint>
                 </mat-form-field>
 
                 <mat-form-field fxFlex="none" *ngIf="datosForm.referencia_folio">

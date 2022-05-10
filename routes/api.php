@@ -102,6 +102,8 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('partidas-bienes-servicios/',                    'API\Modulos\PartidasController@partidas');
     Route::get('familias-bienes-servicios/',                    'API\Modulos\FamiliasController@familias');
     Route::apiResource('catalogo-almacenes',                    'API\ConfiguracionUnidad\AlmacenesController');
+    Route::get('ajustes/articulos',                             'API\Modulos\AlmacenAjustesController@listaArticulos');
+    Route::get('ajustes/articulo-lotes/{id}',                   'API\Modulos\AlmacenAjustesController@articuloLotes');
 
     /**
      * Modulos Pedidos

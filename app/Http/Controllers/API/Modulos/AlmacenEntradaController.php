@@ -266,6 +266,7 @@ class AlmacenEntradaController extends Controller
                     'fecha_movimiento' => $parametros['fecha_movimiento'],
                     'programa_id' => (isset($parametros['programa_id']) && $parametros['programa_id'])?$parametros['programa_id']:null,
                     'proveedor_id' => (isset($parametros['proveedor_id']) && $parametros['proveedor_id'])?$parametros['proveedor_id']:null,
+                    'unidad_medica_movimiento_id' => (isset($parametros['unidad_medica_movimiento_id']) && $parametros['unidad_medica_movimiento_id'])?$parametros['unidad_medica_movimiento_id']:null,
                     'descripcion' => 'Entrada Manual: '.$tipo_movimiento->descripcion,
                     'documento_folio' => $parametros['documento_folio'],
                     'referencia_folio' => $parametros['referencia_folio'],
