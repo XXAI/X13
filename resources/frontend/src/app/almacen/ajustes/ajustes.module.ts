@@ -4,10 +4,11 @@ import { SharedModule } from 'src/app/shared/shared.module';
 
 import { AjustesRoutingModule } from './ajustes-routing.module';
 import { ListaComponent } from './lista/lista.component';
+import { DialogoDetallesArticuloComponent } from './dialogo-detalles-articulo/dialogo-detalles-articulo.component';
 
 
 @NgModule({
-  declarations: [ListaComponent],
+  declarations: [ListaComponent, DialogoDetallesArticuloComponent],
   imports: [
     CommonModule,
     SharedModule,

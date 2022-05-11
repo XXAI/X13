@@ -103,7 +103,9 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('familias-bienes-servicios/',                    'API\Modulos\FamiliasController@familias');
     Route::apiResource('catalogo-almacenes',                    'API\ConfiguracionUnidad\AlmacenesController');
     Route::get('ajustes/articulos',                             'API\Modulos\AlmacenAjustesController@listaArticulos');
-    Route::get('ajustes/articulo-lotes/{id}',                   'API\Modulos\AlmacenAjustesController@articuloLotes');
+    Route::get('ajustes/articulo-lotes',                        'API\Modulos\AlmacenAjustesController@articuloLotes');
+    Route::get('ajustes/lote-movimientos/{id}',                 'API\Modulos\AlmacenAjustesController@loteMovimientos');
+    Route::put('ajustes/guardar-cambios-lote/{id}',             'API\Modulos\AlmacenAjustesController@guardarCambiosLote');
 
     /**
      * Modulos Pedidos

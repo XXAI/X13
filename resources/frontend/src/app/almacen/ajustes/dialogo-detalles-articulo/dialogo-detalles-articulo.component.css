@@ -1,0 +1,233 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.salida-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.label-info-delete{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+    background-color: red;
+    border-left: 1px solid whitesmoke;
+    border-right: 1px solid whitesmoke;
+}
+
+.loading-lotes{
+    padding: 25px;
+    text-align: center;
+    font-size: larger;
+    font-style: italic;
+    color:#4a4848;
+    cursor: default;
+}
+
+.boton-accion{
+    border-left: 1px solid whitesmoke;
+    background-color: #787878;
+    border-radius: 0px;
+}
+
+.boton-accion-medio{
+    border-radius: 0px;
+}
+
+.empaque-detalles{
+    padding: 0px;
+    margin-top: 10px;
+}
+
+.empaque-detalles .titulo{
+    background-color: cadetblue;
+    padding: 5px;
+    border-radius: 4px 4px 0px 0px;
+    font-weight: 500;
+    color:whitesmoke;
+}
+
+.empaque-detalles .detalles{
+    padding: 5px;
+    overflow: auto;
+    border-left: 1px solid rgba(0,0,0,.12);
+}
+
+::ng-deep .empaque-detalles .detalles .mat-list-text{
+    padding: 0px !important;
+}
+
+.panel-formulario{
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    padding: 10px;
+    background-color: whitesmoke;
+}
+
+/*.empaque-detalles .formulario{
+    
+}*/
+
+.empaque-detalles .botones{
+    padding-top: 10px;
+}
+
+.para-borrar{
+    color:red;
+}
+
+.icono-dato{
+    padding: 0px 5px;
+    border-left: 1px solid rgba(0,0,0,.12);
+}
+
+/*.tabla-contenido{
+    min-height: 150px;
+    max-height: 500px;
+}*/
+
+.extra-data{
+    font-size: smaller;
+}
+
+.lista-movimientos-table{
+    width: 100%;
+    cursor: default;
+}
+
+.lista-movimientos-table th{
+    text-align: center;
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.lista-movimientos-table tr.mat-row:hover {
+    background-color: #F5F5F5;
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.datos-articulo{
+    padding: 5px;
+    background-color:#420101;
+    color:whitesmoke;
+}
+
+.info-empaque-detalle{
+    margin: 5px;
+    background-color:#658eff;
+    border-radius: 4px;
+}
+
+.info-existencias{
+    font-size: inherit;
+}
+
+.info-existencias span{
+    font-weight: 500;
+}
+
+.info-existencias span.nueva-existencia{
+    color:darkgreen;
+}
+
+.fake-input{
+    border-radius: 4px;
+    padding: 0.75em;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: 1.125;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    letter-spacing: normal;
+    color: rgba(255,255,255,.87);
+    cursor:default;
+    /*background-color: rgba(0,0,0,.04);*/
+}
+
+.fake-input:hover{
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.fake-input .label{
+    display: block;
+    font-size: small;
+    color: rgba(255,255,255,.54);
+    white-space: nowrap;
+}
+
+.fake-input .value{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    white-space: nowrap;
+    padding: 0 5px;
+}
+
+.fake-input .value-text{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    padding: 0 5px;
+}
+
+.lista-items{
+    border-top: 1px solid rgba(0,0,0,.12);
+    border-right: 1px solid rgba(0,0,0,.12);
+}
+
+.item-detalles{
+    border-top: 1px solid rgba(0,0,0,.12);
+}
+
+.detalles-sin-lote{
+    margin: 10px;
+    padding: 40px;
+    text-align: center;
+    font-style: italic;
+    color: #4a4848;
+    border-radius: 5px;
+    background-color: whitesmoke;
+    cursor: default;
+}
+
+.detalles-lote{
+    padding: 8px;
+}
+
+.botones{
+    padding: 8px;
+    background-color: whitesmoke;
+}
+
+.encabezado{
+    padding: 5px;
+    font-weight: 500;
+    background-color: cadetblue;
+}
+
+.lista{
+    overflow: auto;
+}
+
+.tabla-movimientos{
+    overflow: auto;
+}

@@ -9,12 +9,30 @@ import { map } from 'rxjs/operators';
 })
 export class AjustesService {
   url_articulos = `${environment.base_url}/ajustes/articulos`;
-  url_lotes = `${environment.base_url}/ajustes/articulo-lotes/`;
+  url_lotes = `${environment.base_url}/ajustes/articulo-lotes`;
+  url_movimientos = `${environment.base_url}/ajustes/lote-movimientos/`;
+  url_guardar = `${environment.base_url}/ajustes/guardar-cambios-lote/`;
 
   constructor(private http: HttpClient) { }
 
-  getLotes(id) {
-    return this.http.get<any>(this.url_lotes+id,{}).pipe(
+  guardarCambioLote(id,payload) {
+    return this.http.put<any>(this.url_guardar+id,payload).pipe(
+      map( (response: any) => {
+        return response;
+      }
+    ));
+  }
+
+  getMovimientos(id) {
+    return this.http.get<any>(this.url_movimientos+id,{}).pipe(
+      map( (response: any) => {
+        return response;
+      }
+    ));
+  }
+
+  getLotes(payload) {
+    return this.http.get<any>(this.url_lotes,{params: payload}).pipe(
       map( (response: any) => {
         return response;
       }

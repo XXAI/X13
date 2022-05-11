@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { SharedService } from 'src/app/shared/shared.service';
 import { AjustesService } from '../ajustes.service';
+import { DialogoDetallesArticuloComponent } from '../dialogo-detalles-articulo/dialogo-detalles-articulo.component';
 
 @Component({
   selector: 'app-lista',
@@ -79,22 +80,22 @@ export class ListaComponent implements OnInit {
     return event;
   }
 
-  mostrarDialogoArticulo(id:number = null){
-    /*let configDialog = {
+  mostrarDialogoArticulo(articuloId:number, almacenId:number){
+    let configDialog = {
       width: '100%',
       height: '100%',
       disableClose: true,
-      data:{id: id},
+      data:{articuloId: articuloId, almacenId: almacenId},
       panelClass: 'no-padding-dialog'
     };
 
-    const dialogRef = this.dialog.open(DialogoDetallesComponent, configDialog);
+    const dialogRef = this.dialog.open(DialogoDetallesArticuloComponent, configDialog);
     dialogRef.afterClosed().subscribe(dialogResponse => {
       if(dialogResponse){
         console.log('Response: ',dialogResponse);
         this.loadListadoArticulos(this.pageEvent);
       }
-    });*/
+    });
   }
 
   cleanSearch(){
