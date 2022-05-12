@@ -38,7 +38,8 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   loteSeleccionado:boolean;
   formDetallesLote:FormGroup;
   existencias:any;
-  nuevaExistencia: number;
+  resumenMovimientos:any;
+  nuevaExistencia: any;
 
   empaqueDetalleSeleccionado:any;
 
@@ -108,6 +109,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.existencias.piezas = lote.existencia_unidades;
     this.existencias.x_pieza = this.empaqueDetalleSeleccionado.piezas_x_empaque;
 
+    this.resumenMovimientos = null;
     this.dataSourceMovimientos = new MatTableDataSource<any>([]);
     this.dataSourceMovimientos.paginator = this.lotesPaginator;
     this.dataSourceMovimientos.sort = this.sort;
@@ -115,7 +117,6 @@ export class DialogoDetallesArticuloComponent implements OnInit {
 
     this.ajustesService.getMovimientos(lote.id).subscribe(
       response =>{
-        let keep:boolean = false;
         if(response.error) {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
@@ -135,8 +136,38 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           this.dataSourceMovimientos = new MatTableDataSource<any>(response.data);
           this.dataSourceMovimientos.paginator = this.lotesPaginator;
           this.dataSourceMovimientos.sort = this.sort;
+
+          this.resumenMovimientos = {
+            'ENT':{'nrm':0,'uni':0},
+            'SAL':{'nrm':0,'uni':0}
+          }
+          response.resumen.forEach(item => {
+            if(this.resumenMovimientos[item.direccion_movimiento]){
+              if(item.modo_movimiento == 'UNI'){
+                this.resumenMovimientos[item.direccion_movimiento]['uni'] += item.cantidad;
+              }else{
+                this.resumenMovimientos[item.direccion_movimiento]['nrm'] += item.cantidad;
+            }
+            }
+            /* 
+            if($suma->direccion_movimiento == 'ENT'){
+                if($suma->modo_movimiento == 'UNI'){
+                    $total_entradas_piezas += $suma->cantidad;
+                }else{
+                    $total_entradas_piezas += ($suma->cantidad * $nuevo_empaque->piezas_x_empaque);
+                }
+            }else if($suma->direccion_movimiento == 'SAL'){
+                if($suma->modo_movimiento == 'UNI'){
+                    $total_salidas_piezas += $suma->cantidad;
+                }else{
+                    $total_salidas_piezas += ($suma->cantidad * $nuevo_empaque->piezas_x_empaque);
+                }
+            }
+            */
+          });
+          //response.data.resumen;
         }
-        this.isLoadingMovimientos = keep;
+        this.isLoadingMovimientos = false;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -150,15 +181,20 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   }
 
   cambiarDetalle(event){
-    this.nuevaExistencia = 2;
-    let restante = this.existencias.piezas - (this.existencias.cantidad * this.existencias.x_pieza);
+    this.nuevaExistencia = null;
     this.empaqueDetalleSeleccionado = this.empaqueDetalles.find(x => x.id == event.value);
-    
-    let nueva_existencia = (this.existencias.cantidad * this.empaqueDetalleSeleccionado.piezas_x_empaque) + restante;
-    if(nueva_existencia != this.existencias.piezas){
-      this.nuevaExistencia = nueva_existencia;
-    }else{
-      this.nuevaExistencia = 0;
+
+    let entradas_uni = +this.resumenMovimientos['ENT']['uni'] + (+this.resumenMovimientos['ENT']['nrm'] * this.empaqueDetalleSeleccionado.piezas_x_empaque);
+    let salidas_uni = +this.resumenMovimientos['SAL']['uni'] + (+this.resumenMovimientos['SAL']['nrm'] * this.empaqueDetalleSeleccionado.piezas_x_empaque);
+
+    let existencia_uni = entradas_uni - salidas_uni;
+    let existencia = Math.floor(existencia_uni / this.empaqueDetalleSeleccionado.piezas_x_empaque);
+
+    if(existencia_uni != this.existencias.piezas){
+      this.nuevaExistencia = {
+        'nrm':existencia,
+        'uni':existencia_uni
+      };
     }
   }
 
@@ -168,7 +204,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.existencias.cantidad = 0;
     this.existencias.piezas = 0;
     this.existencias.x_pieza = 0;
-    this.nuevaExistencia = 0;
+    this.nuevaExistencia = null;
     this.dataSourceMovimientos = new MatTableDataSource<any>([]);
   }
 

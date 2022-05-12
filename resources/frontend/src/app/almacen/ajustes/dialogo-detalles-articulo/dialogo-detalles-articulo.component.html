@@ -76,11 +76,15 @@
                 </div>
                 <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="botones" *ngIf="loteSeleccionado">
                     <div fxFlex class="info-existencias">
-                        <span>Existencia: </span>{{existencias.cantidad | number:'1.0-0'}}<br>
-                        <span>Piezas: </span>{{existencias.piezas | number:'1.0-0'}} <span class="nueva-existencia" *ngIf="nuevaExistencia"> -> [{{nuevaExistencia | number:'1.0-0'}}]</span>
+                        <span>Existencia: </span>{{existencias.cantidad | number:'1.0-0'}} <span *ngIf="nuevaExistencia" class="nueva-existencia">=> {{nuevaExistencia['nrm'] | number:'1.0-0'}}</span><br>
+                        <span>Piezas: </span>{{existencias.piezas | number:'1.0-0'}} <span *ngIf="nuevaExistencia" class="nueva-existencia">=> {{nuevaExistencia['uni'] | number:'1.0-0'}}</span>
+                    </div>
+                    <div fxFlex class="info-resumen" *ngIf="resumenMovimientos">
+                        <span>[ENT] NRM: </span>{{resumenMovimientos['ENT']['nrm'] | number:'1.0-0'}}<span> | UNI: </span>{{resumenMovimientos['ENT']['uni'] | number:'1.0-0'}}<br>
+                        <span>[SAL] NRM: </span>{{resumenMovimientos['SAL']['nrm'] | number:'1.0-0'}}<span> | UNI: </span>{{resumenMovimientos['SAL']['uni'] | number:'1.0-0'}}
                     </div>
                     <div fxFlex></div>
-                    <button mat-button fxFlex="none" (click)="cancelarEdicioLote(); listaSeleccionableLotes.deselectAll();">Cancelar</button>
+                    <button mat-stroked-button fxFlex="none" (click)="cancelarEdicioLote(); listaSeleccionableLotes.deselectAll();">Cancelar</button>
                     <button mat-flat-button color="primary" fxFlex="none" (click)="guardarCambiosLote()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> Guardar</button>
                 </div>
                 <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" class="detalles-lote" *ngIf="loteSeleccionado" [formGroup]="formDetallesLote">

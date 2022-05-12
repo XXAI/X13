@@ -19,6 +19,7 @@ use App\Models\Empaque;
 use App\Models\UnidadMedida;
 use App\Models\UnidadMedica;
 use App\Models\Almacen;
+use App\Models\MovimientoArticulo;
 use App\Models\Stock;
 use Response, Validator;
 
@@ -314,7 +315,43 @@ class AdminBienesServiciosController extends Controller{
                                     if($total_lotes){
                                         for($j = 0; $j < $total_lotes; $j++){
                                             $lote = $lotes[$j];
-                                            if($lote->existencia_unidades){
+
+                                            $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
+                                                    ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
+                                                    ->where('movimientos.estatus','FIN')
+                                                    ->where('movimientos_articulos.stock_id',$lote->id)
+                                                    ->groupBy('movimientos_articulos.stock_id')
+                                                    ->groupBy('movimientos_articulos.direccion_movimiento')
+                                                    ->groupBy('movimientos_articulos.modo_movimiento')
+                                                    ->get();
+                                            //
+                                            $total_entradas_piezas = 0;
+                                            $total_salidas_piezas = 0;
+
+                                            for($i  = 0; $i < count($suma_movimientos); $i++){
+                                                $suma = $suma_movimientos[$i];
+                                                if($suma->direccion_movimiento == 'ENT'){
+                                                    if($suma->modo_movimiento == 'UNI'){
+                                                        $total_entradas_piezas += $suma->cantidad;
+                                                    }else{
+                                                        $total_entradas_piezas += ($suma->cantidad * $detalle['piezas_x_empaque']);
+                                                    }
+                                                }else if($suma->direccion_movimiento == 'SAL'){
+                                                    if($suma->modo_movimiento == 'UNI'){
+                                                        $total_salidas_piezas += $suma->cantidad;
+                                                    }else{
+                                                        $total_salidas_piezas += ($suma->cantidad * $detalle['piezas_x_empaque']);
+                                                    }
+                                                }
+                                            }
+
+                                            $existencias_piezas = $total_entradas_piezas - $total_salidas_piezas;
+                                            $existencias = FLOOR($existencias_piezas / $detalle['piezas_x_empaque']);
+                                            
+                                            $lote->existencia = $existencias;
+                                            $lote->existencia_unidades = $existencias_piezas;
+
+                                            /*if($lote->existencia_unidades){
                                                 if($lote->existencia_unidades < $detalle_update->piezas_x_empaque){
                                                     $piezas_extra = $lote->existencia_unidades;
                                                 }else{
@@ -324,7 +361,7 @@ class AdminBienesServiciosController extends Controller{
                                                 $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']) + $piezas_extra;
                                             }else{
                                                 $lote->existencia_unidades = ($lote->existencia * $detalle['piezas_x_empaque']);
-                                            }
+                                            }*/
                                             $lote->save();
                                             
                                         }

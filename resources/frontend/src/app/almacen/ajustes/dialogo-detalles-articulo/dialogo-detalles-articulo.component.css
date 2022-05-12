@@ -138,13 +138,29 @@
     margin: 5px;
     background-color:#658eff;
     border-radius: 4px;
+    cursor:default;
 }
 
 .info-existencias{
     font-size: inherit;
+    cursor:default;
 }
 
 .info-existencias span{
+    font-weight: 500;
+}
+
+.info-resumen{
+    font-size: inherit;
+    border-left: 1px solid rgba(0,0,0,.12);
+    padding-left: 5px;
+    border-right: 1px solid rgba(0,0,0,.12);
+    padding-right: 5px;
+    white-space: nowrap;
+    cursor:default;
+}
+
+.info-resumen span{
     font-weight: 500;
 }
 

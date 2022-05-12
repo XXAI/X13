@@ -45,7 +45,16 @@ class AlmacenAjustesController extends Controller{
                             ->orderBy('movimientos.fecha_movimiento')
                             ->get();
             //
-            return response()->json(['data'=>$lotes],HttpResponse::HTTP_OK);
+            $resumen_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
+                                    ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
+                                    ->where('movimientos.estatus','FIN')
+                                    ->where('movimientos_articulos.stock_id',$id)
+                                    ->groupBy('movimientos_articulos.stock_id')
+                                    ->groupBy('movimientos_articulos.direccion_movimiento')
+                                    ->groupBy('movimientos_articulos.modo_movimiento')
+                                    ->get();
+            //
+            return response()->json(['data'=>$lotes,'resumen'=>$resumen_movimientos],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
@@ -69,7 +78,7 @@ class AlmacenAjustesController extends Controller{
                             ->where('stocks.bien_servicio_id',$parametros['articulo'])
                             ->where('stocks.almacen_id',$parametros['almacen'])
                             ->get();
-            
+            //
             $return_data = [
                 'almacen' => $almacen,
                 'articulo' => $articulo,
@@ -182,14 +191,41 @@ class AlmacenAjustesController extends Controller{
                 }
 
                 if($viejo_empaque->piezas_x_empaque != $nuevo_empaque->piezas_x_empaque){
-                    $suma_entradas = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'))
+                    $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
                                                     ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
                                                     ->where('movimientos.estatus','FIN')
-                                                    ->where('movimientos.direccion_movimiento','ENT')
                                                     ->where('movimientos_articulos.stock_id',$stock->id)
                                                     ->groupBy('movimientos_articulos.stock_id')
-                                                    ->first();
-                    if($stock->existencia_unidades){
+                                                    ->groupBy('movimientos_articulos.direccion_movimiento')
+                                                    ->groupBy('movimientos_articulos.modo_movimiento')
+                                                    ->get();
+                    //
+                    $total_entradas_piezas = 0;
+                    $total_salidas_piezas = 0;
+
+                    for($i  = 0; $i < count($suma_movimientos); $i++){
+                        $suma = $suma_movimientos[$i];
+                        if($suma->direccion_movimiento == 'ENT'){
+                            if($suma->modo_movimiento == 'UNI'){
+                                $total_entradas_piezas += $suma->cantidad;
+                            }else{
+                                $total_entradas_piezas += ($suma->cantidad * $nuevo_empaque->piezas_x_empaque);
+                            }
+                        }else if($suma->direccion_movimiento == 'SAL'){
+                            if($suma->modo_movimiento == 'UNI'){
+                                $total_salidas_piezas += $suma->cantidad;
+                            }else{
+                                $total_salidas_piezas += ($suma->cantidad * $nuevo_empaque->piezas_x_empaque);
+                            }
+                        }
+                    }
+
+                    $existencias_piezas = $total_entradas_piezas - $total_salidas_piezas;
+                    $existencias = FLOOR($existencias_piezas / $nuevo_empaque->piezas_x_empaque);
+                    
+                    $stock->existencia = $existencias;
+                    $stock->existencia_unidades = $existencias_piezas;
+                    /*if($stock->existencia_unidades){
                         if($stock->existencia_unidades < $viejo_empaque->piezas_x_empaque){
                             $piezas_extra = $stock->existencia_unidades;
                         }else{
@@ -199,7 +235,7 @@ class AlmacenAjustesController extends Controller{
                         $stock->existencia_unidades = ($stock->existencia * $nuevo_empaque->piezas_x_empaque) + $piezas_extra;
                     }else{
                         $stock->existencia_unidades = ($stock->existencia * $nuevo_empaque->piezas_x_empaque);
-                    }
+                    }*/
                 }
 
                 $stock->empaque_detalle_id = $parametros['empaque_detalle_id'];
