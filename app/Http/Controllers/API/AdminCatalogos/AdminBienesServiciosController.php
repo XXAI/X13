@@ -318,7 +318,10 @@ class AdminBienesServiciosController extends Controller{
 
                                             $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
                                                     ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
-                                                    ->where('movimientos.estatus','FIN')
+                                                    //->where('movimientos.estatus','FIN')
+                                                    ->where(function($where){
+                                                        $where->where('movimientos.estatus','!=','BOR')->where('movimientos.estatus','!=','CAN');
+                                                    })
                                                     ->where('movimientos_articulos.stock_id',$lote->id)
                                                     ->groupBy('movimientos_articulos.stock_id')
                                                     ->groupBy('movimientos_articulos.direccion_movimiento')
@@ -328,8 +331,8 @@ class AdminBienesServiciosController extends Controller{
                                             $total_entradas_piezas = 0;
                                             $total_salidas_piezas = 0;
 
-                                            for($i  = 0; $i < count($suma_movimientos); $i++){
-                                                $suma = $suma_movimientos[$i];
+                                            for($k  = 0; $k < count($suma_movimientos); $k++){
+                                                $suma = $suma_movimientos[$k];
                                                 if($suma->direccion_movimiento == 'ENT'){
                                                     if($suma->modo_movimiento == 'UNI'){
                                                         $total_entradas_piezas += $suma->cantidad;
@@ -346,7 +349,7 @@ class AdminBienesServiciosController extends Controller{
                                             }
 
                                             $existencias_piezas = $total_entradas_piezas - $total_salidas_piezas;
-                                            $existencias = FLOOR($existencias_piezas / $detalle['piezas_x_empaque']);
+                                            $existencias = floor($existencias_piezas / $detalle['piezas_x_empaque']);
                                             
                                             $lote->existencia = $existencias;
                                             $lote->existencia_unidades = $existencias_piezas;

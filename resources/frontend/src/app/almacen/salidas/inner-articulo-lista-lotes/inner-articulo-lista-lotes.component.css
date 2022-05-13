@@ -58,6 +58,19 @@
     text-align: center;
 }
 
+.contenido-tabla-lotes table tbody .input-cell{
+    width: 100px;
+    position: relative;
+}
+
+.contenido-tabla-lotes table tbody .input-cell input{
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
 .medium-button{
     width: 100% !important;
     line-height: 30px !important;

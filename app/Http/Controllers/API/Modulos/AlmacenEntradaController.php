@@ -324,7 +324,7 @@ class AlmacenEntradaController extends Controller
             $total_loop = $total_claves;
             $total_articulos = 0;
             $total_monto = 0;
-            $modo_movimiento = ($tipo_movimiento->clave == 'RCPCN')?'TPS':'NRM';
+            //$modo_movimiento = ($tipo_movimiento->clave == 'RCPCN')?'TPS':'NRM';
 
             if(!$concluir){
                 $lista_articulos_borrador = [];
@@ -341,7 +341,7 @@ class AlmacenEntradaController extends Controller
                                 'bien_servicio_id'      => $articulo['id'],
                                 'empaque_detalle_id'    => (isset($lote['empaque_detalle_id']))?$lote['empaque_detalle_id']:null,
                                 'direccion_movimiento'  => 'ENT',
-                                'modo_movimiento'       => $modo_movimiento,
+                                'modo_movimiento'       => ($lote['entrada_piezas'])?'UNI':'NRM',//$modo_movimiento,
                                 'cantidad'              => $lote['cantidad'],
 
                                 'stock_id'              => (isset($lote['stock_id']))?$lote['stock_id']:null,
@@ -367,7 +367,7 @@ class AlmacenEntradaController extends Controller
                         $lista_articulos_borrador[] = [
                             'bien_servicio_id'      => $articulo['id'],
                             'direccion_movimiento'  => 'ENT',
-                            'modo_movimiento'       => $modo_movimiento,
+                            'modo_movimiento'       => ($lote['entrada_piezas'])?'UNI':'NRM', //$modo_movimiento,
                             'cantidad'              => 0,
                             'user_id'               => $loggedUser->id,
                         ];
@@ -435,8 +435,8 @@ class AlmacenEntradaController extends Controller
                                 'bien_servicio_id'      => $articulo['id'],
                                 'empaque_detalle_id'    => (isset($lote['empaque_detalle_id']))?$lote['empaque_detalle_id']:null,
                                 'programa_id'           => $movimiento->programa_id,
-                                'existencia'            => $lote['cantidad'],
-                                'existencia_unidades'   => $piezas_x_empaque * $lote['cantidad'],
+                                //'existencia'            => $lote['cantidad'],
+                                //'existencia_unidades'   => $piezas_x_empaque * $lote['cantidad'],
 
                                 'marca_id'              => (isset($lote['marca_id']))?$lote['marca_id']:null,
                                 'modelo'                => (isset($lote['modelo']))?$lote['modelo']:null,
@@ -449,6 +449,14 @@ class AlmacenEntradaController extends Controller
                                 'user_id'               => $loggedUser->id,
                             ];
 
+                            if($lote['entrada_piezas']){
+                                $stock_lote['existencia']            = floor($lote['cantidad'] / $piezas_x_empaque);
+                                $stock_lote['existencia_unidades']   = $lote['cantidad'];
+                            }else{
+                                $stock_lote['existencia']            = $lote['cantidad'];
+                                $stock_lote['existencia_unidades']   = $piezas_x_empaque * $lote['cantidad'];
+                            }
+                            
                             if($tipo_movimiento->clave == 'RCPCN'){ //Si el tipo de movimiento es de recepción, entonces ya debe venir con el id del lote, del que se saco
                                 $lote_padre = Stock::where('id',$lote['stock_id'])->first();
 
@@ -458,15 +466,16 @@ class AlmacenEntradaController extends Controller
                                     //throw new \Exception("Error al intentar copiar datos del Lote", 1);
                                 }
 
-                                $stock_lote['programa_id']      = $lote_padre->programa_id;
+                                $stock_lote['programa_id']          = $lote_padre->programa_id;
+                                $stock_lote['empaque_detalle_id']   = $lote_padre->empaque_detalle_id;
                                 
-                                $stock_lote["marca_id"]         = $lote_padre->marca_id;
-                                $stock_lote["modelo"]           = $lote_padre->modelo;
-                                $stock_lote["no_serie"]         = $lote_padre->no_serie;
+                                $stock_lote["marca_id"]             = $lote_padre->marca_id;
+                                $stock_lote["modelo"]               = $lote_padre->modelo;
+                                $stock_lote["no_serie"]             = $lote_padre->no_serie;
 
-                                $stock_lote["lote"]             = $lote_padre->lote;
-                                $stock_lote["codigo_barras"]    = $lote_padre->codigo_barras;
-                                $stock_lote["fecha_caducidad"]  = $lote_padre->fecha_caducidad;
+                                $stock_lote["lote"]                 = $lote_padre->lote;
+                                $stock_lote["codigo_barras"]        = $lote_padre->codigo_barras;
+                                $stock_lote["fecha_caducidad"]      = $lote_padre->fecha_caducidad;
                             }
 
                             $lote_guardado = Stock::where("almacen_id",$stock_lote['almacen_id'])
@@ -485,8 +494,9 @@ class AlmacenEntradaController extends Controller
                             
                             if($lote_guardado){
                                 $lote_guardado->existencia += $stock_lote['existencia'];
+                                $lote_guardado->existencia_unidades += $stock_lote['existencia_unidades'];
                                 //if($articulo_data->puede_surtir_unidades){
-                                $lote_guardado->existencia_unidades += ($piezas_x_empaque * $stock_lote['existencia']);
+                                //$lote_guardado->existencia_unidades += ($piezas_x_empaque * $stock_lote['existencia']);
                                 //}
                                 $lote_guardado->user_id = $loggedUser->id;
                                 $lote_guardado->save();
@@ -524,7 +534,7 @@ class AlmacenEntradaController extends Controller
                                 $articulo_guardado->stock_id                = $lote_guardado->id;
                                 $articulo_guardado->bien_servicio_id        = $articulo['id'];
                                 $articulo_guardado->direccion_movimiento    = 'ENT';
-                                $articulo_guardado->modo_movimiento         = $modo_movimiento;
+                                $articulo_guardado->modo_movimiento         = ($lote['entrada_piezas'])?'UNI':'NRM'; //$modo_movimiento;
                                 $articulo_guardado->cantidad                = $lote['cantidad'];
                                 $articulo_guardado->precio_unitario         = ($lote['precio_unitario'])?$lote['precio_unitario']:null;
                                 $articulo_guardado->iva                     = ($lote['iva'])?$lote['iva']:null;
@@ -539,7 +549,7 @@ class AlmacenEntradaController extends Controller
                                     'stock_id'              => $lote_guardado->id,
                                     'bien_servicio_id'      => $articulo['id'],
                                     'direccion_movimiento'  => 'ENT',
-                                    'modo_movimiento'       => $modo_movimiento,
+                                    'modo_movimiento'       => ($lote['entrada_piezas'])?'UNI':'NRM', //$modo_movimiento,
                                     'cantidad'              => $lote['cantidad'],
                                     'precio_unitario'       => ($lote['precio_unitario'])?$lote['precio_unitario']:null,
                                     'iva'                   => ($lote['iva'])?$lote['iva']:null,
@@ -553,7 +563,7 @@ class AlmacenEntradaController extends Controller
                         $articulo_en_ceros = [
                             'bien_servicio_id'      => $articulo['id'],
                             'direccion_movimiento'  => 'ENT',
-                            'modo_movimiento'       => $modo_movimiento,
+                            'modo_movimiento'       => 'NRM',//$modo_movimiento,
                             'cantidad'              => 0,
                             'precio_unitario'       => null,
                             'iva'                   => null,

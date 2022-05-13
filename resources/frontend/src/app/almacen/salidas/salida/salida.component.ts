@@ -225,7 +225,7 @@ export class SalidaComponent implements OnInit {
                 this.isLoading = true;
                 this.salidasService.verSalida(datos_recibidos.movimiento_id).subscribe(
                   response =>{
-                    console.log('Respuesta:',response);
+                    //console.log('Respuesta:',response);
                     this.formMovimiento.get('almacen_id').patchValue(response.data.almacen_id);
                     this.catalogos['tipos_movimiento'] = (this.catalogos['almacenes'].find(item => item.id == response.data.almacen_id)).tipos_movimiento;
                     this.formMovimiento.get('tipo_movimiento_id').patchValue(response.data.tipo_movimiento_id);
@@ -301,7 +301,7 @@ export class SalidaComponent implements OnInit {
           this.formMovimiento.patchValue(response.data);
           this.datosMovimiento = response.data;
           //this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
-          console.log('Datos del Server:',this.datosMovimiento);
+          //console.log('Datos del Server:',this.datosMovimiento);
 
           if(response.data.es_colectivo){
             this.checarTieneSolicitud(true);
@@ -848,7 +848,7 @@ export class SalidaComponent implements OnInit {
               this.sharedService.showSnackBar('Datos Guardados con Éxito', null, 3000);
               response.data.modificacion.registro_original = JSON.parse(response.data.modificacion.registro_original);
               response.data.modificacion.registro_modificado = JSON.parse(response.data.modificacion.registro_modificado);
-              console.log('Modificacion Guardada:',response.data.modificacion);
+              //console.log('Modificacion Guardada:',response.data.modificacion);
               if(response.data.modificacion.estatus == 'FIN'){
                 this.datosMovimiento = response.data.movimiento;
                 this.estatusMovimiento = response.data.movimiento.estatus;
@@ -939,7 +939,7 @@ export class SalidaComponent implements OnInit {
             let errorMessage = response.error;
             this.sharedService.showSnackBar(errorMessage, null, 3000);
             if(response.code == 'solicitud_repetida'){
-              console.log(response.data);
+              //console.log(response.data);
               let configDialog = {
                 width: '50%',
                 maxHeight: '90vh',
@@ -1078,7 +1078,7 @@ export class SalidaComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         }else{
           if(response.data){
-            console.log('Datos Salida: ',response.data);
+            //console.log('Datos Salida: ',response.data);
             let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
 
             const reportWorker = new ReportWorker();
@@ -1092,7 +1092,7 @@ export class SalidaComponent implements OnInit {
             reportWorker.onerror().subscribe(
               (data) => {
                 this.sharedService.showSnackBar(data.message, null, 3000);
-                console.log(data);
+                //console.log(data);
                 this.isLoading = false;
                 reportWorker.terminate();
               }

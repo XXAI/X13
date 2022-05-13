@@ -9,14 +9,14 @@
                 <th *ngIf="articulo.tipo_formulario == 'ACTVO'">Marca</th>
 
                 <th>Detalles</th>
-                <th>Cantidad</th>
+                <th colspan="2">Cantidad</th>
                 <th>{{(modoRecepcion)?'Recibido':'Monto'}}</th>
                 <th *ngIf="edicionActiva && !modoRecepcion">Control</th>
             </tr>
         </thead>
         <tbody>
             <tr *ngIf="articulo.lotes.length <= 0">
-                <td colspan="6" class="no-results-found">No existen lotes capturados</td>
+                <td colspan="7" class="no-results-found">No existen lotes capturados</td>
             </tr>
             <tr *ngFor="let lote of articulo.lotes; let i = index" class="caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">
                 <ng-container *ngIf="loteEditIndex != i">
@@ -27,7 +27,7 @@
                     <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.marca?.nombre}}</td>
 
                     <td>{{(lote.empaque_detalle)?lote.empaque_detalle.descripcion:'Sin Detalles'}}</td>
-
+                    <td width="1"><mat-icon [matTooltip]="(lote.entrada_piezas)?'Piezas':'Normal'">{{(lote.entrada_piezas)?'workspaces':'group_work'}}</mat-icon></td>
                     <td *ngIf="!modoRecepcion">{{lote.cantidad | number:'1.0-0'}}</td>
                     <td *ngIf="!modoRecepcion">$ {{lote.total_monto | number:'1.2-2'}}</td>
                     
@@ -38,12 +38,12 @@
                     </td>
 
                     <td width="1" style="white-space: nowrap;" *ngIf="edicionActiva && !modoRecepcion">
-                        <button class="small-icon-button" mat-icon-button color="primary" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button>
-                        <button class="small-icon-button" mat-icon-button color="warn" (click)="eliminarLote(i)"><mat-icon>delete</mat-icon></button>
+                        <button mat-icon-button color="primary" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button>
+                        <!--button class="small-icon-button" mat-icon-button color="warn" (click)="eliminarLote(i)"><mat-icon>delete</mat-icon></button-->
                     </td>
                 </ng-container>
                 <ng-container *ngIf="loteEditIndex == i">
-                    <td colspan="6">
+                    <td colspan="7">
                         <section style="width: 100%;" fxLayout="column" fxLayoutGap="5px" [formGroup]="formLote">
                             <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" fxLayoutAlign="space-between center" *ngIf="articulo.tipo_formulario == 'MEDS'">
                                 <mat-form-field fxFlex>
@@ -66,7 +66,10 @@
                                     <input matInput formControlName="codigo_barras" (keydown.enter)="guardarCambiosLote()" autocomplete="off">
                                 </mat-form-field>
                                 <mat-form-field fxFlex>
-                                    <mat-label>Cantidad</mat-label>
+                                    <mat-label>Cantidad<span *ngIf="formLote.get('entrada_piezas').value"> (Piezas)</span></mat-label>
+                                    <button mat-icon-button matSuffix (click)="formLote.get('entrada_piezas').patchValue(!formLote.get('entrada_piezas').value)">
+                                        <mat-icon>{{formLote.get('entrada_piezas').value ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
+                                    </button>
                                     <input matInput formControlName="cantidad" (keydown.enter)="guardarCambiosLote()" type="number" required autocomplete="off">
                                     <mat-error *ngIf="formLote.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
                                 </mat-form-field>
@@ -161,7 +164,9 @@
                                     <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> Carta de Canje
                                 </button>
                                 <div fxFlex></div>
-                                <button fxFlex="none" mat-button (click)="cancelarEdicion()">Cancelar</button>
+                                <button fxFlex="none" mat-button color="warn" (click)="eliminarLote(loteEditIndex)" *ngIf="articulo.lotes[loteEditIndex].hash"><mat-icon>remove</mat-icon> Quitar Lote</button>
+                                <div fxFlex></div>
+                                <button fxFlex="none" mat-button (click)="cancelarEdicion()" >Cancelar</button>
                                 <button fxFlex="none" color="success" mat-stroked-button (click)="guardarCambiosLote()">Guardar</button>
                                 <button fxFlex="none" color="info" mat-stroked-button (click)="guardarCambiosLote(true)">Guardar <mat-icon>add_circle_outline</mat-icon></button>
                             </div>
@@ -173,7 +178,7 @@
         <tfoot>
             <tr *ngIf="edicionActiva && !modoRecepcion && loteEditIndex < 0">
                 <ng-container>
-                    <td colspan="6">
+                    <td colspan="7">
                         <button class="medium-button" mat-button (click)="agregarLote()"><mat-icon>add_circle</mat-icon> Agregar Lote</button>
                     </td>
                 </ng-container>

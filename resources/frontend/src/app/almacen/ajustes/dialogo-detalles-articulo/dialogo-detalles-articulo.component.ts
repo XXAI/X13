@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
@@ -21,6 +22,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   @ViewChild(MatTable) movimientosTable: MatTable<any>;
   @ViewChild(MatPaginator) lotesPaginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatSelectionList) listaSeleccionableLotes: MatSelectionList;
 
   constructor(
     public dialogRef: MatDialogRef<DialogoDetallesArticuloComponent>,
@@ -55,6 +57,10 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   datosArticulo:any;
   empaqueDetalles:any[];
   listaLotes:any[];
+
+  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
+  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
+  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
   ngOnInit(): void {
     this.actualizado = false;
@@ -103,11 +109,13 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.loteSeleccionado = true;
     let lote = event.option.value;
     this.formDetallesLote.patchValue(lote);
+    this.nuevaExistencia = null;
 
     this.empaqueDetalleSeleccionado = this.empaqueDetalles.find(x => x.id == lote.empaque_detalle_id);
+
     this.existencias.cantidad = lote.existencia;
     this.existencias.piezas = lote.existencia_unidades;
-    this.existencias.x_pieza = this.empaqueDetalleSeleccionado.piezas_x_empaque;
+    this.existencias.x_pieza = (this.empaqueDetalleSeleccionado)?this.empaqueDetalleSeleccionado.piezas_x_empaque:1;
 
     this.resumenMovimientos = null;
     this.dataSourceMovimientos = new MatTableDataSource<any>([]);
@@ -144,9 +152,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           response.resumen.forEach(item => {
             if(this.resumenMovimientos[item.direccion_movimiento]){
               if(item.modo_movimiento == 'UNI'){
-                this.resumenMovimientos[item.direccion_movimiento]['uni'] += item.cantidad;
+                this.resumenMovimientos[item.direccion_movimiento]['uni'] += +item.cantidad;
               }else{
-                this.resumenMovimientos[item.direccion_movimiento]['nrm'] += item.cantidad;
+                this.resumenMovimientos[item.direccion_movimiento]['nrm'] += +item.cantidad;
             }
             }
             /* 
@@ -183,12 +191,13 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   cambiarDetalle(event){
     this.nuevaExistencia = null;
     this.empaqueDetalleSeleccionado = this.empaqueDetalles.find(x => x.id == event.value);
+    let piezas_x_empaque = (this.empaqueDetalleSeleccionado)?this.empaqueDetalleSeleccionado.piezas_x_empaque:1;
 
-    let entradas_uni = +this.resumenMovimientos['ENT']['uni'] + (+this.resumenMovimientos['ENT']['nrm'] * this.empaqueDetalleSeleccionado.piezas_x_empaque);
-    let salidas_uni = +this.resumenMovimientos['SAL']['uni'] + (+this.resumenMovimientos['SAL']['nrm'] * this.empaqueDetalleSeleccionado.piezas_x_empaque);
+    let entradas_uni = +this.resumenMovimientos['ENT']['uni'] + (+this.resumenMovimientos['ENT']['nrm'] * piezas_x_empaque);
+    let salidas_uni = +this.resumenMovimientos['SAL']['uni'] + (+this.resumenMovimientos['SAL']['nrm'] * piezas_x_empaque);
 
     let existencia_uni = entradas_uni - salidas_uni;
-    let existencia = Math.floor(existencia_uni / this.empaqueDetalleSeleccionado.piezas_x_empaque);
+    let existencia = Math.floor(existencia_uni / piezas_x_empaque);
 
     if(existencia_uni != this.existencias.piezas){
       this.nuevaExistencia = {
@@ -200,6 +209,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
 
   cancelarEdicioLote(){
     this.loteSeleccionado = false;
+    this.listaSeleccionableLotes.deselectAll();
     this.formDetallesLote.reset();
     this.existencias.cantidad = 0;
     this.existencias.piezas = 0;
@@ -217,7 +227,6 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response);
           let index = this.listaLotes.findIndex(x => x.id == response.data.id);
           this.listaLotes[index] = response.data;
           this.cancelarEdicioLote();
@@ -233,6 +242,14 @@ export class DialogoDetallesArticuloComponent implements OnInit {
         this.isSaving = false;
       }
     );
+  }
+
+  cancelarAccion(){
+    if(this.loteSeleccionado){
+      this.cancelarEdicioLote();
+    }else{
+      this.cerrar();
+    }
   }
 
   cerrar(){

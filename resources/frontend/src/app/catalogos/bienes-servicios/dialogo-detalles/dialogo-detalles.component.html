@@ -1,4 +1,4 @@
-<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
+<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;" (document:keydown.escape)="cancelarAccion()"> <!-- Main Body <<<<<<< -->
     <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
             <button fxFlex="none" mat-button color="default" [matMenuTriggerFor]="menuArticulo" aria-label="Menu de articulo">
@@ -250,7 +250,7 @@
                             </div>
                             <div fxFlex></div>
                             <button fxFlex="none" mat-stroked-button (click)="aceptarDetalles()" color="primary" [disabled]="!formDetalles.valid">Aceptar</button>
-                            <button fxFlex="none" mat-stroked-button (click)="cancelarDetalles(); listaDetalles.deselectAll();">Cancelar</button>
+                            <button fxFlex="none" mat-stroked-button (click)="cancelarDetalles()">Cancelar</button>
                         </div>
                     </div>
                 </div>

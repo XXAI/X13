@@ -55,6 +55,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         lote:['',Validators.required],
         codigo_barras:[''],
         cantidad:['',Validators.required],
+        entrada_piezas:[''],
         empaque_detalle_id:[''],
         precio_unitario:[''],
         iva:[''],
@@ -73,6 +74,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         modelo:['',],
         no_serie:['',Validators.required],
         cantidad:['',Validators.required],
+        entrada_piezas:[''],
         empaque_detalle_id:[''],
         precio_unitario:[''],
         iva:[''],
@@ -107,6 +109,13 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       if(typeof loteData.empaque_detalle === 'string'){
         loteData.empaque_detalle = {descripcion: loteData.empaque_detalle};
       }
+
+      if(loteData.modo_movimiento == 'UNI'){
+        loteData.entrada_piezas = true;
+      }else{
+        loteData.entrada_piezas = false;
+      }
+      
     });
     this.articulo.estatus = estatus_articulo;
 
@@ -195,7 +204,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   }
 
   cancelarEdicion(){
-    if(!this.articulo.lotes[this.loteEditIndex].hash){
+    if(this.articulo.lotes[this.loteEditIndex] && !this.articulo.lotes[this.loteEditIndex].hash){
       this.articulo.lotes.splice(this.loteEditIndex,1);
     }
     this.loteEditIndex = -1;
@@ -340,7 +349,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   }
 
   eliminarLote(index:number){
-    if(this.loteEditIndex < 0){
+    //if(this.loteEditIndex < 0){
       if(this.articulo.lotes.length == 1){
         this.cambiosEnLotes.emit({accion:'EliminarArticulo',value:this.articulo.id});
       }else{
@@ -350,9 +359,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         this.articulo.total_monto -=  this.articulo.lotes[index].total_monto;
         this.articulo.no_lotes -= 1;
         this.articulo.lotes.splice(index,1);
+        this.cancelarEdicion();
         this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
       }
-    }
+    //}
   }
 
   obtenerEstadoActualArticulo(): any{

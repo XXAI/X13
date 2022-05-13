@@ -1,8 +1,8 @@
-<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
+<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;" (document:keydown.escape)="cancelarAccion()"> <!-- Main Body <<<<<<< -->
     <section fxFlex="none" class="salida-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
             <div fxFlex="none" class="label-info" *ngIf="datosAlmacen && datosArticulo">
-                {{datosAlmacen.nombre}}: {{datosArticulo.articulo}}
+                <mat-icon>home</mat-icon> {{datosAlmacen.nombre}}: {{datosArticulo.articulo}}
             </div>
             <div fxFlex>
             </div>
@@ -62,8 +62,8 @@
                     <mat-selection-list #listaSeleccionableLotes [multiple]="false" (selectionChange)="seleccionarLote($event)">
                         <mat-list-option *ngFor="let lote of listaLotes" [value]="lote">
                             <mat-icon mat-list-icon matBadgePosition="before" matBadgeSize="small" matBadge="{{lote.movimientos}}">sync_alt</mat-icon>
-                            <div mat-line>Lote: {{lote.lote}}</div>
-                            <div mat-line>FC: {{lote.fecha_caducidad | date}}</div>
+                            <div mat-line><span class="lote-label">Lote: </span>{{lote.lote}}</div>
+                            <div mat-line><span class="lote-label">Cad:</span> {{lote.fecha_caducidad | date}}</div>
                             <div mat-line>E:{{lote.existencia | number:'1.0-0'}} | P:{{lote.existencia_unidades | number:'1.0-0'}}</div>
                         </mat-list-option>
                     </mat-selection-list>
@@ -74,57 +74,73 @@
                 <div fxFlex="none" class="detalles-sin-lote" *ngIf="!loteSeleccionado">
                     <span>Seleccione un lote</span>
                 </div>
-                <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="botones" *ngIf="loteSeleccionado">
+                <div fxFlex="none" fxLayout="row" class="botones" *ngIf="loteSeleccionado">
                     <div fxFlex class="info-existencias">
                         <span>Existencia: </span>{{existencias.cantidad | number:'1.0-0'}} <span *ngIf="nuevaExistencia" class="nueva-existencia">=> {{nuevaExistencia['nrm'] | number:'1.0-0'}}</span><br>
                         <span>Piezas: </span>{{existencias.piezas | number:'1.0-0'}} <span *ngIf="nuevaExistencia" class="nueva-existencia">=> {{nuevaExistencia['uni'] | number:'1.0-0'}}</span>
                     </div>
-                    <div fxFlex class="info-resumen" *ngIf="resumenMovimientos">
-                        <span>[ENT] NRM: </span>{{resumenMovimientos['ENT']['nrm'] | number:'1.0-0'}}<span> | UNI: </span>{{resumenMovimientos['ENT']['uni'] | number:'1.0-0'}}<br>
-                        <span>[SAL] NRM: </span>{{resumenMovimientos['SAL']['nrm'] | number:'1.0-0'}}<span> | UNI: </span>{{resumenMovimientos['SAL']['uni'] | number:'1.0-0'}}
+                    <div fxFlex="none" fxLayout="row" class="info-resumen" *ngIf="resumenMovimientos">
+                        <div fxFlex="none">
+                            <span>ENT: </span><br>
+                            <span>SAL: </span>
+                        </div>
+                        <div fxFlex="none">&nbsp;</div>
+                        <div fxFlex="none">
+                            {{resumenMovimientos['ENT']['nrm'] | number:'1.0-0'}}<br>
+                            {{resumenMovimientos['SAL']['nrm'] | number:'1.0-0'}}
+                        </div>
+                        <div fxFlex="none">&nbsp;</div>
+                        <div fxFlex="none">
+                            <span> | Pzas: </span>{{resumenMovimientos['ENT']['uni'] | number:'1.0-0'}}<br>
+                            <span> | Pzas: </span>{{resumenMovimientos['SAL']['uni'] | number:'1.0-0'}}
+                        </div>
                     </div>
-                    <div fxFlex></div>
-                    <button mat-stroked-button fxFlex="none" (click)="cancelarEdicioLote(); listaSeleccionableLotes.deselectAll();">Cancelar</button>
-                    <button mat-flat-button color="primary" fxFlex="none" (click)="guardarCambiosLote()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> Guardar</button>
+                    <div fxFlex fxLayout="row">
+                        <div fxFlex></div>
+                        <button mat-stroked-button fxFlex="none" (click)="cancelarEdicioLote()">Cancelar</button>
+                        <div fxFlex="none">&nbsp;</div>
+                        <button mat-flat-button color="primary" fxFlex="none" (click)="guardarCambiosLote()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> Guardar</button>
+                    </div>
                 </div>
                 <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" class="detalles-lote" *ngIf="loteSeleccionado" [formGroup]="formDetallesLote">
-                    <mat-form-field fxFlex>
+                    <mat-form-field fxFlex="none">
                         <mat-label>Lote</mat-label>
                         <input matInput formControlName="lote" autocomplete="off" readonly>
                     </mat-form-field>
 
-                    <mat-form-field fxFlex>
+                    <mat-form-field fxFlex="none">
                         <mat-label>Fecha Caducidad</mat-label>
                         <input matInput formControlName="fecha_caducidad" autocomplete="off" readonly>
                     </mat-form-field>
 
-                    <mat-form-field fxFlex>
+                    <mat-form-field fxFlex="none">
                         <mat-label>Codigo de Barras</mat-label>
                         <input matInput formControlName="codigo_barras" autocomplete="off">
                     </mat-form-field>
 
-                    <div fxFlex="100">
-                        <mat-form-field fxFlex="none">
-                            <mat-label>Empaque Detalle</mat-label>
-                            <mat-select formControlName="empaque_detalle_id" (selectionChange)="cambiarDetalle($event)" required>
-                                <mat-option *ngIf="empaqueDetalles.length == 0">Sin Registros</mat-option>
-                                <mat-option *ngFor="let item of empaqueDetalles" [value]="item.id">
-                                    {{item.descripcion}}
-                                </mat-option>
-                            </mat-select>
-                        </mat-form-field>
+                    <mat-form-field fxFlex fxFlex.lt-lg="50">
+                        <mat-label>Empaque Detalle</mat-label>
+                        <mat-select formControlName="empaque_detalle_id" (selectionChange)="cambiarDetalle($event)" required>
+                            <mat-option *ngIf="empaqueDetalles.length == 0">Sin Registros</mat-option>
+                            <mat-option *ngFor="let item of empaqueDetalles" [value]="item.id">
+                                {{item.descripcion}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <div fxFlex fxFlex.lt-lg="100">
                         <div fxFlex fxLayout="row" class="info-empaque-detalle" *ngIf="empaqueDetalleSeleccionado">
                             <div fxFlex class="fake-input">
                                 <span class="label">Empaque:</span>
                                 <span class="value">{{empaqueDetalleSeleccionado.empaque.descripcion}}</span>
                             </div>
                             <div fxFlex class="fake-input">
-                                <span class="label">Unidad Medida:</span>
-                                <span class="value">{{empaqueDetalleSeleccionado.unidad_medida.descripcion}}</span>
-                            </div>
-                            <div fxFlex class="fake-input">
                                 <span class="label">Piezas X Empaque:</span>
                                 <span class="value">{{empaqueDetalleSeleccionado.piezas_x_empaque | number:'1.0-0'}}</span>
+                            </div>
+                            <div fxFlex class="fake-input">
+                                <span class="label">Unidad Medida:</span>
+                                <span class="value">{{empaqueDetalleSeleccionado.unidad_medida.descripcion}}</span>
                             </div>
                         </div>
                     </div>
@@ -133,7 +149,8 @@
                     <table mat-table [dataSource]="dataSourceMovimientos" class="lista-movimientos-table" matSort>
                         <ng-container matColumnDef="direccion_movimiento">
                             <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Dirección </th>
-                            <td mat-cell *matCellDef="let row">
+                            <td mat-cell *matCellDef="let row" class="{{listaEstatusClaves[row.estatus]}}-color">
+                                <mat-icon matTooltip="{{listaEstatusLabels[row.estatus]}}">{{listaEstatusIconos[row.estatus]}}</mat-icon>
                                 <mat-icon [matTooltip]="(row.direccion_movimiento == 'ENT')?'Entrada':'Salida'">{{(row.direccion_movimiento == 'ENT')?'exit_to_app':'launch'}}</mat-icon>
                             </td>
                         </ng-container>
@@ -183,7 +200,7 @@
                         </ng-container>
                         
                         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                        <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;">
+                        <tr mat-row class="tabla-row-articulo {{listaEstatusClaves[row.estatus]}}-color" *matRowDef="let row; let i = index; columns: displayedColumns;">
                         <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': (dataSourceMovimientos && dataSourceMovimientos.filteredData.length > 0) || isLoadingMovimientos}"></tr>
                         <tr mat-footer-row *matFooterRowDef="['loadingData']" class="no-results-found" [ngClass]="{'hide': !isLoadingMovimientos}"></tr>
                     </table>

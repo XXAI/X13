@@ -49,7 +49,7 @@
 
                 <td>{{lote.programa}}</td>
                 <td>{{lote.existencia | number:'1.0-0'}}</td>
-                <td width="1" style="white-space: nowrap;">
+                <td width="1" class="input-cell" style="white-space: nowrap;">
                     <input *ngIf="edicionActiva" #inputValue type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
                     <span *ngIf="!edicionActiva">{{lote.salida | number:'1.0-0'}}</span>
                 </td>

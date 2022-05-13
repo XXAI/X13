@@ -32,22 +32,26 @@ class AlmacenAjustesController extends Controller{
             $parametros = $request->all();
 
             $lotes = MovimientoArticulo::select('movimientos_articulos.id','movimientos_articulos.cantidad','movimientos_articulos.modo_movimiento','movimientos_articulos.direccion_movimiento','movimientos.folio','catalogo_tipos_movimiento.descripcion as tipo_movimiento','movimientos.fecha_movimiento',
-                                        'almacen_movimiento.nombre as almacen_movimiento','unidad_movimiento.nombre as unidad_movimiento','area_servicio_movimiento.descripcion as area_servicio_movimiento','catalogo_tipos_solicitud.descripcion as tipo_solicitud')
+                                        'almacen_movimiento.nombre as almacen_movimiento','unidad_medica_movimiento.nombre as unidad_medica_movimiento','area_servicio_movimiento.descripcion as area_servicio_movimiento','catalogo_tipos_solicitud.descripcion as tipo_solicitud','movimientos.estatus')
                             ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
                             ->leftJoin('catalogo_tipos_movimiento','catalogo_tipos_movimiento.id','=','movimientos.tipo_movimiento_id')
                             ->leftJoin('almacenes as almacen_movimiento','almacen_movimiento.id','=','movimientos.almacen_movimiento_id')
-                            ->leftJoin('catalogo_unidades_medicas as unidad_movimiento','unidad_movimiento.id','=','movimientos.unidad_medica_movimiento_id')
+                            ->leftJoin('catalogo_unidades_medicas as unidad_medica_movimiento','unidad_medica_movimiento.id','=','movimientos.unidad_medica_movimiento_id')
                             ->leftJoin('catalogo_areas_servicios as area_servicio_movimiento','area_servicio_movimiento.id','=','movimientos.area_servicio_movimiento_id')
                             ->leftJoin('solicitudes','solicitudes.id','=','movimientos.solicitud_id')
                             ->leftJoin('catalogo_tipos_solicitud','catalogo_tipos_solicitud.id','=','solicitudes.tipo_solicitud_id')
                             ->where('movimientos_articulos.stock_id',$id)
+                            ->where('movimientos.estatus','!=','BOR')
                             ->groupBy('movimientos_articulos.id')
                             ->orderBy('movimientos.fecha_movimiento')
+                            ->orderBy('movimientos.created_at')
                             ->get();
             //
             $resumen_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
                                     ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
-                                    ->where('movimientos.estatus','FIN')
+                                    ->where(function($where){
+                                        $where->where('movimientos.estatus','!=','BOR')->where('movimientos.estatus','!=','CAN');
+                                    })
                                     ->where('movimientos_articulos.stock_id',$id)
                                     ->groupBy('movimientos_articulos.stock_id')
                                     ->groupBy('movimientos_articulos.direccion_movimiento')
@@ -72,9 +76,6 @@ class AlmacenAjustesController extends Controller{
             $lotes = Stock::select('stocks.*', DB::raw('COUNT(DISTINCT movimientos_articulos.id) as movimientos'))
                             ->leftJoin('movimientos_articulos','movimientos_articulos.stock_id','=','stocks.id')
                             ->groupBy('stocks.id')
-                            /*->where(function($where){
-                                $where->where('stocks.existencia','>=',0)->orWhere('stocks.existencia_unidades','>=',0);
-                            })*/
                             ->where('stocks.bien_servicio_id',$parametros['articulo'])
                             ->where('stocks.almacen_id',$parametros['almacen'])
                             ->get();
@@ -180,20 +181,22 @@ class AlmacenAjustesController extends Controller{
                 $viejo_empaque = BienServicioEmpaqueDetalle::where('bien_servicio_id',$stock->bien_servicio_id)->where('id',$stock->empaque_detalle_id)->first();
                 $nuevo_empaque = BienServicioEmpaqueDetalle::where('bien_servicio_id',$stock->bien_servicio_id)->where('id',$parametros['empaque_detalle_id'])->first();
 
-                if(!$viejo_empaque){
+                /*if(!$viejo_empaque){
                     DB::rollback();
                     return response()->json(['error'=>'No se encontraron los detalles con id: '.$stock->empaque_detalle_id.' del articulo'],HttpResponse::HTTP_OK);
-                }
+                }*/
                 
                 if(!$nuevo_empaque){
                     DB::rollback();
                     return response()->json(['error'=>'No se encontraron los detalles con id: '.$parametros['empaque_detalle_id'].' del articulo'],HttpResponse::HTTP_OK);
                 }
 
-                if($viejo_empaque->piezas_x_empaque != $nuevo_empaque->piezas_x_empaque){
+                if((!$viejo_empaque && $nuevo_empaque) || ($viejo_empaque->piezas_x_empaque != $nuevo_empaque->piezas_x_empaque)){
                     $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
                                                     ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
-                                                    ->where('movimientos.estatus','FIN')
+                                                    ->where(function($where){
+                                                        $where->where('movimientos.estatus','!=','BOR')->where('movimientos.estatus','!=','CAN');
+                                                    })
                                                     ->where('movimientos_articulos.stock_id',$stock->id)
                                                     ->groupBy('movimientos_articulos.stock_id')
                                                     ->groupBy('movimientos_articulos.direccion_movimiento')
@@ -221,7 +224,7 @@ class AlmacenAjustesController extends Controller{
                     }
 
                     $existencias_piezas = $total_entradas_piezas - $total_salidas_piezas;
-                    $existencias = FLOOR($existencias_piezas / $nuevo_empaque->piezas_x_empaque);
+                    $existencias = floor($existencias_piezas / $nuevo_empaque->piezas_x_empaque);
                     
                     $stock->existencia = $existencias;
                     $stock->existencia_unidades = $existencias_piezas;

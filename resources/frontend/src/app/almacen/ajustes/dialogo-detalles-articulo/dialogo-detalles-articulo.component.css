@@ -117,6 +117,7 @@
 
 .lista-movimientos-table tr.mat-row:hover {
     background-color: #F5F5F5;
+    font-weight: 500;
 }
 
 .no-results-found{
@@ -166,6 +167,10 @@
 
 .info-existencias span.nueva-existencia{
     color:darkgreen;
+}
+
+.lote-label{
+    font-weight: 500;
 }
 
 .fake-input{
@@ -246,4 +251,24 @@
 
 .tabla-movimientos{
     overflow: auto;
+}
+
+.pendiente-recepcion-color > td{
+    color:#dc8503 !important;
+}
+
+.concluido-color > td{
+    color:#07a8ff !important;
+}
+
+.cancelado-color > td{
+    color:#ff2a2a !important;
+}
+
+.peticion-modificacion-color > td{
+    color:#b000e6;
+}
+
+.modificacion-aprobada-color > td{
+    color:#b000e6;
 }

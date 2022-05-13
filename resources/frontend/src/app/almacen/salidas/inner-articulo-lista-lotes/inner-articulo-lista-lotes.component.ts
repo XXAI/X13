@@ -118,7 +118,6 @@ export class InnerArticuloListaLotesComponent implements OnInit {
     
     let articulo_restante = 0;
     this.articulo.lotes.forEach(loteData => {
-      console.log(loteData);
       if(this.articulo.surtir_en_unidades){
         loteData.existencia = loteData.existencia_unidades;
       }else{
@@ -143,7 +142,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
       if(propName == 'fechaMovimiento'){
         const chng = changes[propName];
         if(chng.previousValue){
-          console.log(`Trabajando las caducidades en `+this.articulo.clave);
+          //console.log(`Trabajando las caducidades en `+this.articulo.clave);
           let estatus_articulo = 1;
           this.articulo.lotes.forEach(loteData => {
             let result = this.verificarFechaCaducidad(loteData.fecha_caducidad);
@@ -155,27 +154,27 @@ export class InnerArticuloListaLotesComponent implements OnInit {
             }
           });
           this.articulo.estatus = estatus_articulo;
-          console.log(`Terminado `+this.articulo.clave);
+          //console.log(`Terminado `+this.articulo.clave);
         }else{
-          console.log(`Incializando `+this.articulo.clave);
+          //console.log(`Incializando `+this.articulo.clave);
         }
       }else if(propName == 'articulo'){
         const chng = changes[propName];
         let cur  = chng.currentValue;
-        console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
+        //console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
       }else if(propName == 'tieneSolicitud'){
         const chng = changes[propName];
         let cur  = chng.currentValue;
-        console.log(`Cambio de valor en ${propName}: clave = ${cur}`);
+        //console.log(`Cambio de valor en ${propName}: clave = ${cur}`);
       }else if(propName == 'tipoSalida'){
         const chng = changes[propName];
         let cur = chng.currentValue;
-        if(cur && !(cur.clave == 'RCTA' || cur.clave == 'PSNL')){
+        /*if(cur && !(cur.clave == 'RCTA' || cur.clave == 'PSNL')){
           this.surtirUnidades(false);
-        }
-        if(cur){
+        }*/
+        /*if(cur){
           console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
-        }
+        }*/
       }
     }
   }

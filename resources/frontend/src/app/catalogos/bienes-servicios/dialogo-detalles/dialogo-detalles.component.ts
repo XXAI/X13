@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
@@ -23,6 +24,7 @@ export class DialogoDetallesComponent implements OnInit {
   @ViewChild(MatTable) lotesTable: MatTable<any>;
   @ViewChild(MatPaginator) lotesPaginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatSelectionList) listaDetalles: MatSelectionList;
 
   constructor(
     public dialogRef: MatDialogRef<DialogoDetallesComponent>,
@@ -326,6 +328,7 @@ export class DialogoDetallesComponent implements OnInit {
 
   cancelarDetalles(){
     this.selectedDetalleIndex = -1;
+    this.listaDetalles.deselectAll();
     this.formDetalles.reset();
     this.toggleDescripcionAutomatica(true);
   }
@@ -391,6 +394,15 @@ export class DialogoDetallesComponent implements OnInit {
   private _filter(catalogo: string, value: string, field: string): any[] {
     const filterValue = value.toLowerCase();
     return this.catalogoAutocomplete[catalogo].filter(option => option[field].toLowerCase().includes(filterValue));
+  }
+
+  cancelarAccion(){
+    console.log('lista',this.listaDetalles);
+    if(this.selectedDetalleIndex >= 0){
+      this.cancelarDetalles();
+    }else{
+      this.cerrar();
+    }
   }
 
   cerrar(){
