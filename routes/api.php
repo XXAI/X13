@@ -80,6 +80,9 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('catalogos/bienes-servicios',            'API\AdminCatalogos\AdminBienesServiciosController');
     Route::get('catalogos/bienes-servicios-catalogos',          'API\AdminCatalogos\AdminBienesServiciosController@obtenerCatalogos');
     Route::get('catalogos/bienes-servicios-lotes/{id}',         'API\AdminCatalogos\AdminBienesServiciosController@obtenerLotes');
+    Route::get('catalogos/catalogos-generales-lista',           'API\AdminCatalogos\CatalogosGeneralesController@obtenerCatalogos');
+    Route::apiResource('catalogos/catalogos-generales',         'API\AdminCatalogos\CatalogosGeneralesController');
+    
 
     /**
      * Modulos Almacen

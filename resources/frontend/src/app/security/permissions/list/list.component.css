@@ -1,6 +1,6 @@
 .permissions-container {
     position: relative;
-    min-height: 200px;
+    overflow: auto;
 }
 
 .permissions-table-container {
@@ -26,6 +26,10 @@ table {
     width: 100%;
 }
 
+tr.mat-row:hover {
+    background-color: #F5F5F5;
+}
+
 .no-results-found{
     text-align: center;
     font-style: italic;
@@ -46,14 +50,8 @@ table {
 }
 
 .mat-form-field {
-font-size: 14px;
-width: 100%;
-}
-
-/* Column Widths */
-.mat-column-actions{
-  max-width: 60px;
-  min-width: 60px;
+    font-size: 14px;
+    width: 100%;
 }
 
 .hide{

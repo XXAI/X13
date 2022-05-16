@@ -1,12 +1,11 @@
 .roles-container {
     position: relative;
-    min-height: 200px;
+    overflow: auto;
 }
 
 .roles-table-container {
     position: relative;
     max-height: 400px;
-    overflow: auto;
 }
 
 .roles-loading-shade {
@@ -24,6 +23,10 @@
 
 table {
     width: 100%;
+}
+
+tr.mat-row:hover {
+    background-color: #F5F5F5;
 }
 
 .no-results-found{
@@ -46,14 +49,8 @@ table {
 }
 
 .mat-form-field {
-font-size: 14px;
-width: 100%;
-}
-
-/* Column Widths */
-.mat-column-actions{
-  max-width: 60px;
-  min-width: 60px;
+    font-size: 14px;
+    width: 100%;
 }
 
 .hide{

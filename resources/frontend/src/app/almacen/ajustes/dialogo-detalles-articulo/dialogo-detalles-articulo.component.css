@@ -211,6 +211,7 @@
 }
 
 .lista-items{
+    overflow: hidden;
     border-top: 1px solid rgba(0,0,0,.12);
     border-right: 1px solid rgba(0,0,0,.12);
 }
@@ -249,6 +250,10 @@
     overflow: auto;
 }
 
+.lista .mat-list-base{
+    padding-top: 0px;
+}
+
 .tabla-movimientos{
     overflow: auto;
 }
@@ -271,4 +276,31 @@
 
 .modificacion-aprobada-color > td{
     color:#b000e6;
+}
+
+.campo-filtro{
+    background-color: #d5d5d5;
+}
+
+.small-search-input{
+    padding: 5px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: #d5d5d5;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
 }

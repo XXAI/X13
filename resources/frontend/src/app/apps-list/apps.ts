@@ -18,7 +18,7 @@ export const APPS:App [] = [
         { name:'Entradas',                    route: "almacen/entradas",                    icon: "assets/icons/entrada-almacen.svg",       permission:"snyR2BzbSqXJHVQCgjnWqgseP0pqLnhe"  },
         { name:'Salidas',                     route: "almacen/salidas",                     icon: "assets/icons/salida-almacen.svg",        permission:"q6iwrTdBPOSA7ivxWzs21oiEqtWSUVXb"  },
         { name:'Existencias',                 route: "almacen/existencias",                 icon: "assets/icons/existencias.svg",           permission:"zFdj3x3UfqRsp5DeAGBVm5elqvkvnIr1"  },
-        { name:'Ajustes de Lotes',            route: "almacen/ajustes",                     icon: "assets/icons/ajustes.svg",               permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
+        { name:'Ajustes de Lotes',            route: "almacen/ajustes",                     icon: "assets/icons/ajustes.svg",               permission:"nD6BzFC2yO4mDQbXTUwJJE6il1DY3Dw1"  },
         //{ name:'Transferencias',  route: "almacen/transferencias",  icon: "assets/icons/transferencia.svg",   permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         //{ name:'Inventario',      route: "almacen/inventario",      icon: "assets/icons/inventario.svg",      permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
         { name:'Administrar Modificaciones',  route: "almacen/administrar-modificaciones",  icon: "assets/icons/admin-modificaciones.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK"  },
@@ -36,7 +36,7 @@ export const APPS:App [] = [
     { name:'Admin Captura: Abasto y Surtimiento',    route: "admin-captura-reporte-semanal",      icon: "assets/icons/admin-captura-reporte.svg",    permission:"BjvroJXhbaJvcKrBnxHpRRBq2u6BovUN" },
     { name:'Admin: Catalogos',                       route: "catalogos",                          icon: "assets/icons/catalogos.svg",                isHub:true,
       apps:[
-        { name:'Catalogos Simples',   route: "catalogos/catalogos-simples",   icon: "assets/icons/catalogos-simples.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
+        { name:'Catalogos Generales', route: "catalogos/catalogos-generales", icon: "assets/icons/catalogos-simples.svg", permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
         { name:'Bienes Servicios',    route: "catalogos/bienes-servicios",    icon: "assets/icons/bienes-servicios.svg",  permission:"yae2OXtjmQpqg73EujKZSGCraE8VG4Ip" },
         { name:'Unidades Medicas',    route: "catalogos/unidades-medicas",    icon: "assets/icons/unidades-medicas.svg",  permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
       ]

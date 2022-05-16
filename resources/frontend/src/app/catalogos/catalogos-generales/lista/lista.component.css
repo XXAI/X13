@@ -25,6 +25,7 @@ th, td {
     width:auto;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: default;
 }
 
 table th {
@@ -34,6 +35,7 @@ table th {
 
 table td {
     padding:0 5px;
+    text-align: center;
 }
 
 .data-table th:first-child{
@@ -50,55 +52,9 @@ table td {
     color:whitesmoke;
 }
 
-.added-data{
-    font-size: smaller;
-    color:rgb(129, 125, 125);
-}
-
-.descontinuado > td{
-    color:rgb(250, 70, 4);
-}
-
-.descontinuado > td .added-data{
-    color:rgba(250, 70, 4,0.75);
-}
-
-.descontinuado > td .inactivo{
-    color:rgba(250, 70, 4,0.75);
-}
-
-/*.con-existencias{
-    font-weight: bold;
-}*/
-
-.inactivo{
-    color:rgb(154, 153, 153);
-}
-
 table .mat-row:hover{
     background-color: whitesmoke;
     cursor: pointer;
-}
-
-.mat-column-almacen{
-    width:155px;
-}
-
-.mat-column-clave{
-    width:110px;
-}
-
-.mat-column-existencias{
-    width:85px;
-    text-align: center;
-}
-
-.mat-column-total_lotes{
-    width:80px;
-}
-
-.mat-column-actions{
-    width:48px;
 }
 
 .no-results-found{
@@ -108,4 +64,13 @@ table .mat-row:hover{
 
 .hide{
     display: none;
+}
+
+.catalogo-seleccionado{
+    padding: 8px;
+    cursor: default;
+}
+
+.catalogo-seleccionado span{
+    font-weight: 600;
 }

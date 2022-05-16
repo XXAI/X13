@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { PageEvent } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { SharedService } from 'src/app/shared/shared.service';
 import { AjustesService } from '../ajustes.service';
 import { DialogoDetallesArticuloComponent } from '../dialogo-detalles-articulo/dialogo-detalles-articulo.component';
@@ -11,6 +11,7 @@ import { DialogoDetallesArticuloComponent } from '../dialogo-detalles-articulo/d
   styleUrls: ['./lista.component.css']
 })
 export class ListaComponent implements OnInit {
+  @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
 
   constructor(
     private sharedService: SharedService,
@@ -28,7 +29,7 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   pageSizeOptions: number[] = [10, 20, 30, 50];
   listaArticulos: any[];
-  displayedColumns:string[] = ['almacen','clave','articulo','puede_surtir_unidades','existencias'];
+  displayedColumns:string[] = ['almacen','clave','articulo','existencias','total_lotes'];
 
   ngOnInit(): void {
     this.searchQuery = '';
@@ -64,6 +65,7 @@ export class ListaComponent implements OnInit {
             this.listaArticulos = response.data.data;
             this.resultsLength = response.data.total;
           }
+          this.articulosPaginator.pageIndex = response.data.current_page-1;
         }
         this.isLoading = false;
       },

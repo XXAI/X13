@@ -11,7 +11,6 @@ import { DialogoDetallesComponent } from '../dialogo-detalles/dialogo-detalles.c
   styleUrls: ['./lista.component.css']
 })
 export class ListaComponent implements OnInit {
-
   constructor(
     private sharedService: SharedService,
     private bienesServiciosService: BienesServiciosService,
@@ -96,10 +95,6 @@ export class ListaComponent implements OnInit {
         this.loadListadoArticulos(this.pageEvent);
       }
     });
-  }
-
-  eliminarArticulo(id:number){
-    //
   }
 
   cleanSearch(){

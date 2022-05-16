@@ -52,15 +52,28 @@
                 </div>
             </mat-card>
         </div>
-        <div fxFlex="none" style="padding:10px 0px;">
+        <div fxFlex="none" style="padding:5px 0px;">
             <mat-divider></mat-divider>
         </div>
-        <div fxFlex fxLayout="row">
-            <div fxFlex="none" class="lista-items">
-                <div class="encabezado">Lista de Lotes:</div>
-                <div class="lista">
+        <div fxFlex fxLayout="row" style="overflow: hidden;">
+            <div fxFlex="none" fxLayout="column" class="lista-items">
+                <div fxFlex="none" class="encabezado" fxLayout="row"><span fxFlex="none">Lotes:</span> <span fxFlex></span> <span fxFlex="none">{{dataSourceLotes.filteredData.length}}/{{dataSourceLotes.data.length}}</span></div>
+                <div fxFlex="none" fxLayout="row" class="campo-filtro">
+                    <div fxFlex class="small-search-input">
+                        <mat-form-field fxFlex appearance="outline">
+                            <input matInput [(ngModel)]="filtroLotes" (keyup)="aplicarFiltroLotes($event)" placeholder="Filtrar" autocomplete="off" cdkFocusInitial>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="none" style="padding: 10px 5px;">
+                        <mat-checkbox [(ngModel)]="mostrarTodosLotes" (ngModelChange)="aplicarFiltroLotes()"></mat-checkbox>
+                    </div>
+                </div>
+                <div fxFlex class="lista">
                     <mat-selection-list #listaSeleccionableLotes [multiple]="false" (selectionChange)="seleccionarLote($event)">
-                        <mat-list-option *ngFor="let lote of listaLotes" [value]="lote">
+                        <mat-list-option *ngIf="dataSourceLotes.filteredData.length == 0" disabled class="no-results-found">
+                            Sin Resultados
+                        </mat-list-option>
+                        <mat-list-option *ngFor="let lote of dataSourceLotes.filteredData" [value]="lote">
                             <mat-icon mat-list-icon matBadgePosition="before" matBadgeSize="small" matBadge="{{lote.movimientos}}">sync_alt</mat-icon>
                             <div mat-line><span class="lote-label">Lote: </span>{{lote.lote}}</div>
                             <div mat-line><span class="lote-label">Cad:</span> {{lote.fecha_caducidad | date}}</div>
@@ -103,22 +116,22 @@
                     </div>
                 </div>
                 <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" class="detalles-lote" *ngIf="loteSeleccionado" [formGroup]="formDetallesLote">
-                    <mat-form-field fxFlex="none">
+                    <mat-form-field fxFlex fxFlex.lt-lg="33">
                         <mat-label>Lote</mat-label>
                         <input matInput formControlName="lote" autocomplete="off" readonly>
                     </mat-form-field>
 
-                    <mat-form-field fxFlex="none">
+                    <mat-form-field fxFlex fxFlex.lt-lg="33">
                         <mat-label>Fecha Caducidad</mat-label>
                         <input matInput formControlName="fecha_caducidad" autocomplete="off" readonly>
                     </mat-form-field>
 
-                    <mat-form-field fxFlex="none">
+                    <mat-form-field fxFlex fxFlex.lt-lg="30">
                         <mat-label>Codigo de Barras</mat-label>
                         <input matInput formControlName="codigo_barras" autocomplete="off">
                     </mat-form-field>
 
-                    <mat-form-field fxFlex fxFlex.lt-lg="50">
+                    <mat-form-field fxFlex="50" fxFlex.lt-lg="100">
                         <mat-label>Empaque Detalle</mat-label>
                         <mat-select formControlName="empaque_detalle_id" (selectionChange)="cambiarDetalle($event)" required>
                             <mat-option *ngIf="empaqueDetalles.length == 0">Sin Registros</mat-option>
@@ -126,9 +139,10 @@
                                 {{item.descripcion}}
                             </mat-option>
                         </mat-select>
+                        <mat-hint align="end" *ngIf="empaqueDetalleSeleccionado">Contiene: {{empaqueDetalleSeleccionado.piezas_x_empaque}} Pzas.</mat-hint>
                     </mat-form-field>
 
-                    <div fxFlex fxFlex.lt-lg="100">
+                    <!--div fxFlex="50" fxFlex.lt-lg="100" fxHide.lt-lg>
                         <div fxFlex fxLayout="row" class="info-empaque-detalle" *ngIf="empaqueDetalleSeleccionado">
                             <div fxFlex class="fake-input">
                                 <span class="label">Empaque:</span>
@@ -143,7 +157,7 @@
                                 <span class="value">{{empaqueDetalleSeleccionado.unidad_medida.descripcion}}</span>
                             </div>
                         </div>
-                    </div>
+                    </div-->
                 </div>
                 <div fxFlex class="tabla-movimientos" *ngIf="loteSeleccionado">
                     <table mat-table [dataSource]="dataSourceMovimientos" class="lista-movimientos-table" matSort>
@@ -171,8 +185,8 @@
                         </ng-container>
                         
                         <ng-container matColumnDef="destino_origen">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header> Destino | Origen </th>
-                            <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-lg> Destino | Origen </th>
+                            <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;" fxHide.lt-lg>
                                 {{(row.destino_origen)?row.destino_origen:'---'}}
                             </td>
                         </ng-container>

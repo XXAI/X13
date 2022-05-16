@@ -116,7 +116,7 @@ class AlmacenAjustesController extends Controller{
                                             DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),"stocks.bien_servicio_id as id",'catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', 
                                             DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                                             "bienes_servicios.articulo as articulo","bienes_servicios.especificaciones as especificaciones","bienes_servicios.puede_surtir_unidades",
-                                            DB::raw("SUM(stocks.existencia_unidades) as existencias"))
+                                            DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia_unidades) as existencias"))
                                     ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
                                     ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
                                     ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
@@ -129,6 +129,54 @@ class AlmacenAjustesController extends Controller{
             
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
+                $params_query = urldecode($parametros['query']);
+
+                $search_queries = explode('+',$params_query);
+
+                $lista_articulos = $lista_articulos->where(function($query)use($search_queries){
+                    //->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
+                    //->where('familias.nombre','LIKE','%'.$parametros['query'].'%')
+                    return $query->where(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->orWhere('bienes_servicios.clave_cubs','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->orWhere('bienes_servicios.clave_local','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->orWhere('bienes_servicios.articulo','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->orWhere('bienes_servicios.especificaciones','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->orWhere('stocks.lote','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                })
+                                ->orWhere(function($where)use($search_queries){
+                                    for($i = 0; $i < count($search_queries); $i++){
+                                        $where = $where->orWhere('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$search_queries[$i].'%');
+                                    }
+                                    return $where;
+                                });
+                });
+                $params['incluir_existencias_cero'] = true;
+            }
+
+            /*if(isset($parametros['query']) && $parametros['query']){
                 $lista_articulos = $lista_articulos->where(function($query)use($parametros){
                     return $query->where('stocks.lote','LIKE','%'.$parametros['query'].'%')
                                 ->orWhere('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$parametros['query'].'%')
@@ -138,7 +186,7 @@ class AlmacenAjustesController extends Controller{
                                 ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$parametros['query'].'%');
                 });
                 $params['incluir_existencias_cero'] = true;
-            }
+            }*/
 
             if(isset($params['incluir_existencias_cero']) && $params['incluir_existencias_cero']){
                 $lista_articulos = $lista_articulos->where(function($where){

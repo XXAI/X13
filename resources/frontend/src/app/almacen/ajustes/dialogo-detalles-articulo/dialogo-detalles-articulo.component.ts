@@ -1,10 +1,12 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import { SharedService } from 'src/app/shared/shared.service';
 import { AjustesService } from '../ajustes.service';
 
@@ -58,6 +60,11 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   empaqueDetalles:any[];
   listaLotes:any[];
 
+  mostrarTodosLotes:boolean;
+  filtroLotes:string;
+  filtroAplicado:boolean;
+  dataSourceLotes: MatTableDataSource<any>;
+
   listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
@@ -65,7 +72,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   ngOnInit(): void {
     this.actualizado = false;
     this.isLoading = true;
+    this.mostrarTodosLotes = false;
     this.existencias = {cantidad:0, piezas:0, x_pieza:1};
+    this.dataSourceLotes = new MatTableDataSource<any>([]);
 
     this.formDetallesLote = this.formBuilder.group({
       'id':                         [''],
@@ -90,7 +99,23 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           this.datosAlmacen = response.data.almacen;
           this.datosArticulo = response.data.articulo;
           this.empaqueDetalles = this.datosArticulo.empaque_detalle;
-          this.listaLotes = response.data.lotes;
+          //this.listaLotes = response.data.lotes;
+          this.dataSourceLotes = new MatTableDataSource<any>(response.data.lotes);
+          this.dataSourceLotes.filterPredicate = function (record,filter) {
+            let filtro = JSON.parse(filter);
+            let result:boolean = true;
+
+            if(!filtro.todos){
+              result = (record.existencia > 0 || record.existencia_unidades > 0);
+            }
+            
+            if(result && filtro.query){
+              result = record.lote.toLowerCase().includes(filtro.query.toLowerCase());
+            }
+            
+            return result;
+         }
+         this.aplicarFiltroLotes();
         }
         this.isLoading = keep;
       },
@@ -157,23 +182,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
                 this.resumenMovimientos[item.direccion_movimiento]['nrm'] += +item.cantidad;
             }
             }
-            /* 
-            if($suma->direccion_movimiento == 'ENT'){
-                if($suma->modo_movimiento == 'UNI'){
-                    $total_entradas_piezas += $suma->cantidad;
-                }else{
-                    $total_entradas_piezas += ($suma->cantidad * $nuevo_empaque->piezas_x_empaque);
-                }
-            }else if($suma->direccion_movimiento == 'SAL'){
-                if($suma->modo_movimiento == 'UNI'){
-                    $total_salidas_piezas += $suma->cantidad;
-                }else{
-                    $total_salidas_piezas += ($suma->cantidad * $nuevo_empaque->piezas_x_empaque);
-                }
-            }
-            */
           });
-          //response.data.resumen;
         }
         this.isLoadingMovimientos = false;
       },
@@ -227,8 +236,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          let index = this.listaLotes.findIndex(x => x.id == response.data.id);
-          this.listaLotes[index] = response.data;
+          let index = this.dataSourceLotes.data.findIndex(x => x.id == response.data.id);
+          this.dataSourceLotes.data[index] = response.data;
+          this.aplicarFiltroLotes();
           this.cancelarEdicioLote();
         }
         this.isSaving = false;
@@ -254,5 +264,13 @@ export class DialogoDetallesArticuloComponent implements OnInit {
 
   cerrar(){
     this.dialogRef.close(this.actualizado);
+  }
+
+  aplicarFiltroLotes(event?){
+    let filter:any = {
+      query: this.filtroLotes,
+      todos: this.mostrarTodosLotes
+    };
+    this.dataSourceLotes.filter = JSON.stringify(filter);
   }
 }
