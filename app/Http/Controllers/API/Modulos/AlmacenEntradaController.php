@@ -341,7 +341,7 @@ class AlmacenEntradaController extends Controller
                                 'bien_servicio_id'      => $articulo['id'],
                                 'empaque_detalle_id'    => (isset($lote['empaque_detalle_id']))?$lote['empaque_detalle_id']:null,
                                 'direccion_movimiento'  => 'ENT',
-                                'modo_movimiento'       => ($lote['entrada_piezas'])?'UNI':'NRM',//$modo_movimiento,
+                                'modo_movimiento'       => (isset($lote['entrada_piezas']) && $lote['entrada_piezas'])?'UNI':'NRM',//$modo_movimiento,
                                 'cantidad'              => $lote['cantidad'],
 
                                 'stock_id'              => (isset($lote['stock_id']))?$lote['stock_id']:null,
@@ -367,7 +367,7 @@ class AlmacenEntradaController extends Controller
                         $lista_articulos_borrador[] = [
                             'bien_servicio_id'      => $articulo['id'],
                             'direccion_movimiento'  => 'ENT',
-                            'modo_movimiento'       => ($lote['entrada_piezas'])?'UNI':'NRM', //$modo_movimiento,
+                            'modo_movimiento'       => (isset($lote['entrada_piezas']) && $lote['entrada_piezas'])?'UNI':'NRM', //$modo_movimiento,
                             'cantidad'              => 0,
                             'user_id'               => $loggedUser->id,
                         ];
@@ -449,7 +449,7 @@ class AlmacenEntradaController extends Controller
                                 'user_id'               => $loggedUser->id,
                             ];
 
-                            if($lote['entrada_piezas']){
+                            if(isset($lote['entrada_piezas']) && $lote['entrada_piezas']){
                                 $stock_lote['existencia']            = floor($lote['cantidad'] / $piezas_x_empaque);
                                 $stock_lote['existencia_unidades']   = $lote['cantidad'];
                             }else{
@@ -534,7 +534,7 @@ class AlmacenEntradaController extends Controller
                                 $articulo_guardado->stock_id                = $lote_guardado->id;
                                 $articulo_guardado->bien_servicio_id        = $articulo['id'];
                                 $articulo_guardado->direccion_movimiento    = 'ENT';
-                                $articulo_guardado->modo_movimiento         = ($lote['entrada_piezas'])?'UNI':'NRM'; //$modo_movimiento;
+                                $articulo_guardado->modo_movimiento         = (isset($lote['entrada_piezas']) && $lote['entrada_piezas'])?'UNI':'NRM'; //$modo_movimiento;
                                 $articulo_guardado->cantidad                = $lote['cantidad'];
                                 $articulo_guardado->precio_unitario         = ($lote['precio_unitario'])?$lote['precio_unitario']:null;
                                 $articulo_guardado->iva                     = ($lote['iva'])?$lote['iva']:null;
@@ -549,7 +549,7 @@ class AlmacenEntradaController extends Controller
                                     'stock_id'              => $lote_guardado->id,
                                     'bien_servicio_id'      => $articulo['id'],
                                     'direccion_movimiento'  => 'ENT',
-                                    'modo_movimiento'       => ($lote['entrada_piezas'])?'UNI':'NRM', //$modo_movimiento,
+                                    'modo_movimiento'       => (isset($lote['entrada_piezas']) && $lote['entrada_piezas'])?'UNI':'NRM', //$modo_movimiento,
                                     'cantidad'              => $lote['cantidad'],
                                     'precio_unitario'       => ($lote['precio_unitario'])?$lote['precio_unitario']:null,
                                     'iva'                   => ($lote['iva'])?$lote['iva']:null,
