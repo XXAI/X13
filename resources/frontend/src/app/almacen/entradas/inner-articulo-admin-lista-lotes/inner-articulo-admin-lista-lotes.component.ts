@@ -142,6 +142,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
           });
           this.articulo.estatus = estatus_articulo;
           console.log(`Terminado `+this.articulo.clave);
+          this.cambiosEnLotes.emit({accion:'CambiosParaStorage',value:{}});
         }else{
           console.log(`Incializando `+this.articulo.clave);
         }
@@ -149,6 +150,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         const chng = changes[propName];
         let cur  = chng.currentValue;
         console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
+        this.cambiosEnLotes.emit({accion:'CambiosParaStorage',value:{}});
       }
     }
   }

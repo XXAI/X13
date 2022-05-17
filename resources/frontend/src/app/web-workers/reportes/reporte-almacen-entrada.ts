@@ -312,15 +312,15 @@ export class ReporteAlmacenEntrada{
 
         for(let i = 0; i < tabla_articulos.length; i++){
           let item  = tabla_articulos[i];
-          let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
+          //let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
           //let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
-          let fecha_caducidad = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
+          let fecha_caducidad = (item.stock)?item.stock.fecha_caducidad:((item.fecha_caducidad)?item.fecha_caducidad:'S/F/C');
           
           let item_pdf = [
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
             { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
             { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-            { text: (item.stock?.lote)?item.stock?.lote:'S/L',                                      style: 'tabla_datos_center'},
+            { text: (item.stock)?item.stock.lote:((item.lote)?item.lote:'S/L'),                     style: 'tabla_datos_center'},
             { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
             { text: numberFormat(parseInt(item.cantidad)),                                          style: 'tabla_datos_center'},
           ];

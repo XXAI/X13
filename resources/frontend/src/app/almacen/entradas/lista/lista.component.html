@@ -101,8 +101,10 @@
             <div fxFlex="none" [ifHasPermission]="'Ret6H40ZJQ16rv74RKnz0V0KAcXm27MS'">
                 <button mat-stroked-button color="accent" (click)="verDialogoSubirArchivo()" matTooltip="Subir Archivo de Existencias"><mat-icon>file_upload</mat-icon></button>
             </div>
+            <div fxFlex="none" *ngIf="datosRecuperados.id">
+                <button mat-flat-button color="accent" [matTooltip]="'Fecha: ' + (datosRecuperados.actualizado | date:'medium')" (click)="recuperarDatos()"><mat-icon>restore_page</mat-icon> Recuperar Captura</button>
+            </div>
             <div fxFlex="none">
-                <!--button mat-raised-button color="info"   ><mat-icon>add_circle</mat-icon> Nuevo Pedido</button-->
                 <button mat-flat-button color="info" [routerLink]="'/almacen/entradas/nueva'" ><mat-icon>add_circle</mat-icon> Nueva Entrada</button>
             </div>
         </div>
@@ -185,7 +187,7 @@
                     </ng-container>
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row [ngClass]="{'selected-item': i==selectedItemIndex,'cancelado':row.estatus_clave == 'cancelado'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                    <tr mat-row [ngClass]="{'datos-recuperados': (datosRecuperados && row.id==datosRecuperados.id),'cancelado':row.estatus_clave == 'cancelado'}" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
 
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="not-results-found" [ngClass]="{'hide':!(listadoMovimientos!=null && listadoMovimientos.length==0)}"></tr>
                 </table>

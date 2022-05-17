@@ -11,11 +11,11 @@
             <button fxFlex="none" mat-button *ngIf="verBoton['concluir_modificacion']" [matTooltip]="'Concluir Modificación'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirModificacion()" [class.button-spinner]="isSaving">
                 <mat-icon>all_inbox</mat-icon>
             </button>
-            <div fxFlex>
-            </div>
+            <div fxFlex></div>
             <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.folio" class="label-info">
                 <span>{{datosEntrada.folio}}</span>
             </div>
+            <div fxFlex="none" class="label-info-storage" *ngIf="estatusStorageIcon"><mat-icon>{{estatusStorageIcon}}</mat-icon></div>
             <div fxFlex="none" fxLayout="column" (click)="verListadoUsuarios = !verListadoUsuarios" cdkOverlayOrigin style="cursor: help !important;" #verListaUsuarios="cdkOverlayOrigin">
                 <div fxFlex fxLayout="row" class="estatus-movimiento {{listaEstatusClaves[estatusMovimiento]}}-color" *ngIf="estatusMovimiento">
                     <span fxFlex="none" style="padding-top:2px;"><mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon></span>

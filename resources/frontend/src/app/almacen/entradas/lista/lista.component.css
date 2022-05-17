@@ -91,6 +91,11 @@ table tr:hover{
   margin: 0 10px;
 }
 
+.datos-recuperados{
+  background-color: #ffecf0 !important;
+  font-weight: 500;
+}
+
 .borrador-color{
   color:#6b6767 !important;
 }

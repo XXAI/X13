@@ -6,18 +6,19 @@ import { MatTable } from '@angular/material/table';
 import { MediaObserver } from '@angular/flex-layout';
 import { EntradasService } from '../entradas.service';
 import { AlmacenService } from '../../almacen.service';
-
 import { ReportWorker } from '../../../web-workers/report-worker';
-import * as FileSaver from 'file-saver';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ConfirmActionDialogComponent } from 'src/app/utils/confirm-action-dialog/confirm-action-dialog.component';
 import { DialogoCancelarResultadoComponent } from '../dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 import { DialogoCancelarMovimientoComponent } from '../../tools/dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { DialogoSubirArchivoComponent } from '../dialogo-subir-archivo/dialogo-subir-archivo.component';
 import { DatePipe } from '@angular/common';
 import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
+import { MovimientosLocalStorageService } from '../../tools/movimientos-local-storage.service';
+import { Router } from '@angular/router';
 
+import * as FileSaver from 'file-saver';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -29,13 +30,15 @@ export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatTable) usersTable: MatTable<any>;
 
-  constructor(private datepipe: DatePipe, private sharedService: SharedService, private entradasService: EntradasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver) { }
+  constructor(private datepipe: DatePipe, private sharedService: SharedService, private entradasService: EntradasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver, private localStorageService: MovimientosLocalStorageService, private router: Router) { }
 
   isLoading: boolean = false;
   mediaSize: string;
   isLoadingPDF: boolean = false;
   isLoadingPDFArea: boolean = false;
   isLoadingAgent: boolean = false;
+
+  datosRecuperados:any;
 
   showMyStepper:boolean = false;
   showReportForm:boolean = false;
@@ -65,6 +68,9 @@ export class ListaComponent implements OnInit {
   fechaActual:Date = new Date();
 
   ngOnInit() {
+    this.localStorageService.tipoMovimiento = 'entradas';
+    this.datosRecuperados = this.localStorageService.getDatosEntradaID();
+    console.log(this.datosRecuperados);
     this.mediaObserver.media$.subscribe(
       response => {
         this.mediaSize = response.mqAlias;
@@ -95,6 +101,15 @@ export class ListaComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  recuperarDatos(){
+    //this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>);
+    if(this.datosRecuperados.id == 'NV'){
+      this.router.navigate(['/almacen/entradas/nueva'],{state:{data:{recuperacion:true}}});
+    }else{
+      this.router.navigate(['/almacen/entradas/editar/'+this.datosRecuperados.id]);
+    }
   }
 
   loadListadoMovimientos(event?){

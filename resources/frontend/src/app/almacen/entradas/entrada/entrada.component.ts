@@ -22,6 +22,8 @@ import { MovimientoData } from '../../tools/entrada';
 import { User } from 'src/app/auth/models/user';
 import { AuthService } from 'src/app/auth/auth.service';
 import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
+import { Location } from '@angular/common';
+import { MovimientosLocalStorageService } from '../../tools/movimientos-local-storage.service';
 
 @Component({
   selector: 'app-entrada',
@@ -52,10 +54,14 @@ export class EntradaComponent implements OnInit {
     private sharedService: SharedService, 
     private dialog: MatDialog, 
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private location: Location,
+    private localStorageService: MovimientosLocalStorageService,
   ) { }
 
   authUser:User;
+
+  estatusStorageIcon:string;
 
   formMovimiento:FormGroup;
   catalogos:any;
@@ -114,6 +120,7 @@ export class EntradaComponent implements OnInit {
   
   ngOnInit() {
     this.authUser = this.authService.getUserData();
+    this.localStorageService.tipoMovimiento = 'entradas';
 
     this.isLoading = true;
     this.puedeEditarDatosEncabezado = false;
@@ -321,105 +328,34 @@ export class EntradaComponent implements OnInit {
 
               articulos_temp = this.cargarListaArticulos(lista_articulos,this.datosEntrada.tipo_movimiento.clave,this.datosEntrada.estatus);
 
-              /*
-              for(let i in lista_articulos){
-                lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
-                let articulo:any;
-
-                if(!this.controlArticulosAgregados[lista_articulos[i].articulo.id]){
-                  articulo = {
-                    id: lista_articulos[i].articulo.id,
-                    estatus: 1,
-                    clave: (lista_articulos[i].articulo.clave_cubs)?lista_articulos[i].articulo.clave_cubs:lista_articulos[i].articulo.clave_local,
-                    nombre: lista_articulos[i].articulo.articulo,
-                    descripcion: lista_articulos[i].articulo.especificaciones,
-                    partida_clave: lista_articulos[i].articulo.clave_partida_especifica,
-                    partida_descripcion: lista_articulos[i].articulo.partida_especifica,
-                    familia: lista_articulos[i].articulo.familia,
-                    empaque_detalle: lista_articulos[i].articulo.empaque_detalle,
-                    tiene_fecha_caducidad: (lista_articulos[i].articulo.tiene_fecha_caducidad)?true:false,
-                    tipo_articulo: lista_articulos[i].articulo.tipo_bien_servicio,
-                    tipo_formulario: lista_articulos[i].articulo.clave_form,
-                    en_catalogo: (lista_articulos[i].articulo.en_catalogo_unidad)?true:false,
-                    normativo: (lista_articulos[i].articulo.es_normativo)?true:false,
-                    descontinuado: (lista_articulos[i].articulo.descontinuado)?true:false,
-                    cantidad_solicitada: lista_articulos[i].cantidad_solicitada,
-                    total_monto: 0,
-                    no_lotes: 0,
-                    total_piezas: 0,
-                    total_recibido: 0,
-                    lotes: [],
-                  };
-                  
-                  articulos_temp.push(articulo);
-
-                  this.controlArticulosAgregados[articulo.id] = true;
-                  this.totalesRecibidos.claves += 1;
-                }else{
-                  let index = articulos_temp.findIndex(x => x.id == lista_articulos[i].articulo.id);
-                  articulo = articulos_temp[index];                  
-                }
-
-                if(lista_articulos[i].cantidad > 0 || lista_articulos[i].cantidad_anterior > 0){
-                  articulo.no_lotes += 1;
-                  articulo.total_monto += lista_articulos[i].total_monto;
-
-                  let lote:any = {
-                    lote:               (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
-                    fecha_caducidad:    (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
-                    codigo_barras:      (lista_articulos[i].stock)?lista_articulos[i].stock.codigo_barras:lista_articulos[i].codigo_barras,
-                    no_serie:           (lista_articulos[i].stock)?lista_articulos[i].stock.no_serie:lista_articulos[i].no_serie,
-                    modelo:             (lista_articulos[i].stock)?lista_articulos[i].stock.modelo:lista_articulos[i].modelo,
-                    marca_id:           (lista_articulos[i].stock)?lista_articulos[i].stock.marca_id:lista_articulos[i].marca_id,
-                    marca:              (lista_articulos[i].stock && lista_articulos[i].stock.marca_id)?lista_articulos[i].stock.marca:(lista_articulos[i].marca_id)?lista_articulos[i].marca:'',
-                    empaque_detalle_id: (lista_articulos[i].stock)?lista_articulos[i].stock.empaque_detalle_id:lista_articulos[i].empaque_detalle_id,
-                    empaque_detalle:    (lista_articulos[i].stock)?lista_articulos[i].stock.empaque_detalle:null,
-                    precio_unitario:    lista_articulos[i].precio_unitario,
-                    iva:                lista_articulos[i].iva,
-                    total_monto:        lista_articulos[i].total_monto,
-                    memo_folio:         (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_folio:lista_articulos[i].memo_folio,
-                    memo_fecha:         (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.memo_fecha:lista_articulos[i].memo_fecha,
-                    vigencia_meses:     (lista_articulos[i].carta_canje)?lista_articulos[i].carta_canje.vigencia_meses:lista_articulos[i].vigencia_meses,
-                  };
-                  
-                  if(lote.empaque_detalle_id && articulo.empaque_detalle){
-                    lote.empaque_detalle = articulo.empaque_detalle.find(x => x.id == lote.empaque_detalle_id);
-                  }
-
-                  if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN' && this.datosEntrada.estatus == 'PERE'){
-                    lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
-                    lote.cantidad = (lista_articulos[i].cantidad_recibida === null)?lista_articulos[i].cantidad:lista_articulos[i].cantidad_recibida;
-                    lote.cantidad_enviada = lista_articulos[i].cantidad;
-                    lote.cantidad_recibida_anterior = lote.cantidad_enviada - lote.cantidad;
-                    articulo.total_recibido += lote.cantidad;
-                    articulo.total_piezas += lote.cantidad_enviada;
-                  }else if(this.datosEntrada.tipo_movimiento.clave == 'RCPCN'){
-                    lote.cantidad = lista_articulos[i].cantidad;
-                    lote.cantidad_enviada = lista_articulos[i].cantidad_anterior;
-                    articulo.total_recibido += lote.cantidad;
-                    articulo.total_piezas += lote.cantidad_enviada;
-                  }else{
-                    articulo.total_piezas += lista_articulos[i].cantidad;
-                    lote.cantidad = lista_articulos[i].cantidad;
-                  }
-
-                  articulo.lotes.push(lote);
-
-                  if(this.modoRecepcion){
-                    this.totalesRecibidos.recibidos += lote.cantidad;
-                    this.totalesRecibidos.articulos += lote.cantidad_enviada;
-                  }else{
-                    this.totalesRecibidos.articulos += lote.cantidad;//lista_articulos[i].cantidad;
-                  }
-                  this.totalesRecibidos.monto += lista_articulos[i].total_monto;
-                }
-              }*/
-
               this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
               this.dataSourceArticulos.paginator = this.articulosPaginator;
               this.dataSourceArticulos.sort = this.sort;
 
               this.cargarDatosUsuarios(response.data);
+
+              
+              let identificador = this.localStorageService.getDatosEntradaID();
+              if(identificador && identificador.id == response.data.id){
+                console.log('tencontre', identificador.id);
+                let fecha_datos = this.datepipe.transform(identificador.actualizado, 'medium');
+                const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+                  width: '500px',
+                  disableClose: true,
+                  data:{dialogTitle:'Recuperación de datos no guardados:',dialogMessage:'Se han encontado datos locales del movimiento actual, estos datos fueron capturados con fecha: '+fecha_datos+', pero no fueron guardados. ¿desea cargar los datos encontrados?',btnColor:'accent',btnText:'Cargar Datos'}
+                });
+            
+                dialogRef.afterClosed().subscribe(valid => {
+                  if(valid){
+                    this.estatusStorageIcon = 'difference';
+                    let datos_guardados = this.localStorageService.getDatosEntrada();
+                    if(datos_guardados.formulario){
+                      this.formMovimiento.patchValue(datos_guardados.formulario);
+                    }
+                  }
+                });
+              }
+              this.configurarDatosTemporales();
             }
             this.isLoading = false;
           },
@@ -435,7 +371,7 @@ export class EntradaComponent implements OnInit {
       }else{
         let datos_recibidos = history.state.data;
         this.estatusMovimiento = 'NV';
-
+        
         //Si recibimos datos, es por que estamos copiando una salida o el movimiento se esta generando en base a una entrada
         if(datos_recibidos && datos_recibidos.movimiento_id){
           this.isLoading = true;
@@ -448,6 +384,8 @@ export class EntradaComponent implements OnInit {
               this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
               this.dataSourceArticulos.paginator = this.articulosPaginator;
               this.dataSourceArticulos.sort = this.sort;
+
+              this.configurarDatosTemporales();
 
               this.isLoading = false;
             },
@@ -476,6 +414,22 @@ export class EntradaComponent implements OnInit {
 
         this.reconfigurarFormulario();
         this.cargarColumnasArticulos();
+
+        if(datos_recibidos && datos_recibidos.recuperacion){
+          let identificador = this.localStorageService.getDatosEntradaID();
+          if(identificador && identificador.id == 'NV'){
+            this.estatusStorageIcon = 'difference';
+            let datos_guardados = this.localStorageService.getDatosEntrada();
+            if(datos_guardados.formulario){
+              if(this.formMovimiento.get('almacen_id')){
+                this.formMovimiento.get('almacen_id').patchValue(datos_guardados.formulario.almacen_id);
+                this.checarAlmacenSeleccionado();
+              }
+              this.formMovimiento.patchValue(datos_guardados.formulario);
+            }
+          }
+        }
+        this.configurarDatosTemporales();
       }
     });
   }
@@ -634,19 +588,19 @@ export class EntradaComponent implements OnInit {
 
   reconfigurarFormulario(mostrar_campos?:string[]){
     let grupoFields:any = {
-      id:[''],
-      tipo_movimiento_id:['',Validators.required],
-      turno_id:['',Validators.required],
+      id: [''],
+      tipo_movimiento_id: ['',Validators.required],
+      turno_id: ['',Validators.required],
       fecha_movimiento: [new Date(),Validators.required], //Por default la fecha actual
       almacen_id: ['',Validators.required],
-      documento_folio:[''],
+      documento_folio: new FormControl('',{ updateOn: 'blur' }), //[''],
       programa: ['',Validators.required],
       programa_id: [''],
-      proveedor:[''],
+      proveedor: [''],
       proveedor_id: [''],
-      referencia_folio:[''],
-      referencia_fecha:[''],
-      observaciones: [''],
+      referencia_folio: new FormControl('',{ updateOn: 'blur' }), //[''],
+      referencia_fecha: [''],
+      observaciones: new FormControl('',{ updateOn: 'blur' }), //[''],
     };
 
     if(!mostrar_campos){
@@ -679,7 +633,7 @@ export class EntradaComponent implements OnInit {
     if(this.formMovimiento.get('almacen_id') && this.catalogos['almacenes'].length == 1){
       this.formMovimiento.get('almacen_id').patchValue(this.catalogos['almacenes'][0].id);
       this.checarAlmacenSeleccionado();
-    }    
+    }
 
     if(this.formMovimiento.get('proveedor')){
       this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
@@ -692,6 +646,21 @@ export class EntradaComponent implements OnInit {
                           map(descripcion => descripcion ? this._filter('programas',descripcion,'descripcion') : this.catalogos['programas'].slice())
                         );
     }
+  }
+
+  configurarDatosTemporales(){
+    this.formMovimiento.valueChanges.subscribe(
+      changes => {
+        this.estatusStorageIcon = 'difference';
+        //let stored_data = this.localStorageService.getDatosEntrada();
+        this.localStorageService.setDatosEntradaFormulario(changes);
+      }
+    );
+  }
+
+  guardarDatosTemporalesListaArticulos(){
+    console.log('hay datos entrada: ',this.datosEntrada);
+    this.localStorageService.setDatosEntradaListaArticulos(this.datosEntrada.id,this.dataSourceArticulos.data);
   }
 
   checarTipoMovimientoSeleccinado(){
@@ -815,6 +784,7 @@ export class EntradaComponent implements OnInit {
         this.totalesRecibidos.recibidos += articulo.total_recibido;
       }
     }
+    this.guardarDatosTemporalesListaArticulos();
   }
 
   activarModificacionEntrada(){
@@ -965,6 +935,11 @@ export class EntradaComponent implements OnInit {
             this.sharedService.showSnackBar(errorMessage, null, 4000);
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
+
+            if(this.estatusMovimiento == 'NV'){
+              this.location.replaceState('/almacen/entradas/editar/'+response.data.id);
+            }
+
             this.estatusMovimiento = response.data.estatus;
             this.datosEntrada = response.data;
             this.cargarDatosUsuarios(response.data);
@@ -989,6 +964,8 @@ export class EntradaComponent implements OnInit {
             }
             this.controlArticulosModificados = {};
             this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
+            this.estatusStorageIcon = '';
+            this.localStorageService.deleteDatosEntrada();
           }
           this.isSaving = false;
         },
