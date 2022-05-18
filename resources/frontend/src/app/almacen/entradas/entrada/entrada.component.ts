@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, SimpleChange, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlmacenService } from '../../almacen.service';
 import { EntradasService } from '../entradas.service';
@@ -154,7 +154,7 @@ export class EntradaComponent implements OnInit {
         articulos: 0,
         monto: parseFloat('0'),
       }
-    }
+    };
     
     this.catalogos = {
       'almacenes':[],
@@ -179,6 +179,7 @@ export class EntradaComponent implements OnInit {
       eliminar:false,
       cancelar:false,
       modificar_entrada:false,
+      descartar_cambios:false,
     };
 
     let lista_catalogos:any = {almacenes:'*',programas:'*',proveedores:'*',marcas:'*',turnos:'*',unidades_medicas:'*',filtro_almacenes_movimiento:'ENT'};
@@ -275,6 +276,8 @@ export class EntradaComponent implements OnInit {
                 this.reconfigurarFormulario(['id','fecha_movimiento','turno_id','observaciones']);
                 this.modoRecepcion = true;
                 this.totalesRecibidos.recibidos = 0;
+              }else if(response.data.estatus == 'CAN'){
+                this.verBoton.duplicar = true;
               }else{
                 this.verBoton.duplicar = true;
                 this.verBoton.crear_salida = true;
@@ -335,27 +338,44 @@ export class EntradaComponent implements OnInit {
               this.cargarDatosUsuarios(response.data);
 
               
-              let identificador = this.localStorageService.getDatosEntradaID();
+              let identificador = this.localStorageService.getDatosID();
               if(identificador && identificador.id == response.data.id){
-                console.log('tencontre', identificador.id);
-                let fecha_datos = this.datepipe.transform(identificador.actualizado, 'medium');
-                const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
-                  width: '500px',
-                  disableClose: true,
-                  data:{dialogTitle:'Recuperación de datos no guardados:',dialogMessage:'Se han encontado datos locales del movimiento actual, estos datos fueron capturados con fecha: '+fecha_datos+', pero no fueron guardados. ¿desea cargar los datos encontrados?',btnColor:'accent',btnText:'Cargar Datos'}
-                });
-            
-                dialogRef.afterClosed().subscribe(valid => {
-                  if(valid){
-                    this.estatusStorageIcon = 'difference';
-                    let datos_guardados = this.localStorageService.getDatosEntrada();
-                    if(datos_guardados.formulario){
-                      this.formMovimiento.patchValue(datos_guardados.formulario);
+                if(this.estatusMovimiento != 'BOR' && this.estatusMovimiento != 'PERE' ){
+                  this.localStorageService.deleteDatos();
+                }else{
+                  let fecha_datos = this.datepipe.transform(identificador.actualizado, 'medium');
+                  const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+                    width: '500px',
+                    disableClose: true,
+                    data:{dialogTitle:'Recuperación de datos no guardados:',dialogMessage:'Se han encontado datos locales del movimiento actual, estos datos fueron capturados con fecha: '+fecha_datos+', pero no fueron guardados. ¿desea cargar los datos encontrados?',btnColor:'accent',btnText:'Cargar Datos'}
+                  });
+              
+                  dialogRef.afterClosed().subscribe(valid => {
+                    if(valid){
+                      this.estatusStorageIcon = 'difference';
+                      this.verBoton.descartar_cambios = true;
+                      let datos_guardados = this.localStorageService.getDatos();
+
+                      if(datos_guardados.lista_articulos){
+                        this.dataSourceArticulos = new MatTableDataSource<any>(datos_guardados.lista_articulos);
+                        this.dataSourceArticulos.paginator = this.articulosPaginator;
+                        this.dataSourceArticulos.sort = this.sort;
+                      }
+
+                      if(datos_guardados.generales){
+                        this.totalesRecibidos = datos_guardados.generales;
+                      }
+
+                      if(datos_guardados.formulario){
+                        this.formMovimiento.patchValue(datos_guardados.formulario);
+                      }
                     }
-                  }
-                });
+                    this.configurarDatosTemporales();
+                  });
+                }
+              }else{
+                this.configurarDatosTemporales();
               }
-              this.configurarDatosTemporales();
             }
             this.isLoading = false;
           },
@@ -416,10 +436,22 @@ export class EntradaComponent implements OnInit {
         this.cargarColumnasArticulos();
 
         if(datos_recibidos && datos_recibidos.recuperacion){
-          let identificador = this.localStorageService.getDatosEntradaID();
+          let identificador = this.localStorageService.getDatosID();
           if(identificador && identificador.id == 'NV'){
             this.estatusStorageIcon = 'difference';
-            let datos_guardados = this.localStorageService.getDatosEntrada();
+            this.verBoton.descartar_cambios = true;
+            let datos_guardados = this.localStorageService.getDatos();
+
+            if(datos_guardados.lista_articulos){
+              this.dataSourceArticulos = new MatTableDataSource<any>(datos_guardados.lista_articulos);
+              this.dataSourceArticulos.paginator = this.articulosPaginator;
+              this.dataSourceArticulos.sort = this.sort;
+            }
+
+            if(datos_guardados.generales){
+              this.totalesRecibidos = datos_guardados.generales;
+            }
+
             if(datos_guardados.formulario){
               if(this.formMovimiento.get('almacen_id')){
                 this.formMovimiento.get('almacen_id').patchValue(datos_guardados.formulario.almacen_id);
@@ -428,14 +460,35 @@ export class EntradaComponent implements OnInit {
               this.formMovimiento.patchValue(datos_guardados.formulario);
             }
           }
+          this.configurarDatosTemporales();
+        }else{
+          this.configurarDatosTemporales();
         }
-        this.configurarDatosTemporales();
       }
     });
   }
 
   cargarListaArticulos(lista_articulos:any[], tipo_movimiento_clave:string, estatus:string):any[]{
     let listado_articulos:any = [];
+    this.controlArticulosAgregados = {};
+    this.totalesRecibidos = {
+      claves: 0,
+      lotes: 0,
+      articulos: 0,
+      monto: parseFloat('0'),
+      por_caducar: {
+        claves: 0,
+        lotes: 0,
+        articulos: 0,
+        monto: parseFloat('0'),
+      },
+      caducados:{
+        claves: 0,
+        lotes: 0,
+        articulos: 0,
+        monto: parseFloat('0'),
+      }
+    };
 
     for(let i in lista_articulos){
       lista_articulos[i].total_monto = parseFloat(lista_articulos[i].total_monto||0);
@@ -651,16 +704,27 @@ export class EntradaComponent implements OnInit {
   configurarDatosTemporales(){
     this.formMovimiento.valueChanges.subscribe(
       changes => {
-        this.estatusStorageIcon = 'difference';
-        //let stored_data = this.localStorageService.getDatosEntrada();
-        this.localStorageService.setDatosEntradaFormulario(changes);
+        //this.estatusStorageIcon = 'difference';
+        //this.verBoton.descartar_cambios = true;
+        //this.localStorageService.setDatosFormulario(changes);
+        this.guardarDatosTemporales('formulario');//,changes
       }
     );
   }
 
-  guardarDatosTemporalesListaArticulos(){
-    console.log('hay datos entrada: ',this.datosEntrada);
-    this.localStorageService.setDatosEntradaListaArticulos(this.datosEntrada.id,this.dataSourceArticulos.data);
+  guardarDatosTemporales(tipo:string){
+    if(this.estatusStorageIcon != 'difference'){
+      this.localStorageService.deleteDatos();
+      this.estatusStorageIcon = 'difference';
+      this.verBoton.descartar_cambios = true;
+    }
+    if(tipo == 'formulario'){
+      this.localStorageService.setDatosFormulario(this.formMovimiento.value);
+    }else if(tipo == 'lista_articulos'){
+      let local_storage_id = (this.datosEntrada)?this.datosEntrada.id:'NV';
+      this.localStorageService.setDatosListaArticulos(local_storage_id,this.dataSourceArticulos.data);
+      this.localStorageService.setDatosGenerales(local_storage_id,this.totalesRecibidos);
+    }
   }
 
   checarTipoMovimientoSeleccinado(){
@@ -674,7 +738,7 @@ export class EntradaComponent implements OnInit {
     if(tipo_movimiento && tipo_movimiento.clave == 'RUMD'){
       if(!this.formMovimiento.get('unidad_medica_movimiento')){
         this.formMovimiento.addControl('unidad_medica_movimiento',new FormControl('',Validators.required));
-        this.formMovimiento.addControl('unidad_medica_movimiento_id',new FormControl(''));          
+        this.formMovimiento.addControl('unidad_medica_movimiento_id',new FormControl('',Validators.required));
         this.filteredUnidadesMedicas = this.formMovimiento.get('unidad_medica_movimiento').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
                               map(nombre => nombre ? this._filter('unidades_medicas',nombre,'nombre') : this.catalogos['unidades_medicas'].slice())
                             );
@@ -688,8 +752,8 @@ export class EntradaComponent implements OnInit {
       }
     }else{
       if(!this.formMovimiento.get('proveedor')){
-        this.formMovimiento.addControl('proveedor',new FormControl('',Validators.required));
-        this.formMovimiento.addControl('proveedor_id',new FormControl(''));          
+        this.formMovimiento.addControl('proveedor',new FormControl(''));
+        this.formMovimiento.addControl('proveedor_id',new FormControl(''));
         this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
                           map(nombre => nombre ? this._filter('proveedores',nombre,'nombre') : this.catalogos['proveedores'].slice())
                         );
@@ -762,6 +826,7 @@ export class EntradaComponent implements OnInit {
         this.dataSourceArticulos.sort = this.sort;
 
         this.idArticuloSeleccionado = null;
+        this.guardarDatosTemporales('lista_articulos');
       }
     });
   }
@@ -783,8 +848,13 @@ export class EntradaComponent implements OnInit {
         this.totalesRecibidos.recibidos -= config.value.total_recibido;
         this.totalesRecibidos.recibidos += articulo.total_recibido;
       }
+
+      this.guardarDatosTemporales('lista_articulos');
+    }else if (config.accion == 'CambiosParaStorage'){
+      if(config.value.agregar){
+        this.guardarDatosTemporales('lista_articulos');
+      }
     }
-    this.guardarDatosTemporalesListaArticulos();
   }
 
   activarModificacionEntrada(){
@@ -965,7 +1035,8 @@ export class EntradaComponent implements OnInit {
             this.controlArticulosModificados = {};
             this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
             this.estatusStorageIcon = '';
-            this.localStorageService.deleteDatosEntrada();
+            this.verBoton.descartar_cambios = false;
+            this.localStorageService.deleteDatos();
           }
           this.isSaving = false;
         },
@@ -981,6 +1052,24 @@ export class EntradaComponent implements OnInit {
     }
   }
 
+  descartarCambiosLocalStorage(){
+    const dialogRef = this.dialog.open(ConfirmActionDialogComponent, {
+      width: '500px',
+      disableClose: true,
+      data:{dialogTitle:'Descartar Cambios:',dialogMessage:'¿desea descartar todos los cambios no guardados?',btnColor:'accent',btnText:'Aceptar'}
+    });
+
+    dialogRef.afterClosed().subscribe(valid => {
+      if(valid){
+        this.estatusStorageIcon = '';
+        this.verBoton.descartar_cambios = false;
+        this.localStorageService.deleteDatos();
+        this.idArticuloSeleccionado = null;
+        this.cargarDatosMovimiento();
+      }
+    });
+  }
+
   aplicarFiltroArticulos(event: Event){ 
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSourceArticulos.filter = filterValue.trim().toLowerCase();
@@ -990,7 +1079,6 @@ export class EntradaComponent implements OnInit {
     }else{
       this.filtroAplicado = true;
     }
-    
   }
 
   expandirRow(row){
@@ -1001,6 +1089,20 @@ export class EntradaComponent implements OnInit {
     this.filtroArticulos = '';
     this.dataSourceArticulos.filter = '';
     this.filtroAplicado = false;
+  }
+
+  autoOpcionSeleccionada(valor:any,campo:string,parametro:string){
+    if(this.formMovimiento.get(campo)){
+      this.formMovimiento.get(campo).patchValue(valor[parametro]);
+    }
+  }
+
+  validarOpcionSeleccionada(campo:string){
+    setTimeout (() => {
+      if(typeof this.formMovimiento.get(campo).value == 'string' && this.formMovimiento.get(campo).value != ''){
+        this.formMovimiento.get(campo).setErrors({notSelected:true});
+      }
+    }, 100);
   }
 
   getDisplayFn(label: string){

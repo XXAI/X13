@@ -16,29 +16,24 @@ export class MovimientosLocalStorageService {
     this.usuario = this.authService.getUserData();
   }
 
-  getDatosEntrada():any{
+  getDatos():any{
     let datos_completos:any = {
       formulario: this.getDatosTempMovimiento('formulario'),
       generales: this.getDatosTempMovimiento('generales'),
       lista_articulos: this.getDatosTempMovimiento('lista_articulos'),
     };
 
-    if(datos_completos.formulario.fecha_movimiento){
+    if((datos_completos.formulario) && datos_completos.formulario.fecha_movimiento){
       datos_completos.formulario.fecha_movimiento = new Date(datos_completos.formulario.fecha_movimiento);
     }
-    if(datos_completos.formulario.referencia_fecha){
+    if((datos_completos.formulario) && datos_completos.formulario.referencia_fecha){
       datos_completos.formulario.referencia_fecha = new Date(datos_completos.formulario.referencia_fecha);
     }
 
     return datos_completos;
   }
 
-  deleteDatosEntrada():any{
-    let resultado = this.deleteDatosTempMovimiento();
-    return resultado;
-  }
-
-  getDatosEntradaID():any{
+  getDatosID():any{
     let identificador = this.getDatosTempMovimiento('identificador');
     if(!identificador){
       identificador = {};
@@ -48,42 +43,51 @@ export class MovimientosLocalStorageService {
     return identificador;
   }
 
-  getDatosEntradaFormulario():any{
+  getDatosFormulario():any{
     let datos_formulario = this.getDatosTempMovimiento('formulario');
-    if(datos_formulario.fecha_movimiento){
+    if((datos_formulario) && datos_formulario.fecha_movimiento){
       datos_formulario.fecha_movimiento = new Date(datos_formulario.fecha_movimiento);
     }
-    if(datos_formulario.referencia_fecha){
+    if((datos_formulario) && datos_formulario.referencia_fecha){
       datos_formulario.referencia_fecha = new Date(datos_formulario.referencia_fecha);
     }
     return datos_formulario;
   }
 
-  setDatosEntradaID(datos:any):any{
+  deleteDatos():any{
+    let resultado = this.deleteDatosTempMovimiento();
+    return resultado;
+  }
+
+  setDatosID(datos:any):any{
     return this.setDatosTempMovimiento('identificador',datos);
   }
 
-  setDatosEntradaFormulario(datos:any):any{
+  setDatosFormulario(datos:any):any{
     this.putIdentificador(datos.id);
     return this.setDatosTempMovimiento('formulario',datos);
   }
 
-  setDatosEntradaListaArticulos(id,datos:any):any{
+  setDatosListaArticulos(id,datos:any):any{
     this.putIdentificador(id);
     return this.setDatosTempMovimiento('lista_articulos',datos);
   }
 
+  setDatosGenerales(id,datos:any):any{
+    this.putIdentificador(id);
+    return this.setDatosTempMovimiento('generales',datos);
+  }
+
   private putIdentificador(idMovimiento?:any){
-    let identificador:any = this.getDatosEntradaID();
+    let identificador:any = this.getDatosID();
     let id = (idMovimiento)?idMovimiento:'NV';
     identificador.id = id;
     identificador.actualizado = new Date();
-    this.setDatosEntradaID(identificador);
+    this.setDatosID(identificador);
   }
 
   private getDatosTempMovimiento(seccion:string):any{
     let key = 'datos_'+this.tipoMovimiento+'_tmp_id_'+this.usuario.id+'_secc_'+seccion;
-    console.log(key);
     return JSON.parse(localStorage.getItem(key));
   }
 

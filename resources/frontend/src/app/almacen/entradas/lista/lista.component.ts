@@ -69,8 +69,7 @@ export class ListaComponent implements OnInit {
 
   ngOnInit() {
     this.localStorageService.tipoMovimiento = 'entradas';
-    this.datosRecuperados = this.localStorageService.getDatosEntradaID();
-    console.log(this.datosRecuperados);
+    this.datosRecuperados = this.localStorageService.getDatosID();
     this.mediaObserver.media$.subscribe(
       response => {
         this.mediaSize = response.mqAlias;
@@ -283,7 +282,7 @@ export class ListaComponent implements OnInit {
         }
       });
     }else{
-      console.log('no encotnrado');
+      console.log('no encontrado');
     }
   }
 
@@ -362,7 +361,7 @@ export class ListaComponent implements OnInit {
               lista_items.estatus_label = this.listaEstatusLabels[lista_items.estatus];
               lista_items.estatus_icono = this.listaEstatusIconos[lista_items.estatus];
             this.objetoMovimiento = response.data;
-            console.log(this.objetoMovimiento);
+            //console.log(this.objetoMovimiento);
             this.generarEntradaPDF(this.objetoMovimiento);
             
           }
@@ -416,8 +415,6 @@ export class ListaComponent implements OnInit {
     dialogRef.afterClosed().subscribe(response => {
       if(response){
         this.loadListadoMovimientos();
-      }else{
-        console.log('Cancelar');
       }
     });
   }

@@ -43,13 +43,14 @@
                     </td>
                 </ng-container>
                 <ng-container *ngIf="loteEditIndex == i">
-                    <td colspan="7">
+                    <td colspan="7" style="color: black;">
                         <section style="width: 100%;" fxLayout="column" fxLayoutGap="5px" [formGroup]="formLote">
                             <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" fxLayoutAlign="space-between center" *ngIf="articulo.tipo_formulario == 'MEDS'">
                                 <mat-form-field fxFlex>
                                     <mat-label>Lote</mat-label>
                                     <input matInput formControlName="lote" required (keydown.enter)="guardarCambiosLote()" autocomplete="off">
                                     <mat-error *ngIf="formLote.get('lote').hasError('required')">Este campo es obligatorio</mat-error>
+                                    <mat-error *ngIf="formLote.get('lote').hasError('duplicated')">Los datos de este Lote ya fueron capturados</mat-error>
                                 </mat-form-field>
                                 <mat-form-field fxFlex>
                                     <mat-label>Fecha Caducidad</mat-label>
@@ -164,7 +165,7 @@
                                     <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> Carta de Canje
                                 </button>
                                 <div fxFlex></div>
-                                <button fxFlex="none" mat-button color="warn" (click)="eliminarLote(loteEditIndex)" *ngIf="articulo.lotes[loteEditIndex].hash"><mat-icon>remove</mat-icon> Quitar Lote</button>
+                                <button fxFlex="none" mat-button color="warn" (click)="eliminarLote(loteEditIndex)" *ngIf="articulo.lotes[loteEditIndex].hash"><mat-icon>delete</mat-icon> Quitar Lote</button>
                                 <div fxFlex></div>
                                 <button fxFlex="none" mat-button (click)="cancelarEdicion()" >Cancelar</button>
                                 <button fxFlex="none" color="success" mat-stroked-button (click)="guardarCambiosLote()">Guardar</button>

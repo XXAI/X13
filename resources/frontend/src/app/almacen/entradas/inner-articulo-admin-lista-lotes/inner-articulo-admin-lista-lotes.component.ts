@@ -115,7 +115,6 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       }else{
         loteData.entrada_piezas = false;
       }
-      
     });
     this.articulo.estatus = estatus_articulo;
 
@@ -129,7 +128,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       if(propName == 'fechaMovimiento'){
         const chng = changes[propName];
         if(chng.previousValue){
-          console.log(`Trabajando las caducidades en `+this.articulo.clave);
+          //console.log(`Trabajando las caducidades en `+this.articulo.clave);
           let estatus_articulo = 1;
           this.articulo.lotes.forEach(loteData => {
             let result = this.verificarFechaCaducidad(loteData.fecha_caducidad);
@@ -141,39 +140,40 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
             }
           });
           this.articulo.estatus = estatus_articulo;
-          console.log(`Terminado `+this.articulo.clave);
-          this.cambiosEnLotes.emit({accion:'CambiosParaStorage',value:{}});
-        }else{
-          console.log(`Incializando `+this.articulo.clave);
-        }
+          //console.log(`Terminado `+this.articulo.clave);
+          this.cambiosEnLotes.emit({accion:'CambiosParaStorage',value:{agregar:true}});
+        }//else{
+          //console.log(`Incializando `+this.articulo.clave);
+        //}
       }else if(propName == 'articulo'){
         const chng = changes[propName];
         let cur  = chng.currentValue;
-        console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
-        this.cambiosEnLotes.emit({accion:'CambiosParaStorage',value:{}});
+        //console.log(`Cambio de valor en ${propName}: clave = ${cur.clave}`);
+        this.cambiosEnLotes.emit({accion:'CambiosParaStorage',value:{agregar: cur.seleccionado}});
       }
     }
   }
 
   aplicarCantidad(lote){
-    console.log(lote);
+    //console.log(lote);
     if(this.edicionActiva){
       if(lote.cantidad < 0){
         lote.cantidad = 0;
       }else if(lote.cantidad > lote.cantidad_enviada){
         lote.cantidad = lote.cantidad_enviada;
       }
-  
-      let estado_anterior = this.obtenerEstadoActualArticulo();
+
+      if(lote.cantidad_recibida_anterior != (lote.cantidad_enviada - lote.cantidad)){
+        let estado_anterior = this.obtenerEstadoActualArticulo();
       
-      if(lote.cantidad_recibida_anterior){
-        this.articulo.total_recibido += lote.cantidad_recibida_anterior;
+        if(lote.cantidad_recibida_anterior){
+          this.articulo.total_recibido += lote.cantidad_recibida_anterior;
+        }
+    
+        this.articulo.total_recibido -= (lote.cantidad_enviada - lote.cantidad);
+        lote.cantidad_recibida_anterior = (lote.cantidad_enviada - lote.cantidad);
+        this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
       }
-  
-      this.articulo.total_recibido -= (lote.cantidad_enviada - lote.cantidad);
-      lote.cantidad_recibida_anterior = (lote.cantidad_enviada - lote.cantidad);
-  
-      this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
     }
   }
 
@@ -278,6 +278,12 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   }
 
   guardarCambiosLote(addNew:boolean = false){
+    console.log('si lo tiene borrarlo',this.formLote.get('lote').hasError('duplicated'));
+    if(this.formLote.get('lote').hasError('duplicated')){
+      this.formLote.get('lote').errors['duplicated'] = false;
+      this.formLote.get('lote').updateValueAndValidity();
+      //this.formLote.get('lote').markAsUntouched();
+    }
     if(this.formLote.valid){
       this.checarCaducidadFormulario();
       
@@ -322,6 +328,8 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         let loteIndex = this.articulo.lotes.findIndex(x => x.hash === loteData.hash);
         if(loteIndex >= 0){
           console.log('lote ya capturado');
+          this.formLote.get('lote').setErrors({duplicated:true});
+          return false;
         }else{
           this.articulo.lotes.push(loteData);
           this.articulo.total_piezas += +loteData.cantidad;
@@ -339,9 +347,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         });
         this.articulo.estatus = estatus_articulo;
       }
+      this.cancelarEdicion();
+
       this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
 
-      this.cancelarEdicion();
       if(addNew){
         this.agregarLote();
       }

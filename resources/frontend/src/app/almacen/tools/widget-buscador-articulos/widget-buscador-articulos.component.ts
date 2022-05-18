@@ -98,8 +98,6 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
   }
 
   buscarArticulo(){
-    console.log('buscar: ',this.inputBuscadorArticulos.value);
-
     if(this.buscarStock){
       if(this.inputBuscadorArticulos.value == 'l:' || this.inputBuscadorArticulos.value == 'L:'){
         this.modoBusqueda = '[ por Lote ]';
@@ -220,11 +218,15 @@ export class WidgetBuscadorArticulosComponent implements OnInit {
 
   itemSeleccionado(item){
     let articulo = item;
+    articulo.seleccionado = true;
+
     delete articulo.descripcion_html;
     delete articulo.nombre_html;
+
     this.inputBuscadorArticulos.reset();
     this.resultadoArticulos = [];
     this.estatusBusqueda = 'idle';
+
     this.articuloSeleccionado.emit(articulo);
   }
 

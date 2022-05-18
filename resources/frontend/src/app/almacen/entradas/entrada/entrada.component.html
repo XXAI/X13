@@ -80,6 +80,12 @@
                 </button>
             </div>
 
+            <mat-divider *ngIf="verBoton['descartar_cambios']"></mat-divider>
+            <button mat-menu-item *ngIf="verBoton['descartar_cambios']" (click)="descartarCambiosLocalStorage()">
+                <mat-icon>undo</mat-icon>
+                <span>Descartar Cambios</span>
+            </button>
+
             <mat-divider></mat-divider>
             <button mat-menu-item (click)="generarPDF()">
                 <mat-icon>print</mat-icon>
@@ -210,7 +216,7 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.programa">
                     <mat-label>Programa</mat-label>
-                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" [matAutocomplete]="autoProgramas" autocomplete="off" required>
+                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" (blur)="validarOpcionSeleccionada('programa')" [matAutocomplete]="autoProgramas" autocomplete="off" required>
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
@@ -220,7 +226,14 @@
                             {{programa.descripcion}}
                         </mat-option>
                     </mat-autocomplete>
-                    <mat-hint *ngIf="formMovimiento.get('programa').value"><mat-icon>{{(formMovimiento.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                    <mat-error *ngIf="formMovimiento.get('programa').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-error *ngIf="formMovimiento.get('programa').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                    <mat-hint *ngIf="formMovimiento.get('programa').value">
+                        <mat-icon>{{(formMovimiento.get('programa').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                    </mat-hint>
+                    <mat-hint align="end" *ngIf="formMovimiento.get('programa').value && formMovimiento.get('programa').value.id">
+                        Programa Seleccionado
+                    </mat-hint>
                 </mat-form-field>
 
                 <mat-form-field fxFlex *ngIf="!datosForm.programa && datosEntrada">
@@ -241,7 +254,7 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.proveedor">
                     <mat-label>Proveedor</mat-label>
-                    <input #proveedorInput type="text" placeholder="Teclee para buscar un proveedor" matInput formControlName="proveedor" [matAutocomplete]="autoProveedores">
+                    <input #proveedorInput type="text" placeholder="Teclee para buscar un proveedor" matInput formControlName="proveedor" [matAutocomplete]="autoProveedores" (blur)="validarOpcionSeleccionada('proveedor')">
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
@@ -251,7 +264,10 @@
                             {{proveedor.nombre}} <mat-hint>[{{proveedor.rfc}}]</mat-hint>
                         </mat-option>
                     </mat-autocomplete>
-                    <mat-hint *ngIf="formMovimiento.get('proveedor').value"><mat-icon>{{(formMovimiento.get('proveedor').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
+                    <mat-error *ngIf="formMovimiento.get('proveedor').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
+                    <mat-hint *ngIf="formMovimiento.get('proveedor').value">
+                        <mat-icon>{{(formMovimiento.get('proveedor').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon>
+                    </mat-hint>
                     <mat-hint align="end" *ngIf="formMovimiento.get('proveedor').value">[{{formMovimiento.get('proveedor').value.rfc}}]</mat-hint>
                 </mat-form-field>
 
@@ -262,16 +278,18 @@
 
                 <mat-form-field fxFlex *ngIf="datosForm.unidad_medica_movimiento">
                     <mat-label>Unidad Médica Origen</mat-label>
-                    <input #unidadMedicaInput type="text" placeholder="Teclee para buscar una Unidad Médica" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas">
+                    <input #unidadMedicaInput type="text" placeholder="Teclee para buscar una Unidad Médica" matInput formControlName="unidad_medica_movimiento" [matAutocomplete]="autoUnidadesMedicas" (blur)="validarOpcionSeleccionada('unidad_medica_movimiento')" required>
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
-                    <mat-autocomplete #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto">
+                    <mat-autocomplete #autoUnidadesMedicas="matAutocomplete" [displayWith]="getDisplayFn('nombre')" panelWidth="auto" (optionSelected)="autoOpcionSeleccionada($event.option.value,'unidad_medica_movimiento_id','id')">
                         <mat-option *ngIf="catalogos['unidades_medicas'].length == 0" value="">No hay unidades médicas capturados</mat-option>
                         <mat-option *ngFor="let unidad_medica of filteredUnidadesMedicas | async" [value]="unidad_medica">
                             {{unidad_medica.nombre}} <mat-hint>[{{unidad_medica.clues}}]</mat-hint>
                         </mat-option>
                     </mat-autocomplete>
+                    <mat-error *ngIf="formMovimiento.get('unidad_medica_movimiento').hasError('required')">Este campo es obligatorio</mat-error>
+                    <mat-error *ngIf="formMovimiento.get('unidad_medica_movimiento').hasError('notSelected')">Seleccionar un elemento de la lista</mat-error>
                     <mat-hint *ngIf="formMovimiento.get('unidad_medica_movimiento').value"><mat-icon>{{(formMovimiento.get('unidad_medica_movimiento').value.id)?'check_box':'indeterminate_check_box'}}</mat-icon></mat-hint>
                     <mat-hint align="end" *ngIf="formMovimiento.get('unidad_medica_movimiento').value">[{{formMovimiento.get('unidad_medica_movimiento').value.clues}}]</mat-hint>
                 </mat-form-field>
