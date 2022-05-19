@@ -722,27 +722,30 @@ class AlmacenEntradaController extends Controller
 
             $control_stocks = [];
             foreach ($movimiento->listaArticulos as $articulo) {
-                $stock = $articulo->stock;
+                if($articulo->stock){
 
-                if($stock->empaqueDetalle){
-                    $piezas_x_empaque = $stock->empaqueDetalle->piezas_x_empaque;
-                }else{
-                    $piezas_x_empaque = 1;
-                }
-
-                if($articulo->modo_movimiento == 'UNI'){
-                    $stock->existencia_piezas = $stock->existencia_piezas - $articulo->cantidad;
-                    $stock->existencia = $stock->existencia - floor($articulo->cantidad / $piezas_x_empaque);
-                }else{
-                    $stock->existencia = $stock->existencia - $articulo->cantidad;
-                    $stock->existencia_piezas = $stock->existencia_piezas - ($articulo->cantidad * $piezas_x_empaque);
-                }
-                
-                if($stock->existencia < 0){
-                    $control_stocks[] = $stock;
-                }else{
-                    if(count($control_stocks) == 0){
-                        $stock->save();
+                    $stock = $articulo->stock;
+                    
+                    if($stock->empaqueDetalle){
+                        $piezas_x_empaque = $stock->empaqueDetalle->piezas_x_empaque;
+                    }else{
+                        $piezas_x_empaque = 1;
+                    }
+    
+                    if($articulo->modo_movimiento == 'UNI'){
+                        $stock->existencia_piezas = $stock->existencia_piezas - $articulo->cantidad;
+                        $stock->existencia = $stock->existencia - floor($articulo->cantidad / $piezas_x_empaque);
+                    }else{
+                        $stock->existencia = $stock->existencia - $articulo->cantidad;
+                        $stock->existencia_piezas = $stock->existencia_piezas - ($articulo->cantidad * $piezas_x_empaque);
+                    }
+                    
+                    if($stock->existencia < 0){
+                        $control_stocks[] = $stock;
+                    }else{
+                        if(count($control_stocks) == 0){
+                            $stock->save();
+                        }
                     }
                 }
             }
