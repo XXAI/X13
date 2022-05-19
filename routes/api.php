@@ -109,6 +109,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('ajustes/articulo-lotes',                        'API\Modulos\AlmacenAjustesController@articuloLotes');
     Route::get('ajustes/lote-movimientos/{id}',                 'API\Modulos\AlmacenAjustesController@loteMovimientos');
     Route::put('ajustes/guardar-cambios-lote/{id}',             'API\Modulos\AlmacenAjustesController@guardarCambiosLote');
+    Route::get('ajustes/lote-resguardos/{id}',                  'API\Modulos\AlmacenAjustesController@loteResguardos');
 
     /**
      * Modulos Pedidos

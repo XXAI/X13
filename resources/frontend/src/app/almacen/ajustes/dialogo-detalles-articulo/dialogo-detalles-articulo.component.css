@@ -2,6 +2,14 @@
     padding:0px;
 }
 
+@media screen and (max-width: 1024px){
+    ::ng-deep .no-padding-dialog > .mat-dialog-container{
+        padding:0px;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
 .salida-toolbar:not(.mat-button){
     background-color: #4a4848;
     color:whitesmoke;
@@ -145,6 +153,7 @@
 .info-existencias{
     font-size: inherit;
     cursor:default;
+    white-space: nowrap;
 }
 
 .info-existencias span{

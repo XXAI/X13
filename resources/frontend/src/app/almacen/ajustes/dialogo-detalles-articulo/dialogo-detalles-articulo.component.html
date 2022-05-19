@@ -77,7 +77,7 @@
                             <mat-icon mat-list-icon matBadgePosition="before" matBadgeSize="small" matBadge="{{lote.movimientos}}">sync_alt</mat-icon>
                             <div mat-line><span class="lote-label">Lote: </span>{{lote.lote}}</div>
                             <div mat-line><span class="lote-label">Cad:</span> {{lote.fecha_caducidad | date}}</div>
-                            <div mat-line>E:{{lote.existencia | number:'1.0-0'}} | P:{{lote.existencia_unidades | number:'1.0-0'}}</div>
+                            <div mat-line>E:{{lote.existencia | number:'1.0-0'}} | P:{{lote.existencia_piezas | number:'1.0-0'}}</div>
                         </mat-list-option>
                     </mat-selection-list>
                 </div>
@@ -88,10 +88,11 @@
                     <span>Seleccione un lote</span>
                 </div>
                 <div fxFlex="none" fxLayout="row" class="botones" *ngIf="loteSeleccionado">
-                    <div fxFlex class="info-existencias">
+                    <div fxFlex="none" class="info-existencias">
                         <span>Existencia: </span>{{existencias.cantidad | number:'1.0-0'}} <span *ngIf="nuevaExistencia" class="nueva-existencia">=> {{nuevaExistencia['nrm'] | number:'1.0-0'}}</span><br>
                         <span>Piezas: </span>{{existencias.piezas | number:'1.0-0'}} <span *ngIf="nuevaExistencia" class="nueva-existencia">=> {{nuevaExistencia['uni'] | number:'1.0-0'}}</span>
                     </div>
+                    <div fxFlex></div>
                     <div fxFlex="none" fxLayout="row" class="info-resumen" *ngIf="resumenMovimientos">
                         <div fxFlex="none">
                             <span>ENT: </span><br>
@@ -108,11 +109,11 @@
                             <span> | Pzas: </span>{{resumenMovimientos['SAL']['uni'] | number:'1.0-0'}}
                         </div>
                     </div>
-                    <div fxFlex fxLayout="row">
-                        <div fxFlex></div>
-                        <button mat-stroked-button fxFlex="none" (click)="cancelarEdicioLote()">Cancelar</button>
+                    <div fxFlex></div>
+                    <div fxFlex="none" fxLayout="row">
+                        <button mat-stroked-button fxFlex="none" (click)="cancelarEdicioLote()"><mat-icon>clear</mat-icon> <span fxHide.lt-lg>Cancelar</span></button>
                         <div fxFlex="none">&nbsp;</div>
-                        <button mat-flat-button color="primary" fxFlex="none" (click)="guardarCambiosLote()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> Guardar</button>
+                        <button mat-flat-button color="primary" fxFlex="none" (click)="guardarCambiosLote()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> <span fxHide.lt-lg>Guardar</span></button>
                     </div>
                 </div>
                 <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" class="detalles-lote" *ngIf="loteSeleccionado" [formGroup]="formDetallesLote">
@@ -131,7 +132,7 @@
                         <input matInput formControlName="codigo_barras" autocomplete="off">
                     </mat-form-field>
 
-                    <mat-form-field fxFlex="50" fxFlex.lt-lg="100">
+                    <mat-form-field fxFlex="60" fxFlex.lt-lg="fill">
                         <mat-label>Empaque Detalle</mat-label>
                         <mat-select formControlName="empaque_detalle_id" (selectionChange)="cambiarDetalle($event)" required>
                             <mat-option *ngIf="empaqueDetalles.length == 0">Sin Registros</mat-option>
@@ -142,22 +143,15 @@
                         <mat-hint align="end" *ngIf="empaqueDetalleSeleccionado">Contiene: {{empaqueDetalleSeleccionado.piezas_x_empaque}} Pzas.</mat-hint>
                     </mat-form-field>
 
-                    <!--div fxFlex="50" fxFlex.lt-lg="100" fxHide.lt-lg>
-                        <div fxFlex fxLayout="row" class="info-empaque-detalle" *ngIf="empaqueDetalleSeleccionado">
+                    <div fxFlex="none" fxFlex.lt-lg="30">
+                        <div fxFlex fxLayout="row" class="info-empaque-detalle" *ngIf="resguardos">
+                            <button fxFlex="none" mat-flat-button color="primary" MatTooltip="Resguardar" (click)="mostrarDialogoResguardo()"><mat-icon>settings</mat-icon></button>
                             <div fxFlex class="fake-input">
-                                <span class="label">Empaque:</span>
-                                <span class="value">{{empaqueDetalleSeleccionado.empaque.descripcion}}</span>
-                            </div>
-                            <div fxFlex class="fake-input">
-                                <span class="label">Piezas X Empaque:</span>
-                                <span class="value">{{empaqueDetalleSeleccionado.piezas_x_empaque | number:'1.0-0'}}</span>
-                            </div>
-                            <div fxFlex class="fake-input">
-                                <span class="label">Unidad Medida:</span>
-                                <span class="value">{{empaqueDetalleSeleccionado.unidad_medida.descripcion}}</span>
+                                <span class="label">Resguardado:</span>
+                                <span class="value">{{resguardos.cantidad | number:'1.0-0'}} ({{resguardos.piezas | number:'1.0-0'}} Pzas.)</span>
                             </div>
                         </div>
-                    </div-->
+                    </div>
                 </div>
                 <div fxFlex class="tabla-movimientos" *ngIf="loteSeleccionado">
                     <table mat-table [dataSource]="dataSourceMovimientos" class="lista-movimientos-table" matSort>

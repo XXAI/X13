@@ -15,7 +15,7 @@ export interface Stock {
     fecha_caducidad?:Date;
     codigo_barras?:string;
     existencia?:Number;
-    existencia_unidades?:Number;
+    existencia_piezas?:Number;
     user_id?:string;
   }
 //No se si voy a usar este todavia
@@ -29,7 +29,7 @@ export interface Stock {
     fecha_caducidad?:Date;
     codigo_barras?:string;
     existencia?:Number;
-    existencia_unidades?:Number;
+    existencia_piezas?:Number;
     user_id?:string;
   }
 

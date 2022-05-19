@@ -278,7 +278,6 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   }
 
   guardarCambiosLote(addNew:boolean = false){
-    console.log('si lo tiene borrarlo',this.formLote.get('lote').hasError('duplicated'));
     if(this.formLote.get('lote').hasError('duplicated')){
       this.formLote.get('lote').errors['duplicated'] = false;
       this.formLote.get('lote').updateValueAndValidity();

@@ -69,7 +69,7 @@ class VisorAbastoSurtimientoController extends Controller
                                                                     $joinStocks->on('stocks.bien_servicio_id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                                 ->on('stocks.unidad_medica_id','=','unidad_medica_catalogo_articulos.unidad_medica_id')
                                                                                 ->where(function($where){
-                                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                                                 })->whereNull('stocks.deleted_at');
                                                                 })
                                                                 ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
@@ -105,14 +105,14 @@ class VisorAbastoSurtimientoController extends Controller
 
             /* Lista de existencias para articulos normativos  */
             $catalogo_normativo = UnidadMedicaCatalogoArticulo::select('catalogo_tipos_bien_servicio.descripcion AS tipo','bienes_servicios.clave_local AS clave','bienes_servicios.articulo','bienes_servicios.especificaciones AS descripcion','unidad_medica_catalogo_articulos.es_normativo',
-                                                                        DB::raw('SUM(stocks.existencia) AS existencia'), DB::raw('SUM(stocks.existencia_unidades) AS existencia_unidades')) #'unidad_medica_catalogo_articulos.id is not null as en_catalogo',
+                                                                        DB::raw('SUM(stocks.existencia) AS existencia'), DB::raw('SUM(stocks.existencia_piezas) AS existencia_piezas')) #'unidad_medica_catalogo_articulos.id is not null as en_catalogo',
                                                                 ->leftJoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                 ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
                                                                 ->leftJoin('stocks',function($joinStocks){
                                                                     $joinStocks->on('stocks.bien_servicio_id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                                 ->on('stocks.unidad_medica_id','=','unidad_medica_catalogo_articulos.unidad_medica_id')
                                                                                 ->where(function($where){
-                                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                                                 })->whereNull('stocks.deleted_at');
                                                                 })
                                                                 ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
@@ -125,7 +125,7 @@ class VisorAbastoSurtimientoController extends Controller
 
             /* Lista de articulos con caducidad  */
             $articulos_caducidades = Stock::select('bienes_servicios.clave_local AS clave','bienes_servicios.articulo','bienes_servicios.especificaciones AS descripcion','almacenes.nombre as almacen','stocks.lote', 'stocks.fecha_caducidad', 
-                                                DB::raw('SUM(stocks.existencia) as existencia'), DB::raw('SUM(stocks.existencia_unidades) as existencia_unidades'),DB::raw('TIMESTAMPDIFF(DAY, current_date(), stocks.fecha_caducidad) as dias'),
+                                                DB::raw('SUM(stocks.existencia) as existencia'), DB::raw('SUM(stocks.existencia_piezas) as existencia_piezas'),DB::raw('TIMESTAMPDIFF(DAY, current_date(), stocks.fecha_caducidad) as dias'),
                                                 DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0) as caducado'))
                                                                 ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
                                                                 ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
@@ -147,12 +147,12 @@ class VisorAbastoSurtimientoController extends Controller
                 if($articulo->caducado){
                     $articulos_estado_caducidades['caducados']['total_lotes'] += 1;
                     $articulos_estado_caducidades['caducados']['total_existencia'] += $articulo->existencia;
-                    $articulos_estado_caducidades['caducados']['total_existencia_unidades'] += $articulo->existencia_unidades;
+                    $articulos_estado_caducidades['caducados']['total_existencia_unidades'] += $articulo->existencia_piezas;
                     $articulos_estado_caducidades['caducados']['lista'][] = $articulo;
                 }else{
                     $articulos_estado_caducidades['por_caducar']['total_lotes'] += 1;
                     $articulos_estado_caducidades['por_caducar']['total_existencia'] += $articulo->existencia;
-                    $articulos_estado_caducidades['por_caducar']['total_existencia_unidades'] += $articulo->existencia_unidades;
+                    $articulos_estado_caducidades['por_caducar']['total_existencia_unidades'] += $articulo->existencia_piezas;
                     $articulos_estado_caducidades['por_caducar']['lista'][] = $articulo;
                 }
             }
@@ -193,7 +193,7 @@ class VisorAbastoSurtimientoController extends Controller
                                                         $joinStocks->on('stocks.bien_servicio_id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                     ->on('stocks.unidad_medica_id','=','unidad_medica_catalogo_articulos.unidad_medica_id')
                                                                     ->where(function($where){
-                                                                        $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                        $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                                     })->whereNull('stocks.deleted_at');
                                                     })
                                                     ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
@@ -213,7 +213,7 @@ class VisorAbastoSurtimientoController extends Controller
                                 ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
                                 ->where('stocks.unidad_medica_id',$unidad_medica_id)
                                 ->where(function($where){
-                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                 })
                                 ->whereNotNull('stocks.fecha_caducidad')
                                 ->groupBy('stocks.id')

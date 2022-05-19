@@ -26,6 +26,19 @@ use Response, Validator;
 
 class AlmacenAjustesController extends Controller{
 
+    public function loteResguardos(Request $request, $id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            $detalles = Stock::where('stocks.id',$id)->with('resguardoDetalle.usuario')->first();
+            
+            return response()->json(['data'=>$detalles],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     public function loteMovimientos(Request $request, $id){
         try{
             $loggedUser = auth()->userOrFail();
@@ -116,7 +129,7 @@ class AlmacenAjustesController extends Controller{
                                             DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),"stocks.bien_servicio_id as id",'catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', 
                                             DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                                             "bienes_servicios.articulo as articulo","bienes_servicios.especificaciones as especificaciones","bienes_servicios.puede_surtir_unidades",
-                                            DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia_unidades) as existencias"))
+                                            DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia_piezas) as existencias"))
                                     ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
                                     ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
                                     ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
@@ -194,7 +207,7 @@ class AlmacenAjustesController extends Controller{
                 });
             }else{
                 $lista_articulos = $lista_articulos->where(function($where){
-                    $where->where('stocks.existencia','>',0)->orWhere('existencia_unidades','>',0);
+                    $where->where('stocks.existencia','>',0)->orWhere('existencia_piezas','>',0);
                 });
             }
 
@@ -275,17 +288,17 @@ class AlmacenAjustesController extends Controller{
                     $existencias = floor($existencias_piezas / $nuevo_empaque->piezas_x_empaque);
                     
                     $stock->existencia = $existencias;
-                    $stock->existencia_unidades = $existencias_piezas;
-                    /*if($stock->existencia_unidades){
-                        if($stock->existencia_unidades < $viejo_empaque->piezas_x_empaque){
-                            $piezas_extra = $stock->existencia_unidades;
+                    $stock->existencia_piezas = $existencias_piezas;
+                    /*if($stock->existencia_piezas){
+                        if($stock->existencia_piezas < $viejo_empaque->piezas_x_empaque){
+                            $piezas_extra = $stock->existencia_piezas;
                         }else{
-                            $piezas_extra = $stock->existencia_unidades - ( $stock->existencia * $viejo_empaque->piezas_x_empaque );
+                            $piezas_extra = $stock->existencia_piezas - ( $stock->existencia * $viejo_empaque->piezas_x_empaque );
                         }
                         
-                        $stock->existencia_unidades = ($stock->existencia * $nuevo_empaque->piezas_x_empaque) + $piezas_extra;
+                        $stock->existencia_piezas = ($stock->existencia * $nuevo_empaque->piezas_x_empaque) + $piezas_extra;
                     }else{
-                        $stock->existencia_unidades = ($stock->existencia * $nuevo_empaque->piezas_x_empaque);
+                        $stock->existencia_piezas = ($stock->existencia * $nuevo_empaque->piezas_x_empaque);
                     }*/
                 }
 

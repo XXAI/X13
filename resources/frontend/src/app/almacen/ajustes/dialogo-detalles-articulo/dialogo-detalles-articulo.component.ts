@@ -5,10 +5,9 @@ import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
 import { SharedService } from 'src/app/shared/shared.service';
 import { AjustesService } from '../ajustes.service';
+import { DialogoResguardoLoteComponent } from '../dialogo-resguardo-lote/dialogo-resguardo-lote.component';
 
 export interface DialogData {
   articuloId: number;
@@ -42,6 +41,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   loteSeleccionado:boolean;
   formDetallesLote:FormGroup;
   existencias:any;
+  resguardos:any;
   resumenMovimientos:any;
   nuevaExistencia: any;
 
@@ -74,6 +74,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.isLoading = true;
     this.mostrarTodosLotes = false;
     this.existencias = {cantidad:0, piezas:0, x_pieza:1};
+    this.resguardos = {cantidad:0, piezas:0};
     this.dataSourceLotes = new MatTableDataSource<any>([]);
 
     this.formDetallesLote = this.formBuilder.group({
@@ -106,7 +107,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
             let result:boolean = true;
 
             if(!filtro.todos){
-              result = (record.existencia > 0 || record.existencia_unidades > 0);
+              result = (record.existencia > 0 || record.existencia_piezas > 0);
             }
             
             if(result && filtro.query){
@@ -139,8 +140,11 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.empaqueDetalleSeleccionado = this.empaqueDetalles.find(x => x.id == lote.empaque_detalle_id);
 
     this.existencias.cantidad = lote.existencia;
-    this.existencias.piezas = lote.existencia_unidades;
+    this.existencias.piezas = lote.existencia_piezas;
     this.existencias.x_pieza = (this.empaqueDetalleSeleccionado)?this.empaqueDetalleSeleccionado.piezas_x_empaque:1;
+    
+    this.resguardos.piezas = lote.resguardo_piezas||0;
+    this.resguardos.cantidad = Math.floor((lote.resguardo_piezas||0)/this.existencias.x_pieza);
 
     this.resumenMovimientos = null;
     this.dataSourceMovimientos = new MatTableDataSource<any>([]);
@@ -272,5 +276,23 @@ export class DialogoDetallesArticuloComponent implements OnInit {
       todos: this.mostrarTodosLotes
     };
     this.dataSourceLotes.filter = JSON.stringify(filter);
+  }
+
+  mostrarDialogoResguardo(){
+    let stock_id:number = this.formDetallesLote.get('id').value;
+    let piezas_x_empaque = (this.empaqueDetalleSeleccionado)?this.empaqueDetalleSeleccionado.piezas_x_empaque:1;
+    let configDialog = {
+      width: '60%',
+      height: '80%',
+      data:{stockId: stock_id, almacenData:this.datosAlmacen, articuloData: this.datosArticulo, piezasXEmpaque: piezas_x_empaque},
+      panelClass: 'no-padding-dialog'
+    };
+
+    const dialogRef = this.dialog.open(DialogoResguardoLoteComponent, configDialog);
+    dialogRef.afterClosed().subscribe(dialogResponse => {
+      if(dialogResponse){
+        console.log('Response: ',dialogResponse);
+      }
+    });
   }
 }

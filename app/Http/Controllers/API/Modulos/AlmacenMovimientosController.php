@@ -122,7 +122,7 @@ class AlmacenMovimientosController extends Controller{
                                                     $join = $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
                                                                 ->where('stocks.unidad_medica_id',$unidad_medica_id)
                                                                 ->where(function($where){
-                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                                 })
                                                                 ->where('stocks.almacen_id',$parametros['almacen_id'])
                                                                 ->whereNull('stocks.deleted_at');
@@ -338,7 +338,7 @@ class AlmacenMovimientosController extends Controller{
                             'empaque_detalle'       => ['descripcion'=>$value->empaquetado],
                             'existencia'            => $value->existencia,
                             'existencia_empaque'    => $value->existencia,
-                            'existencia_unidades'   => $value->existencia_unidades,
+                            'existencia_piezas'   => $value->existencia_piezas,
                         ];
                     }else{
                         if(!isset($resultado_stock[$index_articulo]['lotes'])){
@@ -359,13 +359,13 @@ class AlmacenMovimientosController extends Controller{
                             'empaque_detalle'       => $value->empaquetado,
                             'existencia'            => $value->existencia,
                             'existencia_empaque'    => $value->existencia,
-                            'existencia_unidades'   => $value->existencia_unidades,
+                            'existencia_piezas'   => $value->existencia_piezas,
                         ];
                     }
                     $resultado_stock[$index_articulo]['total_lotes']++;
                     $resultado_stock[$index_articulo]['existencias'] += $value->existencia;
                     $resultado_stock[$index_articulo]['existencias_empaque'] += $value->existencia;
-                    $resultado_stock[$index_articulo]['existencias_unidades'] += $value->existencia_unidades;
+                    $resultado_stock[$index_articulo]['existencias_unidades'] += $value->existencia_piezas;
                 }
             }
 

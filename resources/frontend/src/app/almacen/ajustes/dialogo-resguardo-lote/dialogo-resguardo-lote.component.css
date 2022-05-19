@@ -1,0 +1,132 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.salida-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.boton-accion{
+    border-left: 1px solid whitesmoke;
+    background-color: #787878;
+    border-radius: 0px;
+}
+
+.boton-accion-medio{
+    border-radius: 0px;
+}
+
+.datos-articulo{
+    padding: 5px;
+    background-color:#420101;
+    color:whitesmoke;
+}
+
+.datos-lote{
+    padding: 5px;
+    background-color: whitesmoke;
+    color:black;
+}
+
+.datos-lote .fake-input{
+    color: rgba(0,0,0,.87);
+}
+
+.datos-lote .fake-input .label{
+    color: rgba(0,0,0,.54);
+}
+
+.datos-lote .fake-input .value{
+    border-bottom: 1px solid rgba(0,0,0,.42);
+}
+
+.fake-input{
+    border-radius: 4px;
+    padding: 0.75em;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: 1.125;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    letter-spacing: normal;
+    color: rgba(255,255,255,.87);
+    cursor:default;
+    /*background-color: rgba(0,0,0,.04);*/
+}
+
+.fake-input:hover{
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.fake-input .label{
+    display: block;
+    font-size: small;
+    color: rgba(255,255,255,.54);
+    white-space: nowrap;
+}
+
+.fake-input .value{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    white-space: nowrap;
+    padding: 0 5px;
+}
+
+.fake-input .value-text{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    padding: 0 5px;
+}
+
+.panel-resguardo{
+    overflow: hidden;
+}
+
+.panel-resguardo > div{
+    border:1px solid rgba(255,255,255,.42);
+    border-collapse: collapse;
+}
+
+.panel-lista{
+    overflow: auto;
+}
+
+.panel-detalle{
+    overflow: auto;
+}
+
+.encabezado{
+    padding: 5px;
+    font-weight: 500;
+    background-color: cadetblue;
+}
+
+.panel-lista .mat-list-base{
+    padding-top: 0px;
+}
+
+.detalles-sin-resguardo{
+    margin: 10px;
+    padding: 40px;
+    text-align: center;
+    font-style: italic;
+    color: #4a4848;
+    border-radius: 5px;
+    background-color: whitesmoke;
+    cursor: default;
+}
+
+.botones{
+    background-color: whitesmoke;
+    padding: 4px;
+}

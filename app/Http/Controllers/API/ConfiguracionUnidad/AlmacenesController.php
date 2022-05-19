@@ -203,7 +203,7 @@ class AlmacenesController extends Controller
     {
         try {
             $total_stocks = Stock::where('almacen_id',$id)->where(function($where){
-                                                                $where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);
+                                                                $where->where('existencia','>',0)->orWhere('existencia_piezas','>',0);
                                                             })->count();
 
             if($total_stocks > 0){

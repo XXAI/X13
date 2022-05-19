@@ -75,7 +75,7 @@ class AlmacenExistenciasController extends Controller
                 });
             }else{
                 $items = $items->where(function($where){
-                    $where->where('stocks.existencia','>',0)->orWhere('existencia_unidades','>',0);
+                    $where->where('stocks.existencia','>',0)->orWhere('existencia_piezas','>',0);
                 });
             }
 
@@ -96,7 +96,7 @@ class AlmacenExistenciasController extends Controller
                         "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
                         "familias.nombre as familia",
                         DB::raw("SUM(stocks.existencia) as existencia"),
-                        DB::raw("SUM(stocks.existencia_unidades) as existencia_unidades"),
+                        DB::raw("SUM(stocks.existencia_piezas) as existencia_piezas"),
                         DB::raw("COUNT(distinct stocks.id) as total_lotes"))
                         ->groupBy('stocks.bien_servicio_id');
                 }
@@ -114,7 +114,7 @@ class AlmacenExistenciasController extends Controller
                     "cog_partidas_especificas.clave as clave_partida_especifica",
                     "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
                     "stocks.existencia as existencia",
-                    "stocks.existencia_unidades as existencia_unidades",
+                    "stocks.existencia_piezas as existencia_piezas",
                     "stocks.fecha_caducidad as fecha_caducidad",
                     "stocks.lote as lote",
                     "stocks.codigo_barras as codigo_barras",

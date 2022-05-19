@@ -10,7 +10,11 @@ class Stock extends Model{
     
     use SoftDeletes;
     protected $table = 'stocks';  
-    protected $fillable = ['id','unidad_medica_id','almacen_id','bien_servicio_id','empaque_detalle_id','programa_id','marca_id','modelo','no_serie','lote','fecha_caducidad','codigo_barras','existencia','existencia_unidades','user_id'];
+    protected $fillable = ['id','unidad_medica_id','almacen_id','bien_servicio_id','empaque_detalle_id','programa_id','marca_id','modelo','no_serie','lote','fecha_caducidad','codigo_barras','existencia','existencia_piezas','resguardo_piezas','user_id'];
+
+    public function resguardoDetalle(){
+        return $this->hasMany('App\Models\StockResguardoDetalle','stock_id');
+    }
 
     public function marca(){
         return $this->belongsTo('App\Models\Marca','marca_id');

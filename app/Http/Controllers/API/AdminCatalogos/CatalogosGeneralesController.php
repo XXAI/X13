@@ -121,7 +121,7 @@ class CatalogosGeneralesController extends Controller{
                                         ->leftJoin('stocks',function($join){
                                             $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
                                                 ->where(function($where){
-                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                 });
                                         })
                                         ->with(['familia','partidaEspecifica','unidadMedida',
@@ -129,7 +129,7 @@ class CatalogosGeneralesController extends Controller{
                                                     $empaqueDetalle->select('bienes_servicios_empaque_detalles.*',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
                                                                     ->leftJoin('stocks',function($join){
                                                                         $join->on('stocks.empaque_detalle_id','=','bienes_servicios_empaque_detalles.id')->where(function($where){
-                                                                            $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                                            $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                                         });
                                                                     })
                                                                     ->groupBy('bienes_servicios_empaque_detalles.id')
@@ -144,7 +144,7 @@ class CatalogosGeneralesController extends Controller{
                             ->groupBy('stocks.empaque_detalle_id')
                             ->groupBy('stocks.unidad_medica_id')
                             ->orderBy('stocks.unidad_medica_id')
-                            ->where(function($where){$where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);})
+                            ->where(function($where){$where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);})
                             ->where('stocks.bien_servicio_id',$id)->get();
             //
             $return_data = [
@@ -246,12 +246,12 @@ class CatalogosGeneralesController extends Controller{
                                 if($total_lotes){
                                     for($j = 0; $j < $total_lotes; $j++){
                                         $lote = $lotes[$j];
-                                        if($lote->existencia_unidades < $detalle_update->piezas_x_empaque){
-                                            $piezas_extra = $lote->existencia_unidades;
+                                        if($lote->existencia_piezas < $detalle_update->piezas_x_empaque){
+                                            $piezas_extra = $lote->existencia_piezas;
                                         }else{
-                                            $piezas_extra = $lote->existencia_unidades - ( $lote->existencia * $detalle_update->piezas_x_empaque );
+                                            $piezas_extra = $lote->existencia_piezas - ( $lote->existencia * $detalle_update->piezas_x_empaque );
                                         }
-                                        $lote->existencia_unidades = $lote->existencia + $piezas_extra;
+                                        $lote->existencia_piezas = $lote->existencia + $piezas_extra;
                                         $lote->empaque_detalle_id = null;
                                         $lote->save();
                                     }
@@ -260,7 +260,7 @@ class CatalogosGeneralesController extends Controller{
                                 $detalles_guardados[$detalle['id']] = null;
                             }else{
                                 if($detalle_update->piezas_x_empaque != $detalle['piezas_x_empaque']){
-                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->where(function($where){$where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);})->get();
+                                    $lotes = Stock::where('empaque_detalle_id',$detalle_update->id)->where(function($where){$where->where('existencia','>',0)->orWhere('existencia_piezas','>',0);})->get();
                                     $total_lotes = count($lotes);
                                     if($total_lotes){
                                         for($j = 0; $j < $total_lotes; $j++){
@@ -302,7 +302,7 @@ class CatalogosGeneralesController extends Controller{
                                             $existencias = floor($existencias_piezas / $detalle['piezas_x_empaque']);
                                             
                                             $lote->existencia = $existencias;
-                                            $lote->existencia_unidades = $existencias_piezas;
+                                            $lote->existencia_piezas = $existencias_piezas;
                                             $lote->save();
                                             
                                         }
@@ -326,7 +326,7 @@ class CatalogosGeneralesController extends Controller{
                             $empaqueDetalle->select('bienes_servicios_empaque_detalles.*',DB::raw('COUNT(DISTINCT stocks.id) as existencias'))
                                             ->leftJoin('stocks',function($join){
                                                 $join->on('stocks.empaque_detalle_id','=','bienes_servicios_empaque_detalles.id')->where(function($where){
-                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_unidades','>',0);
+                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
                                                 });
                                             })
                                             ->groupBy('bienes_servicios_empaque_detalles.id')
@@ -352,7 +352,7 @@ class CatalogosGeneralesController extends Controller{
             $articulo = BienServicio::find($id);
             
             $validar_stock = Stock::where('bien_servicio_id',$id)->where(function($where){
-                                                                            $where->where('existencia','>',0)->orWhere('existencia_unidades','>',0);
+                                                                            $where->where('existencia','>',0)->orWhere('existencia_piezas','>',0);
                                                                         })->groupBy('bien_servicio_id')->first();
             if($validar_stock){
                 return response()->json(['error'=>'Este articulo no puede eliminarse ya que cuenta con existencias activas'],HttpResponse::HTTP_OK);

@@ -385,7 +385,7 @@ export class SalidaComponent implements OnInit {
                   }
                   
                   articulo.existencias_empaque += stock.existencia;
-                  articulo.existencias_unidades += stock.existencia_unidades;
+                  articulo.existencias_unidades += stock.existencia_piezas;
 
                   articulo.lotes.push({
                     id: stock.id,
@@ -399,7 +399,7 @@ export class SalidaComponent implements OnInit {
                     marca: (stock.marca)?stock.marca:'Sin Marca',
                     existencia: stock.existencia,
                     existencia_empaque: stock.existencia,
-                    existencia_unidades: stock.existencia_unidades,
+                    existencia_piezas: stock.existencia_piezas,
                     salida: stock.cantidad,
                     restante: stock.existencia - stock.cantidad,
                   });
@@ -538,13 +538,13 @@ export class SalidaComponent implements OnInit {
           marca: (lista_articulos[i].stock.marca)?lista_articulos[i].stock.marca:'Sin Marca',
           existencia: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia,
           existencia_empaque: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia,
-          existencia_unidades: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia_unidades,
+          existencia_piezas: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia_piezas,
           salida: lista_articulos[i].cantidad,
           restante: ((!precarga)?+lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia) - +lista_articulos[i].cantidad,
         };
 
         if(precarga){
-          if((lote.existencia_empaque + lote.existencia_unidades) > 0){
+          if((lote.existencia_empaque + lote.existencia_piezas) > 0){
             if(lote.salida > lote.existencia_empaque){
               lote.salida = lote.existencia_empaque;
               lote.restante = 0;
@@ -561,7 +561,7 @@ export class SalidaComponent implements OnInit {
         articulo.total_piezas += lote.salida;
         articulo.total_lotes++;
         articulo.existencias_empaque += (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia;
-        articulo.existencias_unidades += (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia_unidades;  
+        articulo.existencias_unidades += (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia_piezas;  
       }
       articulo.existencias = (articulo.surtir_en_unidades)?articulo.existencias_unidades:articulo.existencias_empaque;
       articulo.existencias_restantes = articulo.existencias - articulo.total_piezas;

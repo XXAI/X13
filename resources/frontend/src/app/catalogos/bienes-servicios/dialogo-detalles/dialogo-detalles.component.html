@@ -325,7 +325,7 @@
                         <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Existencia<br>(Piezas) </th>
                         <td mat-cell *matCellDef="let row"> 
                             {{row.existencia||0 | number:'1.0-0'}}<br>
-                            ({{row.existencia_unidades||0 | number:'1.0-0'}})
+                            ({{row.existencia_piezas||0 | number:'1.0-0'}})
                         </td>
                     </ng-container>
 

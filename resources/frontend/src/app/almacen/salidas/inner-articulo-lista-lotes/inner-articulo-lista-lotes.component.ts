@@ -81,7 +81,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
       }
 
       if(this.articulo.surtir_en_unidades){
-        loteData.existencia = loteData.existencia_unidades;
+        loteData.existencia = loteData.existencia_piezas;
       }else{
         loteData.existencia = loteData.existencia_empaque;
       }
@@ -119,7 +119,7 @@ export class InnerArticuloListaLotesComponent implements OnInit {
     let articulo_restante = 0;
     this.articulo.lotes.forEach(loteData => {
       if(this.articulo.surtir_en_unidades){
-        loteData.existencia = loteData.existencia_unidades;
+        loteData.existencia = loteData.existencia_piezas;
       }else{
         loteData.existencia = loteData.existencia_empaque;
       }

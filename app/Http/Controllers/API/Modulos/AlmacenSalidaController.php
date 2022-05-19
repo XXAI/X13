@@ -432,15 +432,15 @@ class AlmacenSalidaController extends Controller
                                     $piezas_x_empaque = 1;
                                 }
 
-                                $cantidad_anterior = ($modo_movimiento == 'UNI')?$lote_guardado->existencia_unidades:$lote_guardado->existencia;
+                                $cantidad_anterior = ($modo_movimiento == 'UNI')?$lote_guardado->existencia_piezas:$lote_guardado->existencia;
                                 if($cantidad_anterior >= $lote['salida']){
                                     if($modo_movimiento == 'UNI'){
-                                        $lote_guardado->existencia_unidades -= $lote['salida'];
-                                        $lote_guardado->existencia = floor($lote_guardado->existencia_unidades / $piezas_x_empaque);
+                                        $lote_guardado->existencia_piezas -= $lote['salida'];
+                                        $lote_guardado->existencia = floor($lote_guardado->existencia_piezas / $piezas_x_empaque);
                                     }else{
                                         $lote_guardado->existencia -= $lote['salida'];
                                         //if($datos_articulo->puede_surtir_unidades){
-                                        $lote_guardado->existencia_unidades -= ($lote['salida'] * $piezas_x_empaque);
+                                        $lote_guardado->existencia_piezas -= ($lote['salida'] * $piezas_x_empaque);
                                         //}
                                     }
                                     $lote_guardado->user_id = $loggedUser->id;
@@ -788,12 +788,12 @@ class AlmacenSalidaController extends Controller
                     }
 
                     if($articulo_movimiento->modo_movimiento == 'UNI'){
-                        $stock->existencia_unidades += $articulo_movimiento->cantidad;
-                        $stock->existencia = floor($stock->existencia_unidades / $piezas_x_empaque);
+                        $stock->existencia_piezas += $articulo_movimiento->cantidad;
+                        $stock->existencia = floor($stock->existencia_piezas / $piezas_x_empaque);
                     }else{
                         $stock->existencia += $articulo_movimiento->cantidad;
                         //if($articulo_movimiento->articulo->puede_surtir_unidades){
-                        $stock->existencia_unidades += ($articulo_movimiento->cantidad * $piezas_x_empaque);
+                        $stock->existencia_piezas += ($articulo_movimiento->cantidad * $piezas_x_empaque);
                         //}
                     }
                     $stock->save();

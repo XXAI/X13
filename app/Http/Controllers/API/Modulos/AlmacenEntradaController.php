@@ -436,7 +436,7 @@ class AlmacenEntradaController extends Controller
                                 'empaque_detalle_id'    => (isset($lote['empaque_detalle_id']))?$lote['empaque_detalle_id']:null,
                                 'programa_id'           => $movimiento->programa_id,
                                 //'existencia'            => $lote['cantidad'],
-                                //'existencia_unidades'   => $piezas_x_empaque * $lote['cantidad'],
+                                //'existencia_piezas'   => $piezas_x_empaque * $lote['cantidad'],
 
                                 'marca_id'              => (isset($lote['marca_id']))?$lote['marca_id']:null,
                                 'modelo'                => (isset($lote['modelo']))?$lote['modelo']:null,
@@ -451,10 +451,10 @@ class AlmacenEntradaController extends Controller
 
                             if(isset($lote['entrada_piezas']) && $lote['entrada_piezas']){
                                 $stock_lote['existencia']            = floor($lote['cantidad'] / $piezas_x_empaque);
-                                $stock_lote['existencia_unidades']   = $lote['cantidad'];
+                                $stock_lote['existencia_piezas']   = $lote['cantidad'];
                             }else{
                                 $stock_lote['existencia']            = $lote['cantidad'];
-                                $stock_lote['existencia_unidades']   = $piezas_x_empaque * $lote['cantidad'];
+                                $stock_lote['existencia_piezas']   = $piezas_x_empaque * $lote['cantidad'];
                             }
                             
                             if($tipo_movimiento->clave == 'RCPCN'){ //Si el tipo de movimiento es de recepción, entonces ya debe venir con el id del lote, del que se saco
@@ -494,9 +494,9 @@ class AlmacenEntradaController extends Controller
                             
                             if($lote_guardado){
                                 $lote_guardado->existencia += $stock_lote['existencia'];
-                                $lote_guardado->existencia_unidades += $stock_lote['existencia_unidades'];
+                                $lote_guardado->existencia_piezas += $stock_lote['existencia_piezas'];
                                 //if($articulo_data->puede_surtir_unidades){
-                                //$lote_guardado->existencia_unidades += ($piezas_x_empaque * $stock_lote['existencia']);
+                                //$lote_guardado->existencia_piezas += ($piezas_x_empaque * $stock_lote['existencia']);
                                 //}
                                 $lote_guardado->user_id = $loggedUser->id;
                                 $lote_guardado->save();
@@ -731,11 +731,11 @@ class AlmacenEntradaController extends Controller
                 }
 
                 if($articulo->modo_movimiento == 'UNI'){
-                    $stock->existencia_unidades = $stock->existencia_unidades - $articulo->cantidad;
+                    $stock->existencia_piezas = $stock->existencia_piezas - $articulo->cantidad;
                     $stock->existencia = $stock->existencia - floor($articulo->cantidad / $piezas_x_empaque);
                 }else{
                     $stock->existencia = $stock->existencia - $articulo->cantidad;
-                    $stock->existencia_unidades = $stock->existencia_unidades - ($articulo->cantidad * $piezas_x_empaque);
+                    $stock->existencia_piezas = $stock->existencia_piezas - ($articulo->cantidad * $piezas_x_empaque);
                 }
                 
                 if($stock->existencia < 0){
