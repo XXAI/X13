@@ -21,6 +21,7 @@ use App\Models\UnidadMedida;
 use App\Models\UnidadMedica;
 use App\Models\Almacen;
 use App\Models\Stock;
+use App\Models\StockResguardoDetalle;
 use App\Models\MovimientoArticulo;
 use Response, Validator;
 
@@ -32,6 +33,96 @@ class AlmacenAjustesController extends Controller{
             $parametros = $request->all();
 
             $detalles = Stock::where('stocks.id',$id)->with('resguardoDetalle.usuario')->first();
+            
+            return response()->json(['data'=>$detalles],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function saveResguardo(Request $request,$stockId){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            $stock = Stock::with('empaqueDetalle')->find($stockId);
+
+            if(!$stock){
+                return response()->json(['error'=>'No se encontro el lote indicado'],HttpResponse::HTTP_OK);
+            }
+
+            if($parametros['cantidad_resguardada'] <= 0){
+                return response()->json(['error'=>'La cantidad a resguardar no puede ser menor o igual que 0'],HttpResponse::HTTP_OK);
+            }
+
+            if($stock->empaqueDetalle){
+                $piezas_x_empaque = $stock->empaqueDetalle->piezas_x_empaque;
+            }else{
+                $piezas_x_empaque = 1;
+            }
+
+            if($parametros['son_piezas']){
+                $cantidad_piezas = $parametros['cantidad_resguardada'];
+            }else{
+                $cantidad_piezas = $parametros['cantidad_resguardada'] * $piezas_x_empaque;
+            }
+
+            $stock->resguardo_piezas += $cantidad_piezas;
+            if($stock->resguardo_piezas > $stock->existencia_piezas){
+                return response()->json(['error'=>'No es posible resguardar esta cantidad'],HttpResponse::HTTP_OK);
+            }
+
+            DB::beginTransaction();
+
+            $parametros['usuario_resguarda_id'] = $loggedUser->id;
+            
+            if($parametros['id']){
+                $resguardo = StockResguardoDetalle::find($parametros['id']);
+
+                if($resguardo->cantidad_restante > $parametros['cantidad_resguardada']){
+                    DB::rollback();
+                    return response()->json(['error'=>'La cantidad a resguardar no puede ser menor a lo restante por surtir'],HttpResponse::HTTP_OK);
+                }
+
+                $resguardo->update($parametros);
+            }else{
+                $parametros['cantidad_restante'] = $parametros['cantidad_resguardada'];
+                $resguardo = StockResguardoDetalle::create($parametros);
+            }
+
+            $stock->save();
+            
+            DB::commit();
+            
+            return response()->json(['data'=>$resguardo],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function deleteResguardo(Request $request,$id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            $resguardo = StockResguardoDetalle::find($id);
+            $stock = Stock::with('empaqueDetalle')->find($resguardo->stock_id);
+
+            if($stock->empaqueDetalle){
+                $piezas_x_empaque = $stock->empaqueDetalle->piezas_x_empaque;
+            }else{
+                $piezas_x_empaque = 1;
+            }
+
+            if($resguardo->son_piezas){
+                $cantidad_piezas = $resguardo->cantidad_resguardada;
+            }else{
+                $cantidad_piezas = $resguardo->cantidad_resguardada * $piezas_x_empaque;
+            }
+
+            //TODO::
+            
             
             return response()->json(['data'=>$detalles],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

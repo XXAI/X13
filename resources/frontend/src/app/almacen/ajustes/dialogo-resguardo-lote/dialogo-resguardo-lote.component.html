@@ -63,7 +63,7 @@
                             <div mat-line><span class="lote-label">{{resguardo.descripcion}}</span></div>
                             <div mat-line>{{resguardo.cantidad_resguardada | number:'1.0-0'}} <span *ngIf="resguardo.son_piezas">(Pzas.)</span></div>
                         </mat-list-option>
-                        <mat-list-option [value]="{nuevo:true}">
+                        <mat-list-option [value]="{nuevo:true}" class="opcion-nuevo-registro">
                             <mat-icon mat-list-icon>add_circle</mat-icon>
                             <div mat-line>Nuevo Resguardo</div>
                         </mat-list-option>
@@ -74,6 +74,13 @@
                 <div fxFlex="none" class="encabezado">Detalles:</div>
                 <div fxFlex="none" class="detalles-sin-resguardo" *ngIf="!resguardoSeleccionado">
                     <span>Seleccione un lote</span>
+                </div>
+                <div fxFlex="none" fxLayou="row" *ngIf="resguardoSeleccionado" class="botones">
+                    <button mat-stroked-button fxFlex="none" color="warn" *ngIf="formResguardo.get('id').value" (click)="eliminarResguardo(formResguardo.get('id').value)"><mat-icon>delete</mat-icon> <span>Eliminar</span></button>
+                    <div fxFlex></div>
+                    <button mat-stroked-button fxFlex="none" (click)="cancelarForm()"><mat-icon>clear</mat-icon> <span>Cancelar</span></button>
+                    <div fxFlex="none">&nbsp;</div>
+                    <button mat-flat-button color="accent" fxFlex="none" (click)="guardarForm()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> <span>Guardar</span></button>
                 </div>
                 <div fxFlex *ngIf="resguardoSeleccionado">
                     <div fxLayout="row wrap" fxLayoutGap="5px" [formGroup]="formResguardo">
@@ -94,13 +101,6 @@
                             <mat-error *ngIf="formResguardo.get('cantidad_resguardada').hasError('exceeded')">La cantidad excede las existencias</mat-error>
                         </mat-form-field>
                     </div>
-                </div>
-                <div fxFlex="none" fxLayou="row" *ngIf="resguardoSeleccionado" class="botones">
-                    <button mat-stroked-button fxFlex="none" color="warn" *ngIf="formResguardo.get('id').value" (click)="eliminarResguardo(formResguardo.get('id').value)"><mat-icon>delete</mat-icon> <span>Eliminar</span></button>
-                    <div fxFlex></div>
-                    <button mat-stroked-button fxFlex="none" (click)="cancelarForm()"><mat-icon>clear</mat-icon> <span>Cancelar</span></button>
-                    <div fxFlex="none">&nbsp;</div>
-                    <button mat-flat-button color="accent" fxFlex="none" (click)="guardarForm()" [disabled]="isSaving" [class.button-spinner]="isSaving"><mat-icon>save</mat-icon> <span>Guardar</span></button>
                 </div>
             </div>
         </div>

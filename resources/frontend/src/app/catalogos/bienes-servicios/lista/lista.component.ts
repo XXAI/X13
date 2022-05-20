@@ -83,6 +83,7 @@ export class ListaComponent implements OnInit {
     let configDialog = {
       width: '100%',
       height: '100%',
+      maxWidth: '100%',
       disableClose: true,
       data:{id: id},
       panelClass: 'no-padding-dialog'

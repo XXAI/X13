@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog, MatDialogState } from '@angular/material/dialog';
 import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -33,6 +33,8 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     public dialog: MatDialog,
   ) { }
+
+  subDialogRef:any;
 
   isLoading:boolean;
   isSaving:boolean;
@@ -259,7 +261,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   }
 
   cancelarAccion(){
-    if(this.loteSeleccionado){
+    if(this.subDialogRef && this.subDialogRef.getState() === MatDialogState.OPEN){
+      this.subDialogRef.close();
+    }else if(this.loteSeleccionado){
       this.cancelarEdicioLote();
     }else{
       this.cerrar();
@@ -283,15 +287,18 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     let piezas_x_empaque = (this.empaqueDetalleSeleccionado)?this.empaqueDetalleSeleccionado.piezas_x_empaque:1;
     let configDialog = {
       width: '60%',
-      height: '80%',
+      height: '60%',
+      disableClose:true,
       data:{stockId: stock_id, almacenData:this.datosAlmacen, articuloData: this.datosArticulo, piezasXEmpaque: piezas_x_empaque},
       panelClass: 'no-padding-dialog'
     };
 
-    const dialogRef = this.dialog.open(DialogoResguardoLoteComponent, configDialog);
-    dialogRef.afterClosed().subscribe(dialogResponse => {
+    this.subDialogRef = this.dialog.open(DialogoResguardoLoteComponent, configDialog);
+    this.subDialogRef.afterClosed().subscribe(dialogResponse => {
       if(dialogResponse){
         console.log('Response: ',dialogResponse);
+        this.resguardos.piezas = +dialogResponse.resguardoPiezas;
+        this.resguardos.cantidad = Math.floor(dialogResponse.resguardoPiezas/this.empaqueDetalleSeleccionado.piezas_x_empaque);
       }
     });
   }

@@ -30,7 +30,17 @@ export class DialogoResguardoLoteComponent implements OnInit {
     private formBuilder: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     public dialog: MatDialog,
-  ) { }
+  ) {
+    dialogRef.beforeClosed().subscribe(() => 
+      {
+        let return_val:any = null;
+        if(this.loteData){
+          return_val = {resguardoPiezas: this.loteData.resguardo_piezas};
+        }
+        dialogRef.close(return_val);
+      }
+    );
+   }
 
   isLoading:boolean;
   isSaving:boolean;
@@ -133,7 +143,20 @@ export class DialogoResguardoLoteComponent implements OnInit {
   }
 
   eliminarResguardo(id){
-    ///
+    //buscar y eliminar
+    let index = this.loteData.resguardo_detalle.findIndex(x => x.id == id);
+    let resguardo = this.loteData.resguardo_detalle[index];
+
+    let cantidad_piezas;
+    if(resguardo.son_piezas){
+      cantidad_piezas = resguardo.cantidad_resguardada;
+    }else{
+      cantidad_piezas = (resguardo.cantidad_resguardada * this.data.piezasXEmpaque);
+    }
+    this.loteData.resguardo_piezas -= cantidad_piezas;
+
+    this.loteData.resguardo_detalle.splice(index,1);
+    this.resguardoSeleccionado = false;
   }
 
   cerrar(){
