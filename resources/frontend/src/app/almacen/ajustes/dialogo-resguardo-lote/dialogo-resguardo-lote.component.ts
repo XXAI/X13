@@ -111,52 +111,82 @@ export class DialogoResguardoLoteComponent implements OnInit {
       this.formResguardo.get('cantidad_resguardada').errors['exceeded'] = false;
       this.formResguardo.get('cantidad_resguardada').updateValueAndValidity();
     }
-    if(this.formResguardo.valid){
+    if(this.formResguardo.valid && !this.isSaving){
+      this.isSaving = true;
       let datos_detalle = this.formResguardo.value;
-      if(!datos_detalle.id){ //enviar a guardar
-        datos_detalle.id = this.loteData.resguardo_detalle.length+1;
-        
 
-        let cantidad_piezas;
-        if(datos_detalle.son_piezas){
-          cantidad_piezas = datos_detalle.cantidad_resguardada;
-        }else{
-          cantidad_piezas = (datos_detalle.cantidad_resguardada * this.data.piezasXEmpaque);
-        }
-
-        if(this.loteData.existencia_piezas < (cantidad_piezas + this.loteData.resguardo_piezas)){
-          this.formResguardo.get('cantidad_resguardada').setErrors({exceeded:true});
-          this.formResguardo.get('cantidad_resguardada').markAsTouched();
-        }else{
-          this.loteData.resguardo_piezas += cantidad_piezas;
-          this.loteData.resguardo_detalle.push(datos_detalle);
-          this.formInput.focus();
-          this.formResguardo.reset();
-        }
+      let cantidad_piezas;
+      if(datos_detalle.son_piezas){
+        cantidad_piezas = datos_detalle.cantidad_resguardada;
       }else{
-        //buscar y reemplazar
-        let index = this.loteData.resguardo_detalle.findIndex(x => x.id == datos_detalle.id);
-        this.loteData.resguardo_detalle[index] = datos_detalle;
-        this.resguardoSeleccionado = false;
+        cantidad_piezas = (datos_detalle.cantidad_resguardada * this.data.piezasXEmpaque);
+      }
+
+      if(this.loteData.existencia_piezas < (cantidad_piezas + this.loteData.resguardo_piezas)){
+        this.formResguardo.get('cantidad_resguardada').setErrors({exceeded:true});
+        this.formResguardo.get('cantidad_resguardada').markAsTouched();
+        this.isSaving = false;
+      }else{
+        this.ajustesService.guardarResguardo(this.data.stockId,datos_detalle).subscribe(
+          response =>{
+            if(response.error) {
+              let errorMessage = response.error;
+              this.sharedService.showSnackBar(errorMessage, null, 3000);
+            } else {
+              console.log(response);
+              let index = this.loteData.resguardo_detalle.findIndex(x => x.id == response.data.id);
+              if(index >= 0){
+                this.loteData.resguardo_detalle[index] = response.data;
+                this.resguardoSeleccionado = false;
+              }else{
+                this.loteData.resguardo_detalle.push(response.data);
+                this.formInput.focus();
+                this.formResguardo.reset();
+              }
+              this.loteData.resguardo_piezas = response.stock_resguardo_piezas;
+            }
+            this.isSaving = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isSaving = false;
+          }
+        );
       }
     }
   }
 
   eliminarResguardo(id){
     //buscar y eliminar
-    let index = this.loteData.resguardo_detalle.findIndex(x => x.id == id);
-    let resguardo = this.loteData.resguardo_detalle[index];
-
-    let cantidad_piezas;
-    if(resguardo.son_piezas){
-      cantidad_piezas = resguardo.cantidad_resguardada;
-    }else{
-      cantidad_piezas = (resguardo.cantidad_resguardada * this.data.piezasXEmpaque);
+    if(id){
+      this.isSaving = true;
+      this.ajustesService.borrarResguardo(id).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          } else {
+            let index = this.loteData.resguardo_detalle.findIndex(x => x.id == id);
+            this.loteData.resguardo_detalle.splice(index,1);
+            this.loteData.resguardo_piezas = response.data.resguardo_piezas;
+            this.resguardoSeleccionado = false;
+          }
+          this.isSaving = false;
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isSaving = false;
+        }
+      );
     }
-    this.loteData.resguardo_piezas -= cantidad_piezas;
-
-    this.loteData.resguardo_detalle.splice(index,1);
-    this.resguardoSeleccionado = false;
   }
 
   cerrar(){

@@ -296,9 +296,11 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.subDialogRef = this.dialog.open(DialogoResguardoLoteComponent, configDialog);
     this.subDialogRef.afterClosed().subscribe(dialogResponse => {
       if(dialogResponse){
-        console.log('Response: ',dialogResponse);
         this.resguardos.piezas = +dialogResponse.resguardoPiezas;
         this.resguardos.cantidad = Math.floor(dialogResponse.resguardoPiezas/this.empaqueDetalleSeleccionado.piezas_x_empaque);
+        let index = this.dataSourceLotes.data.findIndex(x => x.id == stock_id);
+        this.dataSourceLotes.data[index].resguardo_piezas = +dialogResponse.resguardoPiezas;
+        this.aplicarFiltroLotes();
       }
     });
   }

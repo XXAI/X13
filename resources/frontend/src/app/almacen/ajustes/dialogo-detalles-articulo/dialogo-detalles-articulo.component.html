@@ -74,10 +74,10 @@
                             Sin Resultados
                         </mat-list-option>
                         <mat-list-option *ngFor="let lote of dataSourceLotes.filteredData" [value]="lote">
-                            <mat-icon mat-list-icon matBadgePosition="before" matBadgeSize="small" matBadge="{{lote.movimientos}}">sync_alt</mat-icon>
+                            <mat-icon mat-list-icon matBadgePosition="before" matBadgeSize="small" matBadge="{{lote.movimientos}}" [matBadgeColor]="(lote.resguardo_piezas > 1)?'accent':'primary'" [color]="(lote.resguardo_piezas > 1)?'accent':''">sync_alt</mat-icon>
                             <div mat-line><span class="lote-label">Lote: </span>{{lote.lote}}</div>
                             <div mat-line><span class="lote-label">Cad:</span> {{lote.fecha_caducidad | date}}</div>
-                            <div mat-line>E:{{lote.existencia | number:'1.0-0'}} | P:{{lote.existencia_piezas | number:'1.0-0'}}</div>
+                            <div mat-line><span class="lote-label">E:</span> {{lote.existencia | number:'1.0-0'}} | <span class="lote-label">P:</span> {{lote.existencia_piezas | number:'1.0-0'}}</div>
                         </mat-list-option>
                     </mat-selection-list>
                 </div>

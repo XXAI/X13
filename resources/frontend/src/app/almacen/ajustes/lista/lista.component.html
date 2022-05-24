@@ -89,7 +89,7 @@
                     <ng-container matColumnDef="existencias" >
                         <th mat-header-cell *matHeaderCellDef fxHide.xs="true"> Tiene<br>Existencias </th>
                         <td mat-cell *matCellDef="let row" fxHide.xs="true"> 
-                            <mat-icon [ngClass]="{'inactivo':!+row.existencias}" [matTooltip]="+row.existencias | number:'1.0-0'">{{(+row.existencias)?'inventory':'content_paste_off'}}</mat-icon>
+                            <mat-icon [ngClass]="{'inactivo':!+row.existencias}" [color]="(row.resguardo_piezas > 1)?'accent':''" [matTooltip]="+row.existencias | number:'1.0-0'">{{(+row.existencias)?'inventory':'content_paste_off'}}</mat-icon>
                         </td>
                     </ng-container>
                     

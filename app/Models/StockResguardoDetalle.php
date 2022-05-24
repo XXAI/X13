@@ -10,7 +10,7 @@ class StockResguardoDetalle extends Model{
     
     use SoftDeletes;
     protected $table = 'stocks_resguardo_detalles';  
-    protected $fillable = ['stock_id','descripcion','cantidad_resguardada','cantidad_restante','condiciones_salida','usuario_resguarda_id'];
+    protected $fillable = ['stock_id','descripcion','son_piezas','cantidad_resguardada','cantidad_restante','condiciones_salida','usuario_resguarda_id'];
 
     public function stock(){
         return $this->belongsTo('App\Models\Stock','stock_id');

@@ -12,7 +12,7 @@ export class AjustesService {
   url_lotes = `${environment.base_url}/ajustes/articulo-lotes`;
   url_movimientos = `${environment.base_url}/ajustes/lote-movimientos/`;
   url_guardar = `${environment.base_url}/ajustes/guardar-cambios-lote/`;
-  url_resguardos = `${environment.base_url}/ajustes/lote-resguardos/`;
+  url_resguardos = `${environment.base_url}/ajustes/lote-resguardos`;
 
   constructor(private http: HttpClient) { }
 
@@ -41,7 +41,23 @@ export class AjustesService {
   }
 
   getLoteResguardo(id){
-    return this.http.get<any>(this.url_resguardos+id,{}).pipe(
+    return this.http.get<any>(this.url_resguardos+'/'+id,{}).pipe(
+      map( (response: any) => {
+        return response;
+      }
+    ));
+  }
+
+  guardarResguardo(id,payload){
+    return this.http.put<any>(this.url_resguardos+'/'+id,payload).pipe(
+      map( (response: any) => {
+        return response;
+      }
+    ));
+  }
+
+  borrarResguardo(id){
+    return this.http.delete<any>(this.url_resguardos+'/'+id,{}).pipe(
       map( (response: any) => {
         return response;
       }

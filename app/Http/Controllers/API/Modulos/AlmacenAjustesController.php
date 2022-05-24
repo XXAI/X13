@@ -40,12 +40,12 @@ class AlmacenAjustesController extends Controller{
         }
     }
 
-    public function saveResguardo(Request $request,$stockId){
+    public function saveResguardo(Request $request,$id){
         try{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $stock = Stock::with('empaqueDetalle')->find($stockId);
+            $stock = Stock::with('empaqueDetalle')->find($id);
 
             if(!$stock){
                 return response()->json(['error'=>'No se encontro el lote indicado'],HttpResponse::HTTP_OK);
@@ -67,34 +67,43 @@ class AlmacenAjustesController extends Controller{
                 $cantidad_piezas = $parametros['cantidad_resguardada'] * $piezas_x_empaque;
             }
 
-            $stock->resguardo_piezas += $cantidad_piezas;
-            if($stock->resguardo_piezas > $stock->existencia_piezas){
-                return response()->json(['error'=>'No es posible resguardar esta cantidad'],HttpResponse::HTTP_OK);
-            }
-
             DB::beginTransaction();
 
             $parametros['usuario_resguarda_id'] = $loggedUser->id;
+            $parametros['cantidad_restante'] = $parametros['cantidad_resguardada'];
+            $parametros['stock_id'] = $stock->id;
             
             if($parametros['id']){
                 $resguardo = StockResguardoDetalle::find($parametros['id']);
 
-                if($resguardo->cantidad_restante > $parametros['cantidad_resguardada']){
+                /*if($resguardo->cantidad_restante > $parametros['cantidad_resguardada']){
                     DB::rollback();
                     return response()->json(['error'=>'La cantidad a resguardar no puede ser menor a lo restante por surtir'],HttpResponse::HTTP_OK);
+                }*/
+
+                if($resguardo->son_piezas){
+                    $cantidad_anterior_piezas = $resguardo->cantidad_restante;
+                }else{
+                    $cantidad_anterior_piezas = $resguardo->cantidad_restante * $piezas_x_empaque;
                 }
 
+                $stock->resguardo_piezas -= $cantidad_anterior_piezas;
                 $resguardo->update($parametros);
             }else{
-                $parametros['cantidad_restante'] = $parametros['cantidad_resguardada'];
                 $resguardo = StockResguardoDetalle::create($parametros);
+            }
+
+            $stock->resguardo_piezas += $cantidad_piezas;
+            if($stock->resguardo_piezas > $stock->existencia_piezas){
+                DB::rollback();
+                return response()->json(['error'=>'No es posible resguardar esta cantidad'],HttpResponse::HTTP_OK);
             }
 
             $stock->save();
             
             DB::commit();
             
-            return response()->json(['data'=>$resguardo],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>$resguardo,'stock_resguardo_piezas'=>$stock->resguardo_piezas],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -116,16 +125,22 @@ class AlmacenAjustesController extends Controller{
             }
 
             if($resguardo->son_piezas){
-                $cantidad_piezas = $resguardo->cantidad_resguardada;
+                $cantidad_piezas = $resguardo->cantidad_restante;
             }else{
-                $cantidad_piezas = $resguardo->cantidad_resguardada * $piezas_x_empaque;
+                $cantidad_piezas = $resguardo->cantidad_restante * $piezas_x_empaque;
             }
 
-            //TODO::
+            DB::beginTransaction();
+
+            $stock->resguardo_piezas -= $cantidad_piezas;
+            $stock->save();
+            $resguardo->delete();
             
+            DB::commit();
             
-            return response()->json(['data'=>$detalles],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>$stock],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
+            DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
     }
@@ -220,7 +235,7 @@ class AlmacenAjustesController extends Controller{
                                             DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),"stocks.bien_servicio_id as id",'catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', 
                                             DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                                             "bienes_servicios.articulo as articulo","bienes_servicios.especificaciones as especificaciones","bienes_servicios.puede_surtir_unidades",
-                                            DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia_piezas) as existencias"))
+                                            DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia_piezas) as existencias"), DB::raw("SUM(stocks.resguardo_piezas) as resguardo_piezas"))
                                     ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
                                     ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
                                     ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
