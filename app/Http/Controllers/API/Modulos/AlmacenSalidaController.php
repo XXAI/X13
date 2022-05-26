@@ -432,17 +432,59 @@ class AlmacenSalidaController extends Controller
                                     $piezas_x_empaque = 1;
                                 }
 
-                                $cantidad_anterior = ($modo_movimiento == 'UNI')?$lote_guardado->existencia_piezas:$lote_guardado->existencia;
+                                $cantidad_resguardo = 0;
+                                $quitar_resguardo = false;
+                                if($lote_guardado->resguardo_piezas && $lote_guardado->resguardo_piezas > 0){
+                                    if($modo_movimiento == 'UNI'){
+                                        $cantidad_resguardo = $lote_guardado->resguardo_piezas;
+                                    }else{
+                                        $cantidad_resguardo = ceil($lote_guardado->resguardo_piezas / $piezas_x_empaque);
+                                    }
+                                    
+                                    $fecha_movimiento = $movimiento->fecha_movimiento;
+                                    $lote_guardado->load(['resguardoDetalle'=>function($query)use($fecha_movimiento){
+                                        return $query->where('created_at','>=',$fecha_movimiento.' 00:00:00')->where('cantidad_restante','>',0)->whereNull('deleted_at')->orderBy('created_at');
+                                    }]);
+                                    
+                                    if(count($lote_guardado->resguardoDetalle) > 0){
+                                        $quitar_resguardo = true;
+                                        $restante = ($modo_movimiento == 'UNI')?$lote['salida']:($lote['salida']*$piezas_x_empaque);
+                                        for($k = 0; $k < count($lote_guardado->resguardoDetalle); $k++){
+                                            $lote_resguardo = $lote_guardado->resguardoDetalle[$k];
+                                            if($lote_resguardo->cantidad_restante < $restante){
+                                                $restante -= $lote_resguardo->cantidad_restante;
+                                                $lote_resguardo->cantidad_restante = 0;
+                                            }else{
+                                                $lote_resguardo->cantidad_restante -= $restante;
+                                                $restante = 0;
+                                            }
+                                            $lote_resguardo->save();
+                                            if($restante == 0){
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    DB::rollback();
+                                    return response()->json(['error'=>"trabajando, debugueando",'data'=>$lote_guardado],HttpResponse::HTTP_OK);
+                                }
+
+                                $cantidad_anterior = (($modo_movimiento == 'UNI')?$lote_guardado->existencia_piezas:$lote_guardado->existencia) - $cantidad_resguardo;
                                 if($cantidad_anterior >= $lote['salida']){
                                     if($modo_movimiento == 'UNI'){
                                         $lote_guardado->existencia_piezas -= $lote['salida'];
                                         $lote_guardado->existencia = floor($lote_guardado->existencia_piezas / $piezas_x_empaque);
                                     }else{
                                         $lote_guardado->existencia -= $lote['salida'];
-                                        //if($datos_articulo->puede_surtir_unidades){
                                         $lote_guardado->existencia_piezas -= ($lote['salida'] * $piezas_x_empaque);
+                                        //if($datos_articulo->puede_surtir_unidades){
                                         //}
                                     }
+
+                                    if($quitar_resguardo){
+                                        $lote_guardado->resguardo_piezas -= ($modo_movimiento == 'UNI')?$lote['salida']:($lote['salida']*$piezas_x_empaque);
+                                    }
+
                                     $lote_guardado->user_id = $loggedUser->id;
                                     $lote_guardado->save();
                                 }else{
@@ -490,6 +532,8 @@ class AlmacenSalidaController extends Controller
                         $total_claves -= 1;
                     }
                 }
+                DB::rollback();
+                return response()->json(['error'=>"trabajando, debugueando, por si acaso"],HttpResponse::HTTP_OK);
 
                 if($total_claves <= 0){
                     DB::rollback();

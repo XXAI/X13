@@ -49,9 +49,13 @@
 }
 
 .contenido-tabla-lotes table tfoot{
-    background-color:rgb(95, 204, 255);
-    color: whitesmoke;
-    border: 1px solid rgb(95, 204, 255);;
+    color: grey;
+    cursor: default;
+}
+
+.contenido-tabla-lotes table tfoot tr.nota-pie td{
+    text-align: left !important;
+    background-color: none !important;
 }
 
 .contenido-tabla-lotes table tfoot tr td{

@@ -352,7 +352,7 @@ export class EntradaComponent implements OnInit {
               
                   dialogRef.afterClosed().subscribe(valid => {
                     if(valid){
-                      this.estatusStorageIcon = 'difference';
+                      this.estatusStorageIcon = 'edit_note';
                       this.verBoton.descartar_cambios = true;
                       let datos_guardados = this.localStorageService.getDatos();
 
@@ -438,7 +438,7 @@ export class EntradaComponent implements OnInit {
         if(datos_recibidos && datos_recibidos.recuperacion){
           let identificador = this.localStorageService.getDatosID();
           if(identificador && identificador.id == 'NV'){
-            this.estatusStorageIcon = 'difference';
+            this.estatusStorageIcon = 'edit_note';
             this.verBoton.descartar_cambios = true;
             let datos_guardados = this.localStorageService.getDatos();
 
@@ -713,9 +713,9 @@ export class EntradaComponent implements OnInit {
   }
 
   guardarDatosTemporales(tipo:string){
-    if(this.estatusStorageIcon != 'difference'){
+    if(this.estatusStorageIcon != 'edit_note'){
       this.localStorageService.deleteDatos();
-      this.estatusStorageIcon = 'difference';
+      this.estatusStorageIcon = 'edit_note';
       this.verBoton.descartar_cambios = true;
     }
     if(tipo == 'formulario'){

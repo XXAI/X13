@@ -116,7 +116,7 @@ class AlmacenMovimientosController extends Controller{
                                                     'programas.descripcion AS programa','almacenes.nombre AS almacen','unidad_medica_catalogo_articulos.es_normativo','catalogo_marcas.nombre AS marca',
                                                     'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
                                                     'bienes_servicios.tipo_bien_servicio_id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio','catalogo_tipos_bien_servicio.clave_form',
-                                                    'bienes_servicios_empaque_detalles.descripcion as empaquetado')
+                                                    'bienes_servicios_empaque_detalles.descripcion as empaquetado', 'bienes_servicios_empaque_detalles.piezas_x_empaque as piezas_x_empaque')
                                                 //Relaciones de filtrado
                                                 ->leftjoin('stocks',function($join)use($unidad_medica_id,$parametros){
                                                     $join = $join->on('stocks.bien_servicio_id','=','bienes_servicios.id')
@@ -316,7 +316,7 @@ class AlmacenMovimientosController extends Controller{
                         if(!isset($resultado_stock[$index_articulo]['programa_lotes'])){
                             $resultado_stock[$index_articulo]['programa_lotes'] = [];
                         }
-    
+
                         $programa_id = ($value->programa_id)?$value->programa_id:'S/P';
                         if(!isset($resultado_stock[$index_articulo]['programa_lotes'][$programa_id])){
                             $resultado_stock[$index_articulo]['programa_lotes'][$programa_id] = [
@@ -336,9 +336,11 @@ class AlmacenMovimientosController extends Controller{
                             'marca_id'              => $value->marca_id,
                             'marca'                 => $value->marca,
                             'empaque_detalle'       => ['descripcion'=>$value->empaquetado],
+                            'piezas_x_empaque'      => $value->piezas_x_empaque,
                             'existencia'            => $value->existencia,
                             'existencia_empaque'    => $value->existencia,
-                            'existencia_piezas'   => $value->existencia_piezas,
+                            'existencia_piezas'     => $value->existencia_piezas,
+                            'resguardo_piezas'      => $value->resguardo_piezas,
                         ];
                     }else{
                         if(!isset($resultado_stock[$index_articulo]['lotes'])){
@@ -357,9 +359,11 @@ class AlmacenMovimientosController extends Controller{
                             'marca_id'              => $value->marca_id,
                             'marca'                 => $value->marca,
                             'empaque_detalle'       => $value->empaquetado,
+                            'piezas_x_empaque'      => $value->piezas_x_empaque,
                             'existencia'            => $value->existencia,
                             'existencia_empaque'    => $value->existencia,
-                            'existencia_piezas'   => $value->existencia_piezas,
+                            'existencia_piezas'     => $value->existencia_piezas,
+                            'resguardo_piezas'      => $value->resguardo_piezas,
                         ];
                     }
                     $resultado_stock[$index_articulo]['total_lotes']++;

@@ -397,6 +397,7 @@ export class SalidaComponent implements OnInit {
                     modelo: stock.modelo,
                     programa: (stock.programa)?stock.programa.descripcion:'Sin Programa',
                     marca: (stock.marca)?stock.marca:'Sin Marca',
+                    resguardo_piezas: stock.resguardo_piezas,
                     existencia: stock.existencia,
                     existencia_empaque: stock.existencia,
                     existencia_piezas: stock.existencia_piezas,
