@@ -423,7 +423,6 @@ class AlmacenSalidaController extends Controller
                                 if(!$lote_guardado){
                                     DB::rollback();
                                     return response()->json(['error'=>"No se encontro un lote para el medicamento: ".$articulo['clave']],HttpResponse::HTTP_OK);
-                                    //throw new \Exception("No se encontro un lote para el medicamento: ".$articulo['clave'], 1);
                                 }
 
                                 if($lote_guardado->empaqueDetalle){
@@ -433,13 +432,10 @@ class AlmacenSalidaController extends Controller
                                 }
 
                                 $cantidad_resguardo = 0;
+                                $resguardo_usado = 0;
                                 $quitar_resguardo = false;
                                 if($lote_guardado->resguardo_piezas && $lote_guardado->resguardo_piezas > 0){
-                                    if($modo_movimiento == 'UNI'){
-                                        $cantidad_resguardo = $lote_guardado->resguardo_piezas;
-                                    }else{
-                                        $cantidad_resguardo = ceil($lote_guardado->resguardo_piezas / $piezas_x_empaque);
-                                    }
+                                    $cantidad_resguardo = $lote_guardado->resguardo_piezas;
                                     
                                     $fecha_movimiento = $movimiento->fecha_movimiento;
                                     $lote_guardado->load(['resguardoDetalle'=>function($query)use($fecha_movimiento){
@@ -451,22 +447,25 @@ class AlmacenSalidaController extends Controller
                                         $restante = ($modo_movimiento == 'UNI')?$lote['salida']:($lote['salida']*$piezas_x_empaque);
                                         for($k = 0; $k < count($lote_guardado->resguardoDetalle); $k++){
                                             $lote_resguardo = $lote_guardado->resguardoDetalle[$k];
-                                            if($lote_resguardo->cantidad_restante < $restante){
-                                                $restante -= $lote_resguardo->cantidad_restante;
-                                                $lote_resguardo->cantidad_restante = 0;
-                                            }else{
-                                                $lote_resguardo->cantidad_restante -= $restante;
-                                                $restante = 0;
-                                            }
-                                            $lote_resguardo->save();
-                                            if($restante == 0){
-                                                break;
+                                            $cantidad_resguardo -= $lote_resguardo->cantidad_restante;
+                                            if($restante > 0){
+                                                if($lote_resguardo->cantidad_restante < $restante){
+                                                    $restante -= $lote_resguardo->cantidad_restante;
+                                                    $resguardo_usado += $lote_resguardo->cantidad_restante;
+                                                    $lote_resguardo->cantidad_restante = 0;
+                                                }else{
+                                                    $lote_resguardo->cantidad_restante -= $restante;
+                                                    $resguardo_usado += $restante;
+                                                    $restante = 0;
+                                                }
+                                                $lote_resguardo->save();
                                             }
                                         }
                                     }
+                                }
 
-                                    DB::rollback();
-                                    return response()->json(['error'=>"trabajando, debugueando",'data'=>$lote_guardado],HttpResponse::HTTP_OK);
+                                if($modo_movimiento != 'UNI'){
+                                    $cantidad_resguardo = ceil($cantidad_resguardo / $piezas_x_empaque);
                                 }
 
                                 $cantidad_anterior = (($modo_movimiento == 'UNI')?$lote_guardado->existencia_piezas:$lote_guardado->existencia) - $cantidad_resguardo;
@@ -477,21 +476,21 @@ class AlmacenSalidaController extends Controller
                                     }else{
                                         $lote_guardado->existencia -= $lote['salida'];
                                         $lote_guardado->existencia_piezas -= ($lote['salida'] * $piezas_x_empaque);
-                                        //if($datos_articulo->puede_surtir_unidades){
-                                        //}
                                     }
 
                                     if($quitar_resguardo){
-                                        $lote_guardado->resguardo_piezas -= ($modo_movimiento == 'UNI')?$lote['salida']:($lote['salida']*$piezas_x_empaque);
+                                        //$lote_guardado->resguardo_piezas -= ($modo_movimiento == 'UNI')?$lote['salida']:($lote['salida']*$piezas_x_empaque);
+                                        $lote_guardado->resguardo_piezas -= $resguardo_usado;
                                     }
 
                                     $lote_guardado->user_id = $loggedUser->id;
                                     $lote_guardado->save();
                                 }else{
                                     DB::rollback();
-                                    return response()->json(['error'=>"Existencias insuficientes para el medicamento: ".$articulo['clave']],HttpResponse::HTTP_OK);
-                                    //throw new \Exception("Existencias insuficientes para el medicamento: ".$articulo['clave'], 1);
+                                    return response()->json(['error'=>"Existencias insuficientes para el medicamento con clave: ".$articulo['clave'].' y lote: '.$lote_guardado->lote],HttpResponse::HTTP_OK);
                                 }
+                                //DB::rollback();
+                                //return response()->json(['error'=>"trabajando, debugueando",'data'=>['cantidad_bloqueada'=>$cantidad_resguardo, 'existencias'=>$cantidad_anterior, 'quitar_resguardo'=>$quitar_resguardo, 'lote'=>$lote_guardado  ]],HttpResponse::HTTP_OK);
 
                                 if(isset($lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id])){
                                     $articulo_guardado = $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id];
@@ -532,8 +531,8 @@ class AlmacenSalidaController extends Controller
                         $total_claves -= 1;
                     }
                 }
-                DB::rollback();
-                return response()->json(['error'=>"trabajando, debugueando, por si acaso"],HttpResponse::HTTP_OK);
+                //DB::rollback();
+                //return response()->json(['error'=>"trabajando, debugueando, por si acaso"],HttpResponse::HTTP_OK);
 
                 if($total_claves <= 0){
                     DB::rollback();

@@ -495,3 +495,31 @@ tr.tabla-row-articulo-detalle{
     font-size: small;
     color: rgba(0,0,0,.60);
 }
+
+.banda-alerta{
+    cursor: default;
+    font-weight: 300;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: small;
+}
+
+.banda-alerta .mensaje{
+    padding: 0px 5px;
+}
+
+.banda-alerta.success{
+    background-color: #04a504;
+    color:whitesmoke;
+}
+
+.banda-alerta.error{
+    background-color: #fb1e1e;
+    color: #fffca3;
+}
+
+.banda-alerta.warning{
+    background-color: #ff8400;
+    color: #ffffff;
+}

@@ -32,6 +32,12 @@ import { AuthService } from 'src/app/auth/auth.service';
       transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')), 
       transition('expanded <=> void', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)'))
     ]),
+    /*trigger('showAlert',[
+      state('closed',style({opacity:'1'})),
+      state('open',style({opacity:'0'})),
+      transition('* => open', [animate('500ms ease-out')]),
+      transition('open => closed', [animate('500ms ease-out')])
+    ]),*/
   ],
 })
 export class SalidaComponent implements OnInit {
@@ -52,6 +58,8 @@ export class SalidaComponent implements OnInit {
   ) { }
 
   authUser:User;
+
+  datosAlerta:any;
 
   datosMovimiento:any;
   formMovimiento:FormGroup;
@@ -239,6 +247,7 @@ export class SalidaComponent implements OnInit {
                     this.dataSourceArticulos.paginator = this.articulosPaginator;
                     this.dataSourceArticulos.sort = this.sort;
                     this.isLoading = false;
+                    this.toggleCamposNoAlterables();
                   },
                   errorResponse =>{
                     var errorMessage = "Ocurrió un error.";
@@ -419,10 +428,11 @@ export class SalidaComponent implements OnInit {
           }else{
             articulos_temp = this.cargarArticulos(response.data.lista_articulos);
           }
-
           this.dataSourceArticulos = new MatTableDataSource<any>(articulos_temp);
           this.dataSourceArticulos.paginator = this.articulosPaginator;
           this.dataSourceArticulos.sort = this.sort;
+
+          this.toggleCamposNoAlterables();
         }
 
         this.cargarDatosUsuarios(response.data);
@@ -689,6 +699,14 @@ export class SalidaComponent implements OnInit {
     this.checarTieneSolicitud(this.tieneSolicitud);
   }
 
+  toggleCamposNoAlterables(){
+    if(this.dataSourceArticulos.data.length > 0){
+      this.formMovimiento.get('programa').disable();
+    }else{
+      this.formMovimiento.get('programa').enable();
+    }
+  }
+
   agregarArticulo(articulo){
     if(this.controlArticulosAgregados[articulo.id]){
       let index = this.dataSourceArticulos.data.findIndex(x => x.id === articulo.id);
@@ -707,6 +725,8 @@ export class SalidaComponent implements OnInit {
     
     this.idArticuloSeleccionado = null;
     this.dataSourceArticulos.data.unshift(articulo);
+
+    this.toggleCamposNoAlterables();
     
     this.articulosTable.renderRows();
     this.dataSourceArticulos.paginator = this.articulosPaginator;
@@ -741,6 +761,8 @@ export class SalidaComponent implements OnInit {
         this.dataSourceArticulos.sort = this.sort;
 
         this.idArticuloSeleccionado = null;
+
+        this.toggleCamposNoAlterables();
       }
     });
   }
@@ -887,10 +909,17 @@ export class SalidaComponent implements OnInit {
     });
   }
 
-  validarOpcionSeleccionada(campo:string){
+  validarOpcionSeleccionada(campo:string, valor?:string, campo_hijo?:string){
     setTimeout (() => {
       if(typeof this.formMovimiento.get(campo).value == 'string' && this.formMovimiento.get(campo).value != ''){
         this.formMovimiento.get(campo).setErrors({notSelected:true});
+        if(campo_hijo && valor){
+          this.formMovimiento.get(campo_hijo).patchValue('');
+        }
+      }else{
+        if(this.formMovimiento.get(campo).value && campo_hijo && valor){
+          this.formMovimiento.get(campo_hijo).patchValue(this.formMovimiento.get(campo).value[valor]);
+        }
       }
     }, 100);
   }
@@ -899,11 +928,12 @@ export class SalidaComponent implements OnInit {
     if(this.formMovimiento.valid){
       let formData:any = this.formMovimiento.value;
       this.isSaving = true;
+      this.datosAlerta = null;
 
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
 
-      formData.programa_id = (formData.programa)?formData.programa.id:null;
+      //formData.programa_id = (formData.programa)?formData.programa.id:null;
       formData.unidad_medica_movimiento_id = (formData.unidad_medica_movimiento)?formData.unidad_medica_movimiento.id:null;
       formData.area_servicio_movimiento_id = (formData.area_servicio_movimiento)?formData.area_servicio_movimiento.id:null;
       formData.personal_medico_id = (formData.personal_medico)?formData.personal_medico.id:null;
@@ -929,7 +959,9 @@ export class SalidaComponent implements OnInit {
           this.dataSourceArticulos.sort = this.sort;
           this.isSaving = false;
           this.idArticuloSeleccionado = this.dataSourceArticulos.data[0].id;
-          this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
+          this.mostrarAlerta('warning','Advertencia: '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.');
+          //this.datosAlerta = {tipo_estatus:'warning', icono:'report', mensaje:'Advertencia: '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.'};
+          //this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
           return false;
         }
       }
@@ -938,7 +970,8 @@ export class SalidaComponent implements OnInit {
         response =>{
           if(response.error) {
             let errorMessage = response.error;
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.mostrarAlerta('error','Error: '+errorMessage);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
             if(response.code == 'solicitud_repetida'){
               //console.log(response.data);
               let configDialog = {
@@ -981,7 +1014,8 @@ export class SalidaComponent implements OnInit {
               this.verBoton.modificar_salida = true;
             }
             this.controlArticulosModificados = {};
-            this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
+            this.mostrarAlerta('success','Datos almacenados con éxito');
+            //this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
           }
           this.isSaving = false;
         },
@@ -990,7 +1024,8 @@ export class SalidaComponent implements OnInit {
           if(errorResponse.status == 409){
             errorMessage = errorResponse.error.error.message;
           }
-          this.sharedService.showSnackBar(errorMessage, null, 5000);
+          this.mostrarAlerta('error','Error: '+errorMessage);
+          //this.sharedService.showSnackBar(errorMessage, null, 5000);
           this.isSaving = false;
         }
       );
@@ -1015,9 +1050,11 @@ export class SalidaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error;
-              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.mostrarAlerta('error','Error: '+errorMessage);
+              //this.sharedService.showSnackBar(errorMessage, null, 3000);
             }else{
-              this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              this.mostrarAlerta('success','Movimiento cancelado con éxito');
+              //this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
               this.estatusMovimiento = 'CAN';
               this.verBoton.cancelar = false;
               this.verBoton.modificar_salida = false;
@@ -1029,6 +1066,7 @@ export class SalidaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
+            this.mostrarAlerta('error','Error: '+errorMessage);
             this.sharedService.showSnackBar(errorMessage, null, 3000);            
           }
         );
@@ -1049,7 +1087,8 @@ export class SalidaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error.message;
-              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.mostrarAlerta('error','Error: '+errorMessage);
+              //this.sharedService.showSnackBar(errorMessage, null, 3000);
             }else{
               this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
               this.router.navigateByUrl('/almacen/salidas');
@@ -1060,7 +1099,8 @@ export class SalidaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.mostrarAlerta('error','Error: '+errorMessage);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
             //this.isLoadingPDF = false;
           }
         );
@@ -1076,7 +1116,8 @@ export class SalidaComponent implements OnInit {
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.mostrarAlerta('error','Error: '+errorMessage);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
         }else{
           if(response.data){
             //console.log('Datos Salida: ',response.data);
@@ -1113,7 +1154,8 @@ export class SalidaComponent implements OnInit {
         if(errorResponse.status == 409){
           errorMessage = errorResponse.error.error.message;
         }
-        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.mostrarAlerta('error','Error: '+errorMessage);
+        //this.sharedService.showSnackBar(errorMessage, null, 3000);
         //this.isLoadingPDF = false;
       }
     );
@@ -1177,7 +1219,8 @@ export class SalidaComponent implements OnInit {
         response =>{
           if(response.error) {
             let errorMessage = response.error.message;
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.mostrarAlerta('error','Error: '+errorMessage);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
             this.cargandoDatosPaciente = false;
           }else{
             if(response.data){
@@ -1202,7 +1245,8 @@ export class SalidaComponent implements OnInit {
           if(errorResponse.status == 409){
             errorMessage = errorResponse.error.error.message;
           }
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.mostrarAlerta('error','Error: '+errorMessage);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
           this.cargandoDatosPaciente = false;
         }
       );
@@ -1225,6 +1269,32 @@ export class SalidaComponent implements OnInit {
   cargarNuevaSalida(uri:string){
     this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>
     this.router.navigate([uri]));
+  }
+
+  cerrarAlerta(){
+    this.datosAlerta = null;
+  }
+
+  mostrarAlerta(tipo, mensaje){
+    let icono:string;
+    switch (tipo) {
+      case 'success':
+        icono = 'check_circle';
+        break;
+      case 'error':
+        icono = 'error';
+        break;
+      case 'warning':
+        icono = 'report';
+        break;
+      default:
+        icono = 'info';
+        break;
+    }
+    this.datosAlerta = {tipo_estatus: tipo, icono: icono, mensaje: mensaje};
+    if(tipo == 'success'){
+      setTimeout (() => { this.cerrarAlerta(); }, 2500);
+    }
   }
 
 }

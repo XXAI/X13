@@ -94,6 +94,16 @@ export class InnerArticuloListaLotesComponent implements OnInit {
       if(typeof loteData.empaque_detalle === 'string'){
         loteData.empaque_detalle = {descripcion: loteData.empaque_detalle};
       }
+
+      if(loteData.empaque_detalle.piezas_x_empaque){
+        loteData.piezas_x_empaque = loteData.empaque_detalle.piezas_x_empaque;
+      }
+
+      if(this.articulo.surtir_en_unidades){
+        loteData.resguardo_apartado = loteData.resguardo_piezas;
+      }else{
+        loteData.resguardo_apartado = Math.ceil(loteData.resguardo_piezas/loteData.piezas_x_empaque);
+      }
     });
     this.articulo.estatus = estatus_articulo;
     if(this.articulo.puede_surtir_unidades && this.articulo.surtir_en_unidades){
@@ -120,8 +130,10 @@ export class InnerArticuloListaLotesComponent implements OnInit {
     this.articulo.lotes.forEach(loteData => {
       if(this.articulo.surtir_en_unidades){
         loteData.existencia = loteData.existencia_piezas;
+        loteData.resguardo_apartado = loteData.resguardo_piezas;
       }else{
         loteData.existencia = loteData.existencia_empaque;
+        loteData.resguardo_apartado = Math.ceil(loteData.resguardo_piezas/loteData.piezas_x_empaque);
       }
 
       if(!loteData.salida){

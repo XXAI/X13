@@ -48,7 +48,9 @@
                 <td *ngIf="articulo.tipo_formulario == 'ACTVO'">{{lote.marca}}</td>
 
                 <td>{{lote.programa}}</td>
-                <td><span *ngIf="lote.resguardo_piezas">*</span> {{lote.existencia | number:'1.0-0'}}</td>
+                <td [matTooltip]="(lote.resguardo_piezas)?'* Este lote contiene existencias en resguardo, por lo que es posible que no se puedan surtir ciertas cantidades':''">
+                    <span *ngIf="lote.resguardo_piezas">*</span> {{lote.existencia | number:'1.0-0'}}<br><span *ngIf="lote.resguardo_piezas" class="cantidad-resguardo">[ {{lote.resguardo_apartado | number:'1.0-0'}} ]</span>
+                </td>
                 <td width="1" class="input-cell" style="white-space: nowrap;">
                     <input *ngIf="edicionActiva" #inputValue type="number" [(ngModel)]="lote.salida" (keydown.enter)="aplicarCantidad(lote)" (blur)="aplicarCantidad(lote)" [readonly]="!edicionActiva">
                     <span *ngIf="!edicionActiva">{{lote.salida | number:'1.0-0'}}</span>
@@ -131,11 +133,11 @@
             </tr>
         </tbody>
         <tfoot>
-            <tr class="nota-pie">
+            <!--tr class="nota-pie">
                 <td colspan="7">
                     * Este lote contiene existencias en resguardo, por lo que es posible que no se puedan surtir ciertas cantidades
                 </td>
-            </tr>
+            </tr-->
             <!--tr *ngIf="edicionActiva && loteEditIndex < 0">
                 <ng-container>
                     <td colspan="6">

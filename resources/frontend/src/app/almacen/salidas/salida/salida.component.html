@@ -81,6 +81,20 @@
         </mat-menu>
     </section> <!-- <<<<<<< Toolbar Menu -->
 
+    <section fxFlex="none" fxLayout="row" *ngIf="datosAlerta" class="banda-alerta {{datosAlerta.tipo_estatus}}">
+        <div fxFlex="none" class="icono">
+            <mat-icon>
+                {{datosAlerta.icono}}
+            </mat-icon>
+        </div>
+        <div fxFlex class="mensaje">
+            {{datosAlerta.mensaje}}
+        </div>
+        <div fxFlex="none">
+            <button mat-icon-button (click)="cerrarAlerta()"><mat-icon>clear</mat-icon></button>
+        </div>
+    </section>
+
     <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: hidden;"> <!-- Module Body <<<<<<< -->
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>
         <section fxFlex="none" fxLayout="column">
@@ -195,7 +209,7 @@
 
                 <mat-form-field fxFlex>
                     <mat-label>Programa</mat-label>
-                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" (blur)="validarOpcionSeleccionada('programa')" [matAutocomplete]="autoProgramas" autocomplete="off">
+                    <input type="text" matInput aria-label="Programa" placeholder="Teclee para buscar un programa" formControlName="programa" (blur)="validarOpcionSeleccionada('programa','id','programa_id')" [matAutocomplete]="autoProgramas" autocomplete="off">
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
