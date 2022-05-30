@@ -67,25 +67,20 @@ class AlmacenAjustesController extends Controller{
                 $cantidad_piezas = $parametros['cantidad_resguardada'] * $piezas_x_empaque;
             }
 
+            if($stock->existencia_piezas <  $cantidad_piezas){
+                return response()->json(['error'=>'La cantidad a resguardar no puede ser mayor que las existencias del lote'],HttpResponse::HTTP_OK);
+            }
+
             DB::beginTransaction();
 
             $parametros['usuario_resguarda_id'] = $loggedUser->id;
-            $parametros['cantidad_restante'] = $parametros['cantidad_resguardada'];
+            $parametros['cantidad_restante'] = $cantidad_piezas; //cantidad restante siempre tomar piezas
             $parametros['stock_id'] = $stock->id;
             
             if($parametros['id']){
                 $resguardo = StockResguardoDetalle::find($parametros['id']);
 
-                /*if($resguardo->cantidad_restante > $parametros['cantidad_resguardada']){
-                    DB::rollback();
-                    return response()->json(['error'=>'La cantidad a resguardar no puede ser menor a lo restante por surtir'],HttpResponse::HTTP_OK);
-                }*/
-
-                if($resguardo->son_piezas){
-                    $cantidad_anterior_piezas = $resguardo->cantidad_restante;
-                }else{
-                    $cantidad_anterior_piezas = $resguardo->cantidad_restante * $piezas_x_empaque;
-                }
+                $cantidad_anterior_piezas = $resguardo->cantidad_restante;
 
                 $stock->resguardo_piezas -= $cantidad_anterior_piezas;
                 $resguardo->update($parametros);
@@ -232,7 +227,7 @@ class AlmacenAjustesController extends Controller{
             }
 
             $lista_articulos = Stock::select(DB::raw("almacenes.nombre as almacen"),'stocks.almacen_id', //DB::raw("IF(COUNT(DISTINCT stocks.almacen_id) = 1,almacenes.nombre,CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)')) as almacen")
-                                            DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),"stocks.bien_servicio_id as id",'catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', 
+                                            DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),"stocks.id as unico_id","stocks.bien_servicio_id as id",'catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', 
                                             DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
                                             "bienes_servicios.articulo as articulo","bienes_servicios.especificaciones as especificaciones","bienes_servicios.puede_surtir_unidades",
                                             DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia_piezas) as existencias"), DB::raw("SUM(stocks.resguardo_piezas) as resguardo_piezas"))

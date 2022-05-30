@@ -91,7 +91,9 @@ export class InnerArticuloListaLotesComponent implements OnInit {
         loteData.salida = null;  
       }
 
-      if(typeof loteData.empaque_detalle === 'string'){
+      if(!loteData.empaque_detalle){
+        loteData.empaque_detalle = {descripcion: 'Sin Detalles', piezas_x_empaque: 1};
+      }else if(typeof loteData.empaque_detalle === 'string'){
         loteData.empaque_detalle = {descripcion: loteData.empaque_detalle};
       }
 

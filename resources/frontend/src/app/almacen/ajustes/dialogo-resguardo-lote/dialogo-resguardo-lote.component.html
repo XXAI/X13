@@ -62,6 +62,7 @@
                         <mat-list-option *ngFor="let resguardo of loteData.resguardo_detalle" [value]="resguardo">
                             <div mat-line><span class="lote-label">{{resguardo.descripcion}}</span></div>
                             <div mat-line>{{resguardo.cantidad_resguardada | number:'1.0-0'}} <span *ngIf="resguardo.son_piezas">(Pzas.)</span></div>
+                            <div mat-line>Restante: {{resguardo.cantidad_restante | number:'1.0-0'}} Pzas.</div>
                         </mat-list-option>
                         <mat-list-option [value]="{nuevo:true}" class="opcion-nuevo-registro">
                             <mat-icon mat-list-icon>add_circle</mat-icon>

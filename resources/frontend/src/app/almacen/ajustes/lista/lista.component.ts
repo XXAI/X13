@@ -21,6 +21,8 @@ export class ListaComponent implements OnInit {
 
   isLoading:boolean;
 
+  selectedId:number;
+
   searchQuery:string;
   
   pageEvent: PageEvent;
@@ -82,7 +84,7 @@ export class ListaComponent implements OnInit {
     return event;
   }
 
-  mostrarDialogoArticulo(articuloId:number, almacenId:number){
+  mostrarDialogoArticulo(articuloId:number, almacenId:number, seleccionId:number){
     let configDialog = {
       width: '100%',
       height: '100%',
@@ -91,6 +93,8 @@ export class ListaComponent implements OnInit {
       data:{articuloId: articuloId, almacenId: almacenId},
       panelClass: 'no-padding-dialog'
     };
+
+    this.selectedId = seleccionId;
 
     const dialogRef = this.dialog.open(DialogoDetallesArticuloComponent, configDialog);
     dialogRef.afterClosed().subscribe(dialogResponse => {

@@ -109,3 +109,8 @@ table .mat-row:hover{
 .hide{
     display: none;
 }
+
+.selected-item{
+    font-weight: bold;
+    background-color: whitesmoke;
+}

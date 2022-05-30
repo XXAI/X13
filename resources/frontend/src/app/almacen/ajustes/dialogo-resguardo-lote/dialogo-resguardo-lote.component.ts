@@ -122,7 +122,16 @@ export class DialogoResguardoLoteComponent implements OnInit {
         cantidad_piezas = (datos_detalle.cantidad_resguardada * this.data.piezasXEmpaque);
       }
 
-      if(this.loteData.existencia_piezas < (cantidad_piezas + this.loteData.resguardo_piezas)){
+      let total_resguardo:number = 0;
+      if(datos_detalle.id){
+        let index = this.loteData.resguardo_detalle.findIndex(x => x.id == datos_detalle.id);
+        let cantidad_anterior = this.loteData.resguardo_detalle[index].cantidad_restante;
+        total_resguardo = (cantidad_piezas + (this.loteData.resguardo_piezas - cantidad_anterior));
+      }else{
+        total_resguardo = (cantidad_piezas + this.loteData.resguardo_piezas);
+      }
+
+      if(this.loteData.existencia_piezas < total_resguardo){
         this.formResguardo.get('cantidad_resguardada').setErrors({exceeded:true});
         this.formResguardo.get('cantidad_resguardada').markAsTouched();
         this.isSaving = false;
@@ -133,7 +142,6 @@ export class DialogoResguardoLoteComponent implements OnInit {
               let errorMessage = response.error;
               this.sharedService.showSnackBar(errorMessage, null, 3000);
             } else {
-              console.log(response);
               let index = this.loteData.resguardo_detalle.findIndex(x => x.id == response.data.id);
               if(index >= 0){
                 this.loteData.resguardo_detalle[index] = response.data;

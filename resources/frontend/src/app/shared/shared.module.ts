@@ -8,9 +8,10 @@ import { IfHasPermissionDirective } from './if-has-permission.directive';
 
 import { AppHubComponent } from './components/app-hub/app-hub.component';
 import { MascaraFechaDirective } from './mascara-fecha.directive'; //Temporal, tengo que mover el componente al folder shared
+import { AlertPanelComponent } from './components/alert-panel/alert-panel.component'; 
 
 @NgModule({
-  declarations: [IfHasPermissionDirective, AppHubComponent, MascaraFechaDirective],
+  declarations: [IfHasPermissionDirective, AppHubComponent, MascaraFechaDirective, AlertPanelComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -29,6 +30,7 @@ import { MascaraFechaDirective } from './mascara-fecha.directive'; //Temporal, t
     IfHasPermissionDirective,
     MascaraFechaDirective,
     AppHubComponent,
+    AlertPanelComponent,
   ],
 })
 export class SharedModule { }

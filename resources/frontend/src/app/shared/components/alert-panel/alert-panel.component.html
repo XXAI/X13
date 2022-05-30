@@ -1,0 +1,16 @@
+<div fxLayout="row" *ngIf="mostrarPanel"  class="banda-alerta {{datosAlerta.tipo_estatus}}">
+    <div fxFlex="none" class="icono">
+        <mat-icon>
+            {{datosAlerta.icono}}
+        </mat-icon>
+    </div>
+    <div fxFlex class="mensaje">
+        {{datosAlerta.mensaje}}
+    </div>
+    <div fxFlex="none">
+        <mat-progress-spinner class="temporizador" [diameter]="20" [mode]="'determinate'" [value]="count"></mat-progress-spinner>
+    </div>
+    <div fxFlex="none">
+        <button mat-icon-button (click)="cerrarAlerta()"><mat-icon>clear</mat-icon></button>
+    </div>
+</div>

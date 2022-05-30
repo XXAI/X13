@@ -20,6 +20,8 @@ import { DialogoSolicitudRepetidaComponent } from '../dialogo-solicitud-repetida
 import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 import { User } from 'src/app/auth/models/user';
 import { AuthService } from 'src/app/auth/auth.service';
+import { Location } from '@angular/common';
+import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
 
 @Component({
   selector: 'app-salida',
@@ -44,6 +46,7 @@ export class SalidaComponent implements OnInit {
   @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
   @ViewChild(MatTable) articulosTable: MatTable<any>;
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(AlertPanelComponent) alertPanel:AlertPanelComponent;
 
   constructor(
     private datepipe: DatePipe,
@@ -54,12 +57,11 @@ export class SalidaComponent implements OnInit {
     private sharedService: SharedService, 
     private dialog: MatDialog, 
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private location: Location,
   ) { }
 
   authUser:User;
-
-  datosAlerta:any;
 
   datosMovimiento:any;
   formMovimiento:FormGroup;
@@ -928,7 +930,7 @@ export class SalidaComponent implements OnInit {
     if(this.formMovimiento.valid){
       let formData:any = this.formMovimiento.value;
       this.isSaving = true;
-      this.datosAlerta = null;
+      this.alertPanel.cerrarAlerta();
 
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
@@ -959,8 +961,7 @@ export class SalidaComponent implements OnInit {
           this.dataSourceArticulos.sort = this.sort;
           this.isSaving = false;
           this.idArticuloSeleccionado = this.dataSourceArticulos.data[0].id;
-          this.mostrarAlerta('warning','Advertencia: '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.');
-          //this.datosAlerta = {tipo_estatus:'warning', icono:'report', mensaje:'Advertencia: '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.'};
+          this.alertPanel.mostrarWarning('Advertencia: '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.');
           //this.sharedService.showSnackBar('Se encontraron '+aritculos_en_cero+' articulo(s) sin cantidad solicitada.', null, 6000);
           return false;
         }
@@ -970,7 +971,7 @@ export class SalidaComponent implements OnInit {
         response =>{
           if(response.error) {
             let errorMessage = response.error;
-            this.mostrarAlerta('error','Error: '+errorMessage);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             //this.sharedService.showSnackBar(errorMessage, null, 3000);
             if(response.code == 'solicitud_repetida'){
               //console.log(response.data);
@@ -986,9 +987,12 @@ export class SalidaComponent implements OnInit {
             }
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
-            this.estatusMovimiento = response.data.estatus;
+            
+            if(this.estatusMovimiento == 'NV'){
+              this.location.replaceState('/almacen/salidas/editar/'+response.data.id);
+            }
 
-            //this.datosMovimiento = {id: response.data.id, folio: response.data.folio};
+            this.estatusMovimiento = response.data.estatus;
             this.datosMovimiento = response.data;
             this.cargarDatosUsuarios(response.data);
 
@@ -1014,7 +1018,7 @@ export class SalidaComponent implements OnInit {
               this.verBoton.modificar_salida = true;
             }
             this.controlArticulosModificados = {};
-            this.mostrarAlerta('success','Datos almacenados con éxito');
+            this.alertPanel.mostrarSucces('Datos almacenados con éxito');
             //this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
           }
           this.isSaving = false;
@@ -1024,7 +1028,7 @@ export class SalidaComponent implements OnInit {
           if(errorResponse.status == 409){
             errorMessage = errorResponse.error.error.message;
           }
-          this.mostrarAlerta('error','Error: '+errorMessage);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
           //this.sharedService.showSnackBar(errorMessage, null, 5000);
           this.isSaving = false;
         }
@@ -1050,10 +1054,10 @@ export class SalidaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error;
-              this.mostrarAlerta('error','Error: '+errorMessage);
+              this.alertPanel.mostrarError('Error: '+errorMessage);
               //this.sharedService.showSnackBar(errorMessage, null, 3000);
             }else{
-              this.mostrarAlerta('success','Movimiento cancelado con éxito');
+              this.alertPanel.mostrarSucces('Movimiento cancelado con éxito');
               //this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
               this.estatusMovimiento = 'CAN';
               this.verBoton.cancelar = false;
@@ -1066,7 +1070,7 @@ export class SalidaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.mostrarAlerta('error','Error: '+errorMessage);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             this.sharedService.showSnackBar(errorMessage, null, 3000);            
           }
         );
@@ -1087,7 +1091,7 @@ export class SalidaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error.message;
-              this.mostrarAlerta('error','Error: '+errorMessage);
+              this.alertPanel.mostrarError('Error: '+errorMessage);
               //this.sharedService.showSnackBar(errorMessage, null, 3000);
             }else{
               this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
@@ -1099,7 +1103,7 @@ export class SalidaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.mostrarAlerta('error','Error: '+errorMessage);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             //this.sharedService.showSnackBar(errorMessage, null, 3000);
             //this.isLoadingPDF = false;
           }
@@ -1116,7 +1120,7 @@ export class SalidaComponent implements OnInit {
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
-          this.mostrarAlerta('error','Error: '+errorMessage);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
           //this.sharedService.showSnackBar(errorMessage, null, 3000);
         }else{
           if(response.data){
@@ -1154,7 +1158,7 @@ export class SalidaComponent implements OnInit {
         if(errorResponse.status == 409){
           errorMessage = errorResponse.error.error.message;
         }
-        this.mostrarAlerta('error','Error: '+errorMessage);
+        this.alertPanel.mostrarError('Error: '+errorMessage);
         //this.sharedService.showSnackBar(errorMessage, null, 3000);
         //this.isLoadingPDF = false;
       }
@@ -1219,7 +1223,7 @@ export class SalidaComponent implements OnInit {
         response =>{
           if(response.error) {
             let errorMessage = response.error.message;
-            this.mostrarAlerta('error','Error: '+errorMessage);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             //this.sharedService.showSnackBar(errorMessage, null, 3000);
             this.cargandoDatosPaciente = false;
           }else{
@@ -1245,7 +1249,7 @@ export class SalidaComponent implements OnInit {
           if(errorResponse.status == 409){
             errorMessage = errorResponse.error.error.message;
           }
-          this.mostrarAlerta('error','Error: '+errorMessage);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
           //this.sharedService.showSnackBar(errorMessage, null, 3000);
           this.cargandoDatosPaciente = false;
         }
@@ -1269,32 +1273,6 @@ export class SalidaComponent implements OnInit {
   cargarNuevaSalida(uri:string){
     this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>
     this.router.navigate([uri]));
-  }
-
-  cerrarAlerta(){
-    this.datosAlerta = null;
-  }
-
-  mostrarAlerta(tipo, mensaje){
-    let icono:string;
-    switch (tipo) {
-      case 'success':
-        icono = 'check_circle';
-        break;
-      case 'error':
-        icono = 'error';
-        break;
-      case 'warning':
-        icono = 'report';
-        break;
-      default:
-        icono = 'info';
-        break;
-    }
-    this.datosAlerta = {tipo_estatus: tipo, icono: icono, mensaje: mensaje};
-    if(tipo == 'success'){
-      setTimeout (() => { this.cerrarAlerta(); }, 2500);
-    }
   }
 
 }
