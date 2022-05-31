@@ -296,8 +296,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.subDialogRef = this.dialog.open(DialogoResguardoLoteComponent, configDialog);
     this.subDialogRef.afterClosed().subscribe(dialogResponse => {
       if(dialogResponse){
+        let piezas_x_empaque = (this.empaqueDetalleSeleccionado)?this.empaqueDetalleSeleccionado.piezas_x_empaque:1;
         this.resguardos.piezas = +dialogResponse.resguardoPiezas;
-        this.resguardos.cantidad = Math.floor(dialogResponse.resguardoPiezas/this.empaqueDetalleSeleccionado.piezas_x_empaque);
+        this.resguardos.cantidad = Math.floor(dialogResponse.resguardoPiezas/piezas_x_empaque);
         let index = this.dataSourceLotes.data.findIndex(x => x.id == stock_id);
         this.dataSourceLotes.data[index].resguardo_piezas = +dialogResponse.resguardoPiezas;
         this.aplicarFiltroLotes();

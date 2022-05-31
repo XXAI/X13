@@ -49,26 +49,18 @@ class AdminBienesServiciosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $lotes = Stock::select('stocks.*','catalogo_unidades_medicas.nombre as unidad_medica','almacenes.nombre as almacen',
-                                    DB::raw('COUNT(DISTINCT movimientos_articulos.id) as movimientos'))
+            $lotes = Stock::select('catalogo_unidades_medicas.nombre as unidad_medica','bienes_servicios_empaque_detalles.descripcion as empaque_detalle',DB::raw('IF(COUNT(DISTINCT stocks.almacen_id) > 1,CONCAT(COUNT(DISTINCT stocks.almacen_id)," Almacen(es)"),almacenes.nombre) as almacen'),
+                                    DB::raw('CONCAT(COUNT(DISTINCT stocks.lote)," Lote(s)") as lote'),'stocks.empaque_detalle_id')
                             ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','stocks.unidad_medica_id')
                             ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
-                            ->leftJoin('movimientos_articulos','movimientos_articulos.stock_id','=','stocks.id')
-                            ->groupBy('stocks.id')
-                            ->where(function($where){
-                                $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
-                            })
+                            ->leftJoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
+                            ->groupBy('stocks.empaque_detalle_id')
+                            ->groupBy('stocks.unidad_medica_id')
+                            ->orderBy('stocks.unidad_medica_id')
+                            ->where(function($where){$where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);})
                             ->where('stocks.bien_servicio_id',$id)->get();
-            $unidades_medicas_ids = $lotes->pluck('unidad_medica_id');
-            $almacenes_ids = $lotes->pluck('almacen_id');
 
-            $return_data = [
-                'unidades_medicas' => UnidadMedica::whereIn('id',$unidades_medicas_ids)->get(),
-                'almacenes' => Almacen::whereIn('id',$almacenes_ids)->get(),
-                'lotes' => $lotes,
-            ];
-
-            return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>$lotes],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
@@ -103,13 +95,22 @@ class AdminBienesServiciosController extends Controller{
 
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
-                $catalogo_articulos = $catalogo_articulos->where(function($query)use($parametros){
-                    return $query->where('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('familias.nombre','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.clave_cubs','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.clave_local','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.articulo','LIKE','%'.$parametros['query'].'%')
-                                ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$parametros['query'].'%');
+                $params_query = urldecode($parametros['query']);
+                $search_queries = explode('+',$params_query);
+
+                $catalogo_articulos = $catalogo_articulos->where(function($query)use($search_queries){
+                    for($i = 0; $i < count($search_queries); $i++){
+                        $query_value = $search_queries[$i];
+                        $query = $query->where(function($where)use($query_value){
+                            return $where->where('bienes_servicios.clave_cubs','LIKE','%'.$query_value.'%')
+                                            ->orWhere('bienes_servicios.clave_local','LIKE','%'.$query_value.'%')
+                                            ->orWhere('bienes_servicios.articulo','LIKE','%'.$query_value.'%')
+                                            ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$query_value.'%')
+                                            ->orWhere('familias.nombre','LIKE','%'.$query_value.'%')
+                                            ->orWhere('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$query_value.'%');
+                        });
+                    }
+                    return $query;
                 });
             }
 
@@ -182,24 +183,8 @@ class AdminBienesServiciosController extends Controller{
                                                                     ->with('unidadMedida','empaque');
                                                 }])->find($id);
             //
-            $lotes = Stock::select('catalogo_unidades_medicas.nombre as unidad_medica','bienes_servicios_empaque_detalles.descripcion as empaque_detalle',DB::raw('IF(COUNT(DISTINCT stocks.almacen_id) > 1,CONCAT(COUNT(DISTINCT stocks.almacen_id)," Almacen(es)"),almacenes.nombre) as almacen'),
-                                    DB::raw('CONCAT(COUNT(DISTINCT stocks.lote)," Lote(s)") as lote'),'stocks.empaque_detalle_id')
-                            ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','stocks.unidad_medica_id')
-                            ->leftJoin('almacenes','almacenes.id','=','stocks.almacen_id')
-                            ->leftJoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
-                            ->groupBy('stocks.empaque_detalle_id')
-                            ->groupBy('stocks.unidad_medica_id')
-                            ->orderBy('stocks.unidad_medica_id')
-                            ->where(function($where){$where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);})
-                            ->where('stocks.bien_servicio_id',$id)->get();
-            //$unidades_medicas_ids = $lotes->pluck('unidad_medica_id');
-            //$almacenes_ids = $lotes->pluck('almacen_id');
-
             $return_data = [
                 'articulo' => $bien_servicio,
-                //'unidades_medicas' => UnidadMedica::whereIn('id',$unidades_medicas_ids)->get(),
-                //'almacenes' => Almacen::whereIn('id',$almacenes_ids)->get(),
-                'lotes' => $lotes,
             ];
             return response()->json(['data'=>$return_data],HttpResponse::HTTP_OK);
         }catch(\Exception $e){

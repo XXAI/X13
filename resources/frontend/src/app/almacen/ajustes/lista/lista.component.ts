@@ -52,7 +52,7 @@ export class ListaComponent implements OnInit {
       };
     }
     
-    params.query = this.searchQuery;
+    params.query = encodeURIComponent(this.searchQuery);
 
     this.listaArticulos = [];
     this.resultsLength = 0;

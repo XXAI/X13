@@ -84,19 +84,6 @@
     <section fxFlex="none">
         <alert-panel></alert-panel>
     </section>
-    <!--section fxFlex="none" fxLayout="row" *ngIf="datosAlerta" class="banda-alerta {{datosAlerta.tipo_estatus}}">
-        <div fxFlex="none" class="icono">
-            <mat-icon>
-                {{datosAlerta.icono}}
-            </mat-icon>
-        </div>
-        <div fxFlex class="mensaje">
-            {{datosAlerta.mensaje}}
-        </div>
-        <div fxFlex="none">
-            <button mat-icon-button (click)="cerrarAlerta()"><mat-icon>clear</mat-icon></button>
-        </div>
-    </section-->
 
     <section fxFlex fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="position:relative; padding:10px; overflow: hidden;"> <!-- Module Body <<<<<<< -->
         <div class="data-loading-shade" *ngIf="isLoading || isSaving"></div>

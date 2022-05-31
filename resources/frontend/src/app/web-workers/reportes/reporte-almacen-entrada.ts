@@ -51,18 +51,18 @@ export class ReporteAlmacenEntrada{
                   {
                       text: entrada.almacen?.direccion,
                       alignment:'left',
-                      fontSize: 8,
+                      fontSize: 6,
                   },
                   {
                       margin: [10, 0, 0, 0],
                       text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
-                      fontSize: 8,
+                      fontSize: 6,
                       alignment: 'center'
                   },
                   {
                     text:fecha_hoy.toString(),
                     alignment:'right',
-                    fontSize: 8,
+                    fontSize: 6,
                 }
               ]
             }
@@ -85,50 +85,50 @@ export class ReporteAlmacenEntrada{
             pedido_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
-              fontSize: 8,
+              fontSize: 6,
               bold:true
             },
             pedido_datos:{
-              fontSize: 8
+              fontSize: 6
             },
             tabla_datos:{
-              fontSize: 8
+              fontSize: 6
             },
             tabla_datos_center:{
-              fontSize: 8,
+              fontSize: 6,
               alignment: "center"
             },
             tabla_datos_right:{
-              fontSize: 8,
+              fontSize: 6,
               alignment: "right"
             },
             entrada_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
-              fontSize: 8,
+              fontSize: 6,
               bold:true
             },
             entrada_title_center:{
               alignment:"center",
               fillColor:"#DEDEDE",
-              fontSize: 8,
+              fontSize: 6,
               bold:true
             },
             entrada_datos:{
-              fontSize: 8
+              fontSize: 6
             },
             datos_encabezado_izquierda:{
-              fontSize: 10,
+              fontSize: 8,
               color:"black",
             },
             tabla_encabezado_firmas:
             {
-              fontSize: 10,
+              fontSize: 8,
               alignment:"center",
               bold:true
             },
             tabla_encabezado_datos:{
-              fontSize: 10,
+              fontSize: 8,
               alignment:"center",
             },
             marca_de_agua:{
@@ -254,12 +254,12 @@ export class ReporteAlmacenEntrada{
         });
 
         let encabezado_lista = [
-            {text: "#",                   style: 'cabecera'},
-            {text: "CLAVE",               style: 'cabecera'},
-            {text: "PRODUCTO",            style: 'cabecera'},
-            {text: "LOTE",                style: 'cabecera'},
-            {text: "FECHA CADUCIDAD",     style: 'cabecera'},
-            {text: "CANT",                style: 'cabecera'},
+            {text: "#",                       style: 'cabecera'},
+            {text: "CLAVE",                   style: 'cabecera'},
+            {text: "PRODUCTO",                style: 'cabecera'},
+            {text: "DETALLES",                style: 'cabecera'},
+            {text: "LOTE - FECHA CADUCIDAD",  style: 'cabecera'},
+            {text: "CANTIDAD",                style: 'cabecera'},
         ];
 
         if(reportData.config.mostrar_montos){
@@ -267,7 +267,7 @@ export class ReporteAlmacenEntrada{
           encabezado_lista.push({text: "IMPORTE",             style: 'cabecera'});
         }
 
-        let table_widths = [10, 63, '*', 50, 45, 50];
+        let table_widths = [10, 63, '*', 'auto', 45, 50];
         if(reportData.config.mostrar_montos){
           table_widths = [10, 20, 35, 45, 63, '*', 50, 50];
         }
@@ -312,16 +312,21 @@ export class ReporteAlmacenEntrada{
 
         for(let i = 0; i < tabla_articulos.length; i++){
           let item  = tabla_articulos[i];
-          //let fecha = (item.stock?.fecha_caducidad)?item.stock?.fecha_caducidad:'S/F/C';
-          //let fecha_caducidad = (item.stock?.fecha_caducidad) ? new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(fecha)) : 'S/F/C';
           let fecha_caducidad = (item.stock)?item.stock.fecha_caducidad:((item.fecha_caducidad)?item.fecha_caducidad:'S/F/C');
           
+          let detalle = 'Por pieza\n';
+          if(item.modo_movimiento == 'NRM'){
+            detalle = (item.stock)?((item.stock.empaque_detalle)?item.stock.empaque_detalle.descripcion:'Sin detalles'):(item.empaque_detalle)?item.empaque_detalle.descripcion:'Sin detalles';
+          }else{
+            detalle += ' ( ' + ((item.stock)?((item.stock.empaque_detalle)?item.stock.empaque_detalle.unidad_medida.descripcion:'Sin detalles'):(item.empaque_detalle)?item.empaque_detalle.unidad_medida.descripcion:'Sin detalles') + ' )';
+          }
+          let lote = (item.stock)?item.stock.lote:((item.lote)?item.lote:'S/L');
           let item_pdf = [
             { text: (i+1),                                                                          style: 'tabla_datos_center'},
             { text: (item.articulo.clave_cubs)?item.articulo.clave_cubs:item.articulo.clave_local,  style: 'tabla_datos'},
             { text: item.articulo.especificaciones,                                                 style: 'tabla_datos'},
-            { text: (item.stock)?item.stock.lote:((item.lote)?item.lote:'S/L'),                     style: 'tabla_datos_center'},
-            { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
+            { text: detalle,                                                                        style: 'tabla_datos_center'},
+            { text: lote + '\n' + fecha_caducidad,                                                  style: 'tabla_datos_center'},
             { text: numberFormat(parseInt(item.cantidad)),                                          style: 'tabla_datos_center'},
           ];
 

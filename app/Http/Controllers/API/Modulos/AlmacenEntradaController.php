@@ -181,12 +181,12 @@ class AlmacenEntradaController extends Controller
                                                 ->with(['articulo'=>function($articulos)use($loggedUser){
                                                     $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id)->with('empaqueDetalle');
                                                 },'stock'=>function($stock){
-                                                    $stock->with('marca','empaqueDetalle')->withTrashed();
+                                                    $stock->with('marca','empaqueDetalle.unidadMedida')->withTrashed();
                                                 },'cartaCanje']);
                                 },'listaArticulosBorrador'=>function($listaBorrador)use($loggedUser){ 
                                     return $listaBorrador->with(['articulo'=>function($articulos)use($loggedUser){
                                                 $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id)->with('empaqueDetalle');
-                                            },'marca']);
+                                            },'marca','empaqueDetalle.unidadMedida']);
                                 }]);
             }
 

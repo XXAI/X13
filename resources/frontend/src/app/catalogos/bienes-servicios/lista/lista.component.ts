@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { PageEvent } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { SharedService } from 'src/app/shared/shared.service';
 import { BienesServiciosService } from '../bienes-servicios.service';
 import { DialogoDetallesComponent } from '../dialogo-detalles/dialogo-detalles.component';
@@ -11,6 +11,8 @@ import { DialogoDetallesComponent } from '../dialogo-detalles/dialogo-detalles.c
   styleUrls: ['./lista.component.css']
 })
 export class ListaComponent implements OnInit {
+  @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
+  
   constructor(
     private sharedService: SharedService,
     private bienesServiciosService: BienesServiciosService,
@@ -48,7 +50,7 @@ export class ListaComponent implements OnInit {
       };
     }
     
-    params.query = this.searchQuery;
+    params.query = encodeURIComponent(this.searchQuery);
 
     this.listaArticulos = [];
     this.resultsLength = 0;
@@ -63,6 +65,7 @@ export class ListaComponent implements OnInit {
             this.listaArticulos = response.data.data;
             this.resultsLength = response.data.total;
           }
+          this.articulosPaginator.pageIndex = response.data.current_page-1;
         }
         this.isLoading = false;
       },

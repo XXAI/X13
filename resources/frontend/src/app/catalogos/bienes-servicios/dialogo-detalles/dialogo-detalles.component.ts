@@ -41,11 +41,11 @@ export class DialogoDetallesComponent implements OnInit {
   formDetalles: FormGroup;
 
   ultimaActualizacion: Date;
-  modificarEnExistencias: boolean;
+  tieneExistencias: boolean;
 
   actualizado: boolean;
-  //mostrarListaLotes: boolean;
-  //listaSelectDetalles: any[];
+  esListaExistencias: boolean;
+  infoArticulo:any;
 
   empaqueDetalles:any[];
 
@@ -74,8 +74,8 @@ export class DialogoDetallesComponent implements OnInit {
     this.selectTiposArticulo = [];
     this.empaqueDetalles = [];
     this.autoClaveLocal = false;
-    this.modificarEnExistencias = false;
-    //this.mostrarListaLotes = false;
+    this.tieneExistencias = false;
+    this.esListaExistencias = false;
     this.selectedDetalleIndex = -1;
     this.actualizado = false;
 
@@ -156,13 +156,12 @@ export class DialogoDetallesComponent implements OnInit {
                   let errorMessage = response.error;
                   this.sharedService.showSnackBar(errorMessage, null, 3000);
                 } else {
-                  
                   this.formArticulo.patchValue(response.data.articulo);
                   this.empaqueDetalles = response.data.articulo.empaque_detalle;
 
-                  this.dataSourceLotes.data = response.data.lotes;
+                  /*this.dataSourceLotes.data = response.data.lotes;
                   this.dataSourceLotes.paginator = this.lotesPaginator;
-                  this.dataSourceLotes.sort = this.sort;
+                  this.dataSourceLotes.sort = this.sort;*/
 
                   if(response.data.updated_at){
                     this.ultimaActualizacion = new Date(response.data.updated_at);
@@ -170,8 +169,8 @@ export class DialogoDetallesComponent implements OnInit {
                     this.ultimaActualizacion = new Date();
                   }
 
-                  if(response.data.existencias){
-                    this.modificarEnExistencias = true;
+                  if(response.data.articulo.existencias){
+                    this.tieneExistencias = true;
                   }
                   
                 }
@@ -204,7 +203,7 @@ export class DialogoDetallesComponent implements OnInit {
   nuevoArticulo(){
     this.formArticulo.reset();
     this.formDetalles.reset();
-    this.modificarEnExistencias = false;
+    this.tieneExistencias = false;
     this.ultimaActualizacion = null;
     this.empaqueDetalles = [];
     this.autoClaveLocal = false;
@@ -364,6 +363,44 @@ export class DialogoDetallesComponent implements OnInit {
       this.formDetalles.get('descripcion').enable();
       this.formDetalles.get('descripcion').markAsDirty();
       this.formDetalles.get('descripcion').markAsTouched();
+    }
+  }
+
+  verListaExistencias(){
+    this.esListaExistencias = !this.esListaExistencias;
+
+    if(this.esListaExistencias){
+      this.isLoading = true;
+      this.infoArticulo = this.formArticulo.value;
+      this.infoArticulo.familia = (this.infoArticulo.familia)?this.infoArticulo.familia.nombre:'Sin Familia Asignada';
+      this.infoArticulo.partida_especifica = (this.infoArticulo.partida_especifica)?this.infoArticulo.partida_especifica.descripcion:'Sin Partida Especifica Asignada';
+      this.infoArticulo.unidad_medida = (this.infoArticulo.unidad_medida)?this.infoArticulo.unidad_medida.descripcion:'Sin Unidad de Medida Asignada';
+      let tipo_articulo = this.selectTiposArticulo.find(x => x.id == this.infoArticulo.tipo_bien_servicio_id);
+      this.infoArticulo.tipo_bien_servicio = tipo_articulo.descripcion;
+      
+      
+      
+      this.bienesServiciosService.getLotes(this.infoArticulo.id).subscribe(
+        response =>{
+          if(response.error) {
+            let errorMessage = response.error;
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+          } else {
+            this.dataSourceLotes.data = response.data;
+            this.dataSourceLotes.paginator = this.lotesPaginator;
+            this.dataSourceLotes.sort = this.sort;
+          }
+          this.isLoading = false;
+        },
+        errorResponse =>{
+          var errorMessage = "Ocurrió un error.";
+          if(errorResponse.status == 409){
+            errorMessage = errorResponse.error.error.message;
+          }
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.isLoading = false;
+        }
+      );
     }
   }
 

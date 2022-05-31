@@ -95,13 +95,13 @@
                     <div fxFlex></div>
                     <div fxFlex="none" fxLayout="row" class="info-resumen" *ngIf="resumenMovimientos">
                         <div fxFlex="none">
-                            <span>ENT: </span><br>
-                            <span>SAL: </span>
+                            <span>ENT > </span><br>
+                            <span>SAL > </span>
                         </div>
                         <div fxFlex="none">&nbsp;</div>
                         <div fxFlex="none">
-                            {{resumenMovimientos['ENT']['nrm'] | number:'1.0-0'}}<br>
-                            {{resumenMovimientos['SAL']['nrm'] | number:'1.0-0'}}
+                            <span> C: </span>{{resumenMovimientos['ENT']['nrm'] | number:'1.0-0'}}<br>
+                            <span> C: </span>{{resumenMovimientos['SAL']['nrm'] | number:'1.0-0'}}
                         </div>
                         <div fxFlex="none">&nbsp;</div>
                         <div fxFlex="none">

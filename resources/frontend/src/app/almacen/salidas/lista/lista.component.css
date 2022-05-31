@@ -8,6 +8,7 @@
   max-height: 400px;
   min-height:200px;
   overflow: auto;
+  width: 100%;
 }
 
 .data-loading-shade {

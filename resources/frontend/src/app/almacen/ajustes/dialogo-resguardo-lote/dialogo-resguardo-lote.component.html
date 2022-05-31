@@ -52,16 +52,16 @@
             </div>
         </div>
         <div fxFlex fxLayout="row" class="panel-resguardo">
-            <div fxFlex="none" fxLayout="column" class="panel-lista">
+            <div fxFlex="30" fxLayout="column" class="panel-lista">
                 <div fxFlex="none" class="encabezado">Resguardos:</div>
                 <div fxFlex *ngIf="loteData">
-                    <mat-selection-list #listaDetallesResguardo [multiple]="false" (selectionChange)="seleccionarResguardo($event)" dense>
+                    <mat-selection-list #listaDetallesResguardo [multiple]="false" (selectionChange)="seleccionarResguardo($event)" >
                         <mat-list-option *ngIf="loteData.resguardo_detalle.length == 0" disabled class="no-results-found">
                             Sin Resguardos
                         </mat-list-option>
                         <mat-list-option *ngFor="let resguardo of loteData.resguardo_detalle" [value]="resguardo">
                             <div mat-line><span class="lote-label">{{resguardo.descripcion}}</span></div>
-                            <div mat-line>{{resguardo.cantidad_resguardada | number:'1.0-0'}} <span *ngIf="resguardo.son_piezas">(Pzas.)</span></div>
+                            <div mat-line>{{resguardo.cantidad_resguardada | number:'1.0-0'}} <span *ngIf="resguardo.cantidad_usada">=> {{resguardo.cantidad_usada | number:'1.0-0'}}</span> <span *ngIf="resguardo.son_piezas">(Pzas.)</span></div>
                             <div mat-line>Restante: {{resguardo.cantidad_restante | number:'1.0-0'}} Pzas.</div>
                         </mat-list-option>
                         <mat-list-option [value]="{nuevo:true}" class="opcion-nuevo-registro">
@@ -93,10 +93,10 @@
                         </mat-form-field>
                         <mat-form-field fxFlex="none">
                             <mat-label>Cantidad <span *ngIf="formResguardo.get('son_piezas').value">(Piezas)</span></mat-label>
-                            <button mat-icon-button matPrefix (click)="formResguardo.get('son_piezas').patchValue(!formResguardo.get('son_piezas').value)" required>
+                            <button mat-icon-button matPrefix (click)="formResguardo.get('son_piezas').patchValue(!formResguardo.get('son_piezas').value)">
                                 <mat-icon>{{formResguardo.get('son_piezas').value ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
                             </button>
-                            <input matInput formControlName="cantidad_resguardada" type="number" autocomplete="off" min="1" (keyup.enter)="guardarForm()">
+                            <input matInput formControlName="cantidad_resguardada" type="number" autocomplete="off" min="1" (keyup.enter)="guardarForm()" required>
                             <mat-error *ngIf="formResguardo.get('cantidad_resguardada').hasError('required')">Este campo es obligatorio</mat-error>
                             <mat-error *ngIf="formResguardo.get('cantidad_resguardada').hasError('min')">El valor no pude ser menor que 1</mat-error>
                             <mat-error *ngIf="formResguardo.get('cantidad_resguardada').hasError('exceeded')">La cantidad excede las existencias</mat-error>

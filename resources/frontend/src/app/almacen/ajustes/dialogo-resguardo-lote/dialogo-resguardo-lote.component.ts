@@ -70,7 +70,13 @@ export class DialogoResguardoLoteComponent implements OnInit {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response);
+          response.data.resguardo_detalle.forEach(element => {
+            if(!element.son_piezas){
+              element.cantidad_usada = Math.ceil(element.cantidad_restante / this.data.piezasXEmpaque);
+            }else{
+              element.cantidad_usada = element.cantidad_restante;
+            }
+          });
           this.loteData = response.data;
         }
         this.isLoading = false;

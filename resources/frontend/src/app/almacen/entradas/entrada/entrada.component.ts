@@ -24,6 +24,7 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 import { Location } from '@angular/common';
 import { MovimientosLocalStorageService } from '../../tools/movimientos-local-storage.service';
+import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
 
 @Component({
   selector: 'app-entrada',
@@ -42,8 +43,7 @@ export class EntradaComponent implements OnInit {
   @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
   @ViewChild(MatTable) articulosTable: MatTable<any>;
   @ViewChild(MatSort) sort: MatSort;
-
-  @ViewChild(MatDrawer) entradaDrawer: MatDrawer;
+  @ViewChild(AlertPanelComponent) alertPanel:AlertPanelComponent;
   
   constructor(
     private datepipe: DatePipe,
@@ -188,7 +188,8 @@ export class EntradaComponent implements OnInit {
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
         } else {
           this.catalogos['almacenes'] = response.data.almacenes;
           this.catalogos['programas'] = response.data.programas;
@@ -206,7 +207,8 @@ export class EntradaComponent implements OnInit {
         if(errorResponse.status == 409){
           errorMessage = errorResponse.error.error.message;
         }
-        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.alertPanel.mostrarError('Error: '+errorMessage);
         this.isLoading = false;
       }
     );
@@ -241,7 +243,8 @@ export class EntradaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error.message;
-              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              //this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.alertPanel.mostrarError('Error: '+errorMessage);
             } else {
               response.data.fecha_movimiento = new Date(response.data.fecha_movimiento+'T12:00:00');
               if(response.data.referencia_fecha){
@@ -384,7 +387,8 @@ export class EntradaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             this.isLoading = false;
           }
         );
@@ -414,7 +418,8 @@ export class EntradaComponent implements OnInit {
               if(errorResponse.status == 409){
                 errorMessage = errorResponse.error.error.message;
               }
-              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              //this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.alertPanel.mostrarError('Error: '+errorMessage);
               this.isLoading = false;
             }
           );
@@ -931,13 +936,14 @@ export class EntradaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error;
-              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              //this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.alertPanel.mostrarError('Error: '+errorMessage);
             }else{
-              this.sharedService.showSnackBar('Datos Guardados con Éxito', null, 3000);
+              //this.sharedService.showSnackBar('Datos Guardados con Éxito', null, 3000);
+              this.alertPanel.mostrarSucces('Datos Guardados con Éxito');
 
               response.data.modificacion.registro_original = JSON.parse(response.data.modificacion.registro_original);
               response.data.modificacion.registro_modificado = JSON.parse(response.data.modificacion.registro_modificado);
-              console.log('Modificacion Guardada:',response.data.modificacion);
               
               if(response.data.modificacion.estatus == 'FIN'){
                 this.datosEntrada = response.data.movimiento;
@@ -954,7 +960,8 @@ export class EntradaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             this.isSaving = false;
           }
         );
@@ -978,6 +985,9 @@ export class EntradaComponent implements OnInit {
   guardarMovimiento(concluir:boolean = false){
     if(this.formMovimiento.valid){
       this.isSaving = true;
+
+      this.alertPanel.cerrarAlerta();
+      
       let formData:any = this.formMovimiento.value;
       formData.lista_articulos = this.dataSourceArticulos.data;
       formData.concluir = concluir;
@@ -1002,7 +1012,8 @@ export class EntradaComponent implements OnInit {
         response =>{
           if(response.error) {
             let errorMessage = response.error;
-            this.sharedService.showSnackBar(errorMessage, null, 4000);
+            //this.sharedService.showSnackBar(errorMessage, null, 4000);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
           }else{
             this.formMovimiento.get('id').patchValue(response.data.id);
 
@@ -1033,7 +1044,8 @@ export class EntradaComponent implements OnInit {
               this.verBoton.crear_salida = true;
             }
             this.controlArticulosModificados = {};
-            this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
+            this.alertPanel.mostrarSucces('Datos almacenados con Éxito');
+            //this.sharedService.showSnackBar('Datos almacenados con éxito', null, 3000);
             this.estatusStorageIcon = '';
             this.verBoton.descartar_cambios = false;
             this.localStorageService.deleteDatos();
@@ -1045,7 +1057,8 @@ export class EntradaComponent implements OnInit {
           if(errorResponse.status == 409){
             errorMessage = errorResponse.error.error.message;
           }
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
           this.isSaving = false;
         }
       );
@@ -1154,10 +1167,12 @@ export class EntradaComponent implements OnInit {
                 const dialogRef = this.dialog.open(DialogoCancelarResultadoComponent, configDialog);
               }else{
                 let errorMessage = response.error;
-                this.sharedService.showSnackBar(errorMessage, null, 4000);
+                //this.sharedService.showSnackBar(errorMessage, null, 4000);
+                this.alertPanel.mostrarError('Error: '+errorMessage);
               }
             }else{
-              this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              //this.sharedService.showSnackBar('Movimiento cancelado con exito', null, 3000);
+              this.alertPanel.mostrarSucces('Movimiento Cancelado con Éxito');
               this.estatusMovimiento = 'CAN';
               this.cargarDatosUsuarios(response.data);
             }
@@ -1167,7 +1182,8 @@ export class EntradaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             //this.isLoadingPDF = false;
           }
         );
@@ -1195,9 +1211,11 @@ export class EntradaComponent implements OnInit {
           response =>{
             if(response.error) {
               let errorMessage = response.error.message;
-              this.sharedService.showSnackBar(errorMessage, null, 3000);
+              //this.sharedService.showSnackBar(errorMessage, null, 3000);
+              this.alertPanel.mostrarError('Error: '+errorMessage);
             }else{
-              this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
+              //this.sharedService.showSnackBar('Movimiento eliminado con exito', null, 3000);
+              //this.alertPanel.mostrarSucces('Datos Guardados con Éxito');
               this.router.navigateByUrl('/almacen/entradas');
             }
             this.isLoading = false;
@@ -1207,7 +1225,8 @@ export class EntradaComponent implements OnInit {
             if(errorResponse.status == 409){
               errorMessage = errorResponse.error.error.message;
             }
-            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            //this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.alertPanel.mostrarError('Error: '+errorMessage);
             this.isLoading = false;
           }
         );
@@ -1228,7 +1247,8 @@ export class EntradaComponent implements OnInit {
       response =>{
         if(response.error) {
           let errorMessage = response.error.message;
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
         }else{
           if(response.data){
             let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: 'numeric', day: '2-digit'}).format(new Date());
@@ -1243,7 +1263,8 @@ export class EntradaComponent implements OnInit {
 
             reportWorker.onerror().subscribe(
               (data) => {
-                this.sharedService.showSnackBar(data.message, null, 3000);
+                //this.sharedService.showSnackBar(data.message, null, 3000);
+                this.alertPanel.mostrarInfo('Mensaje: '+data.message);
                 this.isLoading = false;
                 reportWorker.terminate();
               }
@@ -1268,7 +1289,8 @@ export class EntradaComponent implements OnInit {
         if(errorResponse.status == 409){
           errorMessage = errorResponse.error.error.message;
         }
-        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.alertPanel.mostrarError('Error: '+errorMessage);
         //this.isLoadingPDF = false;
       }
     );

@@ -186,6 +186,21 @@ class AlmacenMovimientosController extends Controller{
                     $search_queries = explode('+',$params_query);
 
                     $stock_existencias = $stock_existencias->where(function($query)use($search_queries){
+                        for($i = 0; $i < count($search_queries); $i++){
+                            $query_value = $search_queries[$i];
+                            $query = $query->where(function($where)use($query_value){
+                                return $where->where('bienes_servicios.clave_cubs','LIKE','%'.$query_value.'%')
+                                                ->orWhere('bienes_servicios.clave_local','LIKE','%'.$query_value.'%')
+                                                ->orWhere('bienes_servicios.articulo','LIKE','%'.$query_value.'%')
+                                                ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$query_value.'%')
+                                                ->orWhere('stocks.lote','LIKE','%'.$query_value.'%')
+                                                ->orWhere('stocks.codigo_barras','LIKE','%'.$query_value.'%');
+                            });
+                        }
+                        return $query;
+                    });
+
+                    /*$stock_existencias = $stock_existencias->where(function($query)use($search_queries){
                         return $query//->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
                                     //->where('familias.nombre','LIKE','%'.$parametros['query'].'%')
                                     ->where(function($where)use($search_queries){
@@ -224,7 +239,7 @@ class AlmacenMovimientosController extends Controller{
                                         }
                                         return $where;
                                     });
-                    });
+                    });*/
                 }
             }
 

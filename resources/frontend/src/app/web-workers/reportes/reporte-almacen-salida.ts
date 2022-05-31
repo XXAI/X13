@@ -51,18 +51,18 @@ export class ReporteAlmacenSalida{
                   {
                       text: salida.almacen?.direccion,
                       alignment:'left',
-                      fontSize: 8,
+                      fontSize: 6,
                   },
                   {
                       margin: [10, 0, 0, 0],
                       text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
-                      fontSize: 8,
+                      fontSize: 6,
                       alignment: 'center'
                   },
                   {
                     text:fecha_hoy.toString(),
                     alignment:'right',
-                    fontSize: 8,
+                    fontSize: 6,
                 }
               ]
             }
@@ -85,50 +85,50 @@ export class ReporteAlmacenSalida{
             pedido_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
-              fontSize: 8,
+              fontSize: 6,
               bold:true
             },
             pedido_datos:{
-              fontSize: 8
+              fontSize: 6
             },
             tabla_datos:{
-              fontSize: 8
+              fontSize: 6
             },
             tabla_datos_center:{
-              fontSize: 8,
+              fontSize: 6,
               alignment: "center"
             },
             tabla_datos_right:{
-              fontSize: 8,
+              fontSize: 6,
               alignment: "right"
             },
             salida_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
-              fontSize: 8,
+              fontSize: 6,
               bold:true
             },
             salida_title_center:{
               alignment:"center",
               fillColor:"#DEDEDE",
-              fontSize: 8,
+              fontSize: 6,
               bold:true
             },
             salida_datos:{
-              fontSize: 8
+              fontSize: 6
             },
             datos_encabezado_izquierda:{
-              fontSize: 10,
+              fontSize: 8,
               color:"black",
             },
             tabla_encabezado_firmas:
             {
-              fontSize: 10,
+              fontSize: 8,
               alignment:"center",
               bold:true
             },
             tabla_encabezado_datos:{
-              fontSize: 10,
+              fontSize: 8,
               alignment:"center",
             },
             marca_de_agua:{
@@ -263,8 +263,8 @@ export class ReporteAlmacenSalida{
             {text: "CLAVE",               style: 'cabecera'},
             {text: "PRODUCTO",            style: 'cabecera'},
             {text: "LOTE",                style: 'cabecera'},
-            {text: "FECHA CADUCIDAD",     style: 'cabecera'},
-            {text: "CANT",                style: 'cabecera'},
+            {text: "LOTE - FECHA CADUCIDAD",     style: 'cabecera'},
+            {text: "CANTIDAD",                style: 'cabecera'},
         ];
 
         if(reportData.config.mostrar_montos){
