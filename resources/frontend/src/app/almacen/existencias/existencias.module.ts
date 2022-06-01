@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { ExistenciasRoutingModule } from './existencias-routing.module';
 import { ListaComponent } from './lista/lista.component';
-import { DialogoDetallesStockComponent } from './dialogo-detalles-stock/dialogo-detalles-stock.component';
+import { DialogoDetallesArticuloComponent } from './dialogo-detalles-articulo/dialogo-detalles-articulo.component';
 
 
 @NgModule({
-  declarations: [ListaComponent, DialogoDetallesStockComponent],
+  declarations: [ListaComponent, DialogoDetallesArticuloComponent],
   imports: [
     CommonModule,
     SharedModule,

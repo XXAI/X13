@@ -1137,7 +1137,8 @@ export class SalidaComponent implements OnInit {
 
             reportWorker.onerror().subscribe(
               (data) => {
-                this.sharedService.showSnackBar(data.message, null, 3000);
+                //this.sharedService.showSnackBar(data.message, null, 3000);
+                this.alertPanel.mostrarError(data.message);
                 //console.log(data);
                 this.isLoading = false;
                 reportWorker.terminate();

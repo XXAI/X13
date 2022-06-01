@@ -259,11 +259,11 @@ export class ReporteAlmacenSalida{
         });
 
         let encabezado_lista = [
-            {text: "#",                   style: 'cabecera'},
-            {text: "CLAVE",               style: 'cabecera'},
-            {text: "PRODUCTO",            style: 'cabecera'},
-            {text: "LOTE",                style: 'cabecera'},
-            {text: "LOTE - FECHA CADUCIDAD",     style: 'cabecera'},
+            {text: "#",                       style: 'cabecera'},
+            {text: "CLAVE",                   style: 'cabecera'},
+            {text: "PRODUCTO",                style: 'cabecera'},
+            {text: "DETALLES",                style: 'cabecera'},
+            {text: "LOTE - FECHA CADUCIDAD",  style: 'cabecera'},
             {text: "CANTIDAD",                style: 'cabecera'},
         ];
 
@@ -337,18 +337,26 @@ export class ReporteAlmacenSalida{
               }else{
                 stock_cantidad = parseInt(item.cantidad);
               }
-              if(stock_cantidad > 0){
+              //if(stock_cantidad > 0){
                 let articulo = (typeof item.articulo == 'object')?item.articulo:item;
   
                 let fecha_caducidad = (stock?.fecha_caducidad)?stock?.fecha_caducidad:'S/F/C';
               
+                let detalle = 'Por pieza\n';
+                if(item.modo_movimiento == 'NRM'){
+                  detalle = (stock?.empaque_detalle)?stock.empaque_detalle.descripcion:'Sin detalles';
+                }else{
+                  detalle += ' ( ' + ((stock?.empaque_detalle)?stock.empaque_detalle.unidad_medida.descripcion:'Sin detalles') + ' )';
+                }
+                let lote = (stock?.lote)?stock.lote:'S/L';
+
                 let item_pdf = [
-                  { text: (conteo_real++),                                                                style: 'tabla_datos_center'},
-                  { text: (articulo.clave_cubs)?articulo.clave_cubs:articulo.clave_local,                 style: 'tabla_datos'},
-                  { text: articulo.especificaciones,                                                      style: 'tabla_datos'},
-                  { text: (stock?.lote)?stock.lote:'S/L',                                                 style: 'tabla_datos_center'},
-                  { text: fecha_caducidad,                                                                style: 'tabla_datos_center'},
-                  { text: numberFormat(stock_cantidad||0),                                                style: 'tabla_datos_center'},
+                  { text: (conteo_real++),                                                style: 'tabla_datos_center'},
+                  { text: (articulo.clave_cubs)?articulo.clave_cubs:articulo.clave_local, style: 'tabla_datos'},
+                  { text: articulo.especificaciones,                                      style: 'tabla_datos'},
+                  { text: detalle,                                                        style: 'tabla_datos_center'},
+                  { text: lote + '\n' +fecha_caducidad,                                   style: 'tabla_datos_center'},
+                  { text: numberFormat(stock_cantidad||0),                                style: 'tabla_datos_center'},
                 ];
   
                 if(reportData.config.mostrar_montos){
@@ -359,7 +367,20 @@ export class ReporteAlmacenSalida{
                 datos.content[1].table.body.push(item_pdf);
                 total_articulos += stock_cantidad;
                 se_agrego_lote = true;
-              }
+              //}
+            }
+
+            if(stocks.length == 0){
+              let articulo = (typeof item.articulo == 'object')?item.articulo:item;
+              let item_pdf = [
+                { text: (conteo_real++),                                                style: 'tabla_datos_center'},
+                { text: (articulo.clave_cubs)?articulo.clave_cubs:articulo.clave_local, style: 'tabla_datos'},
+                { text: articulo.especificaciones,                                      style: 'tabla_datos'},
+                { text: '---',                                                          style: 'tabla_datos_center'},
+                { text: '---',                                                          style: 'tabla_datos_center'},
+                { text: numberFormat(0),                                                style: 'tabla_datos_center'},
+              ];
+              datos.content[1].table.body.push(item_pdf);
             }
           //}
         }

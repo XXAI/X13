@@ -19,6 +19,7 @@ use App\Exports\DevReportExport;
 use App\EDocs\EDoc;
 
 use App\Models\Stock;
+use App\Models\BienServicio;
 use App\Models\Movimiento;
 use App\Models\MovimientoArticulo;
 use App\Models\Programa;
@@ -43,156 +44,84 @@ class AlmacenExistenciasController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
-    {        
-        $params = $request->input();
-        if(isset($params["all"])){
-            return response()->json(["data"=>Stock::all()]);
-        } else {
-            if(!isset($params['pageSize'])){
-                $params['pageSize'] = 1;
-            }
-            
+    public function index(Request $request){
+        try{
             $loggedUser = auth()->userOrFail();
-            
+            $parametros = $request->all();
+
+            /*if(!\Gate::denies('has-permission', 'vPZUt02ZCcGoNuxDlfOCETTjJAobvJvO')){
+                $parametros['buscar_catalogo_completo'] = true;
+            }*/
+
+            $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
+
             if($loggedUser->is_superuser){
-                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+                $almacenes_ids = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
             }else{
-                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+                $almacenes_ids = $loggedUser->almacenes()->pluck('almacen_id');
             }
 
-            $items = Stock::leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
-                            ->leftJoin("cog_partidas_especificas", "cog_partidas_especificas.clave","=","bienes_servicios.clave_partida_especifica")
-                            ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
-                            ->leftJoin("programas","programas.id","=","stocks.programa_id")
-                            ->leftJoin("familias","familias.id","=","bienes_servicios.familia_id")
-                            ->where('stocks.unidad_medica_id',$loggedUser->unidad_medica_asignada_id)
-                            ->whereIn('stocks.almacen_id',$almacenes);
+            $lista_articulos = Stock::select('stocks.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
+                                            "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
+                                            'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
+                                            DB::raw("COUNT(DISTINCT stocks.id) as total_lotes"), DB::raw("SUM(stocks.existencia) as existencia"), DB::raw("SUM(stocks.existencia_piezas) as existencia_piezas"), DB::raw("SUM(stocks.resguardo_piezas) as resguardo_piezas"))
+                                    ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
+                                    ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
+                                    ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
+                                        return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
+                                            ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                                            ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
+                                    })
+                                    ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                    ->whereIn('stocks.almacen_id',$almacenes_ids)
+                                    ->groupBy('stocks.bien_servicio_id');
+            
+            //Filtros, busquedas, ordenamiento
+            if(isset($parametros['query']) && $parametros['query']){
+                $params_query = urldecode($parametros['query']);
+
+                $search_queries = explode('+',$params_query);
+
+                $lista_articulos = $lista_articulos->where(function($query)use($search_queries){
+                    //->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
+                    //->where('familias.nombre','LIKE','%'.$parametros['query'].'%')
+                    for($i = 0; $i < count($search_queries); $i++){
+                        $query_value = $search_queries[$i];
+                        $query = $query->where(function($where)use($query_value){
+                            return $where->where('bienes_servicios.clave_cubs','LIKE','%'.$query_value.'%')
+                                            ->orWhere('bienes_servicios.clave_local','LIKE','%'.$query_value.'%')
+                                            ->orWhere('bienes_servicios.articulo','LIKE','%'.$query_value.'%')
+                                            ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$query_value.'%')
+                                            ->orWhere('stocks.lote','LIKE','%'.$query_value.'%')
+                                            ->orWhere('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$query_value.'%');
+                        });
+                    }
+                    return $query;
+                });
+                $params['incluir_existencias_cero'] = true;
+            }
             
             if(isset($params['incluir_existencias_cero']) && $params['incluir_existencias_cero']){
-                $items = $items->where(function($where){
+                $lista_articulos = $lista_articulos->where(function($where){
                     $where->where('stocks.existencia','>=',0);
                 });
             }else{
-                $items = $items->where(function($where){
+                $lista_articulos = $lista_articulos->where(function($where){
                     $where->where('stocks.existencia','>',0)->orWhere('existencia_piezas','>',0);
                 });
             }
 
-            if(isset($params['groupBy']) && trim($params['groupBy']) != ""){
-                if($params['groupBy'] == 'articulo'){
-                    $items = $items->select(
-                        //"almacenes.nombre as almacen",
-                        //"programas.descripcion as programa",
-                        DB::raw("IF(COUNT(DISTINCT stocks.almacen_id) = 1,almacenes.nombre,CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)')) as almacen"),
-                        DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.programa_id),' Programa(s)') as programa"),
-                        "stocks.bien_servicio_id as id", 
-                        DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) as clave"),
-                        "bienes_servicios.articulo as articulo",
-                        "bienes_servicios.especificaciones as especificaciones",
-                        "bienes_servicios.puede_surtir_unidades",
-                        "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
-                        "cog_partidas_especificas.clave as clave_partida_especifica",
-                        "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
-                        "familias.nombre as familia",
-                        DB::raw("SUM(stocks.existencia) as existencia"),
-                        DB::raw("SUM(stocks.existencia_piezas) as existencia_piezas"),
-                        DB::raw("COUNT(distinct stocks.id) as total_lotes"))
-                        ->groupBy('stocks.bien_servicio_id');
-                }
-            }else{
-                $items = $items->select(
-                    //"almacenes.nombre as almacen",
-                    DB::raw("CONCAT('En ',COUNT(DISTINCT stocks.almacen_id),' Almacen(es)') as almacen"),
-                    "programas.descripcion as programa",
-                    "stocks.id as id", 
-                    "stocks.bien_servicio_id as bien_servicio_id", 
-                    "bienes_servicios.articulo as articulo",
-                    "bienes_servicios.especificaciones as especificaciones",
-                    "bienes_servicios.puede_surtir_unidades",
-                    "cog_partidas_especificas.clave_partida_generica as clave_partida_generica",
-                    "cog_partidas_especificas.clave as clave_partida_especifica",
-                    "cog_partidas_especificas.descripcion as partida_especifica_descripcion",
-                    "stocks.existencia as existencia",
-                    "stocks.existencia_piezas as existencia_piezas",
-                    "stocks.fecha_caducidad as fecha_caducidad",
-                    "stocks.lote as lote",
-                    "stocks.codigo_barras as codigo_barras",
-                    DB::raw("(CASE WHEN stocks.fecha_caducidad  < NOW() THEN '1' ELSE '0' END) as caducado"));
+            if(isset($parametros['page'])){
+                $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
+                $lista_articulos = $lista_articulos->paginate($resultadosPorPagina);
+            } else {
+                $lista_articulos = $lista_articulos->get();
             }
 
-            if(isset($params['orderBy']) && trim($params['orderBy'])!= ""){
-                $sortOrder = 'asc';
-                if(isset($params['sortOrder'])){
-                    $sortOrder = $params['sortOrder'];
-                }
-    
-                $items = $items->orderBy($params['orderBy'],$sortOrder);
-            }  else {
-                $items = $items->orderBy('id','desc');
-            }
-
-            if(isset($params['caducidad'])){
-                if($params['caducidad'] == "CAD"){
-                    $items = $items->whereDate("fecha_caducidad","<",date("Y-m-d"));
-                }
-
-                if($params['caducidad'] == "PROX"){
-                    $items = $items->whereDate("fecha_caducidad",">=",date("Y-m-d"))->whereDate("fecha_caducidad","<",DB::raw('DATE_ADD("'.date("Y-m-d").'", INTERVAL 3 MONTH)'));
-                }
-                
-            }
-            
-            if(isset($params['familia_id']) && trim($params['familia_id'])!= ""){
-                $items = $items->where("bienes_servicios.familia_id","=", $params['familia_id']);
-            }
-
-            if(isset($params['clave_partida_especifica']) && trim($params['clave_partida_especifica'])!= ""){
-                $items = $items->where("bienes_servicios.clave_partida_especifica","=", $params['clave_partida_especifica']);
-            }
-
-            if(isset($params['almacen_id']) && trim($params['almacen_id'])!= ""){
-                $almacenes_ids = explode('|',$params['almacen_id']);
-                $items = $items->whereIn("stocks.almacen_id", $almacenes_ids);
-            }
-
-            if(isset($params['programa_id']) && trim($params['programa_id'])!= ""){
-                $items = $items->where("stocks.programa_id","=", $params['programa_id']);
-            }
-
-            if(isset($params['search']) && trim($params['search'])!= ""){
-                $items = $items->where(function($query) use ($params) {
-                    $query->where("codigo_barras","LIKE", "%".$params['search']."%")
-                    ->orWhere("lote","LIKE", "%".$params['search']."%")
-                    ->orWhere("articulo","LIKE", "%".$params['search']."%")
-                    ->orWhere("especificaciones","LIKE", "%".$params['search']."%")
-                    ->orWhere("clave_local","LIKE", "%".$params['search']."%")
-                    ->orWhere("clave_cubs","LIKE", "%".$params['search']."%")
-                    ;
-                });
-            }
-            
-            $items = $items->paginate($params['pageSize']);
-
-            return response()->json($items);
+            return response()->json($lista_articulos,HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        $stock = Stock::where("id",$id)->first();
-        if($stock != null) {
-            return response()->json(['stock' => $stock]);
-        } else {
-            return response()->json(['message' => "Stock no encontrado"],404);
-        }
-        
     }
 
      /**
@@ -248,72 +177,27 @@ class AlmacenExistenciasController extends Controller
             $loggedUser = auth()->userOrFail();
 
             if($loggedUser->is_superuser){
-                $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+                $almacenes_ids = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
             }else{
-                $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
+                $almacenes_ids = $loggedUser->almacenes()->pluck('almacen_id');
             }
 
-            $params = $request->input();
+            $params = $request->all();
 
             $returnData = [];
 
-            if($params['es_articulo']){
-                $por_almacen = Stock::select("almacenes.id","almacenes.nombre as almacen","programas.descripcion as programa",DB::raw("SUM(stocks.existencia) as existencias"))
-                                    ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
-                                    ->leftJoin("programas","programas.id","=","stocks.programa_id")
-                                    ->where("stocks.existencia",">",0)
-                                    ->where("stocks.bien_servicio_id",$id)
-                                    ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
-                                    ->groupBy('stocks.programa_id')
-                                    ->groupBy('stocks.almacen_id')
-                                    ->whereIn('stocks.almacen_id',$almacenes)
-                                    ->get();
-                $returnData['por_almacen'] = $por_almacen;
+            $returnData['detalle_articulo'] = BienServicio::datosDescripcion($loggedUser->unidad_medica_asignada_id)->withTrashed()->find($id);
 
-                $datos_catalogo = UnidadMedicaCatalogoArticulo::where('bien_servicio_id',$id)->first();
-                $returnData['datos_catalogo'] = $datos_catalogo;
-
-                $movimientos = Stock::select(
-                    "movimientos_articulos.movimiento_id as id", 
-                    "almacenes.nombre as almacen",
-                    "movimientos.folio as folio", 
-                    "movimientos.estatus as estatus", 
-                    "movimientos_articulos.direccion_movimiento as direccion_movimiento",
-                    "movimientos.fecha_movimiento as fecha_movimiento",
-                    "programas.descripcion as programa",
-                    "proveedores.nombre as proveedor",
-                    "almacen_destino.nombre as almacen_destino",
-                    "catalogo_unidades_medicas.nombre as unidad_medica_destino",
-                    "catalogo_areas_servicios.descripcion as area_servicio_destino",
-                    "catalogo_tipos_solicitud.descripcion as tipo_solicitud",
-                    DB::raw("SUM(movimientos_articulos.cantidad) as cantidad"),
-                    DB::raw("CONCAT(COUNT(DISTINCT stocks.id),' Lote(s)') as lotes"))
-                ->leftjoin("movimientos_articulos",function($joinArticulos){
-                    $joinArticulos->on("movimientos_articulos.stock_id","=","stocks.id")->whereNull("movimientos_articulos.deleted_at");
-                })
-                ->leftJoin("movimientos",function($joinMovimientos){
-                    $joinMovimientos->on("movimientos.id","=","movimientos_articulos.movimiento_id")->whereNull("movimientos.deleted_at");
-                })
-                ->leftJoin("almacenes","almacenes.id","=","stocks.almacen_id")
-                ->leftJoin('programas','programas.id','=','stocks.programa_id')
-                ->leftJoin('proveedores','proveedores.id','=','movimientos.proveedor_id')
-                ->leftJoin('almacenes as almacen_destino','almacen_destino.id','=','movimientos.almacen_movimiento_id')
-                ->leftJoin('catalogo_unidades_medicas','catalogo_unidades_medicas.id','=','movimientos.unidad_medica_movimiento_id')
-                ->leftJoin('catalogo_areas_servicios','catalogo_areas_servicios.id','=','movimientos.area_servicio_movimiento_id')
-                ->leftJoin('solicitudes','solicitudes.id','=','movimientos.solicitud_id')
-                ->leftJoin('catalogo_tipos_solicitud','catalogo_tipos_solicitud.id','=','solicitudes.tipo_solicitud_id')
-                ->where("stocks.bien_servicio_id",$id)
-                ->where("stocks.unidad_medica_id",$loggedUser->unidad_medica_asignada_id)
-                ->whereIn("movimientos.estatus",["FIN","PERE"])
-                ->orderBy("movimientos.fecha_movimiento","ASC")
-                ->orderBy("movimientos.created_at","ASC")
-                ->orderBy("stocks.lote")
-                ->groupBy("movimientos_articulos.movimiento_id")
-                ->groupBy("stocks.bien_servicio_id")
-                ->whereIn('stocks.almacen_id',$almacenes)
-                ->get();
-                $returnData['movimientos'] = $movimientos;
-            }
+            $returnData['existencias_almacenes'] = Almacen::select('almacenes.id','almacenes.nombre','catalogo_tipos_almacen.descripcion as tipo_almacen','almacenes.externo', 
+                                                                    DB::raw('COUNT(DISTINCT stocks.id) as total_lotes'), DB::raw("SUM(stocks.existencia) as existencia"), DB::raw("SUM(stocks.existencia_piezas) as existencia_piezas"))
+                                                            ->leftJoin('catalogo_tipos_almacen','catalogo_tipos_almacen.id','=','almacenes.tipo_almacen_id')
+                                                            ->leftJoin('stocks',function($join)use($id){
+                                                                return $join->on('stocks.almacen_id','=','almacenes.id')->where('stocks.bien_servicio_id',$id)->whereNull('stocks.deleted_at');
+                                                            })
+                                                            ->whereIn('almacenes.id',$almacenes_ids)
+                                                            ->groupBy('almacenes.id')
+                                                            ->get();
+            //
             return response()->json($returnData);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);

@@ -149,7 +149,7 @@ class AlmacenSalidaController extends Controller
                                                                 'articulo'=>function($articulos)use($loggedUser){
                                                                     return $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
                                                                 },'stock'=>function($stock){
-                                                                    return $stock->with('marca','programa','empaqueDetalle')->withTrashed();
+                                                                    return $stock->with('marca','programa','empaqueDetalle.unidadMedida')->withTrashed();
                                                                 }
                                                             ]);
                                     },'movimientoHijo' => function($movimientoHijo){
@@ -186,7 +186,7 @@ class AlmacenSalidaController extends Controller
                                                                         ->where('movimientos_articulos_borrador.movimiento_id',$movimiento_id);
                                                                 })
                                                                 ->where('stocks.existencia','>',0)
-                                                                ->with('marca','programa','empaqueDetalle');
+                                                                ->with('marca','programa','empaqueDetalle.unidadMedida');
                                                         if($programa_id){
                                                             $stocks = $stocks->where('programa_id',$programa_id);
                                                         }
