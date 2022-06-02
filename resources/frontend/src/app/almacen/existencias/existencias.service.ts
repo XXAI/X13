@@ -10,10 +10,10 @@ import { map } from 'rxjs/operators';
 export class ExistenciasService {
   url_existencias = `${environment.base_url}/almacen-existencias`;
   url_detalles = `${environment.base_url}/almacen-existencias/detalles`;
+  url_lotes = `${environment.base_url}/almacen-existencias/lotes`;
+  url_movimientos = `${environment.base_url}/almacen-existencias/movimientos`;
 
   url_catalogos = `${environment.base_url}/almacen-existencias/catalogos`;
-  
-  url_movimientos = `${environment.base_url}/almacen-existencias/movimientos`;
   url_export =  `${environment.base_url}/almacen-existencias/exportar-excel`;
 
   constructor(private http: HttpClient) { }
@@ -42,8 +42,16 @@ export class ExistenciasService {
     );
   }
 
-  buscarMovimiento(stock_id,payload): Observable<any>{
-    return this.http.get(this.url_movimientos+`/${stock_id}`,{params: payload});
+  obtenerListaLotes(payload):Observable<any> {
+    return this.http.get<any>(this.url_lotes,{params: payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  obtenerListaMovimientos(stock_id): Observable<any>{
+    return this.http.get(this.url_movimientos+`/${stock_id}`);
   }
 
   exportarReporte(payload:any={}):Observable<any>{

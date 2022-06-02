@@ -47,6 +47,20 @@
     cursor: default;
 }
 
+::ng-deep .mini-spinner.mat-progress-spinner circle {
+    /*stroke: whitesmoke !important;*/
+    stroke: rgba(0,0,0,.40);
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
 .boton-accion{
     border-left: 1px solid whitesmoke;
     background-color: #787878;
@@ -100,6 +114,11 @@
     padding: 0 5px;
 }
 
+.datos-lote{
+    color:black !important;
+    background-color: cadetblue;
+}
+
 .datos-almacen{
     padding:5px;
 }
@@ -108,22 +127,30 @@
     cursor: pointer;
     padding:5px;
     border-radius: 5px;
-    border:1px solid grey;
+    border:1px solid rgba(0,0,0,.42);
+}
+
+.datos-almacen .detalles.seleccionado{
+    background-color: #83c0f5;
+}
+
+.datos-almacen .detalles:hover{
+    box-shadow: 0px 0px 4px 3px  rgba(0,0,0,0.20) !important;
 }
 
 .datos-almacen .detalles .nombre{
     font-weight: 500;
-    border-bottom: 1px solid lightgray;
+    border-bottom: 1px solid rgba(0,0,0,0.30);
 }
 
 .datos-almacen .detalles .especificaciones{
     font-size: small;
-    color: gray;
+    color: rgba(0,0,0,0.65);
     padding-right:5px;
 }
 
 .datos-almacen .detalles .existencias{
-    border-left: 1px solid lightgray;
+    border-left: 1px solid rgba(0,0,0,0.30);
     padding:5px;
     text-align: right;
 }
@@ -136,3 +163,167 @@
 .datos-almacen .detalles .existencias .piezas{
     font-size: small;
 }
+
+.lista-items{
+    overflow: hidden;
+    border-top: 1px solid rgba(0,0,0,.12);
+    border-right: 1px solid rgba(0,0,0,.12);
+}
+
+.item-detalles{
+    border-top: 1px solid rgba(0,0,0,.12);
+}
+
+.detalles-sin-lote{
+    margin: 10px;
+    padding: 40px;
+    text-align: center;
+    font-style: italic;
+    color: #4a4848;
+    border-radius: 5px;
+    background-color: whitesmoke;
+    cursor: default;
+}
+
+.detalles-lote{
+    padding: 8px;
+    background-color: whitesmoke;
+}
+
+.detalles-lote .mat-card{
+    padding: 0px;
+}
+
+.encabezado{
+    padding: 5px;
+    font-weight: 500;
+    background-color: cadetblue;
+}
+
+.campo-filtro{
+    background-color: #d5d5d5;
+}
+
+.lista{
+    overflow: auto;
+}
+
+.lista .mat-list-base{
+    padding-top: 0px;
+}
+
+.small-icon{
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+    color: rgba(255,255,255,0.45);
+}
+
+.small-search-input{
+    padding: 5px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: #d5d5d5;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.bloques-detalles{
+    padding: 10px 0px;
+}
+
+.bloques-detalles > .bloque{
+    cursor: default;
+    padding: 8px;
+}
+
+.bloques-detalles > .bloque:first-child{
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.bloques-detalles > .bloque:last-child{
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.bloque-existencias{
+    border:2px solid cadetblue;
+    color:cadetblue;
+}
+
+.bloque-movimientos{
+    background-color: cadetblue;
+    color: white;
+}
+
+.bloque > div:first-child{
+    padding-right:8px;
+}
+
+.bloque > div:not(:first-child){
+    padding-left:8px;
+    border-left: 1px solid;
+}
+
+.bloque .etiqueta{
+    display: block;
+    font-size: small;
+    opacity: 0.80;
+    white-space: nowrap;
+}
+
+.tabla-movimientos{
+    overflow: auto;
+}
+
+.lista-movimientos-table{
+    width: 100%;
+    cursor: default;
+}
+
+.lista-movimientos-table th{
+    text-align: center;
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.lista-movimientos-table tr.mat-row:hover {
+    background-color: #F5F5F5;
+    font-weight: 500;
+}
+
+.pendiente-recepcion-color > td{
+    color:#dc8503 !important;
+}
+
+.concluido-color > td{
+    color:#07a8ff !important;
+}
+
+.cancelado-color > td{
+    color:#ff2a2a !important;
+}
+
+.peticion-modificacion-color > td{
+    color:#b000e6;
+}
+
+.modificacion-aprobada-color > td{
+    color:#b000e6;
+}
+

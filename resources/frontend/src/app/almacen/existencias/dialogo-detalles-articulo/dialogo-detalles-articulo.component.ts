@@ -4,6 +4,7 @@ import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { Subscription } from 'rxjs';
 import { SharedService } from 'src/app/shared/shared.service';
 import { ExistenciasService } from '../existencias.service';
 
@@ -30,10 +31,16 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   ) { }
 
   subDialogRef: any;
+  nivelesEscape: any[];
 
   isLoading: boolean;
+  isLoadingLotes: boolean;
+  isLoadingMovimientos: boolean;
+  subscriptionLotes: Subscription;
+  subscriptionMovimientos: Subscription;
 
   loteSeleccionado: boolean;
+  datosLote: any;
   existencias: any;
   resguardos: any;
   resumenMovimientos: any;
@@ -44,12 +51,10 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   pageSize: number = 30;
   displayedColumns: string[] = ["direccion_movimiento","fecha_movimiento","folio","destino_origen","modo_movimiento","cantidad"];
   dataSourceMovimientos: MatTableDataSource<any>;
-  isLoadingMovimientos:boolean;
 
   almacenes: any[];
   almacenSeleccionado: any;
   datosArticulo: any;
-  listaLotes: any[];
 
   mostrarTodosLotes:boolean;
   filtroLotes:string;
@@ -61,10 +66,12 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
   ngOnInit(): void {
+    this.nivelesEscape = [];
     this.isLoading = true;
     this.mostrarTodosLotes = false;
     this.existencias = {cantidad:0, piezas:0, x_pieza:1};
     this.resguardos = {cantidad:0, piezas:0};
+    this.almacenSeleccionado = {id:0};
     this.dataSourceLotes = new MatTableDataSource<any>([]);
 
     this.existenciasService.obtenerDetallesArticulo(this.data.articuloId).subscribe(
@@ -74,10 +81,10 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
-          console.log(response);
           this.datosArticulo = response.detalle_articulo;
           this.almacenes = response.existencias_almacenes;
-          /*this.dataSourceLotes = new MatTableDataSource<any>(response.data.lotes);
+
+          this.dataSourceLotes = new MatTableDataSource<any>([]);
           this.dataSourceLotes.filterPredicate = function (record,filter) {
             let filtro = JSON.parse(filter);
             let result:boolean = true;
@@ -92,7 +99,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
             
             return result;
          }
-         this.aplicarFiltroLotes();*/
+         this.aplicarFiltroLotes();
         }
         this.isLoading = keep;
       },
@@ -108,18 +115,153 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   }
 
   cancelarAccion(){
-    /*if(something){
-      another thing
-    }else if(something else){
-      something more
+    if(this.loteSeleccionado){
+      this.quitarLoteSeleccionado();
+      this.listaSeleccionableLotes.deselectAll();
+    }else if(this.almacenSeleccionado.id != 0){
+      this.quitarAlmacenSeleccionado();
     }else{
       this.cerrar();
-    }*/
-    this.cerrar();
+    }
+  }
+
+  seleccionarAlmacen(almacen){
+    if(this.almacenSeleccionado.id != 0){
+      this.quitarAlmacenSeleccionado();
+      if(this.loteSeleccionado){
+        this.quitarLoteSeleccionado();
+      }
+    }
+    this.nivelesEscape.push(true);
+    this.almacenSeleccionado = almacen;
+    this.dataSourceLotes.data = [];
+    this.isLoadingLotes = true;
+
+    let params:any = {
+      'almacen': this.almacenSeleccionado.id,
+      'articulo': this.datosArticulo.id,
+    };
+
+    this.subscriptionLotes = this.existenciasService.obtenerListaLotes(params).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          this.dataSourceLotes.data = response.data;
+          this.aplicarFiltroLotes();
+        }
+        this.isLoadingLotes = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingLotes = false;
+      }
+    );
+  }
+
+  seleccionarLote(event){
+    if(this.loteSeleccionado){
+      this.quitarLoteSeleccionado();
+    }
+    this.nivelesEscape.push(true);
+    this.loteSeleccionado = true;
+    this.datosLote = event.option.value;
+    if(!this.datosLote.piezas_x_empaque){
+      this.datosLote.piezas_x_empaque = 1;
+    }
+
+    this.existencias.cantidad = this.datosLote.existencia;
+    this.existencias.x_pieza = this.datosLote.piezas_x_empaque;
+    this.existencias.piezas = this.datosLote.existencia_piezas % this.datosLote.piezas_x_empaque;
+    
+    this.resguardos.cantidad = Math.floor((this.datosLote.resguardo_piezas||0)/this.datosLote.piezas_x_empaque);
+    this.resguardos.piezas = this.datosLote.resguardo_piezas||0 % this.datosLote.piezas_x_empaque;
+
+    this.resumenMovimientos = null;
+    this.dataSourceMovimientos = new MatTableDataSource<any>([]);
+    this.dataSourceMovimientos.paginator = this.lotesPaginator;
+    this.dataSourceMovimientos.sort = this.sort;
+    this.isLoadingMovimientos = true;
+
+    this.existenciasService.obtenerListaMovimientos(this.datosLote.id).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          console.log(response);
+          response.data.forEach(item => {
+            if(item.tipo_solicitud){
+              item.destino_origen = item.tipo_solicitud;
+            }else if (item.area_servicio_movimiento){
+              item.destino_origen = item.area_servicio_movimiento;
+            }else if (item.unidad_medica_movimiento){
+              item.destino_origen = item.unidad_medica_movimiento;
+            }else if (item.almacen_movimiento){
+              item.destino_origen = item.almacen_movimiento;
+            }
+          });
+          this.dataSourceMovimientos = new MatTableDataSource<any>(response.data);
+          this.dataSourceMovimientos.paginator = this.lotesPaginator;
+          this.dataSourceMovimientos.sort = this.sort;
+
+          this.resumenMovimientos = {
+            'ENT':{'nrm':0,'uni':0},
+            'SAL':{'nrm':0,'uni':0}
+          }
+          response.resumen.forEach(item => {
+            if(this.resumenMovimientos[item.direccion_movimiento]){
+              if(item.modo_movimiento == 'UNI'){
+                this.resumenMovimientos[item.direccion_movimiento]['uni'] += +item.cantidad;
+              }else{
+                this.resumenMovimientos[item.direccion_movimiento]['nrm'] += +item.cantidad;
+            }
+            }
+          });
+        }
+        this.isLoadingMovimientos = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingMovimientos = false;
+      }
+    );
   }
 
   cerrar(){
     this.dialogRef.close();
+  }
+
+  private quitarLoteSeleccionado(){
+    if(this.subscriptionMovimientos && !this.subscriptionMovimientos.closed){
+      this.subscriptionMovimientos.unsubscribe();
+    }
+    this.loteSeleccionado = false;
+    //this.listaSeleccionableLotes.deselectAll();
+    this.existencias.cantidad = 0;
+    this.existencias.piezas = 0;
+    this.existencias.x_pieza = 0;
+    this.dataSourceMovimientos = new MatTableDataSource<any>([]);
+    this.nivelesEscape.splice(0,1);
+  }
+
+  private quitarAlmacenSeleccionado(){
+    if(this.subscriptionLotes && !this.subscriptionLotes.closed){
+      this.subscriptionLotes.unsubscribe();
+    }
+    this.almacenSeleccionado = {id:0};
+    this.isLoadingLotes = false;
+    this.dataSourceLotes.data = [];
+    this.nivelesEscape.splice(0,1);
   }
 
   aplicarFiltroLotes(event?){

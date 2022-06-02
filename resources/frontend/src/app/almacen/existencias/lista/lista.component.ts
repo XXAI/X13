@@ -106,7 +106,7 @@ export class ListaComponent implements OnInit {
       width: '100%',
       height: '100%',
       maxWidth: '100%',
-      disableClose: false,
+      disableClose: true,
       data:{articuloId: articuloId},
       panelClass: 'no-padding-dialog'
     };
