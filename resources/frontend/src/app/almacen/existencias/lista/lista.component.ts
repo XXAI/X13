@@ -4,6 +4,8 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { SharedService } from 'src/app/shared/shared.service';
 import { ExistenciasService } from '../existencias.service';
 import { DialogoDetallesArticuloComponent } from '../dialogo-detalles-articulo/dialogo-detalles-articulo.component';
+import { MediaMatcher } from '@angular/cdk/layout';
+import { MatSelectionList } from '@angular/material/list';
 
 @Component({
   selector: 'app-lista',
@@ -12,18 +14,26 @@ import { DialogoDetallesArticuloComponent } from '../dialogo-detalles-articulo/d
 })
 export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator) articulosPaginator: MatPaginator;
-
+  @ViewChild(MatSelectionList) listaSeleccionableAlmacenes: MatSelectionList;
+  
   constructor(
+    private media: MediaMatcher,
     private sharedService: SharedService,
     private existenciasService: ExistenciasService,
     private dialog: MatDialog, 
-  ) { }
+  ) {
+    this.mobileQuery = media.matchMedia('(max-width: 600px)');
+  }
 
   isLoading:boolean;
+  isLoadingFiltros:boolean;
 
   selectedId:number;
 
   searchQuery:string;
+
+  openedSidenav: boolean;
+  mobileQuery: MediaQueryList;
   
   pageEvent: PageEvent;
   resultsLength: number = 0;
@@ -33,8 +43,40 @@ export class ListaComponent implements OnInit {
   listaArticulos: any[];
   displayedColumns:string[] = ['estatus','clave','articulo','total_lotes','existencias'];
 
+  filtroCatalogos:any;
+
   ngOnInit(): void {
     this.searchQuery = '';
+    this.openedSidenav = false; //!this.mobileQuery.matches;
+
+    this.filtroCatalogos = {
+      'almacenes':[]
+    };
+
+    this.isLoadingFiltros = true;
+    this.existenciasService.obtenerCatalogosFiltros().subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          if(response.data['almacenes']){
+            this.filtroCatalogos.almacenes = response.data['almacenes'];
+            this.listaSeleccionableAlmacenes.selectAll();
+          }
+        }
+        this.isLoadingFiltros = false;
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingFiltros = false;
+      }
+    );
+
     this.loadListadoArticulos();
   }
 
@@ -102,6 +144,11 @@ export class ListaComponent implements OnInit {
     );
     
     return event;
+  }
+
+  togglePanelFiltros(open){
+    this.openedSidenav = open;
+    this.listaSeleccionableAlmacenes.selectAll();
   }
 
   mostrarDialogoArticulo(articuloId:number){
