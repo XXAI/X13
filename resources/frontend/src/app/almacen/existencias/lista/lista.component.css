@@ -55,6 +55,11 @@ table td {
     color:rgb(129, 125, 125);
 }
 
+.resguardo-data{
+    font-size: smaller;
+    color:rgb(204, 78, 0);
+}
+
 .descontinuado > td{
     color:rgb(250, 70, 4);
 }
@@ -71,7 +76,7 @@ table td {
     font-weight: bold;
 }*/
 
-.inactivo{
+.fuera-catalogo{
     color:rgb(154, 153, 153);
 }
 

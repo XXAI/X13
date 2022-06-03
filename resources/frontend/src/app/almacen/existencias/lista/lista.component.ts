@@ -80,6 +80,9 @@ export class ListaComponent implements OnInit {
               element.icono = icono;
               element.font_outlined = font_outlined;
               element.tooltip = tooltip;
+
+              element.existencia -= element.resguardo;
+              element.existencia_fraccion -= element.resguardo_fraccion;
             });
             this.listaArticulos = response.data;
             this.resultsLength = response.total;

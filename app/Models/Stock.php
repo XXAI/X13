@@ -16,6 +16,10 @@ class Stock extends Model{
         return $this->hasMany('App\Models\StockResguardoDetalle','stock_id');
     }
 
+    public function resguardoDetallesActivos(){
+        return $this->hasMany('App\Models\StockResguardoDetalle','stock_id')->where('cantidad_restante','>',0);
+    }
+
     public function marca(){
         return $this->belongsTo('App\Models\Marca','marca_id');
     }

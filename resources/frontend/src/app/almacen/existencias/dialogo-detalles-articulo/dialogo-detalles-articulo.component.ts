@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { Subscription } from 'rxjs';
 import { SharedService } from 'src/app/shared/shared.service';
 import { ExistenciasService } from '../existencias.service';
@@ -18,6 +18,7 @@ export interface DialogData {
   styleUrls: ['./dialogo-detalles-articulo.component.css']
 })
 export class DialogoDetallesArticuloComponent implements OnInit {
+  @ViewChild(MatTable) movimientosTable: MatTable<any>;
   @ViewChild(MatPaginator) lotesPaginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   @ViewChild(MatSelectionList) listaSeleccionableLotes: MatSelectionList;
@@ -38,6 +39,8 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   isLoadingMovimientos: boolean;
   subscriptionLotes: Subscription;
   subscriptionMovimientos: Subscription;
+
+  verInfoResguardos:boolean;
 
   loteSeleccionado: boolean;
   datosLote: any;
@@ -82,6 +85,12 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
           this.datosArticulo = response.detalle_articulo;
+
+          response.existencias_almacenes.forEach(element => {
+            element.existencia -= element.resguardo;
+            element.existencia_fraccion -= element.resguardo_fraccion;
+          });
+
           this.almacenes = response.existencias_almacenes;
 
           this.dataSourceLotes = new MatTableDataSource<any>([]);
@@ -115,7 +124,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   }
 
   cancelarAccion(){
-    if(this.loteSeleccionado){
+    if(this.verInfoResguardos){
+      this.verInfoResguardos = false;
+    }else if(this.loteSeleccionado){
       this.quitarLoteSeleccionado();
       this.listaSeleccionableLotes.deselectAll();
     }else if(this.almacenSeleccionado.id != 0){
@@ -148,6 +159,16 @@ export class DialogoDetallesArticuloComponent implements OnInit {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
         } else {
+          response.data.forEach(element => {
+            if(!element.piezas_x_empaque){
+              element.piezas_x_empaque = 1;
+            }
+            element.resguardo = Math.floor((element.resguardo_piezas||0) / element.piezas_x_empaque);
+            element.resguardo_fraccion = (element.resguardo_piezas||0) % element.piezas_x_empaque;
+
+            element.existencia -= element.resguardo;
+            element.existencia_fraccion = (element.existencia_piezas % element.piezas_x_empaque) - element.resguardo_fraccion;
+          });
           this.dataSourceLotes.data = response.data;
           this.aplicarFiltroLotes();
         }
@@ -171,16 +192,27 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.nivelesEscape.push(true);
     this.loteSeleccionado = true;
     this.datosLote = event.option.value;
-    if(!this.datosLote.piezas_x_empaque){
-      this.datosLote.piezas_x_empaque = 1;
+    
+    if(this.datosLote.resguardo_detalles_activos && this.datosLote.resguardo_detalles_activos.length){
+      this.datosLote.resguardo_detalles_activos.forEach(element => {
+        element.fecha_resguardo = element.created_at;
+        let cantidad = Math.floor(element.cantidad_restante/this.datosLote.piezas_x_empaque);
+        let piezas = element.cantidad_restante % this.datosLote.piezas_x_empaque;
+        element.cantidad_restante = cantidad;
+        element.cantidad_piezas_restante = piezas;
+      });
     }
 
+    //this.resguardos.cantidad = Math.floor((this.datosLote.resguardo_piezas||0)/this.datosLote.piezas_x_empaque);
+    //this.resguardos.piezas = (this.datosLote.resguardo_piezas||0) % this.datosLote.piezas_x_empaque;
+    //this.existencias.cantidad = this.datosLote.existencia - this.resguardos.cantidad;
+    //this.existencias.piezas = (this.datosLote.existencia_piezas % this.datosLote.piezas_x_empaque) - this.resguardos.piezas;
+
+    this.resguardos.cantidad = this.datosLote.resguardo;
+    this.resguardos.piezas = this.datosLote.resguardo_fraccion;
+
     this.existencias.cantidad = this.datosLote.existencia;
-    this.existencias.x_pieza = this.datosLote.piezas_x_empaque;
-    this.existencias.piezas = this.datosLote.existencia_piezas % this.datosLote.piezas_x_empaque;
-    
-    this.resguardos.cantidad = Math.floor((this.datosLote.resguardo_piezas||0)/this.datosLote.piezas_x_empaque);
-    this.resguardos.piezas = this.datosLote.resguardo_piezas||0 % this.datosLote.piezas_x_empaque;
+    this.existencias.piezas = this.datosLote.existencia_fraccion;
 
     this.resumenMovimientos = null;
     this.dataSourceMovimientos = new MatTableDataSource<any>([]);
@@ -206,10 +238,13 @@ export class DialogoDetallesArticuloComponent implements OnInit {
               item.destino_origen = item.almacen_movimiento;
             }
           });
-          this.dataSourceMovimientos = new MatTableDataSource<any>(response.data);
-          this.dataSourceMovimientos.paginator = this.lotesPaginator;
-          this.dataSourceMovimientos.sort = this.sort;
 
+          setTimeout(() =>{
+            this.dataSourceMovimientos = new MatTableDataSource<any>(response.data);
+            this.dataSourceMovimientos.paginator = this.lotesPaginator;
+            this.dataSourceMovimientos.sort = this.sort;
+          });
+          
           this.resumenMovimientos = {
             'ENT':{'nrm':0,'uni':0},
             'SAL':{'nrm':0,'uni':0}
@@ -223,6 +258,18 @@ export class DialogoDetallesArticuloComponent implements OnInit {
             }
             }
           });
+
+          if(this.resumenMovimientos['ENT']['uni'] > 0){
+            let entradas_por_pieza = Math.floor(this.resumenMovimientos['ENT']['uni']/this.datosLote.piezas_x_empaque);
+            this.resumenMovimientos['ENT']['uni'] -= (entradas_por_pieza*this.datosLote.piezas_x_empaque);
+            this.resumenMovimientos['ENT']['nrm'] += entradas_por_pieza;
+          }
+
+          if(this.resumenMovimientos['SAL']['uni'] > 0){
+            let entradas_por_pieza = Math.floor(this.resumenMovimientos['SAL']['uni']/this.datosLote.piezas_x_empaque);
+            this.resumenMovimientos['SAL']['uni'] -= (entradas_por_pieza*this.datosLote.piezas_x_empaque);
+            this.resumenMovimientos['SAL']['nrm'] += entradas_por_pieza;
+          }
         }
         this.isLoadingMovimientos = false;
       },

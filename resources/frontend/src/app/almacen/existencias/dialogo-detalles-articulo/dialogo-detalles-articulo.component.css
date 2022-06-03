@@ -127,11 +127,13 @@
     cursor: pointer;
     padding:5px;
     border-radius: 5px;
+    background-color: whitesmoke;
     border:1px solid rgba(0,0,0,.42);
 }
 
 .datos-almacen .detalles.seleccionado{
-    background-color: #83c0f5;
+    background-color: white;
+    box-shadow: 0px 0px 4px 3px  rgba(0,0,0,0.20) !important;
 }
 
 .datos-almacen .detalles:hover{
@@ -141,26 +143,38 @@
 .datos-almacen .detalles .nombre{
     font-weight: 500;
     border-bottom: 1px solid rgba(0,0,0,0.30);
+    padding-right: 8px;
+}
+
+.datos-almacen .detalles .nombre > span{
+    margin: auto;
+    white-space: nowrap;
 }
 
 .datos-almacen .detalles .especificaciones{
     font-size: small;
     color: rgba(0,0,0,0.65);
-    padding-right:5px;
+    padding-right:8px;
 }
 
 .datos-almacen .detalles .existencias{
     border-left: 1px solid rgba(0,0,0,0.30);
     padding:5px;
     text-align: right;
+    white-space: nowrap;
 }
 
-.datos-almacen .detalles .existencias .totales{
+.datos-almacen .detalles .existencias .existencia{
+    font-size: xx-large;
     font-weight: 500;
-    font-size: large;
 }
 
-.datos-almacen .detalles .existencias .piezas{
+.datos-almacen .detalles .existencias .existencia-fraccion{
+    font-weight: 400;
+}
+
+.datos-almacen .detalles .existencias .resguardo{
+    color:rgb(204, 78, 0);
     font-size: small;
 }
 
@@ -251,12 +265,12 @@
     padding: 8px;
 }
 
-.bloques-detalles > .bloque:first-child{
+.bloques-detalles > .bloque:first-of-type{
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
 }
 
-.bloques-detalles > .bloque:last-child{
+.bloques-detalles > .bloque:last-of-type{
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
 }
@@ -272,6 +286,11 @@
 }
 
 .bloque > div:first-child{
+    padding-right:8px;
+}
+
+.bloque > div:not(:last-child){
+    padding-left:8px;
     padding-right:8px;
 }
 
@@ -327,3 +346,28 @@
     color:#b000e6;
 }
 
+.lista-resguardos{
+    padding:0px !important;
+}
+
+.lista-resguardos .resguardo{
+    cursor: default;
+}
+
+.lista-resguardos .resguardo:hover{
+    background-color: whitesmoke;
+}
+
+.lista-resguardos .usuario{
+    font-weight: bold;
+}
+
+.lista-resguardos .datos .cantidad{
+    font-size: small;
+    color: rgba(0,0,0,.60);
+}
+
+.lista-resguardos .datos .fecha{
+    font-size: small;
+    color: rgba(0,0,0,.80);
+}

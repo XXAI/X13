@@ -134,7 +134,7 @@
 
                     <mat-form-field fxFlex="60" fxFlex.lt-lg="fill">
                         <mat-label>Empaque Detalle</mat-label>
-                        <mat-select formControlName="empaque_detalle_id" (selectionChange)="cambiarDetalle($event)" required>
+                        <mat-select formControlName="empaque_detalle_id" (selectionChange)="cambiarDetalle($event)">
                             <mat-option *ngIf="empaqueDetalles.length == 0">Sin Registros</mat-option>
                             <mat-option *ngFor="let item of empaqueDetalles" [value]="item.id">
                                 {{item.descripcion}}
