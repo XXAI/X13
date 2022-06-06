@@ -1,30 +1,66 @@
 <div style="height: 100%; overflow: auto; flex: 1 1 0%; background-color: white;" fxLayout="row">
     <mat-sidenav-container class="sidenav-container">
-        <mat-sidenav #snav [(opened)]="openedSidenav" [disableClose]="true" [mode]="mobileQuery.matches ? 'over' : 'side'" [fixedInViewport]="mobileQuery.matches" fixedTopGap="56">
-            <div fxFlex fxLayout="column" style="padding:10px">
-                <h3 class="mat-h3">Opciones de búsqueda:</h3>
+        <mat-sidenav #snav [(opened)]="openedSidenav" [disableClose]="true" [mode]="mobileQuery.matches ? 'over' : 'side'" [fixedInViewport]="mobileQuery.matches" fixedTopGap="56" class="side-nav-filters">
+            <div fxFlex fxLayout="column" *ngIf="filtro">
+                <div fxFlex="none" class="filter-header">
+                    <div>Filtros para búsqueda:</div>
+                </div>
                 <mat-divider></mat-divider>
+                <div fxFlex="none" class="filter-options">
+                    <mat-radio-group [(ngModel)]="filtro.agrupar" aria-label="Selecciona una agrupación">
+                        <mat-radio-button value="article">Articulo</mat-radio-button>
+                        <mat-radio-button value="batch">Lote - Cad.</mat-radio-button>
+                    </mat-radio-group>
+                </div>
                 <div fxFlex="none">
-                    <mat-selection-list #listaSeleccionableAlmacenes>
-                        <mat-list-item>
-                            <div fxLayout="row" style="width: 100%; display: flex; align-items: center;">
+                    <mat-divider></mat-divider>
+                    <mat-selection-list #listaSeleccionableAlmacenes class="filter-selection-list" [(ngModel)]="filtro.almacenes">
+                        <mat-list-item class="list-title-option">
+                            <div fxLayout="row" class="list-title-item">
                                 <div fxFlex>Almacenes: &nbsp;</div>
-                                <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.selectAll()" color="accent"><mat-icon>done_all</mat-icon></button>
-                                <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.deselectAll()"><mat-icon>filter_none</mat-icon></button>
+                                <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.selectAll()" [matTooltip]="'Seleccionar Todos'" color="accent"><mat-icon>done_all</mat-icon></button>
+                                <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.deselectAll()" [matTooltip]="'Seleccionar Ninguno'"><mat-icon>filter_none</mat-icon></button>
                             </div>
                         </mat-list-item>
                         <mat-list-item *ngIf="filtroCatalogos['almacenes'].length == 0" disabled>
                             Sin Almacenes
                         </mat-list-item>
-                        <mat-list-option *ngFor="let almacen of filtroCatalogos['almacenes']">
+                        <mat-list-option *ngFor="let almacen of filtroCatalogos['almacenes']" [value]="almacen.id">
                           {{almacen.nombre}}
                         </mat-list-option>
                     </mat-selection-list>
+                    <mat-divider></mat-divider>
                 </div>
-                <mat-divider></mat-divider>
-                <button mat-flat-button color="accent" fxFlex="none">Aplicar Filtro</button>
-                <div fxFlex>sdf</div>
-                <div fxFlex>456</div>
+                <div fxFlex="none" class="filter-field">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Existencias:</mat-label>
+                        <mat-select [(value)]="filtro.existencias">
+                            <mat-option value="with-stock">Con Existencias</mat-option>
+                            <mat-option value="zero-stock">Sin existencias</mat-option>
+                            <mat-option value="all">Todos</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                </div>
+                <div fxFlex="none" class="filter-field">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Catalogo de la Unidad:</mat-label>
+                        <mat-select [(value)]="filtro.catalogo_unidad">
+                            <mat-option value="all">Todos</mat-option>
+                            <mat-option value="in-catalog">Catalogo de la Unidad</mat-option>
+                            <mat-option value="non-normative">No Normativos</mat-option>
+                            <mat-option value="normative">Normativos</mat-option>
+                            <mat-option value="outside">Fuera del Catalogo de la Unidad</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="none" class="filter-checkbox">
+                    <mat-checkbox [(ngModel)]="filtro.incluir_catalogo">Incluir Claves del Catalogo</mat-checkbox>
+                </div>
+                <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="filter-buttons">
+                    <button mat-stroked-button fxFlex="none" (click)="filtrosDefault()"><mat-icon>undo</mat-icon></button>
+                    <button mat-flat-button color="accent" fxFlex (click)="aplicarFiltro()"><mat-icon>filter_alt</mat-icon> Aplicar Filtro</button>
+                </div>
             </div>
         </mat-sidenav>
         <mat-sidenav-content>
@@ -36,21 +72,31 @@
                             <div fxFlex fxLayout="row wrap">
                                 <mat-form-field fxFill appearance="fill">
                                     <mat-label>Buscar</mat-label>
-                                    <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applyFilter()" placeholder="Buscar por: clave, lote, articulo, especificaciones" autocomplete="off">
+                                    <input matInput [(ngModel)]="searchQuery" (keyup.escape)="cleanSearch()" (keyup.enter)="applySearch()" placeholder="Buscar por: clave, lote, articulo, especificaciones" autocomplete="off">
                                     <button matSuffix *ngIf="searchQuery" mat-icon-button (click)="cleanSearch()" [attr.aria-label]="'Clean Query'" [attr.aria-pressed]="'cleanQuery'">
                                         <mat-icon>close</mat-icon>
                                     </button>
-                                    <button mat-icon-button matSuffix (click)="applyFilter()">
+                                    <button mat-icon-button matSuffix (click)="applySearch()">
                                         <mat-icon>search</mat-icon>
                                     </button>
                                     <mat-hint>Buscar por: clave, lote, articulo o especificaciones</mat-hint>
                                 </mat-form-field>
                             </div>
                         </div>
-                        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
-                            <div fxFlex fxLayout="row" fxLayoutGap="5px">
+                        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="padding-top: 8px;">
+                            <div fxFlex>
+                                <div class="filtros-aplicados" fxLayout="row" fxLayoutGap="5px" *ngIf="filtroAplicado">
+                                    <button mat-button fxFlex="none"><mat-icon>task_alt</mat-icon> Filtro Aplicado</button>
+                                </div>
                             </div>
-                            <div fxFlex></div>
+                            <div fxFlex="none">
+                                <button mat-stroked-button color="primary" [matMenuTriggerFor]="exportMenu"><mat-icon>download</mat-icon> Descargar</button>
+                                <mat-menu #exportMenu="matMenu" xPosition="before">
+                                    <button mat-menu-item><mat-icon svgIcon="pdf-icon" ></mat-icon> Descargar en PDF</button>
+                                    <mat-divider></mat-divider>
+                                    <button mat-menu-item><mat-icon svgIcon="xls-icon" ></mat-icon> Descargar en Excel</button>
+                                </mat-menu>
+                            </div>
                         </div>
                 </section>
                 <section fxFlex fxLayout="row">
@@ -83,6 +129,14 @@
                                     <th mat-header-cell *matHeaderCellDef fxHide.xs="true" width="1"> # Lotes </th>
                                     <td mat-cell *matCellDef="let row" fxHide.xs="true" style="white-space: nowrap;text-align: center;"> 
                                         {{+row.total_lotes | number:'1.0-0'}}
+                                    </td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="lote_caducidad">
+                                    <th mat-header-cell *matHeaderCellDef> Lote<br>Caducidad </th>
+                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap;text-align: center;"> 
+                                        {{ row.lote }}<br>
+                                        {{ row.fecha_caducidad | date }}
                                     </td>
                                 </ng-container>
             

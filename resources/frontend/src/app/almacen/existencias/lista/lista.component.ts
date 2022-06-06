@@ -41,14 +41,18 @@ export class ListaComponent implements OnInit {
   pageSize: number = 20;
   pageSizeOptions: number[] = [10, 20, 30, 50];
   listaArticulos: any[];
-  displayedColumns:string[] = ['estatus','clave','articulo','total_lotes','existencias'];
+  displayedColumns:string[];
 
   filtroCatalogos:any;
+  filtro:any;
+  filtroAplicado:boolean;
 
   ngOnInit(): void {
     this.searchQuery = '';
     this.openedSidenav = false; //!this.mobileQuery.matches;
 
+    this.alterColumns();
+    
     this.filtroCatalogos = {
       'almacenes':[]
     };
@@ -62,9 +66,9 @@ export class ListaComponent implements OnInit {
         } else {
           if(response.data['almacenes']){
             this.filtroCatalogos.almacenes = response.data['almacenes'];
-            this.listaSeleccionableAlmacenes.selectAll();
           }
         }
+        this.filtrosDefault();
         this.isLoadingFiltros = false;
       },
       errorResponse =>{
@@ -77,10 +81,10 @@ export class ListaComponent implements OnInit {
       }
     );
 
-    this.loadListadoArticulos();
+    //this.loadListadoArticulos();
   }
 
-  loadListadoArticulos(event?:PageEvent):any{
+  loadListadoArticulos(event?:PageEvent, reset:boolean = false):any{
     this.isLoading = true;
 
     let params:any;
@@ -93,8 +97,20 @@ export class ListaComponent implements OnInit {
         per_page: event.pageSize
       };
     }
+
+    if(reset){
+      params.page = 1;
+    }
     
     params.query = encodeURIComponent(this.searchQuery);
+
+    if(this.filtro && this.filtroAplicado){
+      params.agrupar = this.filtro.agrupar;
+      params.existencias = this.filtro.existencias;
+      params.catalogo_unidad = this.filtro.catalogo_unidad;
+      params.incluir_catalogo = this.filtro.incluir_catalogo;
+      params.almacenes = this.filtro.almacenes.join('|');
+    }
 
     this.listaArticulos = [];
     this.resultsLength = 0;
@@ -146,9 +162,34 @@ export class ListaComponent implements OnInit {
     return event;
   }
 
+  aplicarFiltro(){
+    console.log(this.filtro);
+    this.alterColumns();
+    this.filtroAplicado = true;
+    this.loadListadoArticulos(this.pageEvent, true);
+  }
+
+  filtrosDefault(){
+    let almacenes_ids:number[] = [];
+    if(this.filtroCatalogos.almacenes){
+      this.filtroCatalogos.almacenes.forEach(element => {
+        almacenes_ids.push(element.id);
+      });
+    }
+    this.filtro = {
+      agrupar:'article',
+      existencias: 'with-stock',
+      catalogo_unidad: 'all',
+      incluir_catalogo: false,
+      almacenes: almacenes_ids,
+    };
+    this.filtroAplicado = false;
+    this.loadListadoArticulos(this.pageEvent, true);
+  }
+
   togglePanelFiltros(open){
     this.openedSidenav = open;
-    this.listaSeleccionableAlmacenes.selectAll();
+    //this.listaSeleccionableAlmacenes.selectAll();
   }
 
   mostrarDialogoArticulo(articuloId:number){
@@ -167,7 +208,7 @@ export class ListaComponent implements OnInit {
     dialogRef.afterClosed().subscribe(dialogResponse => {
       if(dialogResponse){
         console.log('Response: ',dialogResponse);
-        this.loadListadoArticulos(this.pageEvent);
+        //this.loadListadoArticulos(this.pageEvent);
       }
     });
   }
@@ -176,8 +217,16 @@ export class ListaComponent implements OnInit {
     this.searchQuery = '';
   }
 
-  applyFilter(){
-    this.loadListadoArticulos();
+  applySearch(){
+    this.loadListadoArticulos(this.pageEvent, true);
+  }
+
+  alterColumns(){
+    if(this.filtro && this.filtro.agrupar == 'batch'){
+      this.displayedColumns = ['estatus','clave','articulo','lote_caducidad','existencias'];
+    }else{
+      this.displayedColumns = ['estatus','clave','articulo','total_lotes','existencias'];
+    }
   }
 
 }

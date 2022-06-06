@@ -55,7 +55,9 @@ class AlmacenExistenciasController extends Controller
 
             $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
 
-            if($loggedUser->is_superuser){
+            if(isset($parametros['almacenes']) && $parametros['almacenes']){
+                $almacenes_ids = explode('|',$parametros['almacenes']);
+            }else if($loggedUser->is_superuser){
                 $almacenes_ids = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
             }else{
                 $almacenes_ids = $loggedUser->almacenes()->pluck('almacen_id');
@@ -63,11 +65,11 @@ class AlmacenExistenciasController extends Controller
 
             $lista_articulos = Stock::select('stocks.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
                                             "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
-                                            'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad',
+                                            'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','stocks.id as stock_id','stocks.lote','stocks.fecha_caducidad',
                                             DB::raw("COUNT(DISTINCT stocks.id) AS total_lotes"), DB::raw("SUM(stocks.existencia) AS existencia"), DB::raw("SUM(stocks.existencia_piezas) AS existencia_piezas"), 
                                             DB::raw('SUM(stocks.existencia_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS existencia_fraccion'),
                                             DB::raw("SUM(stocks.resguardo_piezas) AS resguardo_piezas"), DB::raw("SUM(stocks.resguardo_piezas / IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo"), 
-                                            DB::raw("SUM(stocks.resguardo_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo_fraccion"))
+                                            DB::raw("SUM(stocks.resguardo_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo_fraccion"), DB::raw("SUM(stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) AS existencia_filtro"))
                                     ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
                                     ->leftJoin("bienes_servicios_empaque_detalles AS ED", "ED.id","=","stocks.empaque_detalle_id")
                                     ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
@@ -78,8 +80,33 @@ class AlmacenExistenciasController extends Controller
                                     })
                                     ->where('stocks.unidad_medica_id',$unidad_medica_id)
                                     ->whereIn('stocks.almacen_id',$almacenes_ids)
-                                    ->groupBy('stocks.bien_servicio_id');
+                                    ;
             
+            if(isset($parametros['agrupar']) && $parametros['agrupar'] == 'batch'){
+                $lista_articulos = $lista_articulos->groupBy('stocks.bien_servicio_id')->groupBy('stocks.lote')->groupBy('stocks.fecha_caducidad');
+            }else{
+                $lista_articulos = $lista_articulos->groupBy('stocks.bien_servicio_id');
+            }
+
+            if(isset($parametros['catalogo_unidad']) && $parametros['catalogo_unidad']){
+                switch ($parametros['catalogo_unidad']) {
+                    case 'in-catalog':
+                        $lista_articulos = $lista_articulos->whereNotNull('unidad_medica_catalogo_articulos.id');
+                        break;
+                    case 'non-normative':
+                        $lista_articulos = $lista_articulos->where(function($where){
+                            $where->whereNull('unidad_medica_catalogo_articulos.es_normativo')->orWhere('unidad_medica_catalogo_articulos.es_normativo','!=',1);
+                        })->whereNotNull('unidad_medica_catalogo_articulos.id');
+                        break;
+                    case 'normative':
+                        $lista_articulos = $lista_articulos->where('unidad_medica_catalogo_articulos.es_normativo',1);
+                        break;
+                    case 'outside':
+                        $lista_articulos = $lista_articulos->whereNull('unidad_medica_catalogo_articulos.id');
+                        break;
+                }
+            }
+
             //Filtros, busquedas, ordenamiento
             if(isset($parametros['query']) && $parametros['query']){
                 $params_query = urldecode($parametros['query']);
@@ -101,29 +128,36 @@ class AlmacenExistenciasController extends Controller
                     return $query;
                 });
                 //$params['incluir_existencias_cero'] = true;
-            }else{
+            }
+
+            if(isset($parametros['existencias']) && $parametros['existencias']){
+                switch ($parametros['existencias']) {
+                    case 'with-stock':
+                        $lista_articulos = $lista_articulos->having('existencia_filtro','>',0);
+                        /*$lista_articulos = $lista_articulos->where(function($where){
+                            $where->where('stocks.existencia_piezas','>',0)->orWhere(DB::raw('stocks.existencia_piezas - stocks.resguardo_piezas'),'>',0);
+                        });*/
+                        break;
+                    case 'zero-stock':
+                        $lista_articulos = $lista_articulos->having('existencia_filtro','=',0);
+                        /*$lista_articulos = $lista_articulos->where(function($where){
+                            $where->where('stocks.existencia_piezas','=',0)->orWhere(DB::raw('stocks.existencia_piezas - stocks.resguardo_piezas'),'=',0);
+                        });*/
+                        break;
+                }
+            }else if(!isset($parametros['query']) || !$parametros['query']){
                 $lista_articulos = $lista_articulos->where(function($where){
-                    $where->where('stocks.existencia','>',0)->orWhere('existencia_piezas','>',0);
+                    $where->where('stocks.existencia_piezas','>',0);
                 });
             }
             
-            /*if(isset($params['incluir_existencias_cero']) && $params['incluir_existencias_cero']){
-                $lista_articulos = $lista_articulos->where(function($where){
-                    $where->where('stocks.existencia','>=',0);
-                });
-            }else{
-                $lista_articulos = $lista_articulos->where(function($where){
-                    $where->where('stocks.existencia','>',0)->orWhere('existencia_piezas','>',0);
-                });
-            }*/
-
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
                 $lista_articulos = $lista_articulos->paginate($resultadosPorPagina);
             } else {
                 $lista_articulos = $lista_articulos->get();
             }
-
+            //return response()->json(['error'=>'asdf','data'=>$parametros],HttpResponse::HTTP_OK);
             return response()->json($lista_articulos,HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);

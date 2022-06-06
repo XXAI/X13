@@ -102,6 +102,10 @@ table .mat-row:hover{
     width:80px;
 }
 
+.mat-column-lote_caducidad{
+    width:100px;
+}
+
 .mat-column-actions{
     width:48px;
 }
@@ -118,4 +122,64 @@ table .mat-row:hover{
 .selected-item{
     font-weight: bold;
     background-color: whitesmoke;
+}
+
+.filtros-aplicados{
+    background-color: whitesmoke;
+    padding-right: 8px;
+    width: 100%;
+}
+
+.filter-header{
+    width: 100%; 
+    display: flex; 
+    align-items: center;
+    padding: 8px;
+    font-weight: 500;
+    font-size: larger;
+    cursor: default;
+    background-color: #4a4848;
+    color: whitesmoke;
+}
+
+.filter-options{
+    background-color: antiquewhite;
+    padding: 8px 4px;
+}
+
+.filter-checkbox{
+    padding: 8px;
+}
+
+.filter-buttons{
+    padding: 0px 5px;
+}
+
+.filter-selection-list .list-title-option{
+    background-color: whitesmoke;
+}
+
+.filter-selection-list .list-title-item{
+    width: 100%; 
+    display: flex; 
+    align-items: center;
+    padding: 0px 8px;
+    font-weight: 500;
+    font-size: large;
+}
+
+.filter-selection-list.mat-list-base{
+    padding-top: 0px;
+}
+
+::ng-deep .filter-selection-list .list-title-option .mat-list-item-content{
+    padding: 0px !important;
+}
+
+.filter-field .mat-form-field{
+    width: 100%;
+}
+
+.mat-radio-button ~ .mat-radio-button {
+    margin-left: 16px;
 }
