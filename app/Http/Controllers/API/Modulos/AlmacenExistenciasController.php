@@ -20,6 +20,7 @@ use App\EDocs\EDoc;
 
 use App\Models\Stock;
 use App\Models\BienServicio;
+use App\Models\TipoBienServicio;
 use App\Models\Movimiento;
 use App\Models\MovimientoArticulo;
 use App\Models\Programa;
@@ -53,103 +54,7 @@ class AlmacenExistenciasController extends Controller
                 $parametros['buscar_catalogo_completo'] = true;
             }*/
 
-            $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
-
-            if(isset($parametros['almacenes']) && $parametros['almacenes']){
-                $almacenes_ids = explode('|',$parametros['almacenes']);
-            }else if($loggedUser->is_superuser){
-                $almacenes_ids = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
-            }else{
-                $almacenes_ids = $loggedUser->almacenes()->pluck('almacen_id');
-            }
-
-            $lista_articulos = Stock::select('stocks.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
-                                            "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
-                                            'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','stocks.id as stock_id','stocks.lote','stocks.fecha_caducidad',
-                                            DB::raw("COUNT(DISTINCT stocks.id) AS total_lotes"), DB::raw("SUM(stocks.existencia) AS existencia"), DB::raw("SUM(stocks.existencia_piezas) AS existencia_piezas"), 
-                                            DB::raw('SUM(stocks.existencia_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS existencia_fraccion'),
-                                            DB::raw("SUM(stocks.resguardo_piezas) AS resguardo_piezas"), DB::raw("SUM(stocks.resguardo_piezas / IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo"), 
-                                            DB::raw("SUM(stocks.resguardo_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo_fraccion"), DB::raw("SUM(stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) AS existencia_filtro"))
-                                    ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
-                                    ->leftJoin("bienes_servicios_empaque_detalles AS ED", "ED.id","=","stocks.empaque_detalle_id")
-                                    ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
-                                    ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
-                                        return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
-                                            ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
-                                            ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
-                                    })
-                                    ->where('stocks.unidad_medica_id',$unidad_medica_id)
-                                    ->whereIn('stocks.almacen_id',$almacenes_ids)
-                                    ;
-            
-            if(isset($parametros['agrupar']) && $parametros['agrupar'] == 'batch'){
-                $lista_articulos = $lista_articulos->groupBy('stocks.bien_servicio_id')->groupBy('stocks.lote')->groupBy('stocks.fecha_caducidad');
-            }else{
-                $lista_articulos = $lista_articulos->groupBy('stocks.bien_servicio_id');
-            }
-
-            if(isset($parametros['catalogo_unidad']) && $parametros['catalogo_unidad']){
-                switch ($parametros['catalogo_unidad']) {
-                    case 'in-catalog':
-                        $lista_articulos = $lista_articulos->whereNotNull('unidad_medica_catalogo_articulos.id');
-                        break;
-                    case 'non-normative':
-                        $lista_articulos = $lista_articulos->where(function($where){
-                            $where->whereNull('unidad_medica_catalogo_articulos.es_normativo')->orWhere('unidad_medica_catalogo_articulos.es_normativo','!=',1);
-                        })->whereNotNull('unidad_medica_catalogo_articulos.id');
-                        break;
-                    case 'normative':
-                        $lista_articulos = $lista_articulos->where('unidad_medica_catalogo_articulos.es_normativo',1);
-                        break;
-                    case 'outside':
-                        $lista_articulos = $lista_articulos->whereNull('unidad_medica_catalogo_articulos.id');
-                        break;
-                }
-            }
-
-            //Filtros, busquedas, ordenamiento
-            if(isset($parametros['query']) && $parametros['query']){
-                $params_query = urldecode($parametros['query']);
-
-                $search_queries = explode('+',$params_query);
-
-                $lista_articulos = $lista_articulos->where(function($query)use($search_queries){
-                    for($i = 0; $i < count($search_queries); $i++){
-                        $query_value = $search_queries[$i];
-                        $query = $query->where(function($where)use($query_value){
-                            return $where->where('bienes_servicios.clave_cubs','LIKE','%'.$query_value.'%')
-                                            ->orWhere('bienes_servicios.clave_local','LIKE','%'.$query_value.'%')
-                                            ->orWhere('bienes_servicios.articulo','LIKE','%'.$query_value.'%')
-                                            ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$query_value.'%')
-                                            ->orWhere('stocks.lote','LIKE','%'.$query_value.'%')
-                                            ->orWhere('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$query_value.'%');
-                        });
-                    }
-                    return $query;
-                });
-                //$params['incluir_existencias_cero'] = true;
-            }
-
-            if(isset($parametros['existencias']) && $parametros['existencias']){
-                switch ($parametros['existencias']) {
-                    case 'with-stock':
-                        $lista_articulos = $lista_articulos->having('existencia_filtro','>',0);
-                        /*$lista_articulos = $lista_articulos->where(function($where){
-                            $where->where('stocks.existencia_piezas','>',0)->orWhere(DB::raw('stocks.existencia_piezas - stocks.resguardo_piezas'),'>',0);
-                        });*/
-                        break;
-                    case 'zero-stock':
-                        $lista_articulos = $lista_articulos->having('existencia_filtro','=',0);
-                        /*$lista_articulos = $lista_articulos->where(function($where){
-                            $where->where('stocks.existencia_piezas','=',0)->orWhere(DB::raw('stocks.existencia_piezas - stocks.resguardo_piezas'),'=',0);
-                        });*/
-                        break;
-                }
-            }else if(!isset($parametros['query']) || !$parametros['query']){
-                $lista_articulos = $lista_articulos->where(function($where){
-                    $where->where('stocks.existencia_piezas','>',0);
-                });
-            }
+            $lista_articulos = $this->obtenerQueryListaArticulos($parametros, $loggedUser);
             
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;
@@ -162,6 +67,112 @@ class AlmacenExistenciasController extends Controller
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
+    }
+
+    private function obtenerQueryListaArticulos($parametros, $loggedUser){
+        $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
+
+        if(isset($parametros['almacenes']) && $parametros['almacenes']){
+            $almacenes_ids = explode('|',$parametros['almacenes']);
+        }else if($loggedUser->is_superuser){
+            $almacenes_ids = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
+        }else{
+            $almacenes_ids = $loggedUser->almacenes()->pluck('almacen_id');
+        }
+
+        $stocks = Stock::select('stocks.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
+                                        "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
+                                        'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','stocks.id as stock_id','stocks.lote','stocks.fecha_caducidad',
+                                        DB::raw("COUNT(DISTINCT stocks.id) AS total_lotes"), DB::raw("SUM(stocks.existencia) AS existencia"), DB::raw("SUM(stocks.existencia_piezas) AS existencia_piezas"), 
+                                        DB::raw('SUM(stocks.existencia_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS existencia_fraccion'),
+                                        DB::raw("SUM(stocks.resguardo_piezas) AS resguardo_piezas"), DB::raw("SUM(stocks.resguardo_piezas / IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo"), 
+                                        DB::raw("SUM(stocks.resguardo_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo_fraccion"), DB::raw("SUM(stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) AS existencia_filtro"))
+                                ->leftJoin("bienes_servicios", "bienes_servicios.id","=","stocks.bien_servicio_id")
+                                ->leftJoin("bienes_servicios_empaque_detalles AS ED", "ED.id","=","stocks.empaque_detalle_id")
+                                ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
+                                ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
+                                    return $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','bienes_servicios.id')
+                                        ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
+                                        ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
+                                })
+                                ->where('stocks.unidad_medica_id',$unidad_medica_id)
+                                ->whereIn('stocks.almacen_id',$almacenes_ids)
+                                ;
+        
+        if(isset($parametros['agrupar']) && $parametros['agrupar'] == 'batch'){
+            $stocks = $stocks->groupBy('stocks.bien_servicio_id')->groupBy('stocks.lote')->groupBy('stocks.fecha_caducidad');
+        }else{
+            $stocks = $stocks->groupBy('stocks.bien_servicio_id');
+        }
+
+        if(isset($parametros['tipo_articulo']) && $parametros['tipo_articulo']){
+            $stocks = $stocks->where('bienes_servicios.tipo_bien_servicio_id',$parametros['tipo_articulo']);
+        }
+
+        if(isset($parametros['catalogo_unidad']) && $parametros['catalogo_unidad']){
+            switch ($parametros['catalogo_unidad']) {
+                case 'in-catalog':
+                    $stocks = $stocks->whereNotNull('unidad_medica_catalogo_articulos.id');
+                    break;
+                case 'non-normative':
+                    $stocks = $stocks->where(function($where){
+                        $where->whereNull('unidad_medica_catalogo_articulos.es_normativo')->orWhere('unidad_medica_catalogo_articulos.es_normativo','!=',1);
+                    })->whereNotNull('unidad_medica_catalogo_articulos.id');
+                    break;
+                case 'normative':
+                    $stocks = $stocks->where('unidad_medica_catalogo_articulos.es_normativo',1);
+                    break;
+                case 'outside':
+                    $stocks = $stocks->whereNull('unidad_medica_catalogo_articulos.id');
+                    break;
+            }
+        }
+
+        //Filtros, busquedas, ordenamiento
+        if(isset($parametros['query']) && $parametros['query']){
+            $params_query = urldecode($parametros['query']);
+
+            $search_queries = explode('+',$params_query);
+
+            $stocks = $stocks->where(function($query)use($search_queries){
+                for($i = 0; $i < count($search_queries); $i++){
+                    $query_value = $search_queries[$i];
+                    $query = $query->where(function($where)use($query_value){
+                        return $where->where('bienes_servicios.clave_cubs','LIKE','%'.$query_value.'%')
+                                        ->orWhere('bienes_servicios.clave_local','LIKE','%'.$query_value.'%')
+                                        ->orWhere('bienes_servicios.articulo','LIKE','%'.$query_value.'%')
+                                        ->orWhere('bienes_servicios.especificaciones','LIKE','%'.$query_value.'%')
+                                        ->orWhere('stocks.lote','LIKE','%'.$query_value.'%')
+                                        ->orWhere('catalogo_tipos_bien_servicio.descripcion','LIKE','%'.$query_value.'%');
+                    });
+                }
+                return $query;
+            });
+            //$params['incluir_existencias_cero'] = true;
+        }
+
+        if(isset($parametros['existencias']) && $parametros['existencias']){
+            switch ($parametros['existencias']) {
+                case 'with-stock':
+                    $stocks = $stocks->having('existencia_filtro','>',0);
+                    /*$stocks = $stocks->where(function($where){
+                        $where->where('stocks.existencia_piezas','>',0)->orWhere(DB::raw('stocks.existencia_piezas - stocks.resguardo_piezas'),'>',0);
+                    });*/
+                    break;
+                case 'zero-stock':
+                    $stocks = $stocks->having('existencia_filtro','=',0);
+                    /*$stocks = $stocks->where(function($where){
+                        $where->where('stocks.existencia_piezas','=',0)->orWhere(DB::raw('stocks.existencia_piezas - stocks.resguardo_piezas'),'=',0);
+                    });*/
+                    break;
+            }
+        }else if(!isset($parametros['query']) || !$parametros['query']){
+            $stocks = $stocks->where(function($where){
+                $where->where('stocks.existencia_piezas','>',0);
+            });
+        }
+
+        return $stocks;
     }
 
      /**
@@ -179,6 +190,8 @@ class AlmacenExistenciasController extends Controller
             }else{
                 $catalogos['almacenes'] = $loggedUser->almacenes;
             }
+
+            $catalogos['tipos_bien_servicio'] = TipoBienServicio::all();
 
             return response()->json(['data'=>$catalogos],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -236,8 +249,12 @@ class AlmacenExistenciasController extends Controller
                                                                     DB::raw("SUM(stocks.resguardo_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo_fraccion")
                                                                 )
                                                             ->leftJoin('catalogo_tipos_almacen','catalogo_tipos_almacen.id','=','almacenes.tipo_almacen_id')
-                                                            ->leftJoin('stocks',function($join)use($id){
-                                                                return $join->on('stocks.almacen_id','=','almacenes.id')->where('stocks.bien_servicio_id',$id)->whereNull('stocks.deleted_at');
+                                                            ->leftJoin('stocks',function($join)use($id,$params){
+                                                                $join = $join->on('stocks.almacen_id','=','almacenes.id')->where('stocks.bien_servicio_id',$id)->whereNull('stocks.deleted_at');
+                                                                if(isset($params['lote']) && $params['lote']){
+                                                                    $join = $join->where('stocks.lote',$params['lote'])->where('stocks.fecha_caducidad',$params['caducidad']);
+                                                                }
+                                                                return $join;
                                                             })
                                                             ->leftJoin("bienes_servicios_empaque_detalles AS ED", "ED.id","=","stocks.empaque_detalle_id")
                                                             ->whereIn('almacenes.id',$almacenes_ids)
@@ -268,9 +285,12 @@ class AlmacenExistenciasController extends Controller
                             ->groupBy('stocks.id')
                             ->where('stocks.bien_servicio_id',$params['articulo'])
                             ->where('stocks.almacen_id',$params['almacen'])
-                            ->with('resguardoDetallesActivos.usuario')
-                            ->get();
+                            ->with('resguardoDetallesActivos.usuario');
             //
+            if(isset($params['lote']) && $params['lote']){
+                $lotes = $lotes->where('stocks.lote',$params['lote'])->where('stocks.fecha_caducidad',$params['caducidad']);
+            }
+            $lotes = $lotes->get();
             return response()->json(['data'=>$lotes]);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -328,50 +348,12 @@ class AlmacenExistenciasController extends Controller
             $loggedUser = auth()->userOrFail();
             $params = $request->all();
 
-            if(isset($params['almacenes_ids']) && trim($params['almacenes_ids']) != ''){
-                $almacenes = explode('|',$params['almacenes_ids']);
-            }else{
-                if($loggedUser->is_superuser){
-                    $almacenes = Almacen::where('unidad_medica_id',$loggedUser->unidad_medica_asignada_id)->get()->pluck('id');
-                }else{
-                    $almacenes = $loggedUser->almacenes()->pluck('almacen_id');
-                }
-            }
-            $unidad_medica_id = $loggedUser->unidad_medica_asignada_id;
-            
-            $stocks = Stock::select('almacenes.nombre as ALMACEN','programas.descripcion as PROGRAMA','catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO',
-                                'bienes_servicios.clave_local as CLAVE','bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
-                                'stocks.lote as LOTE','stocks.fecha_caducidad as FECHA_CADUCIDAD','stocks.existencia as EXISTENCIA',
-                                'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
-                            ->leftJoin('bienes_servicios','bienes_servicios.id','=','stocks.bien_servicio_id')
-                            ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
-                            ->leftjoin('almacenes','almacenes.id','=','stocks.almacen_id')
-                            ->leftJoin('programas','programas.id','=','stocks.programa_id')
-                            ->leftJoin('unidad_medica_catalogo_articulos',function($join)use($unidad_medica_id){
-                                $join->on('unidad_medica_catalogo_articulos.bien_servicio_id','=','stocks.bien_servicio_id')
-                                    ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
-                                    ->whereNull('unidad_medica_catalogo_articulos.deleted_at');
-                            })
-                            ->whereIn('stocks.almacen_id',$almacenes)
-                            ->orderBy('almacenes.nombre','ASC')
-                            ->orderBy('programas.descripcion','ASC')
-                            ->orderBy('bienes_servicios.articulo','ASC')
-                            ->orderBy('bienes_servicios.clave_local','ASC')
-                            ->orderBy('stocks.fecha_caducidad','ASC');
-            //
-            if(isset($params['agrupar_por']) && trim($params['agrupar_por']) != ''){
-                if($params['agrupar_por'] == 'articulo'){
-                    $stocks = $stocks->select('catalogo_tipos_bien_servicio.descripcion as TIPO_ARTICULO','bienes_servicios.clave_local as CLAVE',
-                                            'bienes_servicios.especificaciones as DESCRIPCION','bienes_servicios.descontinuado as DESCONTINUADO',
-                                            DB::raw('count(stocks.lote) as NO_LOTES'),DB::raw('SUM(stocks.existencia) as EXISTENCIAS'),
-                                            'unidad_medica_catalogo_articulos.es_normativo as NORMATIVO')
-                                    ->groupBy('stocks.bien_servicio_id');
-                }
-            }
+            $stocks = $this->obtenerQueryListaArticulos($params, $loggedUser);
+
             $resultado = $stocks->get();
             $columnas = array_keys(collect($resultado[0])->toArray());
 
-            $filename = 'Existencias Por Almacen';
+            $filename = 'Existencias';
 
             return (new DevReportExport($resultado,$columnas))->download($filename.'.xlsx'); //Excel::XLSX, ['Access-Control-Allow-Origin'=>'*','Access-Control-Allow-Methods'=>'GET']
         }catch(\Exception $e){

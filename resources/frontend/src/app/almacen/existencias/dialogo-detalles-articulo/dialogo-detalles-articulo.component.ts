@@ -10,6 +10,7 @@ import { ExistenciasService } from '../existencias.service';
 
 export interface DialogData {
   articuloId: number;
+  datosFiltroAplicado?: any;
 }
 
 @Component({
@@ -33,6 +34,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
 
   subDialogRef: any;
   nivelesEscape: any[];
+  datosFiltrados: boolean;
 
   isLoading: boolean;
   isLoadingLotes: boolean;
@@ -76,10 +78,50 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.resguardos = {cantidad:0, piezas:0};
     this.almacenSeleccionado = {id:0};
     this.dataSourceLotes = new MatTableDataSource<any>([]);
+    this.datosFiltrados = false;
 
-    this.existenciasService.obtenerDetallesArticulo(this.data.articuloId).subscribe(
+    this.dataSourceLotes = new MatTableDataSource<any>([]);
+    this.dataSourceLotes.filterPredicate = function (record,filter) {
+      let filtro = JSON.parse(filter);
+      let result:boolean = true;
+
+      if(!filtro.todos){
+        result = (record.existencia > 0 || record.existencia_piezas > 0);
+      }
+      
+      if(result && filtro.query){
+        result = record.lote.toLowerCase().includes(filtro.query.toLowerCase());
+      }
+      
+      return result;
+    }
+
+    let payload:any
+    if(this.data.datosFiltroAplicado){
+      this.datosFiltrados = true;
+      payload = {
+        lote: this.data.datosFiltroAplicado.datos_stock.lote,
+        caducidad: this.data.datosFiltroAplicado.datos_stock.fecha_caducidad,
+      };
+    }
+    this.cargarDatosArticulo(payload);
+  }
+
+  cargarDatosSinFiltro(){
+    if(this.almacenSeleccionado.id != 0){
+      this.quitarAlmacenSeleccionado();
+      if(this.loteSeleccionado){
+        this.quitarLoteSeleccionado();
+      }
+    }
+    this.datosFiltrados = false;
+    this.isLoading = true;
+    this.cargarDatosArticulo();
+  }
+
+  cargarDatosArticulo(payload:any = null){
+    this.existenciasService.obtenerDetallesArticulo(this.data.articuloId, payload).subscribe(
       response =>{
-        let keep:boolean = false;
         if(response.error) {
           let errorMessage = response.error;
           this.sharedService.showSnackBar(errorMessage, null, 3000);
@@ -93,24 +135,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
 
           this.almacenes = response.existencias_almacenes;
 
-          this.dataSourceLotes = new MatTableDataSource<any>([]);
-          this.dataSourceLotes.filterPredicate = function (record,filter) {
-            let filtro = JSON.parse(filter);
-            let result:boolean = true;
-
-            if(!filtro.todos){
-              result = (record.existencia > 0 || record.existencia_piezas > 0);
-            }
-            
-            if(result && filtro.query){
-              result = record.lote.toLowerCase().includes(filtro.query.toLowerCase());
-            }
-            
-            return result;
-         }
-         this.aplicarFiltroLotes();
+          this.aplicarFiltroLotes();
         }
-        this.isLoading = keep;
+        this.isLoading = false;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
@@ -143,6 +170,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
         this.quitarLoteSeleccionado();
       }
     }
+
     this.nivelesEscape.push(true);
     this.almacenSeleccionado = almacen;
     this.dataSourceLotes.data = [];
@@ -152,6 +180,11 @@ export class DialogoDetallesArticuloComponent implements OnInit {
       'almacen': this.almacenSeleccionado.id,
       'articulo': this.datosArticulo.id,
     };
+
+    if(this.datosFiltrados){
+      params.lote = this.data.datosFiltroAplicado.datos_stock.lote;
+      params.caducidad = this.data.datosFiltroAplicado.datos_stock.fecha_caducidad;
+    }
 
     this.subscriptionLotes = this.existenciasService.obtenerListaLotes(params).subscribe(
       response =>{
@@ -202,11 +235,6 @@ export class DialogoDetallesArticuloComponent implements OnInit {
         element.cantidad_piezas_restante = piezas;
       });
     }
-
-    //this.resguardos.cantidad = Math.floor((this.datosLote.resguardo_piezas||0)/this.datosLote.piezas_x_empaque);
-    //this.resguardos.piezas = (this.datosLote.resguardo_piezas||0) % this.datosLote.piezas_x_empaque;
-    //this.existencias.cantidad = this.datosLote.existencia - this.resguardos.cantidad;
-    //this.existencias.piezas = (this.datosLote.existencia_piezas % this.datosLote.piezas_x_empaque) - this.resguardos.piezas;
 
     this.resguardos.cantidad = this.datosLote.resguardo;
     this.resguardos.piezas = this.datosLote.resguardo_fraccion;

@@ -8,8 +8,7 @@
                 <mat-divider></mat-divider>
                 <div fxFlex="none" class="filter-options">
                     <mat-radio-group [(ngModel)]="filtro.agrupar" aria-label="Selecciona una agrupación">
-                        <mat-radio-button value="article">Articulo</mat-radio-button>
-                        <mat-radio-button value="batch">Lote - Cad.</mat-radio-button>
+                        <mat-radio-button *ngFor="let agrupacion of filtroCatalogos['agrupacion']" [value]="agrupacion.key">{{agrupacion.value}}</mat-radio-button>
                     </mat-radio-group>
                 </div>
                 <div fxFlex="none">
@@ -35,9 +34,7 @@
                     <mat-form-field appearance="fill">
                         <mat-label>Existencias:</mat-label>
                         <mat-select [(value)]="filtro.existencias">
-                            <mat-option value="with-stock">Con Existencias</mat-option>
-                            <mat-option value="zero-stock">Sin existencias</mat-option>
-                            <mat-option value="all">Todos</mat-option>
+                            <mat-option *ngFor="let existencia of filtroCatalogos['existencias']" [value]="existencia.key">{{existencia.value}}</mat-option>
                         </mat-select>
                     </mat-form-field>
                     <mat-divider></mat-divider>
@@ -46,19 +43,21 @@
                     <mat-form-field appearance="fill">
                         <mat-label>Catalogo de la Unidad:</mat-label>
                         <mat-select [(value)]="filtro.catalogo_unidad">
-                            <mat-option value="all">Todos</mat-option>
-                            <mat-option value="in-catalog">Catalogo de la Unidad</mat-option>
-                            <mat-option value="non-normative">No Normativos</mat-option>
-                            <mat-option value="normative">Normativos</mat-option>
-                            <mat-option value="outside">Fuera del Catalogo de la Unidad</mat-option>
+                            <mat-option *ngFor="let catalogo of filtroCatalogos['catalogo_unidad']" [value]="catalogo.key">{{catalogo.value}}</mat-option>
                         </mat-select>
                     </mat-form-field>
                 </div>
-                <div fxFlex="none" class="filter-checkbox">
-                    <mat-checkbox [(ngModel)]="filtro.incluir_catalogo">Incluir Claves del Catalogo</mat-checkbox>
+                <div fxFlex="none" class="filter-field">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Tipo de Articulo:</mat-label>
+                        <mat-select [(value)]="filtro.tipo_articulo">
+                            <mat-option value="0">Todos</mat-option>
+                            <mat-option *ngFor="let tipo of filtroCatalogos['tipos_articulo']" [value]="tipo.id">{{tipo.descripcion}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
                 </div>
                 <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="filter-buttons">
-                    <button mat-stroked-button fxFlex="none" (click)="filtrosDefault()"><mat-icon>undo</mat-icon></button>
+                    <button mat-stroked-button fxFlex="none" (click)="quitarFiltro()"><mat-icon>undo</mat-icon></button>
                     <button mat-flat-button color="accent" fxFlex (click)="aplicarFiltro()"><mat-icon>filter_alt</mat-icon> Aplicar Filtro</button>
                 </div>
             </div>
@@ -90,11 +89,11 @@
                                 </div>
                             </div>
                             <div fxFlex="none">
-                                <button mat-stroked-button color="primary" [matMenuTriggerFor]="exportMenu"><mat-icon>download</mat-icon> Descargar</button>
+                                <button mat-stroked-button color="primary" [matMenuTriggerFor]="exportMenu" [disabled]="isLoadingExcel" [class.button-spinner]="isLoadingExcel"><mat-icon>download</mat-icon> Descargar</button>
                                 <mat-menu #exportMenu="matMenu" xPosition="before">
                                     <button mat-menu-item><mat-icon svgIcon="pdf-icon" ></mat-icon> Descargar en PDF</button>
                                     <mat-divider></mat-divider>
-                                    <button mat-menu-item><mat-icon svgIcon="xls-icon" ></mat-icon> Descargar en Excel</button>
+                                    <button mat-menu-item (click)="exportarExcel()"><mat-icon svgIcon="xls-icon" ></mat-icon> Descargar en Excel</button>
                                 </mat-menu>
                             </div>
                         </div>
@@ -111,14 +110,15 @@
                                 </ng-container>
             
                                 <ng-container matColumnDef="clave">
-                                    <th mat-header-cell *matHeaderCellDef width="1"> Clave </th>
+                                    <th mat-header-cell *matHeaderCellDef width="1"> Clave<br>Tipo Articulo </th>
                                     <td mat-cell *matCellDef="let row" > 
-                                        <span style="white-space: nowrap;">{{row.clave}}</span>
+                                        <span style="white-space: nowrap;">{{row.clave}}</span><br>
+                                        <span class="added-data" style="white-space: nowrap;">{{row.tipo_bien_servicio}}</span>
                                     </td>
                                 </ng-container>
                                 
                                 <ng-container matColumnDef="articulo">
-                                    <th mat-header-cell *matHeaderCellDef> Articulo - Especificaciones </th>
+                                    <th mat-header-cell *matHeaderCellDef> Articulo<br>Especificaciones </th>
                                     <td mat-cell *matCellDef="let row" style="white-space: nowrap;"> 
                                         {{row.articulo}}<br>
                                         <span class="added-data">{{row.especificaciones}}</span>
@@ -155,7 +155,7 @@
                                 </ng-container>
                                 
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                                <tr mat-row (click)="mostrarDialogoArticulo(row.id)" [ngClass]="{ 'con-existencias': row.existencia, 'descontinuado':row.descontinuado, 'selected-item':(selectedId == row.id) }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                                <tr mat-row (click)="mostrarDialogoArticulo(row.id, row.selectable_id)" [ngClass]="{ 'con-existencias': row.existencia, 'descontinuado':row.descontinuado, 'selected-item':(selectedId == row.selectable_id) }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
                                 <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide':(listaArticulos && listaArticulos.length > 0)}"></tr>
                             </table>

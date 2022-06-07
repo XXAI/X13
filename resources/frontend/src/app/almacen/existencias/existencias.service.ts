@@ -34,8 +34,8 @@ export class ExistenciasService {
     );
   }
 
-  obtenerDetallesArticulo(id):Observable<any> {
-    return this.http.get<any>(this.url_detalles+`/${id}`,{}).pipe(
+  obtenerDetallesArticulo(id, payload:any = {}):Observable<any> {
+    return this.http.get<any>(this.url_detalles+`/${id}`,{params: payload}).pipe(
       map( response => {
         return response;
       })
@@ -54,7 +54,7 @@ export class ExistenciasService {
     return this.http.get(this.url_movimientos+`/${stock_id}`);
   }
 
-  exportarReporte(payload:any={}):Observable<any>{
+  exportarExcel(payload:any={}):Observable<any>{
     return this.http.get<any>(this.url_export, {params:payload, responseType: 'blob' as 'json'});
   }
 }

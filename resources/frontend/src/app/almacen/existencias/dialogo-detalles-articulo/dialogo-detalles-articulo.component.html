@@ -4,6 +4,10 @@
             <div fxFlex="none" class="label-info">
                 <mat-icon>pageview</mat-icon> Detalles del Articulo
             </div>
+            <div fxFlex="none" class="label-info" *ngIf="datosFiltrados">
+                [ Lote: {{ (data.datosFiltroAplicado.datos_stock.lote)?data.datosFiltroAplicado.datos_stock.lote:'SL' }} | Caducidad: {{ (data.datosFiltroAplicado.datos_stock.fecha_caducidad)?data.datosFiltroAplicado.datos_stock.fecha_caducidad:'SC' }} ]
+            </div>
+            <button fxFlex="none" mat-button *ngIf="datosFiltrados" (click)="cargarDatosSinFiltro()"><mat-icon>refresh</mat-icon> <span>Recargar sin filtro</span></button>
             <div fxFlex>
             </div>
             <div fxFlex="none" *ngIf="datosArticulo && datosArticulo.deleted_at" class="label-info-delete">
