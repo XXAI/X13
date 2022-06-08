@@ -143,12 +143,20 @@ table .mat-row:hover{
 }
 
 .filter-options{
-    background-color: antiquewhite;
+    background-color: #c5c1c1;
     padding: 8px 4px;
 }
 
 .filter-checkbox{
     padding: 8px;
+    margin-bottom: 21.5px;
+    background-color: whitesmoke;
+    border-bottom: 1px solid rgba(0,0,0,.45);
+    border-top: 1px solid rgba(0,0,0,.45);
+}
+
+.filter-field{
+    border-top: 1px solid rgba(0,0,0,.45);
 }
 
 .filter-buttons{
@@ -157,6 +165,7 @@ table .mat-row:hover{
 
 .filter-selection-list .list-title-option{
     background-color: whitesmoke;
+    border-top: 1px solid rgba(0,0,0,.45);
 }
 
 .filter-selection-list .list-title-item{

@@ -59,8 +59,8 @@ export class ListaComponent implements OnInit {
       'almacenes':[],
       'tipos_articulo':[],
       'agrupacion':[
-        {key:'article',value:'Articulo'},
-        {key:'batch',value:'Lote - Cad.'}
+        {key:'article',value:'Por: Articulo'},
+        {key:'batch',value:'Por: Lote y Cad.'}
       ],
       'existencias':[
         {key: 'with-stock', value: 'Con Existencias'},
@@ -69,9 +69,9 @@ export class ListaComponent implements OnInit {
       ],
       'catalogo_unidad':[
         {key: 'all',            value: 'Todos'},
-        {key: 'in-catalog',     value: 'Catalogo de la Unidad'},
-        {key: 'non-normative',  value: 'No Normativos'},
-        {key: 'normative',      value: 'Normativos'},
+        {key: 'in-catalog',     value: 'Dentro del Catalogo de la Unidad'},
+        {key: 'non-normative',  value: 'Catalogo No Normativo'},
+        {key: 'normative',      value: 'Catalogo Normativo'},
         {key: 'outside',        value: 'Fuera del Catalogo de la Unidad'},
       ]
     };
@@ -129,11 +129,13 @@ export class ListaComponent implements OnInit {
     params.query = encodeURIComponent(this.searchQuery);
 
     if(this.filtro && this.filtroAplicado){
-      params.agrupar = this.filtroAplicado.agrupar;
-      params.existencias = this.filtroAplicado.existencias;
-      params.catalogo_unidad = this.filtroAplicado.catalogo_unidad;
-      params.tipo_articulo = this.filtroAplicado.tipo_articulo;
-      params.almacenes = this.filtroAplicado.almacenes.join('|');
+      params.agrupar                    = this.filtroAplicado.agrupar;
+      params.existencias                = this.filtroAplicado.existencias;
+      params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
+      params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
+      params.almacenes                  = this.filtroAplicado.almacenes.join('|');
+      params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
+      params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
     }
 
     this.listaArticulos = [];
@@ -219,6 +221,8 @@ export class ListaComponent implements OnInit {
       catalogo_unidad: 'all',
       tipo_articulo: '0',
       almacenes: almacenes_ids,
+      incluir_catalogo_completo: false,
+      incluir_almacenes_ajenos: false,
     };
 
     this.filtroAplicado = null;
@@ -284,11 +288,13 @@ export class ListaComponent implements OnInit {
     params.query = encodeURIComponent(this.searchQuery);
 
     if(this.filtro && this.filtroAplicado){
-      params.agrupar = this.filtroAplicado.agrupar;
-      params.existencias = this.filtroAplicado.existencias;
-      params.catalogo_unidad = this.filtroAplicado.catalogo_unidad;
-      params.tipo_articulo = this.filtroAplicado.tipo_articulo;
-      params.almacenes = this.filtroAplicado.almacenes.join('|');
+      params.agrupar                    = this.filtroAplicado.agrupar;
+      params.existencias                = this.filtroAplicado.existencias;
+      params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
+      params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
+      params.almacenes                  = this.filtroAplicado.almacenes.join('|');
+      params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
+      params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
     }
 
     this.existenciasService.exportarExcel(params).subscribe(

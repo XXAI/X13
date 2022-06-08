@@ -5,7 +5,7 @@
                 <mat-icon>pageview</mat-icon> Detalles del Articulo
             </div>
             <div fxFlex="none" class="label-info" *ngIf="datosFiltrados">
-                [ Lote: {{ (data.datosFiltroAplicado.datos_stock.lote)?data.datosFiltroAplicado.datos_stock.lote:'SL' }} | Caducidad: {{ (data.datosFiltroAplicado.datos_stock.fecha_caducidad)?data.datosFiltroAplicado.datos_stock.fecha_caducidad:'SC' }} ]
+                [ Lote: {{ (data.datosFiltroAplicado.datos_stock.lote)?data.datosFiltroAplicado.datos_stock.lote:'SL' }} | Caducidad: {{ (data.datosFiltroAplicado.datos_stock.fecha_caducidad)?data.datosFiltroAplicado.datos_stock.fecha_caducidad:'S-F-C' }} ]
             </div>
             <button fxFlex="none" mat-button *ngIf="datosFiltrados" (click)="cargarDatosSinFiltro()"><mat-icon>refresh</mat-icon> <span>Recargar sin filtro</span></button>
             <div fxFlex>
@@ -114,7 +114,7 @@
                         <mat-list-option *ngFor="let lote of dataSourceLotes.filteredData" [value]="lote">
                             <mat-icon mat-list-icon matBadgePosition="before" matBadgeSize="small" matBadge="{{lote.movimientos}}" [matTooltip]="'Movimientos del Lote'">sync_alt</mat-icon>
                             <div mat-line><span class="lote-label">Lote: </span>{{lote.lote}}</div>
-                            <div mat-line><span class="lote-label">Cad:</span> {{lote.fecha_caducidad | date}}</div>
+                            <div mat-line><span class="lote-label">Cad:</span> {{(lote.fecha_caducidad)?(lote.fecha_caducidad | date):'S-F-C'}}</div>
                             <div mat-line>
                                 <span class="lote-label">E:</span> {{lote.existencia | number:'1.0-0'}} <span *ngIf="lote.existencia_fraccion">({{lote.existencia_fraccion | number:'1.0-0'}})</span>
                                 <span *ngIf="lote.resguardo"> | <span class="lote-label">R:</span> {{lote.resguardo | number:'1.0-0'}} <span *ngIf="lote.resguardo_fraccion">({{lote.resguardo_fraccion | number:'1.0-0'}})</span></span>
@@ -149,11 +149,11 @@
                             </div>
                             <div fxFlex class="fake-input">
                                 <span class="label">Fecha de Caducidad:</span>
-                                <span class="value">{{datosLote.fecha_caducidad | date:'MMMM d, y'}}</span>
+                                <span class="value">{{(datosLote.fecha_caducidad)?(datosLote.fecha_caducidad | date:'MMMM d, y'):'S-F-C'}}</span>
                             </div>
                             <div fxFlex class="fake-input">
                                 <span class="label">Código de Barras:</span>
-                                <span class="value">{{datosLote.codigo_barras||'SC'}}</span>
+                                <span class="value">{{datosLote.codigo_barras||'S-C-B'}}</span>
                             </div>
                             <div fxFlex class="fake-input">
                                 <span class="label">Detalle:</span>

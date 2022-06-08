@@ -5,14 +5,13 @@
                 <div fxFlex="none" class="filter-header">
                     <div>Filtros para búsqueda:</div>
                 </div>
-                <mat-divider></mat-divider>
                 <div fxFlex="none" class="filter-options">
                     <mat-radio-group [(ngModel)]="filtro.agrupar" aria-label="Selecciona una agrupación">
                         <mat-radio-button *ngFor="let agrupacion of filtroCatalogos['agrupacion']" [value]="agrupacion.key">{{agrupacion.value}}</mat-radio-button>
                     </mat-radio-group>
                 </div>
+
                 <div fxFlex="none">
-                    <mat-divider></mat-divider>
                     <mat-selection-list #listaSeleccionableAlmacenes class="filter-selection-list" [(ngModel)]="filtro.almacenes">
                         <mat-list-item class="list-title-option">
                             <div fxLayout="row" class="list-title-item">
@@ -28,25 +27,12 @@
                           {{almacen.nombre}}
                         </mat-list-option>
                     </mat-selection-list>
-                    <mat-divider></mat-divider>
                 </div>
-                <div fxFlex="none" class="filter-field">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Existencias:</mat-label>
-                        <mat-select [(value)]="filtro.existencias">
-                            <mat-option *ngFor="let existencia of filtroCatalogos['existencias']" [value]="existencia.key">{{existencia.value}}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    <mat-divider></mat-divider>
+                
+                <div fxFlex="none" class="filter-checkbox">
+                    <mat-checkbox [(ngModel)]="filtro.incluir_almacenes_ajenos">Incluir Almacenes Ajenos</mat-checkbox>
                 </div>
-                <div fxFlex="none" class="filter-field">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Catalogo de la Unidad:</mat-label>
-                        <mat-select [(value)]="filtro.catalogo_unidad">
-                            <mat-option *ngFor="let catalogo of filtroCatalogos['catalogo_unidad']" [value]="catalogo.key">{{catalogo.value}}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                </div>
+                
                 <div fxFlex="none" class="filter-field">
                     <mat-form-field appearance="fill">
                         <mat-label>Tipo de Articulo:</mat-label>
@@ -56,9 +42,32 @@
                         </mat-select>
                     </mat-form-field>
                 </div>
+                
+                <div fxFlex="none" class="filter-field">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Existencias:</mat-label>
+                        <mat-select [(value)]="filtro.existencias">
+                            <mat-option *ngFor="let existencia of filtroCatalogos['existencias']" [value]="existencia.key">{{existencia.value}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="none" class="filter-field">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Catalogo de la Unidad:</mat-label>
+                        <mat-select [(value)]="filtro.catalogo_unidad">
+                            <mat-option *ngFor="let catalogo of filtroCatalogos['catalogo_unidad']" [value]="catalogo.key">{{catalogo.value}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="none" class="filter-checkbox">
+                    <mat-checkbox [(ngModel)]="filtro.incluir_catalogo_completo">Incluir Catalogo Completo</mat-checkbox>
+                </div>
+
                 <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="filter-buttons">
-                    <button mat-stroked-button fxFlex="none" (click)="quitarFiltro()"><mat-icon>undo</mat-icon></button>
-                    <button mat-flat-button color="accent" fxFlex (click)="aplicarFiltro()"><mat-icon>filter_alt</mat-icon> Aplicar Filtro</button>
+                    <button mat-stroked-button fxFlex="none" (click)="quitarFiltro()" [disabled]="!filtroAplicado || isLoading"><mat-icon>undo</mat-icon></button>
+                    <button mat-flat-button color="accent" fxFlex (click)="aplicarFiltro()" [disabled]="isLoading"><mat-icon>filter_alt</mat-icon> Aplicar Filtro</button>
                 </div>
             </div>
         </mat-sidenav>

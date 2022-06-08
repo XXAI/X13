@@ -7,12 +7,13 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Events\AfterSheet;
 use \Maatwebsite\Excel\Sheet;
 
 /*
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;*/
@@ -25,13 +26,20 @@ Sheet::macro('styleCells', function (Sheet $sheet, string $cellRange, array $sty
     $sheet->getDelegate()->getStyle($cellRange)->applyFromArray($style);
 });
 
-class DevReportExport implements FromCollection, WithHeadings, ShouldAutosize, WithEvents //, WithColumnFormatting, WithMapping
+class DevReportExport implements FromCollection, WithHeadings, ShouldAutosize, WithEvents, WithColumnWidths, WithColumnFormatting //, WithMapping
 {
     use Exportable;
 
-    public function __construct($data,$headings){
+    protected $column_widths = [];
+    protected $column_formats = [];
+    protected $total_rows = 0;
+
+    public function __construct($data, $headings, $widths = [], $formats = []){
         $this->data = $data;
         $this->headings = $headings;
+        $this->column_widths = $widths;
+        $this->column_formats = $formats;
+        $this->total_rows = count($data);
     }
 
     // freeze the first row with headings
@@ -44,6 +52,7 @@ class DevReportExport implements FromCollection, WithHeadings, ShouldAutosize, W
                     [
                         'alignment' => [
                             'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                            'wrapText'  => true,
                         ],
                         'fill' => [
                             'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
@@ -67,5 +76,19 @@ class DevReportExport implements FromCollection, WithHeadings, ShouldAutosize, W
 
     public function headings(): array{
         return $this->headings;
+    }
+
+    public function columnWidths(): array{
+        return $this->column_widths;
+    }
+
+    public function columnFormats(): array{
+        $apply_formats = [];
+        if(count($this->column_formats)){
+            foreach ($this->column_formats as $key => $value) {
+                $apply_formats[$key.'2:'.$key.$this->total_rows] = $value;
+            }
+        }
+        return $apply_formats;
     }
 }
