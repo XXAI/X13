@@ -76,6 +76,11 @@ table td {
     font-weight: bold;
 }*/
 
+.detalles-ajenos > td{
+    color: rgb(35, 91, 92);
+    background-color: rgba(109, 177, 179, 0.15);
+}
+
 .fuera-catalogo{
     color:rgb(154, 153, 153);
 }

@@ -12,9 +12,9 @@ export class ExistenciasService {
   url_detalles = `${environment.base_url}/almacen-existencias/detalles`;
   url_lotes = `${environment.base_url}/almacen-existencias/lotes`;
   url_movimientos = `${environment.base_url}/almacen-existencias/movimientos`;
-
   url_catalogos = `${environment.base_url}/almacen-existencias/catalogos`;
   url_export =  `${environment.base_url}/almacen-existencias/exportar-excel`;
+  url_pdf =  `${environment.base_url}/almacen-existencias/datos-exportar-pdf`;
 
   constructor(private http: HttpClient) { }
 
@@ -56,5 +56,13 @@ export class ExistenciasService {
 
   exportarExcel(payload:any={}):Observable<any>{
     return this.http.get<any>(this.url_export, {params:payload, responseType: 'blob' as 'json'});
+  }
+
+  exportarPDF(payload:any={}):Observable<any>{
+    return this.http.get<any>(this.url_pdf,{params: payload}).pipe(
+      map( response => {
+        return response;
+      })
+    );
   }
 }

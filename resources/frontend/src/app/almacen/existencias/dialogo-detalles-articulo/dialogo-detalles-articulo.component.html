@@ -64,13 +64,13 @@
         </div>
         <div fxFlex="none" fxLayout="row wrap">
             <div fxFlex="none" class="datos-almacen" *ngFor="let almacen of almacenes">
-                <div fxLayout="row" class="detalles" matRipple [ngClass]="{'seleccionado':almacenSeleccionado.id == almacen.id}" (click)="seleccionarAlmacen(almacen)">
+                <div fxLayout="row" class="detalles" matRipple [ngClass]="{'seleccionado':almacenSeleccionado.id == almacen.id, 'inactivo': almacenesAjenos}" (click)="seleccionarAlmacen(almacen)">
                     <div fxFlex fxLayout="column">
                         <div fxFlex class="nombre"><span>{{almacen.nombre}}</span></div>
                         <div fxFlex class="especificaciones" fxLayout="row">
                             <div fxFlex="none">{{almacen.tipo_almacen}} - {{(almacen.externo)?'Externo':'Interno'}}</div>
                             <div fxFlex>&nbsp;&nbsp;</div>
-                            <div fxFlex="none">#Lotes: {{almacen.total_lotes}}</div>
+                            <div fxFlex="none">#Lotes: {{almacen.total_lotes_activos}}</div>
                         </div>
                     </div>
                     <div fxFlex="none" class="existencias" fxLayout="row">

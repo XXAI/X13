@@ -103,6 +103,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::get('almacen-existencias/lotes',                     'API\Modulos\AlmacenExistenciasController@lotes');
     Route::get('almacen-existencias/catalogos',                 'API\Modulos\AlmacenExistenciasController@catalogosExistencias');
     Route::get('almacen-existencias/exportar-excel',            'API\Modulos\AlmacenExistenciasController@exportExcel');
+    Route::get('almacen-existencias/datos-exportar-pdf',        'API\Modulos\AlmacenExistenciasController@datosExportPDF');
     Route::get('partidas-bienes-servicios/',                    'API\Modulos\PartidasController@partidas');
     Route::get('familias-bienes-servicios/',                    'API\Modulos\FamiliasController@familias');
     Route::apiResource('catalogo-almacenes',                    'API\ConfiguracionUnidad\AlmacenesController');

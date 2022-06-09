@@ -127,8 +127,19 @@
     cursor: pointer;
     padding:5px;
     border-radius: 5px;
-    background-color: whitesmoke;
+    background-color: rgb(228, 228, 228);
     border:1px solid rgba(0,0,0,.42);
+}
+
+.datos-almacen .detalles.inactivo{
+    background-color: #c7c7c7;
+    color:rgba(0, 0, 0, 0.50) !important;
+    border:1px solid rgba(0,0,0,0.20);
+    cursor: default;
+}
+
+.datos-almacen .detalles.inactivo:hover{
+    box-shadow: none !important;
 }
 
 .datos-almacen .detalles.seleccionado{

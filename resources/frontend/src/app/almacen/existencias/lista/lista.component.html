@@ -76,7 +76,7 @@
                 <div class="data-loading-shade" *ngIf="isLoading"><mat-spinner></mat-spinner></div>
                 <section fxFlex="none" fxLayout="column">
                         <div fxLayout="row" fxLayout.xs="column">
-                            <button fxFlex="none" mat-flat-button (click)="togglePanelFiltros(!openedSidenav)" [color]="(openedSidenav)?'primary':''"><mat-icon>tune</mat-icon></button> <!--[color]="(filtroAplicado)?'accent':''" (click)="" [disabled]="filtrosDrawer.opened"-->
+                            <!--button fxFlex="none" mat-flat-button (click)="togglePanelFiltros(!openedSidenav)" [color]="(openedSidenav)?'primary':''"><mat-icon>tune</mat-icon></button-->
                             <div fxFlex fxLayout="row wrap">
                                 <mat-form-field fxFill appearance="fill">
                                     <mat-label>Buscar</mat-label>
@@ -93,14 +93,18 @@
                         </div>
                         <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="padding-top: 8px;">
                             <div fxFlex>
-                                <div class="filtros-aplicados" fxLayout="row" fxLayoutGap="5px" *ngIf="filtroAplicado">
-                                    <button mat-button fxFlex="none"><mat-icon>task_alt</mat-icon> Filtro Aplicado</button>
+                                <div class="filtros-aplicados" fxLayout="row" fxLayoutGap="5px">
+                                    <button mat-raised-button fxFlex="none" (click)="togglePanelFiltros(!openedSidenav)" [color]="(filtroAplicado)?'primary':''">
+                                        <mat-icon>{{(openedSidenav)?'chevron_left':'chevron_right'}}</mat-icon>Filtro: <span>{{(filtroAplicado)?'Activo':'Inactivo'}}</span>
+                                    </button>
                                 </div>
                             </div>
                             <div fxFlex="none">
-                                <button mat-stroked-button color="primary" [matMenuTriggerFor]="exportMenu" [disabled]="isLoadingExcel" [class.button-spinner]="isLoadingExcel"><mat-icon>download</mat-icon> Descargar</button>
+                                <button mat-stroked-button color="primary" [matMenuTriggerFor]="exportMenu" [disabled]="isLoadingExport" [class.button-spinner]="isLoadingExport">
+                                    <mat-icon>download</mat-icon> Descargar<mat-icon>arrow_drop_down</mat-icon>
+                                </button>
                                 <mat-menu #exportMenu="matMenu" xPosition="before">
-                                    <button mat-menu-item><mat-icon svgIcon="pdf-icon" ></mat-icon> Descargar en PDF</button>
+                                    <button mat-menu-item (click)="exportarPDF()"><mat-icon svgIcon="pdf-icon" ></mat-icon> Descargar en PDF</button>
                                     <mat-divider></mat-divider>
                                     <button mat-menu-item (click)="exportarExcel()"><mat-icon svgIcon="xls-icon" ></mat-icon> Descargar en Excel</button>
                                 </mat-menu>
@@ -164,7 +168,7 @@
                                 </ng-container>
                                 
                                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                                <tr mat-row (click)="mostrarDialogoArticulo(row.id, row.selectable_id)" [ngClass]="{ 'con-existencias': row.existencia, 'descontinuado':row.descontinuado, 'selected-item':(selectedId == row.selectable_id) }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                                <tr mat-row (click)="mostrarDialogoArticulo(row.id, row.selectable_id)" [ngClass]="{ 'detalles-ajenos': !row.es_almacen_propio, 'descontinuado':row.descontinuado, 'selected-item':(selectedId == row.selectable_id) }" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
             
                                 <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide':(listaArticulos && listaArticulos.length > 0)}"></tr>
                             </table>

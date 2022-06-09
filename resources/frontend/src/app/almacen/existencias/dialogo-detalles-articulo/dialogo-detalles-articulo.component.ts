@@ -35,6 +35,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   subDialogRef: any;
   nivelesEscape: any[];
   datosFiltrados: boolean;
+  almacenesAjenos: boolean;
 
   isLoading: boolean;
   isLoadingLotes: boolean;
@@ -79,6 +80,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.almacenSeleccionado = {id:0};
     this.dataSourceLotes = new MatTableDataSource<any>([]);
     this.datosFiltrados = false;
+    this.almacenesAjenos = false;
 
     this.dataSourceLotes = new MatTableDataSource<any>([]);
     this.dataSourceLotes.filterPredicate = function (record,filter) {
@@ -98,11 +100,17 @@ export class DialogoDetallesArticuloComponent implements OnInit {
 
     let payload:any
     if(this.data.datosFiltroAplicado){
-      this.datosFiltrados = true;
-      payload = {
-        lote: this.data.datosFiltroAplicado.datos_stock.lote,
-        caducidad: this.data.datosFiltroAplicado.datos_stock.fecha_caducidad,
-      };
+      payload = {};
+      if(this.data.datosFiltroAplicado.agrupar){
+        this.datosFiltrados = true;
+        payload.lote = this.data.datosFiltroAplicado.datos_stock.lote;
+        payload.caducidad = this.data.datosFiltroAplicado.datos_stock.fecha_caducidad;
+      }
+
+      if(this.data.datosFiltroAplicado.almacenes_ajenos){
+        this.almacenesAjenos = true;
+        payload.almacenes_ajenos = true;
+      }
     }
     this.cargarDatosArticulo(payload);
   }
@@ -164,6 +172,10 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   }
 
   seleccionarAlmacen(almacen){
+    if(this.almacenesAjenos){
+      return;
+    }
+    
     if(this.almacenSeleccionado.id != 0){
       this.quitarAlmacenSeleccionado();
       if(this.loteSeleccionado){

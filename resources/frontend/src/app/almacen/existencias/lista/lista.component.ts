@@ -7,6 +7,7 @@ import { DialogoDetallesArticuloComponent } from '../dialogo-detalles-articulo/d
 import { MediaMatcher } from '@angular/cdk/layout';
 import { MatSelectionList } from '@angular/material/list';
 import * as FileSaver from 'file-saver';
+import { ReportWorker } from 'src/app/web-workers/report-worker';
 
 @Component({
   selector: 'app-lista',
@@ -28,7 +29,7 @@ export class ListaComponent implements OnInit {
 
   isLoading: boolean;
   isLoadingFiltros: boolean;
-  isLoadingExcel: boolean;
+  isLoadingExport: boolean;
 
   selectedId:number;
 
@@ -173,6 +174,10 @@ export class ListaComponent implements OnInit {
               }else{
                 element.selectable_id = element.id;
               }
+
+              if(!element.es_almacen_propio){
+                element.selectable_id = element.selectable_id * -1;
+              }
             });
             this.listaArticulos = response.data;
             this.resultsLength = response.total;
@@ -236,13 +241,17 @@ export class ListaComponent implements OnInit {
   mostrarDialogoArticulo(articuloId:number, selectableId:number){
     let articulo = this.listaArticulos.find(x => x.selectable_id == selectableId);
     let filtro_dialogo:any;
-    if(this.filtroAplicado && this.filtroAplicado.agrupar != 'article'){
-      filtro_dialogo = {
-        agrupar: this.filtroAplicado.agrupar,
-        datos_stock: {
+    if(this.filtroAplicado){
+      filtro_dialogo = {};
+      if(this.filtroAplicado.agrupar != 'article'){
+        filtro_dialogo.agrupar = this.filtroAplicado.agrupar;
+        filtro_dialogo.datos_stock = {
           lote: articulo.lote,
           fecha_caducidad: (articulo.fecha_caducidad)?articulo.fecha_caducidad:'',
-        } 
+        };
+      }
+      if(!articulo.es_almacen_propio){
+        filtro_dialogo.almacenes_ajenos = true;
       }
     }
 
@@ -282,8 +291,77 @@ export class ListaComponent implements OnInit {
     }
   }
 
+  exportarPDF(){
+    this.isLoadingExport = true;
+
+    let params:any = {
+      query: encodeURIComponent(this.searchQuery),
+    };
+
+    if(this.filtro && this.filtroAplicado){
+      params.agrupar                    = this.filtroAplicado.agrupar;
+      params.existencias                = this.filtroAplicado.existencias;
+      params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
+      params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
+      params.almacenes                  = this.filtroAplicado.almacenes.join('|');
+      params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
+      params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
+    }
+
+    this.existenciasService.exportarPDF(params).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          if(response.items.length > 0){
+            response.items.forEach(element => {
+              element.existencia -= element.resguardo;
+              element.existencia_fraccion -= element.resguardo_fraccion;
+            });
+            
+            let fecha_reporte = new Intl.DateTimeFormat('es-ES', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date());
+
+            const reportWorker = new ReportWorker();
+            reportWorker.onmessage().subscribe(
+              data => {
+                FileSaver.saveAs(data.data,'Almacen-Existencias '+'('+fecha_reporte+')');
+                reportWorker.terminate();
+                this.isLoadingExport = false;
+            });
+
+            reportWorker.onerror().subscribe(
+              (data) => {
+                this.sharedService.showSnackBar(data.message, null, 3000);
+                this.isLoadingExport = false;
+                reportWorker.terminate();
+              }
+            );
+            
+            let config = {
+              agrupado_lote: (this.filtroAplicado && this.filtroAplicado.agrupar == 'batch')?true:false,
+            };
+
+            reportWorker.postMessage({data:{items: response.items, encabezado:{unidad_medica:response.unidad_medica}, config:config},reporte:'almacen/existencia'});
+          }else{
+            this.sharedService.showSnackBar('No se encontraron resultados', null, 3000);
+            this.isLoadingExport = false;
+          }
+        }
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoadingExport = false;
+      }
+    );
+  }
+
   exportarExcel(){
-    this.isLoadingExcel = true;
+    this.isLoadingExport = true;
     let params:any = {};
     params.query = encodeURIComponent(this.searchQuery);
 
@@ -300,12 +378,12 @@ export class ListaComponent implements OnInit {
     this.existenciasService.exportarExcel(params).subscribe(
       response => {
         FileSaver.saveAs(response,'Repote - Existencias');
-        this.isLoadingExcel = false;
+        this.isLoadingExport = false;
       },
       errorResponse =>{
         this.sharedService.showSnackBar('Ocurrio un error al intentar descargar el archivo', null, 3000);
         console.log(errorResponse);
-        this.isLoadingExcel = false;
+        this.isLoadingExport = false;
       }
     );
   }
