@@ -1,0 +1,207 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.movimiento-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.label-info-delete{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+    background-color: red;
+    border-left: 1px solid whitesmoke;
+    border-right: 1px solid whitesmoke;
+}
+
+.boton-accion{
+    border-left: 1px solid whitesmoke;
+    background-color: #787878;
+    border-radius: 0px;
+}
+
+.boton-accion-medio{
+    border-radius: 0px;
+}
+
+.datos-movimiento{
+    padding: 5px;
+    background-color: cadetblue;
+    color:whitesmoke;
+}
+
+.fake-input{
+    border-radius: 4px;
+    padding: 0.75em;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: 1.125;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    letter-spacing: normal;
+    color: rgba(255,255,255,.87);
+    cursor:default;
+    /*background-color: rgba(0,0,0,.04);*/
+}
+
+.fake-input:hover{
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.fake-input .label{
+    display: block;
+    font-size: small;
+    color: rgba(255,255,255,.54);
+    white-space: nowrap;
+}
+
+.fake-input .value{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    white-space: nowrap;
+    padding: 0 5px;
+}
+
+.fake-input .value-text{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    padding: 0 5px;
+}
+
+.panel-acciones{
+    background-color: whitesmoke;
+}
+
+.panel-acciones > div{
+    padding: 8px;
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.data-table{
+    width: 100%;
+}
+
+.data-table th {
+    text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.data-table td {
+    padding:0 2px;
+}
+
+tr.tabla-row-articulo{
+    cursor: pointer;
+}
+
+tr.tabla-row-articulo td{
+    border-bottom-width: 0;
+}
+
+tr.tabla-row-articulo:not(.tabla-row-articulo-expandido):hover{
+    background-color: whitesmoke;
+}
+
+tr.tabla-row-articulo:not(.tabla-row-articulo-expandido):active {
+    background: #efefef;
+}
+
+tr.tabla-row-articulo.tabla-row-articulo-expandido{
+    background-color: #c7dfd2;
+    font-weight: bold;
+}
+
+tr.tabla-row-articulo-detalle{
+    background-color: #daf7e7;
+    height: 0;
+}
+
+.articulo-detalle-listado-lotes {
+    overflow: hidden;
+    display: flex;
+}
+
+.articulo-listado-lotes{
+    width: 100%;
+    padding: 0 10px 10px 10px;
+}
+
+.contenido-tabla-lotes{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.contenido-tabla-lotes thead th{
+    background-color: black;
+    color:whitesmoke;
+    padding: 0 5px;
+    font-weight: normal;
+}
+
+.contenido-tabla-lotes tbody  {
+    background-color:whitesmoke;
+    color: black;
+    border: 1px solid black;
+}
+
+.contenido-tabla-lotes tbody .input-cell{
+    width: 100px;
+    position: relative;
+}
+
+.contenido-tabla-lotes tbody .input-cell input{
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+.contenido-tabla-lotes tbody tr:nth-child(odd) {
+    background-color:white;
+}
+
+.contenido-tabla-lotes tbody tr:hover  {
+    font-weight: bold;
+}
+
+.contenido-tabla-lotes tbody tr td{
+    text-align: center;
+    border: 1px solid rgb(181, 179, 179);
+}
+
+.contenido-tabla-lotes tfoot{
+    background-color:rgb(95, 204, 255);
+    color: whitesmoke;
+    border: 1px solid rgb(95, 204, 255);;
+}
+
+.contenido-tabla-lotes tfoot tr td{
+    text-align: center;
+}

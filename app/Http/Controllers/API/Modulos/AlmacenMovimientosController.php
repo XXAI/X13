@@ -199,59 +199,8 @@ class AlmacenMovimientosController extends Controller{
                         }
                         return $query;
                     });
-
-                    /*$stock_existencias = $stock_existencias->where(function($query)use($search_queries){
-                        return $query//->where('cog_partidas_especificas.descripcion','LIKE','%'.$parametros['query'].'%')
-                                    //->where('familias.nombre','LIKE','%'.$parametros['query'].'%')
-                                    ->where(function($where)use($search_queries){
-                                        for($i = 0; $i < count($search_queries); $i++){
-                                            $where = $where->where('bienes_servicios.clave_cubs','LIKE','%'.$search_queries[$i].'%');
-                                        }
-                                        return $where;
-                                    })
-                                    ->orWhere(function($where)use($search_queries){
-                                        for($i = 0; $i < count($search_queries); $i++){
-                                            $where = $where->where('bienes_servicios.clave_local','LIKE','%'.$search_queries[$i].'%');
-                                        }
-                                        return $where;
-                                    })
-                                    ->orWhere(function($where)use($search_queries){
-                                        for($i = 0; $i < count($search_queries); $i++){
-                                            $where = $where->where('bienes_servicios.articulo','LIKE','%'.$search_queries[$i].'%');
-                                        }
-                                        return $where;
-                                    })
-                                    ->orWhere(function($where)use($search_queries){
-                                        for($i = 0; $i < count($search_queries); $i++){
-                                            $where = $where->where('bienes_servicios.especificaciones','LIKE','%'.$search_queries[$i].'%');
-                                        }
-                                        return $where;
-                                    })
-                                    ->orWhere(function($where)use($search_queries){
-                                        for($i = 0; $i < count($search_queries); $i++){
-                                            $where = $where->where('stocks.lote','LIKE','%'.$search_queries[$i].'%');
-                                        }
-                                        return $where;
-                                    })
-                                    ->orWhere(function($where)use($search_queries){
-                                        for($i = 0; $i < count($search_queries); $i++){
-                                            $where = $where->where('stocks.codigo_barras','LIKE','%'.$search_queries[$i].'%');
-                                        }
-                                        return $where;
-                                    });
-                    });*/
                 }
             }
-
-            /*if(isset($parametros['programa_id']) && $parametros['programa_id'] != null){
-                $stock_existencias = $stock_existencias->where('stocks.programa_id',$parametros['programa_id']);
-            }*/
-
-            /*
-            if(isset($parametros['almacen_id']) && $parametros['almacen_id']){
-                $stock_existencias = $stock_existencias->where('stocks.almacen_id',$parametros['almacen_id']);
-            }
-            */
 
             if(isset($parametros['familia_id']) && $parametros['familia_id']){
                 $stock_existencias = $stock_existencias->where('bienes_servicios.familia_id',$parametros['familia_id']);
@@ -422,6 +371,49 @@ class AlmacenMovimientosController extends Controller{
 
             $receta = Solicitud::where('tipo_solicitud_id',$tipoSolicitud->id)->where('folio',$folio)->first();
             return response()->json(['data'=>$receta],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
+    public function previewMovimiento(Request $request, $id){
+        try{
+            $loggedUser = auth()->userOrFail();
+            
+            $movimiento = Movimiento::with(['unidadMedica','unidadMedicaMovimiento','almacen','almacenMovimiento','areaServicioMovimiento','proveedor','programa','turno','paciente','personalMedico','tipoMovimiento','creadoPor','modificadoPor','concluidoPor','canceladoPor','eliminadoPor',
+                                            'movimientoPadre'=>function($movimientoPadre){
+                                                return $movimientoPadre->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
+                                            },
+                                            'movimientoHijo' => function($movimientoHijo){
+                                                return $movimientoHijo->with('almacen','tipoMovimiento','concluidoPor','modificadoPor');
+                                            },'solicitud'=> function($solicitud){
+                                                return $solicitud->with('tipoSolicitud','tipoUso');
+                                            },'modificacionActiva'=>function($modificacionActiva){
+                                                $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
+                                            }])->find($id);
+            if(!$movimiento){
+                return response()->json(['error'=>"No se encontró el movimiento solicitado"],HttpResponse::HTTP_OK);
+            }
+
+            $solicitud_id = $movimiento->solicitud_id;
+            $movimiento->load(['listaArticulos'=>function($listaArticulos)use($loggedUser,$solicitud_id){ 
+                                return $listaArticulos->select('movimientos_articulos.*','solicitudes_articulos.cantidad_solicitada')
+                                        ->leftjoin('solicitudes_articulos',function($join)use($solicitud_id){
+                                            return $join->on('solicitudes_articulos.bien_servicio_id','=','movimientos_articulos.bien_servicio_id')
+                                                        ->where('solicitudes_articulos.solicitud_id',$solicitud_id);
+                                        })
+                                        ->with(['articulo'=>function($articulos)use($loggedUser){
+                                            $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
+                                        },'stock'=>function($stock){
+                                            $stock->with('marca','empaqueDetalle.unidadMedida')->withTrashed();
+                                        },'cartaCanje']);
+                        },'listaArticulosBorrador'=>function($listaBorrador)use($loggedUser){ 
+                            return $listaBorrador->with(['articulo'=>function($articulos)use($loggedUser){
+                                        $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id)->with('empaqueDetalle');
+                                    },'marca','empaqueDetalle.unidadMedida']);
+                        }]);
+
+            return response()->json(['data'=>$movimiento],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }

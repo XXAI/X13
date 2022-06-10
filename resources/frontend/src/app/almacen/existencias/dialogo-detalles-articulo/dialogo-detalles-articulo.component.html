@@ -219,6 +219,13 @@
                                             {{row.fecha_movimiento | date:'MMMM d, YYYY'}}
                                         </td>
                                     </ng-container>
+
+                                    <ng-container matColumnDef="preview">
+                                        <th mat-header-cell *matHeaderCellDef> Ver </th>
+                                        <td mat-cell *matCellDef="let row" style="text-align: center;">
+                                            <button mat-icon-button (click)="previewMovimiento(row.id)"><mat-icon>preview</mat-icon></button>
+                                        </td>
+                                    </ng-container>
             
                                     <ng-container matColumnDef="folio">
                                         <th mat-header-cell *matHeaderCellDef mat-sort-header> Folio </th>

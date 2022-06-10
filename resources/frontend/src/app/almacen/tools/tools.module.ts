@@ -5,10 +5,11 @@ import { DialogoCancelarMovimientoComponent } from './dialogo-cancelar-movimient
 import { SharedModule } from 'src/app/shared/shared.module';
 import { DialogoModificarMovimientoComponent } from './dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
 import { WidgetBuscadorArticulosComponent } from './widget-buscador-articulos/widget-buscador-articulos.component';
+import { DialogoPreviewMovimientoComponent } from './dialogo-preview-movimiento/dialogo-preview-movimiento.component';
 
 
 @NgModule({
-  declarations: [DialogoCancelarMovimientoComponent, DialogoModificarMovimientoComponent, WidgetBuscadorArticulosComponent],
+  declarations: [DialogoCancelarMovimientoComponent, DialogoModificarMovimientoComponent, WidgetBuscadorArticulosComponent, DialogoPreviewMovimientoComponent],
   imports: [
     CommonModule,
     SharedModule

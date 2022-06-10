@@ -342,7 +342,38 @@ export class ListaComponent implements OnInit {
               agrupado_lote: (this.filtroAplicado && this.filtroAplicado.agrupar == 'batch')?true:false,
             };
 
-            reportWorker.postMessage({data:{items: response.items, encabezado:{unidad_medica:response.unidad_medica}, config:config},reporte:'almacen/existencia'});
+            let almacenes:string[] = [];
+            let filtros:any;
+            if(this.filtroAplicado){
+              this.filtroAplicado.almacenes.forEach(element => {
+                let almacen = this.filtroCatalogos.almacenes.find(x => x.id == element);
+                almacenes.push(almacen.nombre);
+              });
+
+              filtros = {
+                existencias: (this.filtroCatalogos['existencias'].find(x => x.key == this.filtroAplicado.existencias)).value,
+                catalogo_unidad: (this.filtroCatalogos['catalogo_unidad'].find(x => x.key == this.filtroAplicado.catalogo_unidad)).value,
+              };
+
+              let tipo_articulo:any = this.filtroCatalogos['tipos_articulo'].find(x => x.id == this.filtroAplicado.tipo_articulo);
+              if(tipo_articulo){
+                filtros.tipo_articulo = tipo_articulo.descripcion;
+              }else{
+                filtros.tipo_articulo = 'Todos';
+              }
+
+            }else{
+              this.filtroCatalogos.almacenes.forEach(element => {
+                almacenes.push(element.nombre);
+              });
+            }
+
+            let parametros_busqueda:string;
+            if(this.searchQuery){
+              parametros_busqueda = this.searchQuery;
+            }
+
+            reportWorker.postMessage({data:{items: response.items, encabezado:{unidad_medica:response.unidad_medica, almacenes:almacenes, filtros:filtros, parametros_busqueda:parametros_busqueda}, config:config},reporte:'almacen/existencia'});
           }else{
             this.sharedService.showSnackBar('No se encontraron resultados', null, 3000);
             this.isLoadingExport = false;

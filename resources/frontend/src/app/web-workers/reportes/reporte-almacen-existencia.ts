@@ -153,9 +153,9 @@ export class ReporteAlmacenExistencia{
           }
         }
 
-        let label_titulo:string = 'Existencias por Articulo';
+        let label_titulo:string = 'Existencias agrupadas por Articulo';
         if(reportData.config.agrupado_lote){
-            label_titulo = 'Existencias por Lote';
+            label_titulo = 'Existencias agrupadas por Lote';
         }
 
         datos.content.push({
@@ -172,7 +172,7 @@ export class ReporteAlmacenExistencia{
                 {text: ""},
               ],
               [
-                {text: "Unidad:",                               style: "detalles_title"},
+                {text: "Unidad :",                               style: "detalles_title"},
                 {text: reportData.encabezado.unidad_medica?.nombre+' [ '+reportData.encabezado.unidad_medica?.clues+' ]',           style: "detalles_datos", colSpan: 5 },
                 {text: ""},
                 {text: ""},
@@ -180,8 +180,8 @@ export class ReporteAlmacenExistencia{
                 {text: ""},
               ],
               [
-                {text: "Almacenes:",                              style: "detalles_title"},
-                {text: 'entrada.almacen?.nombre',                 style: "detalles_datos", colSpan: 5 },
+                {text: "Almacen"+((reportData.encabezado.almacenes.length > 1)?'es':'')+" :",                                style: "detalles_title"},
+                {text: reportData.encabezado.almacenes.join(', '),  style: "detalles_datos", colSpan: 5 },
                 {text: ""},
                 {text: ""},
                 {text: ""},
@@ -190,10 +190,24 @@ export class ReporteAlmacenExistencia{
             ]
           }
         });
-        if(reportData.config.agrupado_lote){
+
+        if(reportData.encabezado.parametros_busqueda){
+          datos.content[0].table.body.push(
+              [
+                  {text: "Parametros de Busqueda :",                  style: "detalles_title" },
+                  {text: reportData.encabezado.parametros_busqueda,   style: "detalles_datos", colSpan: 5 },
+                  {text: "" },
+                  {text: "" },
+                  {text: "" },
+                  {text: "" },
+              ],
+          );
+        }
+
+        if(reportData.encabezado.filtros){
             datos.content[0].table.body.push(
                 [
-                    {text: 'Filtros:', colSpan: 6, style:'detalles_title_center'},
+                    {text: 'Filtros Aplicados', colSpan: 6, style:'detalles_title_center'},
                     {text: ""},
                     {text: ""},
                     {text: ""},
@@ -201,12 +215,12 @@ export class ReporteAlmacenExistencia{
                     {text: ""},
                 ],
                 [
-                    {text: "Tipos de Articulos:",   style: "detalles_title" },
-                    {text: '',                      style: "detalles_datos" },
-                    {text: "Existencias:",          style: "detalles_title" },
-                    {text: '',                      style: "detalles_datos" },
-                    {text: "Catalogo:",             style: "detalles_title" },
-                    {text: '',                      style: "detalles_datos" },
+                    {text: "Tipos de Articulos :",                        style: "detalles_title" },
+                    {text: reportData.encabezado.filtros.tipo_articulo,   style: "detalles_datos" },
+                    {text: "Existencias :",                               style: "detalles_title" },
+                    {text: reportData.encabezado.filtros.existencias,     style: "detalles_datos" },
+                    {text: "Catalogo :",                                  style: "detalles_title" },
+                    {text: reportData.encabezado.filtros.catalogo_unidad, style: "detalles_datos" },
                 ],
             );
         }
@@ -254,32 +268,38 @@ export class ReporteAlmacenExistencia{
         for(let i = 0; i < existencias.length; i++){
             let item  = existencias[i];
 
+            if(!item.es_almacen_propio){
+              continue;
+            }
+
             let normativo_label = '-';
             if(item.en_catalogo_unidad){
                 normativo_label = (item.es_normativo)?'SI':'NO';
             }
 
+            let row_fill_color = (!item.es_almacen_propio)?"#E0F6F7":"";
+
             let item_pdf = [
-                { text: (i+1),                      style: 'tabla_datos_center'},
-                { text: normativo_label,            style: 'tabla_datos_center'},
-                { text: item.tipo_bien_servicio,    style: 'tabla_datos'},
-                { text: item.clave,                 style: 'tabla_datos'},
-                { text: item.especificaciones,      style: 'tabla_datos'},
+                { text: (i+1),                      style: 'tabla_datos_center', fillColor: row_fill_color},
+                { text: normativo_label,            style: 'tabla_datos_center', fillColor: row_fill_color},
+                { text: item.tipo_bien_servicio,    style: 'tabla_datos',        fillColor: row_fill_color},
+                { text: item.clave,                 style: 'tabla_datos',        fillColor: row_fill_color},
+                { text: item.especificaciones,      style: 'tabla_datos',        fillColor: row_fill_color},
             ];
 
             if(reportData.config.agrupado_lote){
                 let fecha_caducidad = (item.fecha_caducidad)?item.fecha_caducidad:'S/F/C';
                 item_pdf.push(
-                    { text: item.lote,                                          style: 'tabla_datos_center'},
-                    { text: fecha_caducidad,                                    style: 'tabla_datos_center'},
-                    { text: numberFormat(parseInt(item.existencia)),            style: 'tabla_datos_center'},
-                    { text: numberFormat(parseInt(item.existencia_fraccion)),   style: 'tabla_datos_center'},
+                    { text: item.lote,                                          style: 'tabla_datos_center', fillColor: row_fill_color},
+                    { text: fecha_caducidad,                                    style: 'tabla_datos_center', fillColor: row_fill_color},
+                    { text: numberFormat(parseInt(item.existencia)),            style: 'tabla_datos_center', fillColor: row_fill_color},
+                    { text: numberFormat(parseInt(item.existencia_fraccion)),   style: 'tabla_datos_center', fillColor: row_fill_color},
                 );
             }else{
                 item_pdf.push(
-                    { text: item.total_lotes,                                   style: 'tabla_datos_center'},
-                    { text: numberFormat(parseInt(item.existencia)),            style: 'tabla_datos_center'},
-                    { text: numberFormat(parseInt(item.existencia_fraccion)),   style: 'tabla_datos_center'},
+                    { text: item.total_lotes,                                   style: 'tabla_datos_center', fillColor: row_fill_color},
+                    { text: numberFormat(parseInt(item.existencia)),            style: 'tabla_datos_center', fillColor: row_fill_color},
+                    { text: numberFormat(parseInt(item.existencia_fraccion)),   style: 'tabla_datos_center', fillColor: row_fill_color},
                 );
             }
             datos.content[index_table].table.body.push(item_pdf);

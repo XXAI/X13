@@ -1,11 +1,12 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog, MatDialogState } from '@angular/material/dialog';
 import { MatSelectionList } from '@angular/material/list';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
-import { Subscription } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 import { SharedService } from 'src/app/shared/shared.service';
+import { DialogoPreviewMovimientoComponent } from '../../tools/dialogo-preview-movimiento/dialogo-preview-movimiento.component';
 import { ExistenciasService } from '../existencias.service';
 
 export interface DialogData {
@@ -55,7 +56,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   resultsLength: number = 0;
   currentPage: number = 0;
   pageSize: number = 30;
-  displayedColumns: string[] = ["direccion_movimiento","fecha_movimiento","folio","destino_origen","modo_movimiento","cantidad"];
+  displayedColumns: string[] = ["direccion_movimiento","fecha_movimiento","preview","folio","destino_origen","modo_movimiento","cantidad"];
   dataSourceMovimientos: MatTableDataSource<any>;
 
   almacenes: any[];
@@ -159,7 +160,9 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   }
 
   cancelarAccion(){
-    if(this.verInfoResguardos){
+    if(this.subDialogRef && this.subDialogRef.getState() === MatDialogState.OPEN){
+      this.subDialogRef.close();
+    }else if(this.verInfoResguardos){
       this.verInfoResguardos = false;
     }else if(this.loteSeleccionado){
       this.quitarLoteSeleccionado();
@@ -322,6 +325,24 @@ export class DialogoDetallesArticuloComponent implements OnInit {
         this.isLoadingMovimientos = false;
       }
     );
+  }
+
+  previewMovimiento(id:number){
+    let configDialog = {
+      width: '80%',
+      height: '90%',
+      maxWidth: '100%',
+      disableClose: true,
+      data:{id: id},
+      panelClass: 'no-padding-dialog'
+    };
+
+    this.subDialogRef = this.dialog.open(DialogoPreviewMovimientoComponent, configDialog);
+    this.subDialogRef.afterClosed().subscribe(dialogResponse => {
+      if(dialogResponse){
+        console.log('Response: ',dialogResponse);
+      }
+    });
   }
 
   cerrar(){

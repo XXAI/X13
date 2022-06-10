@@ -1,0 +1,242 @@
+<section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
+    <section fxFlex="none" class="movimiento-toolbar"> <!-- Toolbar Menu <<<<<<< -->
+        <div fxLayout="row">
+            <div fxFlex="none" class="label-info">
+                <mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon> {{tipoMovimiento}}: {{listaEstatusLabels[estatusMovimiento]}}
+            </div>
+            <div fxFlex>
+            </div>
+            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
+        </div>
+        <mat-progress-bar *ngIf="isLoading" mode="indeterminate" [color]="'primary'"></mat-progress-bar>
+    </section> <!-- <<<<<<< Toolbar Menu -->
+    <section fxFlex fxLayout="column">
+        <div fxFlex="none" fxLayout="row" [style.fontSize.px]="15" *ngIf="movimiento">
+            <div fxFlex fxLayout="row raw"  fxLayoutGap="5px" class="datos-movimiento">
+                <div fxFlex class="fake-input">
+                    <span class="label">Folio:</span>
+                    <span class="value">{{movimiento.folio }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Fecha Entrada:</span>
+                    <span class="value">{{movimiento.fecha_movimiento | date:'MMMM d, y' }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Almacen:</span>
+                    <span class="value">{{movimiento.almacen.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Tipo de Movimiento:</span>
+                    <span class="value">{{movimiento.tipo_movimiento.descripcion }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Turno:</span>
+                    <span class="value">{{movimiento.turno.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Programa:</span>
+                    <span class="value">{{(movimiento.programa)?movimiento.programa.descripcion:'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Folio-Documento:</span>
+                    <span class="value">{{ movimiento.documento_folio||'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="movimiento.proveedor">
+                    <span class="label">Proveedor:</span>
+                    <span class="value">{{ movimiento.proveedor.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="movimiento.unidad_medica_movimiento">
+                    <span class="label">Unidad Médica {{(movimiento.direccion_movimiento == 'SAL')?'Destino':'Origen'}}:</span>
+                    <span class="value">{{ movimiento.unidad_medica_movimiento.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="movimiento.almacen_movimiento">
+                    <span class="label">Almacén {{(movimiento.direccion_movimiento == 'SAL')?'Destino':'Origen'}}:</span>
+                    <span class="value">{{ movimiento.almacen_movimiento.nombre }}</span>
+                </div>
+                <div fxFlex class="fake-input" *ngIf="movimiento.area_servicio_movimiento">
+                    <span class="label">Area/Servicio {{(movimiento.direccion_movimiento == 'SAL')?'Destino':'Origen'}}:</span>
+                    <span class="value">{{ movimiento.area_servicio_movimiento.descripcion }}</span>
+                </div>
+
+                <div fxFlex fxLayout="row" *ngIf="movimiento.solicitud">
+                    <div fxFlex class="fake-input" *ngIf="movimiento.solicitud.tipo_solicitud">
+                        <span class="label">Tipo de Solicitud:</span>
+                        <span class="value">{{ movimiento.solicitud.tipo_solicitud.descripcion }}</span>
+                    </div>
+                    <div fxFlex class="fake-input" *ngIf="movimiento.solicitud.tipo_uso">
+                        <span class="label">Tipo de Uso:</span>
+                        <span class="value">{{ movimiento.solicitud.tipo_uso.descripcion }}</span>
+                    </div>
+                </div>
+                
+                <div fxFlex class="fake-input" *ngIf="movimiento.personal_medico">
+                    <span class="label">Personal Médico:</span>
+                    <span class="value">{{ movimiento.personal_medico.nombre_completo }}</span>
+                </div>
+
+                <div fxFlex fxLayout="row" *ngIf="movimiento.paciente">
+                    <div fxFlex class="fake-input">
+                        <span class="label">Folio Expediente:</span>
+                        <span class="value">{{ movimiento.paciente.expediente_clinico }}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Paciente:</span>
+                        <span class="value">{{ movimiento.paciente.nombre_completo }}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">CURP:</span>
+                        <span class="value">{{ movimiento.paciente.curp }}</span>
+                    </div>
+                </div>
+
+                <div fxFlex="none" fxLayout="row" *ngIf="movimiento.referencia_folio">
+                    <div fxFlex class="fake-input">
+                        <span class="label">No de Referencia:</span>
+                        <span class="value">{{ movimiento.referencia_folio||'---' }}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Fecha de Referencia:</span>
+                        <span class="value">{{(movimiento.referencia_fecha)?(movimiento.referencia_fecha | date:'MMMM d, y'):'---' }}</span>
+                    </div>
+                </div>
+
+                <div fxFlex class="fake-input">
+                    <span class="label">Observaciones:</span>
+                    <span class="value">{{ movimiento.observaciones||'---' }}</span>
+                </div>
+            </div>
+        </div>
+        <div fxFlex="none" fxLayout="row" class="panel-acciones">
+            <div fxFlex></div>
+            <div fxFlex="none">{{movimiento?.total_articulos | number:'1.0-0'}} | {{movimiento?.total_claves | number:'1.0-0'}}</div>
+            <div fxFlex></div>
+            <div fxFlex="none">
+                <button mat-stroked-button color="primary" (click)="abrirMovmiento()"><mat-icon>file_open</mat-icon> Abrir</button>
+            </div>
+        </div>
+        <div fxFlex fxLayout="column" class="panel-articulos">
+            <div fxFlex style="overflow: auto;">
+                <table mat-table [dataSource]="dataSourceArticulos" class="data-table" matSort multiTemplateDataRows>
+                    <ng-container matColumnDef="estatus" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Estatus </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center;">
+                            Estatus
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="clave">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Clave </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;">
+                            {{row.clave}}
+                        </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="nombre" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true"> Nombre </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true"> {{row.nombre}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="total_lotes" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.xs="true" width="1" style="text-align: center; white-space: nowrap;"> # Lotes </th>
+                        <td mat-cell *matCellDef="let row" fxHide.xs="true" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_lotes | number:'1.0-0'}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="total_cantidad" >
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1" style="text-align: center; white-space: nowrap;"> Cantidad </th>
+                        <td mat-cell *matCellDef="let row" width="1" style="white-space: nowrap; text-align: center;"> {{row.total_cantidad | number:'1.0-0'}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell width="1" *matHeaderCellDef></th>
+                        <td mat-cell *matCellDef="let row; let i = index" width="1" style="white-space: nowrap;">
+                            <mat-icon>{{(idArticuloSeleccionado == row.id)?'expand_less':'expand_more'}}</mat-icon>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="expandedDetail">
+                        <td mat-cell *matCellDef="let articulo" [attr.colspan]="displayedColumns.length">
+                            <div class="articulo-detalle-listado-lotes" [@detailExpand]="articulo.id == idArticuloSeleccionado ? 'expanded' : 'collapsed'">
+                                <div class="articulo-listado-lotes">
+                                    <div fxLayout="column">
+                                        <div fxFlex="none">
+                                            {{articulo.descripcion}}
+                                        </div>
+                                        <div fxFlex="none" fxLayout="row">
+                                            <mat-icon fxFlex="none" matTooltip="En Catalogo" *ngIf="articulo.en_catalogo_unidad">fact_check</mat-icon>
+                                            <mat-icon fxFlex="none" matTooltip="Normativo" *ngIf="articulo.es_normativo">gpp_good</mat-icon>
+                                            <mat-icon fxFlex="none" matTooltip="Descontinuado" *ngIf="articulo.descontinuado">error</mat-icon>
+                                            <div fxFlex></div>
+                                        </div>
+                                        <div fxFlex>
+                                            <table class="contenido-tabla-lotes">
+                                                <thead>
+                                                    <tr>
+                                                        <th *ngIf="articulo.clave_form == 'MEDS'" width="1">Estatus</th>
+                                                        <th *ngIf="articulo.clave_form == 'MEDS'">Lote / <span style="white-space: nowrap;">Fecha Caducidad</span></th>
+                                        
+                                                        <th *ngIf="articulo.clave_form == 'ACTVO'" style="white-space: nowrap;">No. Serie / <br>Modelo</th>
+                                                        <th *ngIf="articulo.clave_form == 'ACTVO'">Marca</th>
+                                                        <th>Programa</th>
+                                                        <th>Detalles</th>
+                                                        <th width="1">Cantidad</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngIf="articulo.lotes.length <= 0">
+                                                        <td colspan="5" class="no-results-found">No se encontraron lotes</td>
+                                                    </tr>
+                                                    <tr *ngFor="let lote of articulo.lotes">
+                                                        <td *ngIf="articulo.clave_form == 'MEDS'" width="1">Estatus</td>
+                                                        <td *ngIf="articulo.clave_form == 'MEDS'" style="white-space: nowrap;">
+                                                            {{lote.lote}}<br>
+                                                            {{lote.fecha_caducidad | date}}
+                                                        </td>
+
+                                                        <td *ngIf="articulo.clave_form == 'ACTVO'" style="white-space: nowrap;">
+                                                            {{lote.no_serie}}<br>
+                                                            {{lote.modelo}}
+                                                        </td>
+                                                        <td *ngIf="articulo.clave_form == 'ACTVO'">
+                                                            {{(lote.marca)?lote.marca.nombre:'Sin Marca'}}
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            {{lote.programa}}
+                                                        </td>
+                                                        <td>
+                                                            {{lote.detalle}}
+                                                        </td>
+                                                        <td>
+                                                            {{lote.cantidad | number:'1.0-0'}}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="noResultsFound">
+                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron articulos </td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;" (click)="expandirRow(row)" [class.tabla-row-articulo-expandido]="idArticuloSeleccionado === row.id" >
+                    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="tabla-row-articulo-detalle"></tr>
+
+                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': dataSourceArticulos && dataSourceArticulos.filteredData.length > 0}"></tr>
+                </table>
+            </div>
+            <div fxFlex="none" fxLayout="row">
+                <div fxFlex="none" style="padding-top: 10px;">
+                </div>
+                <div fxFlex>
+                    <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
