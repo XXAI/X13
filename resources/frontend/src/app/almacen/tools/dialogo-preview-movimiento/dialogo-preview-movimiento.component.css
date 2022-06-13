@@ -205,3 +205,100 @@ tr.tabla-row-articulo-detalle{
 .contenido-tabla-lotes tfoot tr td{
     text-align: center;
 }
+
+.caducidad-verde{
+    color:#1e7c41;
+}
+
+.caducidad-ambar{
+    color:#ff9900;
+}
+
+.caducidad-rojo{
+    color:#ff2a2a;
+}
+
+.resumen-totales{
+    border: 1px solid darkgray;
+    border-radius: 5px;
+    cursor: default;
+}
+
+.resumen-totales .divisor{
+    border-left: 1px solid rgba(0,0,0,.42);
+    border-collapse: collapse;
+}
+
+.resumen-totales .etiqueta{
+    font-size: small;
+    font-weight: 500;
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #cbcbcb;
+    color: #565555;
+    padding: 0px 8px;
+}
+
+.resumen-totales .valor{
+    font-size: large;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0px 8px;
+    color: black;
+}
+
+.small-search-input{
+    padding: 0px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos > .mat-form-field{
+    background-color: rgb(213, 213, 255);
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: whitesmoke;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input.agregar-articulos .mat-form-field-label { 
+    font-weight: bolder !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.lista-usuarios-estatus{
+    padding:0px !important;
+}
+
+.lista-usuarios-estatus .usuario{
+    cursor: default;
+}
+
+.lista-usuarios-estatus .usuario:hover{
+    background-color: whitesmoke;
+}
+
+.lista-usuarios-estatus .etiqueta{
+    font-weight: bold;
+}
+
+.lista-usuarios-estatus .datos .fecha{
+    font-size: small;
+    color: rgba(0,0,0,.60);
+}

@@ -339,6 +339,18 @@ class AdminBienesServiciosController extends Controller{
                                             $lote->existencia = $existencias;
                                             $lote->existencia_piezas = $existencias_piezas;
 
+                                            $lote->load(['resguardoDetalle'=>function($resguardoDetalle){
+                                                $resguardoDetalle->where('son_piezas','!=',1)->where('cantidad_restante','>',0);
+                                            }]);
+                        
+                                            foreach ($lote->resguardoDetalle as $resguardo){
+                                                $resguardo->cantidad_restante = $resguardo->cantidad_resguardada * $detalle['piezas_x_empaque'];
+                                                if($resguardo->cantidad_restante > $lote->existencia_piezas){
+                                                    $resguardo->cantidad_restante = $lote->existencia_piezas;
+                                                }
+                                                $resguardo->save();
+                                            }
+
                                             /*if($lote->existencia_piezas){
                                                 if($lote->existencia_piezas < $detalle_update->piezas_x_empaque){
                                                     $piezas_extra = $lote->existencia_piezas;

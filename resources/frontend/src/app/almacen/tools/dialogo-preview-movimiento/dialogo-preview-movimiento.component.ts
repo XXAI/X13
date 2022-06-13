@@ -47,6 +47,11 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
   tipoMovimiento: string;
   estatusMovimiento: string;
 
+  filtroArticulos:string;
+
+  listadoEstatusUsuarios: any[];
+  verListadoUsuarios: boolean;
+
   currentPage: number = 0;
   pageSize: number = 50;
   pageSizeOptions: number[] = [10, 30, 50, 100];
@@ -59,9 +64,16 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
   listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
+  listaClasesCaducidad:any = { 1:'caducidad-verde', 2:'caducidad-ambar', 3:'caducidad-rojo' };
+  listaIconosCaducidad:any = { 1:'task_alt', 2:'notification_important', 3:'warning' };
+  listaEtiquetasCaducidad:any = { 1:'', 2:'Por Caducar', 3:'Caducado' };
+
   ngOnInit(): void {
     this.isLoading = true;
     this.idArticuloSeleccionado = null;
+
+    this.listadoEstatusUsuarios = [];
+    this.verListadoUsuarios = false;
 
     this.cargarDatos(this.data.id).subscribe(
       response =>{
@@ -83,6 +95,8 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
               break;
           }
 
+          this.cargarDatosUsuarios(this.movimiento);
+
           let lista_articulos:any[] = [];
           let control_articulos:any = {};
           for (let i = 0; i < response.data.lista_articulos.length; i++) {
@@ -100,6 +114,7 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
                 descontinuado:      item.articulo.descontinuado,
                 en_catalogo_unidad: item.articulo.en_catalogo_unidad,
                 es_normativo:       item.articulo.es_normativo,
+                estatus_caducidad:  1,  // 0 = Sin Caducidad, 1 = Normal, 2 = Por Caducar, 3 = Caducado
                 total_lotes:        0,
                 total_cantidad:     0,
                 lotes:              [],
@@ -114,18 +129,27 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
             articulo.total_cantidad += item.cantidad;
 
             if(item.stock){
+              let estatus = 1;
+              if(item.articulo.tiene_fecha_caducidad){
+                estatus = this.verificarFechaCaducidad(item.stock.fecha_caducidad);
+                if(estatus > articulo.estatus_caducidad){
+                  articulo.estatus_caducidad = estatus;
+                }
+              }
+
               let lote:any = {
-                lote:             item.stock.lote,
-                fecha_caducidad:  item.stock.fecha_caducidad,
-                codigo_barras:    item.stock.codigo_barras,
-                marca:            item.stock.marca,
-                modelo:           item.stock.modelo,
-                no_serie:         item.stock.no_serie,
-                detalle:          (item.stock.empaque_detalle)?item.stock.empaque_detalle.descripcion:'Pieza',
-                unidad_medida:    (item.stock.empaque_detalle)?item.stock.empaque_detalle.unidad_medida.descripcion:'Pieza',
-                programa:         (item.stock.programa)?item.stock.programa.descripcion:'Sin Programa',
-                modo_movimiento:  item.modo_movimiento,
-                cantidad:         item.cantidad,
+                lote:               item.stock.lote,
+                fecha_caducidad:    item.stock.fecha_caducidad,
+                codigo_barras:      item.stock.codigo_barras,
+                marca:              item.stock.marca,
+                modelo:             item.stock.modelo,
+                no_serie:           item.stock.no_serie,
+                detalle:            (item.stock.empaque_detalle)?item.stock.empaque_detalle.descripcion:'Pieza',
+                unidad_medida:      (item.stock.empaque_detalle)?item.stock.empaque_detalle.unidad_medida.descripcion:'Pieza',
+                programa:           (item.stock.programa)?item.stock.programa.descripcion:'Sin Programa',
+                modo_movimiento:    item.modo_movimiento,
+                cantidad:           item.cantidad,
+                estatus_caducidad:  estatus,
               };
               articulo.lotes.push(lote);
             }
@@ -133,6 +157,24 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
           this.dataSourceArticulos = new MatTableDataSource<any>(lista_articulos);
           this.dataSourceArticulos.paginator = this.articulosPaginator;
           this.dataSourceArticulos.sort = this.sort;
+
+          this.dataSourceArticulos.filterPredicate = function (record,filter) {
+            let filtro = filter.toLowerCase();
+            let result:boolean = false;
+            
+            if(record.clave.includes(filtro) || record.nombre.toLowerCase().includes(filtro) || record.descripcion.toLowerCase().includes(filtro)){
+              result = true;
+            }
+
+            for(let index = 0; index < record.lotes.length; index++){
+              if(record.lotes[index] && (record.lotes[index].lote.toLowerCase().includes(filtro))){
+                result = true;
+                break;
+              }
+            }
+
+            return result;
+          }
 
           delete this.movimiento.lista_articulos;
           delete this.movimiento.lista_articulos_borrador;
@@ -150,12 +192,79 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
     );
   }
 
+  verificarFechaCaducidad(fecha_caducidad):number{
+    let estatus_caducidad:number = 1;
+
+    if(fecha_caducidad){
+      let fecha_caducidad_date = new Date(fecha_caducidad + 'T00:00:00');
+      
+      let fecha_comparacion = new Date(this.movimiento.fecha_movimiento + 'T00:00:00');
+      
+      let diferencia_fechas = new Date(fecha_caducidad_date.getTime() - fecha_comparacion.getTime());
+      let diferencia_dias = Math.floor(diferencia_fechas.getTime() / (1000*60*60*24));
+
+      if (diferencia_dias < 0){
+        estatus_caducidad = 3;
+      }else if (diferencia_dias >= 90){
+        estatus_caducidad = 1;
+      }else{
+        estatus_caducidad = 2;
+      }
+    }
+
+    return estatus_caducidad;
+  }
+
+  aplicarFiltroArticulos(event){
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSourceArticulos.filter = filterValue.trim().toLowerCase();
+  }
+
   cargarDatos(id):Observable<any> {
     return this.http.get<any>(this.urlPreviewMovimiento+id,{params:{}}).pipe(
       map( response => {
         return response;
       })
     );
+  }
+
+  cargarDatosUsuarios(datos_movimiento){
+    this.listadoEstatusUsuarios = [];
+    if(datos_movimiento.cancelado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Cancelado por',
+        'nombre': datos_movimiento.cancelado_por.name,
+        'fecha': new Date(datos_movimiento.fecha_cancelacion+'T12:00:00'),
+      });
+    }
+
+    if(datos_movimiento.concluido_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Concluido por',
+        'nombre': datos_movimiento.concluido_por.name,
+        'fecha': new Date(datos_movimiento.updated_at),
+      });
+    }else if(datos_movimiento.modificado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Modificado por',
+        'nombre': datos_movimiento.modificado_por.name,
+        'fecha': new Date(datos_movimiento.updated_at),
+      });
+    }
+
+    if(datos_movimiento.creado_por){
+      this.listadoEstatusUsuarios.push({
+        'etiqueta': 'Creado por',
+        'nombre': datos_movimiento.creado_por.name,
+        'fecha': new Date(datos_movimiento.created_at),
+      });
+    }
+  }
+
+  cerrarListaUsuarios(event){
+    if(event.code == 'Escape'){
+      this.verListadoUsuarios = false;
+    }
   }
 
   abrirMovmiento(){

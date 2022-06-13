@@ -1,1 +1,23 @@
-<p>dialogo-registro works!</p>
+<section fxLayout="column">
+    <section fxFlex="none">
+        <div fxLayout="row wrap" [formGroup]="formRegistro" *ngIf="!isLoading">
+            <div fxFlex *ngFor="let campo of formCampos">
+                <mat-form-field fxFlex *ngIf="data.formulario[campo].type != 'boolean'">
+                    <input matInput placeholder="{{campo}}" formControlName="{{campo}}" [type]="data.formulario[campo].type" [required]="data.formulario[campo].required" autocomplete="off">
+                    <mat-error *ngIf="formRegistro.get(campo).hasError('required')">Este campo es obligatorio</mat-error>
+                </mat-form-field>
+                <mat-slide-toggle fxFlex *ngIf="data.formulario[campo].type == 'boolean'" formControlName="{{campo}}">{{campo}}</mat-slide-toggle>
+            </div>
+        </div>
+    </section>
+    <section fxFlex="none" fxLayout="row">
+        <div fxFlex="none" *ngIf="verBotonEliminar">
+            <button mat-raised-button color="warn" (click)="eliminarRegistro()" [class.button-spinner]="isSaving" [disabled]="isSaving"><mat-icon>delete</mat-icon> Eliminar</button>
+        </div>
+        <div fxFlex></div>
+        <div fxFlex="none">
+            <button mat-button (click)="cerrar()">Cancelar</button>&nbsp;
+            <button mat-raised-button color="primary" (click)="guardarRegistro()" [class.button-spinner]="isSaving" [disabled]="!formRegistro.valid || isSaving">Guardar</button>
+        </div>
+    </section>
+</section>

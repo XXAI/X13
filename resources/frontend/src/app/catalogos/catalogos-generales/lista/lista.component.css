@@ -17,7 +17,7 @@
 
 table {
     width: 100%;
-    table-layout: fixed;    
+    
 }
 
 th, td {
@@ -25,7 +25,6 @@ th, td {
     width:auto;
     text-overflow: ellipsis;
     white-space: nowrap;
-    cursor: default;
 }
 
 table th {
@@ -54,7 +53,7 @@ table td {
 
 table .mat-row:hover{
     background-color: whitesmoke;
-    cursor: pointer;
+    cursor: pointer !important;
 }
 
 .no-results-found{

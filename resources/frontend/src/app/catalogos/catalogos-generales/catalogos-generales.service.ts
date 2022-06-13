@@ -45,8 +45,8 @@ export class CatalogosGeneralesService {
     ));
   }
 
-  deleteRegistro(id) {
-    return this.http.delete<any>(this.url_catalogo+'/'+id,{}).pipe(
+  deleteRegistro(id,payload) {
+    return this.http.delete<any>(this.url_catalogo+'/'+id,{params: payload}).pipe(
       map( (response) => {
         return response;
       }

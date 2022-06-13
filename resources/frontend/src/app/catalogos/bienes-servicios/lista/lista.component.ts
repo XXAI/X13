@@ -84,8 +84,8 @@ export class ListaComponent implements OnInit {
 
   mostrarDialogoArticulo(id:number = null){
     let configDialog = {
-      width: '100%',
-      height: '100%',
+      width: '90%',
+      height: '80%',
       maxWidth: '100%',
       disableClose: true,
       data:{id: id},

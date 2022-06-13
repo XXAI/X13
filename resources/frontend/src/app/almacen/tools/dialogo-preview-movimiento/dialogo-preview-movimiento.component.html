@@ -6,10 +6,27 @@
             </div>
             <div fxFlex>
             </div>
+            <button fxFlex="none" mat-button (click)="verListadoUsuarios = !verListadoUsuarios" cdkOverlayOrigin #verListaUsuarios="cdkOverlayOrigin">
+                <mat-icon>group</mat-icon>
+            </button>
             <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
         </div>
         <mat-progress-bar *ngIf="isLoading" mode="indeterminate" [color]="'primary'"></mat-progress-bar>
     </section> <!-- <<<<<<< Toolbar Menu -->
+    <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="verListaUsuarios" [cdkConnectedOverlayOpen]="verListadoUsuarios" yPosition="below" xPosition="before" (overlayKeydown)="cerrarListaUsuarios($event)" (overlayOutsideClick)="verListadoUsuarios = false">
+        <mat-card class="lista-usuarios-estatus">
+            <mat-list dense>
+                <mat-list-item class="usuario" *ngFor="let usuario of listadoEstatusUsuarios">
+                  <div class="etiqueta" mat-line>{{usuario.etiqueta}} :</div>
+                  <div class="datos" mat-line>{{usuario.nombre}} <span class="fecha">[ {{usuario.fecha | date:'MMMM d, y'}} ]</span></div>
+                  <mat-divider [inset]="true"></mat-divider>
+                </mat-list-item>
+                <mat-list-item class="usuario" *ngIf="listadoEstatusUsuarios.length == 0">
+                    <div class="datos" mat-line><span class="fecha">No hay registros de Usuarios</span></div>
+                  </mat-list-item>
+            </mat-list>
+        </mat-card>
+    </ng-template>
     <section fxFlex fxLayout="column">
         <div fxFlex="none" fxLayout="row" [style.fontSize.px]="15" *ngIf="movimiento">
             <div fxFlex fxLayout="row raw"  fxLayoutGap="5px" class="datos-movimiento">
@@ -106,9 +123,30 @@
                 </div>
             </div>
         </div>
-        <div fxFlex="none" fxLayout="row" class="panel-acciones">
+        <div fxFlex="none" fxLayout="row" class="panel-acciones" *ngIf="movimiento">
+            <div fxFlex="none" class="small-search-input">
+                <mat-form-field fxFlex appearance="outline">
+                    <input matInput [(ngModel)]="filtroArticulos" (keyup)="aplicarFiltroArticulos($event)" placeholder="Filtrar" autocomplete="off" cdkFocusInitial>
+                </mat-form-field>
+            </div>
             <div fxFlex></div>
-            <div fxFlex="none">{{movimiento?.total_articulos | number:'1.0-0'}} | {{movimiento?.total_claves | number:'1.0-0'}}</div>
+            <div fxFlex="none" fxLayout="row" class="panel-resumen-totales">
+                <div fxFlex fxLayout="row" class="resumen-totales">
+                    <div fxFlex class="etiqueta">
+                        Total Claves :
+                    </div>
+                    <div fxFlex="none" class="valor">
+                        {{movimiento?.total_claves | number:'1.0-0'}}
+                    </div>
+                    <div fxFlex="none" class="divisor"></div>
+                    <div fxFlex="none" class="valor">
+                        {{movimiento?.total_articulos | number:'1.0-0'}}
+                    </div>
+                    <div fxFlex class="etiqueta">
+                        : Total Articulos
+                    </div>
+                </div>
+            </div>
             <div fxFlex></div>
             <div fxFlex="none">
                 <button mat-stroked-button color="primary" (click)="abrirMovmiento()"><mat-icon>file_open</mat-icon> Abrir</button>
@@ -119,8 +157,8 @@
                 <table mat-table [dataSource]="dataSourceArticulos" class="data-table" matSort multiTemplateDataRows>
                     <ng-container matColumnDef="estatus" >
                         <th mat-header-cell *matHeaderCellDef mat-sort-header width="1"> Estatus </th>
-                        <td mat-cell *matCellDef="let row" style="text-align: center;">
-                            Estatus
+                        <td mat-cell *matCellDef="let row" style="text-align: center;" class="{{listaClasesCaducidad[row.estatus_caducidad]}}">
+                            <mat-icon [matTooltip]="listaEtiquetasCaducidad[row.estatus_caducidad]">{{listaIconosCaducidad[row.estatus_caducidad]}}</mat-icon>
                         </td>
                     </ng-container>
 
@@ -186,7 +224,9 @@
                                                         <td colspan="5" class="no-results-found">No se encontraron lotes</td>
                                                     </tr>
                                                     <tr *ngFor="let lote of articulo.lotes">
-                                                        <td *ngIf="articulo.clave_form == 'MEDS'" width="1">Estatus</td>
+                                                        <td *ngIf="articulo.clave_form == 'MEDS'" width="1" class="{{listaClasesCaducidad[lote.estatus_caducidad]}}">
+                                                            <mat-icon [matTooltip]="listaEtiquetasCaducidad[lote.estatus_caducidad]">{{listaIconosCaducidad[lote.estatus_caducidad]}}</mat-icon>
+                                                        </td>
                                                         <td *ngIf="articulo.clave_form == 'MEDS'" style="white-space: nowrap;">
                                                             {{lote.lote}}<br>
                                                             {{lote.fecha_caducidad | date}}

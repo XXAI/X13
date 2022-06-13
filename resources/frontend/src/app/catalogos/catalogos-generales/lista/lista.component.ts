@@ -38,9 +38,13 @@ export class ListaComponent implements OnInit {
   dataSource: any[];
   displayedColumns:string[] = ['id'];
 
+  formulario:any;
+
   ngOnInit(): void {
     this.catalogoControl = new FormControl();
     this.listaCatalogos = [];
+    this.searchQuery = '';
+
     this.catalogosGeneralesService.getCatalogos().subscribe(
       response =>{
         if(response.error) {
@@ -69,7 +73,7 @@ export class ListaComponent implements OnInit {
 
   catalogoSeleccionado(){
     this.selectedCatalogo = this.catalogoControl.value;
-    console.log('seleccionda: ',this.selectedCatalogo);
+    this.searchQuery = '';
     this.loadDataSource();
   }
 
@@ -106,6 +110,7 @@ export class ListaComponent implements OnInit {
               this.resultsLength = response.data.total;
             }
             this.displayedColumns = response.columnas;
+            this.formulario = response.formulario;
           }
           this.isLoading = false;
         },
@@ -143,12 +148,11 @@ export class ListaComponent implements OnInit {
     return this.listaCatalogos.filter(option => option.label.toLowerCase().includes(filterValue));
   }
 
-  mostrarDialogo(id:number = null){
+  mostrarDialogo(row:any = null){
     let configDialog = {
-      width: '50%',
-      height: '50%',
+      width: '40%',
       disableClose: false,
-      data:{id: id},
+      data:{registro: row, formulario: this.formulario, catalogo: this.selectedCatalogo.value},
       panelClass: 'no-padding-dialog'
     };
 

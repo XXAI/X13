@@ -47,9 +47,14 @@
             <div fxFlex style="overflow: auto;">
                 <table #dataTable mat-table [dataSource]="dataSource" class="data-table" matSort>
                     <ng-container *ngFor="let column of displayedColumns" matColumnDef="{{column}}">
-                        <th mat-header-cell *matHeaderCellDef width="1"> {{column}} </th>
+                        <th mat-header-cell *matHeaderCellDef width="{{(column == 'created_at' || column == 'updated_at' || column == 'deleted_at' || column == 'id')?'1':'auto'}}"> {{column}} </th>
                         <td mat-cell *matCellDef="let row">
-                            {{row[column]}}
+                            <span *ngIf="column == 'created_at' || column == 'updated_at' || column == 'deleted_at'">
+                                {{row[column] | date:'medium'}}
+                            </span>
+                            <span *ngIf="column != 'created_at' && column != 'updated_at' && column != 'deleted_at'">
+                                {{row[column]}}
+                            </span>
                         </td>
                     </ng-container>
 
@@ -60,7 +65,7 @@
                     </ng-container>
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row (click)="mostrarDialogo(row.id)" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
+                    <tr mat-row (click)="mostrarDialogo(row)" *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
 
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide':(dataSource && dataSource.length > 0)}"></tr>
                 </table>

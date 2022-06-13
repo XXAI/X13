@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { OverlayModule } from '@angular/cdk/overlay';
 import { DialogoCancelarMovimientoComponent } from './dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { DialogoModificarMovimientoComponent } from './dialogo-modificar-movimiento/dialogo-modificar-movimiento.component';
@@ -12,7 +12,8 @@ import { DialogoPreviewMovimientoComponent } from './dialogo-preview-movimiento/
   declarations: [DialogoCancelarMovimientoComponent, DialogoModificarMovimientoComponent, WidgetBuscadorArticulosComponent, DialogoPreviewMovimientoComponent],
   imports: [
     CommonModule,
-    SharedModule
+    SharedModule,
+    OverlayModule
   ],
   exports: [
     DialogoCancelarMovimientoComponent,
