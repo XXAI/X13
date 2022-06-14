@@ -1,8 +1,8 @@
 <section fxLayout="column">
     <section fxFlex="none">
         <div fxLayout="row wrap" [formGroup]="formRegistro" *ngIf="!isLoading">
-            <div fxFlex *ngFor="let campo of formCampos">
-                <mat-form-field fxFlex *ngIf="data.formulario[campo].type != 'boolean'">
+            <div fxFlex="100" *ngFor="let campo of formCampos">
+                <mat-form-field fxFlex="100" *ngIf="data.formulario[campo].type != 'boolean'">
                     <input matInput placeholder="{{campo}}" formControlName="{{campo}}" [type]="data.formulario[campo].type" [required]="data.formulario[campo].required" autocomplete="off">
                     <mat-error *ngIf="formRegistro.get(campo).hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>

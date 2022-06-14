@@ -1,0 +1,24 @@
+<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding:10px; height: 100%; overflow: auto; flex: 1 1 0%; background-color: whitesmoke;">
+    <section fxFlex="none" fxLayout="column" class="dashboard-panel">
+        <mat-grid-list fxflex="none" cols="4" rowHeight="120px">
+            <mat-grid-tile [rowspan]="2">
+                <div class="widget-holder">
+                    <datos-unidad-medica></datos-unidad-medica>
+                </div>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="3">
+                <div class="widget-holder">
+                    <total-abasto-equipamiento></total-abasto-equipamiento>
+                </div>
+            </mat-grid-tile>
+            <mat-grid-tile
+                *ngFor="let tile of tiles"
+                [colspan]="tile.cols"
+                [rowspan]="tile.rows">
+              <div class="widget-holder">
+                <div>{{tile.text}}</div>
+              </div>
+            </mat-grid-tile>
+          </mat-grid-list>
+    </section>
+</section>

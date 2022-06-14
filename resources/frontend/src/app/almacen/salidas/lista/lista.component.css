@@ -32,9 +32,19 @@ table {
 width: 100%;
 }
 
+.data-table th:first-child{
+  border-radius: 4px 0px 0px 0px;
+}
+
+.data-table th:last-child{
+  border-radius: 0px 4px 0px 0px;
+}
+
 table th {
-padding:0 5px;
-text-align: center;
+  padding:0 5px;
+  text-align: center;
+  background-color: #4a4848;
+  color:whitesmoke;
 }
 
 table td {

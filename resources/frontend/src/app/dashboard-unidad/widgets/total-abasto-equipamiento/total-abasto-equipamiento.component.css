@@ -1,0 +1,31 @@
+.tarjetero-titulo{
+    font-weight: 600;
+}
+
+.tarjeta-info{
+    padding: 8px;
+    cursor: default;
+}
+
+.tarjeta-info .titulo{
+    font-weight: 500;
+}
+
+.tarjeta-info .sub-titulo{
+    font-weight: 500;
+    font-size: small;
+    white-space: nowrap;
+}
+
+.tarjeta-info .valor{
+    font-weight: normal;
+    font-size: small;
+    white-space: nowrap;
+}
+
+.tarjeta-info .porcentaje{
+    font-weight: 500;
+    font-size: smaller;
+    white-space: nowrap;
+    text-align: right;
+}

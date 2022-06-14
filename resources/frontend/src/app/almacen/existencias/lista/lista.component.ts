@@ -68,6 +68,11 @@ export class ListaComponent implements OnInit {
         {key: 'zero-stock', value: 'Sin existencias'},
         {key: 'all',        value: 'Todos'},
       ],
+      'caducidades':[
+        {key: 'all',          value: 'Todos'},
+        {key: 'coming-soon',  value: 'Próximos a Caducar (< 90 Días)'},
+        {key: 'expired',      value: 'Caducados'},
+      ],
       'catalogo_unidad':[
         {key: 'all',            value: 'Todos'},
         {key: 'in-catalog',     value: 'Dentro del Catalogo de la Unidad'},
@@ -129,15 +134,17 @@ export class ListaComponent implements OnInit {
     
     params.query = encodeURIComponent(this.searchQuery);
 
-    if(this.filtro && this.filtroAplicado){
+    params = this.agregarFiltroAplicado(params);
+    /*if(this.filtro && this.filtroAplicado){
       params.agrupar                    = this.filtroAplicado.agrupar;
       params.existencias                = this.filtroAplicado.existencias;
+      params.caducidades                = this.filtroAplicado.caducidades;
       params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
       params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
       params.almacenes                  = this.filtroAplicado.almacenes.join('|');
       params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
       params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
-    }
+    }*/
 
     this.listaArticulos = [];
     this.resultsLength = 0;
@@ -223,11 +230,13 @@ export class ListaComponent implements OnInit {
     this.filtro = {
       agrupar:'article',
       existencias: 'with-stock',
+      caducidades: 'all',
       catalogo_unidad: 'all',
       tipo_articulo: '0',
       almacenes: almacenes_ids,
       incluir_catalogo_completo: false,
       incluir_almacenes_ajenos: false,
+      con_resguardo: false,
     };
 
     this.filtroAplicado = null;
@@ -298,15 +307,17 @@ export class ListaComponent implements OnInit {
       query: encodeURIComponent(this.searchQuery),
     };
 
-    if(this.filtro && this.filtroAplicado){
+    params = this.agregarFiltroAplicado(params);
+    /*if(this.filtro && this.filtroAplicado){
       params.agrupar                    = this.filtroAplicado.agrupar;
       params.existencias                = this.filtroAplicado.existencias;
+      params.caducidades                = this.filtroAplicado.caducidades;
       params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
       params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
       params.almacenes                  = this.filtroAplicado.almacenes.join('|');
       params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
       params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
-    }
+    }*/
 
     this.existenciasService.exportarPDF(params).subscribe(
       response =>{
@@ -352,7 +363,9 @@ export class ListaComponent implements OnInit {
 
               filtros = {
                 existencias: (this.filtroCatalogos['existencias'].find(x => x.key == this.filtroAplicado.existencias)).value,
+                caducidades: (this.filtroCatalogos['caducidades'].find(x => x.key == this.filtroAplicado.caducidades)).value,
                 catalogo_unidad: (this.filtroCatalogos['catalogo_unidad'].find(x => x.key == this.filtroAplicado.catalogo_unidad)).value,
+                con_resguardo: (this.filtroAplicado.con_resguardo)?true:false,
               };
 
               let tipo_articulo:any = this.filtroCatalogos['tipos_articulo'].find(x => x.id == this.filtroAplicado.tipo_articulo);
@@ -396,15 +409,18 @@ export class ListaComponent implements OnInit {
     let params:any = {};
     params.query = encodeURIComponent(this.searchQuery);
 
-    if(this.filtro && this.filtroAplicado){
+    params = this.agregarFiltroAplicado(params);
+
+    /*if(this.filtro && this.filtroAplicado){
       params.agrupar                    = this.filtroAplicado.agrupar;
       params.existencias                = this.filtroAplicado.existencias;
+      params.caducidades                = this.filtroAplicado.caducidades;
       params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
       params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
       params.almacenes                  = this.filtroAplicado.almacenes.join('|');
       params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
       params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
-    }
+    }*/
 
     this.existenciasService.exportarExcel(params).subscribe(
       response => {
@@ -417,6 +433,21 @@ export class ListaComponent implements OnInit {
         this.isLoadingExport = false;
       }
     );
+  }
+
+  agregarFiltroAplicado(params:any):any{
+    if(this.filtro && this.filtroAplicado){
+      params.agrupar                    = this.filtroAplicado.agrupar;
+      params.existencias                = this.filtroAplicado.existencias;
+      params.caducidades                = this.filtroAplicado.caducidades;
+      params.catalogo_unidad            = this.filtroAplicado.catalogo_unidad;
+      params.tipo_articulo              = this.filtroAplicado.tipo_articulo;
+      params.almacenes                  = this.filtroAplicado.almacenes.join('|');
+      params.incluir_catalogo_completo  = (this.filtroAplicado.incluir_catalogo_completo)?1:0;
+      params.incluir_almacenes_ajenos   = (this.filtroAplicado.incluir_almacenes_ajenos)?1:0;
+      params.con_resguardo              = (this.filtroAplicado.con_resguardo)?1:0;
+    }
+    return params;
   }
 
 }

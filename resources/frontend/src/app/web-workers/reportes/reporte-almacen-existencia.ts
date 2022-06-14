@@ -161,31 +161,37 @@ export class ReporteAlmacenExistencia{
         datos.content.push({
           table: {
             margin: [0,0,0,0],
-            widths: [ 'auto','*','auto','*','auto','*' ],
+            widths: [ 'auto','*','auto','*','auto','*','auto','*' ],
             body: [
               [
-                {text: label_titulo, colSpan: 6, style:'detalles_title_center'},
+                {text: label_titulo, colSpan: 8, style:'detalles_title_center'},
                 {text: ""},
                 {text: ""},
                 {text: ""},
                 {text: ""},
                 {text: ""},
+                {text: "" },
+                {text: "" },
               ],
               [
                 {text: "Unidad :",                               style: "detalles_title"},
-                {text: reportData.encabezado.unidad_medica?.nombre+' [ '+reportData.encabezado.unidad_medica?.clues+' ]',           style: "detalles_datos", colSpan: 5 },
+                {text: reportData.encabezado.unidad_medica?.nombre+' [ '+reportData.encabezado.unidad_medica?.clues+' ]',           style: "detalles_datos", colSpan: 7 },
                 {text: ""},
                 {text: ""},
                 {text: ""},
                 {text: ""},
+                {text: "" },
+                {text: "" },
               ],
               [
                 {text: "Almacen"+((reportData.encabezado.almacenes.length > 1)?'es':'')+" :",                                style: "detalles_title"},
-                {text: reportData.encabezado.almacenes.join(', '),  style: "detalles_datos", colSpan: 5 },
+                {text: reportData.encabezado.almacenes.join(' | '),  style: "detalles_datos", colSpan: 7 },
                 {text: ""},
                 {text: ""},
                 {text: ""},
                 {text: ""},
+                {text: "" },
+                {text: "" },
               ],
             ]
           }
@@ -195,7 +201,9 @@ export class ReporteAlmacenExistencia{
           datos.content[0].table.body.push(
               [
                   {text: "Parametros de Busqueda :",                  style: "detalles_title" },
-                  {text: reportData.encabezado.parametros_busqueda,   style: "detalles_datos", colSpan: 5 },
+                  {text: reportData.encabezado.parametros_busqueda,   style: "detalles_datos", colSpan: 7 },
+                  {text: "" },
+                  {text: "" },
                   {text: "" },
                   {text: "" },
                   {text: "" },
@@ -205,26 +213,40 @@ export class ReporteAlmacenExistencia{
         }
 
         if(reportData.encabezado.filtros){
-            datos.content[0].table.body.push(
-                [
-                    {text: 'Filtros Aplicados', colSpan: 6, style:'detalles_title_center'},
-                    {text: ""},
-                    {text: ""},
-                    {text: ""},
-                    {text: ""},
-                    {text: ""},
-                ],
-                [
-                    {text: "Tipos de Articulos :",                        style: "detalles_title" },
-                    {text: reportData.encabezado.filtros.tipo_articulo,   style: "detalles_datos" },
-                    {text: "Existencias :",                               style: "detalles_title" },
-                    {text: reportData.encabezado.filtros.existencias,     style: "detalles_datos" },
-                    {text: "Catalogo :",                                  style: "detalles_title" },
-                    {text: reportData.encabezado.filtros.catalogo_unidad, style: "detalles_datos" },
-                ],
-            );
+          let filtros:string[] = [];
+          if(reportData.encabezado.filtros.tipo_articulo != 'Todos'){
+            filtros.push('Tipos de Articulos: ' + reportData.encabezado.filtros.tipo_articulo);
+          }
+          
+          if(reportData.encabezado.filtros.existencias != 'Todos'){
+            filtros.push('Existencias: ' + reportData.encabezado.filtros.existencias);
+          }
+          
+          if(reportData.encabezado.filtros.caducidades != 'Todos'){
+            filtros.push('Caducidades: ' + reportData.encabezado.filtros.caducidades);
+          }
+          
+          if(reportData.encabezado.filtros.catalogo_unidad != 'Todos'){
+            filtros.push('Catalogo: ' + reportData.encabezado.filtros.catalogo_unidad);
+          }
+          
+          if(reportData.encabezado.filtros.con_resguardo){
+            filtros.push('Con Resguardo');
+          }
+          
+          datos.content[0].table.body.push(
+              [
+                  {text: "Filtros Aplicados :",                  style: "detalles_title" },
+                  {text: filtros.join(' | '),   style: "detalles_datos", colSpan: 7 },
+                  {text: "" },
+                  {text: "" },
+                  {text: "" },
+                  {text: "" },
+                  {text: "" },
+                  {text: "" },
+              ],
+          );
         }
-        datos.content[0].table.body.push([{text:'', colSpan:6, border: [false, false, false, false]}]);
 
         let encabezado_lista = [
             {text: "#",                       style: 'cabecera'},
@@ -264,12 +286,29 @@ export class ReporteAlmacenExistencia{
         let index_table = datos.content.length-1;
 
         let existencias:any[] = reportData.items;
-        
+        let control_claves_agregadas:any = {};
+        let total_claves:number = 0;
+        let total_normativos:number = 0;
+        let total_no_normativos:number = 0;
+        let total_fuera_catalogo:number = 0;
+
         for(let i = 0; i < existencias.length; i++){
             let item  = existencias[i];
 
             if(!item.es_almacen_propio){
               continue;
+            }
+
+            if(!control_claves_agregadas[item.clave]){
+              control_claves_agregadas[item.clave] = true;
+              total_claves++;
+              if(!item.en_catalogo_unidad){
+                total_fuera_catalogo++;
+              }else if(item.es_normativo){
+                total_normativos++;
+              }else{
+                total_no_normativos++;
+              }
             }
 
             let normativo_label = '-';
@@ -304,6 +343,20 @@ export class ReporteAlmacenExistencia{
             }
             datos.content[index_table].table.body.push(item_pdf);
         }
+
+        datos.content[0].table.body.push(
+          [
+              {text: "Total de Claves :",                        style: "detalles_title" },
+              {text: numberFormat(total_claves),   style: "detalles_datos" },
+              {text: "Normativos :",                               style: "detalles_title" },
+              {text: numberFormat(total_normativos),     style: "detalles_datos" },
+              {text: "No Normativos :",                               style: "detalles_title" },
+              {text: numberFormat(total_no_normativos),     style: "detalles_datos" },
+              {text: "Fuera del Catalogo :",                                  style: "detalles_title" },
+              {text: numberFormat(total_fuera_catalogo), style: "detalles_datos" },
+          ],
+        );
+        datos.content[0].table.body.push([{text:'', colSpan:8, border: [false, false, false, false]}]);
         
         if(reportData.config.firmas){
           let firmas = reportData.config.firmas;

@@ -25,6 +25,7 @@ export const APPS:App [] = [
         { name:'Importar datos',              route: "almacen/importar",                    icon: "assets/icons/subir.svg",                 permission:"8Az68Smo3I75X4FlfZSwtyRy790CN2Sz"  },
       ]
     },
+    { name:'Dashboard',                    route: "dashboard-unidad",              icon: "assets/icons/dashboard.svg",         permission:"JG3XhY37bRwqzbpO7bHHSUYosM02NduK" },
     { name:'Visor: Abasto y Surtimiento',  route: "visor-abasto-surtimiento",      icon: "assets/icons/visor-reportes.svg",    permission:"RXHuHkXWQZ4YKfhcHo3a948y8NKhP516" },
     /*{ name:'Pedidos',   route: "pedidos",       icon: "assets/icons/pedidos-hub.svg",
       apps:[

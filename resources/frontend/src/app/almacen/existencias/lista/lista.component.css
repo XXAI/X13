@@ -72,9 +72,16 @@ table td {
     color:rgba(250, 70, 4,0.75);
 }
 
-/*.con-existencias{
-    font-weight: bold;
-}*/
+.caducado{
+    background-color: rgb(217, 11, 11);
+    color: whitesmoke;
+}
+
+.por-caducar{
+    background-color: rgb(244, 74, 31);
+    color: whitesmoke;
+}
+
 
 .detalles-ajenos > td{
     color: rgb(35, 91, 92);

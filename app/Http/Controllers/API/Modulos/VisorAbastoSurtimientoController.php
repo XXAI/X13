@@ -69,7 +69,7 @@ class VisorAbastoSurtimientoController extends Controller
                                                                     $joinStocks->on('stocks.bien_servicio_id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                                 ->on('stocks.unidad_medica_id','=','unidad_medica_catalogo_articulos.unidad_medica_id')
                                                                                 ->where(function($where){
-                                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
+                                                                                    $where->whereRaw('(stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) > 0');
                                                                                 })->whereNull('stocks.deleted_at');
                                                                 })
                                                                 ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
@@ -105,16 +105,19 @@ class VisorAbastoSurtimientoController extends Controller
 
             /* Lista de existencias para articulos normativos  */
             $catalogo_normativo = UnidadMedicaCatalogoArticulo::select('catalogo_tipos_bien_servicio.descripcion AS tipo','bienes_servicios.clave_local AS clave','bienes_servicios.articulo','bienes_servicios.especificaciones AS descripcion','unidad_medica_catalogo_articulos.es_normativo',
-                                                                        DB::raw('SUM(stocks.existencia) AS existencia'), DB::raw('SUM(stocks.existencia_piezas) AS existencia_piezas')) #'unidad_medica_catalogo_articulos.id is not null as en_catalogo',
+                                                                        DB::raw('SUM(stocks.existencia) AS existencia_registrada'),
+                                                                        DB::raw('SUM(FLOOR((stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0))/bienes_servicios_empaque_detalles.piezas_x_empaque)) AS existencia'),
+                                                                        DB::raw('SUM(stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) AS existencia_piezas')) #'unidad_medica_catalogo_articulos.id is not null as en_catalogo',
                                                                 ->leftJoin('bienes_servicios','bienes_servicios.id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                 ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','=','bienes_servicios.tipo_bien_servicio_id')
                                                                 ->leftJoin('stocks',function($joinStocks){
                                                                     $joinStocks->on('stocks.bien_servicio_id','=','unidad_medica_catalogo_articulos.bien_servicio_id')
                                                                                 ->on('stocks.unidad_medica_id','=','unidad_medica_catalogo_articulos.unidad_medica_id')
                                                                                 ->where(function($where){
-                                                                                    $where->where('stocks.existencia','>',0)->orWhere('stocks.existencia_piezas','>',0);
+                                                                                    $where->whereRaw('(stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) > 0');
                                                                                 })->whereNull('stocks.deleted_at');
                                                                 })
+                                                                ->leftJoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
                                                                 ->where('unidad_medica_catalogo_articulos.unidad_medica_id',$unidad_medica_id)
                                                                 ->where('unidad_medica_catalogo_articulos.es_normativo',1)
                                                                 ->groupBy('unidad_medica_catalogo_articulos.bien_servicio_id')

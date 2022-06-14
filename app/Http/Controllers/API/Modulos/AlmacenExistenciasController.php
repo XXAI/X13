@@ -77,6 +77,7 @@ class AlmacenExistenciasController extends Controller
         $stocks = Stock::select('stocks.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
                                         "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
                                         'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','stocks.id as stock_id','stocks.lote','stocks.fecha_caducidad',
+                                        DB::raw('TIMESTAMPDIFF(DAY, current_date(), stocks.fecha_caducidad) as dias_caducidad'), DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0) as caducado'),
                                         DB::raw("COUNT(DISTINCT CASE WHEN (stocks.existencia_piezas - IFNULL(stocks.resguardo_piezas,0)) > 0 THEN stocks.id END) AS total_lotes"), DB::raw("SUM(stocks.existencia) AS existencia"), DB::raw("SUM(stocks.existencia_piezas) AS existencia_piezas"), 
                                         DB::raw('SUM(stocks.existencia_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS existencia_fraccion'),
                                         DB::raw("SUM(stocks.resguardo_piezas) AS resguardo_piezas"), DB::raw("SUM(stocks.resguardo_piezas / IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo"), 
@@ -160,9 +161,23 @@ class AlmacenExistenciasController extends Controller
             }
         }else if(!isset($parametros['query']) || !$parametros['query']){
             $stocks = $stocks->where('stocks.existencia_piezas','>',0);
-            /*$stocks = $stocks->where(function($where){
-                $where->where('stocks.existencia_piezas','>',0);
-            });*/
+        }
+
+        if(isset($parametros['caducidades']) && $parametros['caducidades']){
+            switch ($parametros['caducidades']) {
+                case 'coming-soon':
+                    $stocks = $stocks->where(function($where){
+                        $where->where(DB::raw('TIMESTAMPDIFF(DAY, current_date(), stocks.fecha_caducidad)'),'<',90)->where(DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0)'),'=',0);
+                    });
+                    break;
+                case 'expired':
+                    $stocks = $stocks->where(DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0)'),'=',1);
+                    break;
+            }
+        }
+
+        if(isset($parametros['con_resguardo']) && $parametros['con_resguardo']){
+            $stocks = $stocks->where('stocks.resguardo_piezas','>',0);
         }
 
         if(isset($parametros['incluir_almacenes_ajenos']) && $parametros['incluir_almacenes_ajenos'] && isset($parametros['query']) && $parametros['query']){
@@ -170,6 +185,7 @@ class AlmacenExistenciasController extends Controller
             $ajenos = $ajenos->select('stocks.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
                                     "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
                                     'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','stocks.id as stock_id','stocks.lote','stocks.fecha_caducidad',
+                                    DB::raw('TIMESTAMPDIFF(DAY, current_date(), stocks.fecha_caducidad) as dias_caducidad'), DB::raw('IF(stocks.fecha_caducidad < current_date(),1,0) as caducado'),
                                     DB::raw("COUNT(DISTINCT stocks.id) AS total_lotes"), DB::raw("SUM(stocks.existencia) AS existencia"), DB::raw("SUM(stocks.existencia_piezas) AS existencia_piezas"), 
                                     DB::raw('SUM(stocks.existencia_piezas % IF(ED.id,ED.piezas_x_empaque,1)) AS existencia_fraccion'),
                                     DB::raw("SUM(stocks.resguardo_piezas) AS resguardo_piezas"), DB::raw("SUM(stocks.resguardo_piezas / IF(ED.id,ED.piezas_x_empaque,1)) AS resguardo"), 
@@ -184,8 +200,8 @@ class AlmacenExistenciasController extends Controller
             $catalogos = UnidadMedicaCatalogoArticulo::select('unidad_medica_catalogo_articulos.bien_servicio_id AS id','catalogo_tipos_bien_servicio.descripcion AS tipo_bien_servicio', DB::raw("IF(bienes_servicios.clave_local is not null,bienes_servicios.clave_local,bienes_servicios.clave_cubs) AS clave"),
                                         "bienes_servicios.articulo AS articulo","bienes_servicios.especificaciones AS especificaciones","bienes_servicios.puede_surtir_unidades","bienes_servicios.descontinuado",'unidad_medica_catalogo_articulos.es_normativo',
                                         'unidad_medica_catalogo_articulos.cantidad_minima','unidad_medica_catalogo_articulos.cantidad_maxima','unidad_medica_catalogo_articulos.id AS en_catalogo_unidad','unidad_medica_catalogo_articulos.id AS stock_id',
-                                        DB::raw('"S/L" AS lote'),DB::raw('null AS fecha_caducidad'),DB::raw("0 AS total_lotes"), DB::raw("0 AS existencia"), DB::raw("0 AS existencia_piezas"), DB::raw('0 AS existencia_fraccion'),DB::raw("0 AS resguardo_piezas"),
-                                        DB::raw("0 AS resguardo"),DB::raw("0 AS resguardo_fraccion"), DB::raw("0 AS existencia_filtro"),DB::raw("1 AS es_almacen_propio"))
+                                        DB::raw('"S/L" AS lote'),DB::raw('null AS fecha_caducidad'),DB::raw('9999 as dias_caducidad'), DB::raw('0 as caducado'),DB::raw("0 AS total_lotes"), DB::raw("0 AS existencia"), DB::raw("0 AS existencia_piezas"), DB::raw('0 AS existencia_fraccion'),
+                                        DB::raw("0 AS resguardo_piezas"),DB::raw("0 AS resguardo"),DB::raw("0 AS resguardo_fraccion"), DB::raw("0 AS existencia_filtro"),DB::raw("1 AS es_almacen_propio"))
                                 ->leftJoin("bienes_servicios", "bienes_servicios.id","=","unidad_medica_catalogo_articulos.bien_servicio_id")
                                 ->leftJoin('catalogo_tipos_bien_servicio','catalogo_tipos_bien_servicio.id','bienes_servicios.tipo_bien_servicio_id')
                                 ->leftJoin('stocks',function($join)use($unidad_medica_id,$almacenes_ids){

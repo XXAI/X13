@@ -1,0 +1,49 @@
+<div style="width: 100%; height: 100%;" fxLayout="column">
+    <div fxFlex="none" class="tarjetero-titulo">
+        Catalogo Normativo:
+    </div>
+    <div fxFlex fxLayout="row" fxLayoutGap="8px">
+        <mat-card fxFlex="none" fxLayout="column" class="tarjeta-info">
+            <div fxFlex="none" class="titulo">Total:</div>
+            <div fxFlex fxLayout="row">
+                <div fxFlex="none" class="sub-titulo">En Existencia:</div>
+                <div fxFlex="none" class="valor">{{0 | number:'1.0-0'}}</div>
+                <div fxFlex>&nbsp;</div>
+                <div fxFlex="none" class="sub-titulo">En Catalogo:</div>
+                <div fxFlex="none" class="valor">{{0 | number:'1.0-0'}}</div>
+            </div>
+            <div fxFlex="none" class="porcentaje">
+                <mat-progress-bar mode="determinate" value="40"></mat-progress-bar>
+                <span>Abasto: 80%</span>
+            </div>
+        </mat-card>
+        <mat-card fxFlex fxLayout="column" class="tarjeta-info">
+            <div fxFlex="none" class="titulo">Medicamento:</div>
+            <div fxFlex fxLayout="row">
+                <div fxFlex="none" class="sub-titulo">En Existencia:</div>
+                <div fxFlex="none" class="valor">{{0 | number:'1.0-0'}}</div>
+                <div fxFlex></div>
+                <div fxFlex="none" class="sub-titulo">En Catalogo:</div>
+                <div fxFlex="none" class="valor">{{0 | number:'1.0-0'}}</div>
+            </div>
+            <div fxFlex="none" class="porcentaje">
+                <mat-progress-bar color="primary" mode="determinate" value="40"></mat-progress-bar>
+                <span>Abasto: 40%</span>
+            </div>
+        </mat-card>
+        <mat-card fxFlex fxLayout="column" class="tarjeta-info">
+            <div fxFlex="none" class="titulo">Material de Curación:</div>
+            <div fxFlex fxLayout="row">
+                <div fxFlex="none" class="sub-titulo">En Existencia:</div>
+                <div fxFlex="none" class="valor">{{0 | number:'1.0-0'}}</div>
+                <div fxFlex></div>
+                <div fxFlex="none" class="sub-titulo">En Catalogo:</div>
+                <div fxFlex="none" class="valor">{{0 | number:'1.0-0'}}</div>
+            </div>
+            <div fxFlex="none" class="porcentaje">
+                <mat-progress-bar color="primary" mode="determinate" value="40"></mat-progress-bar>
+                <span>Abasto: 40%</span>
+            </div>
+        </mat-card>
+    </div>
+</div>

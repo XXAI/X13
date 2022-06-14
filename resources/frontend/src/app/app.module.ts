@@ -35,6 +35,7 @@ import { DevToolsModule } from './dev-tools/dev-tools.module';
 //Modulos del Sistema
 import { AlmacenModule } from './almacen/almacen.module';
 import { VisorAbastoSurtimientoModule } from './visores/visor-abasto-surtimiento/visor-abasto-surtimiento.module';
+import { DashboardUnidadModule } from './dashboard-unidad/dashboard-unidad.module';
 import { CatalogosModule } from './catalogos/catalogos.module';
 import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { PedidosModule } from './pedidos/pedidos.module';
@@ -68,6 +69,7 @@ registerLocaleData(locale);
     DevToolsModule,
     AlmacenModule,
     VisorAbastoSurtimientoModule,
+    DashboardUnidadModule,
     CatalogosModule,
     ConfiguracionModule,
     PedidosModule,

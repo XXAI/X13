@@ -54,6 +54,15 @@
 
                 <div fxFlex="none" class="filter-field">
                     <mat-form-field appearance="fill">
+                        <mat-label>Caducidades:</mat-label>
+                        <mat-select [(value)]="filtro.caducidades">
+                            <mat-option *ngFor="let caducidad of filtroCatalogos['caducidades']" [value]="caducidad.key">{{caducidad.value}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="none" class="filter-field">
+                    <mat-form-field appearance="fill">
                         <mat-label>Catalogo de la Unidad:</mat-label>
                         <mat-select [(value)]="filtro.catalogo_unidad">
                             <mat-option *ngFor="let catalogo of filtroCatalogos['catalogo_unidad']" [value]="catalogo.key">{{catalogo.value}}</mat-option>
@@ -63,6 +72,10 @@
 
                 <div fxFlex="none" class="filter-checkbox">
                     <mat-checkbox [(ngModel)]="filtro.incluir_catalogo_completo">Incluir Catalogo Completo</mat-checkbox>
+                </div>
+
+                <div fxFlex="none" class="filter-checkbox">
+                    <mat-checkbox [(ngModel)]="filtro.con_resguardo">Con Resguardo Capturado</mat-checkbox>
                 </div>
 
                 <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="filter-buttons">
@@ -147,7 +160,7 @@
 
                                 <ng-container matColumnDef="lote_caducidad">
                                     <th mat-header-cell *matHeaderCellDef> Lote<br>Caducidad </th>
-                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap;text-align: center;"> 
+                                    <td mat-cell *matCellDef="let row" style="white-space: nowrap;text-align: center;" [ngClass]="{'caducado':(row.caducado == 1), 'por-caducar':(row.caducado == 0 && row.dias_caducidad != null && row.dias_caducidad < 90)}"> 
                                         {{ row.lote }}<br>
                                         {{ row.fecha_caducidad | date }}
                                     </td>
