@@ -79,11 +79,13 @@ class ModificacionMovimientosController extends Controller{
                 $modificacion = MovimientoModificacion::create([
                     'movimiento_id' => $id,
                     'estatus' => 'SOL',
+                    'nivel_modificacion' => $parametros['nivel_modificacion'],
                     'motivo_modificacion' => $parametros['motivo_modificacion'],
                     'solicitado_fecha' => $parametros['solicitado_fecha'],
                     'solicitado_usuario_id' => $loggedUser->id,
                 ]);
             }else if($modificacion->solicitado_usuario_id == $loggedUser->id){
+                $modificacion->nivel_modificacion = $parametros['nivel_modificacion'];
                 $modificacion->motivo_modificacion = $parametros['motivo_modificacion'];
                 $modificacion->save();
             }else if(!$aprobarModificacion && !$cancelarModificacion){

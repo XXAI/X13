@@ -1,8 +1,15 @@
-<section fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start" style="padding: 10px; min-height:470px; overflow: auto; flex: 1 1 0%;">
-    <section fxFlex fxLayout="column" [formGroup]="modificarForm">
-        <div fxFlex="none" style="font-weight: 450; font-size: 20px; text-align: center;">
-            Petición para Modificar Movimiento:
+<section fxLayout="column" fxLayoutAlign="start" style="min-height:470px; overflow: auto; flex: 1 1 0%;">
+    <section fxFlex="none" class="dialog-toolbar">
+        <div fxLayout="row">
+            <div fxFlex="none" class="label-info">
+                <mat-icon>admin_panel_settings</mat-icon> Petición para Modificar Movimiento:
+            </div>
+            <div fxFlex>
+            </div>
+            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
         </div>
+    </section>
+    <section fxFlex fxLayout="column" [formGroup]="modificarForm" style="padding: 8px;">
         <div fxFlex="none" class="fake-input">
             <span class="label">Fecha:</span> {{modificarForm.get('solicitado_fecha').value | date:'MMMM d, y':'GMT-6'}}
         </div>
@@ -30,6 +37,13 @@
             <div fxFlex></div>
         </div>
         <div fxFlex fxLayout="column" *ngIf="!isLoading && !mostrarErrores">
+            <div fxFlex="none" class="nivel-modificacion">
+                <span>Nivel: </span>
+                <mat-radio-group color="primary" aria-label="Nivel de Modificación" formControlName="nivel_modificacion" [disabled]="!puedeEditar">
+                    <mat-radio-button [value]="1">Solo Encabezado</mat-radio-button>
+                    <mat-radio-button [value]="2">Incluir Articulos</mat-radio-button>
+                </mat-radio-group>
+            </div>
             <mat-form-field fxFlex appearance="outline">
                 <mat-label>Motivo:</mat-label>
                 <textarea rows="3" cdkFocusInitial matInput #motivo maxlength="255" formControlName="motivo_modificacion" [readonly]="!puedeEditar"></textarea>
@@ -83,8 +97,7 @@
             </div>
         </div>
     </section>
-    <section fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-        <button fxFlex="none" mat-flat-button (click)="cerrar()">Cerrar</button>
+    <section fxFlex="none" fxLayout="row" fxLayoutGap="10px" style="padding: 8px;">
         <div fxFlex *ngIf="cancelado"></div>
         <button fxFlex mat-raised-button color="primary" (click)="aceptar()" *ngIf="!mostrarFormUsuario && !cancelado" [disabled]="isLoading || !modificarForm.valid || mostrarErrores || !puedeEditar" [class.button-spinner]="isLoading"> 
             {{(modificacionGuardada)?'Actualizar Motivo':'Solicitar Modificación'}}

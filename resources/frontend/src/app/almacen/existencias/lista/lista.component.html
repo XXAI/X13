@@ -10,74 +10,74 @@
                         <mat-radio-button *ngFor="let agrupacion of filtroCatalogos['agrupacion']" [value]="agrupacion.key">{{agrupacion.value}}</mat-radio-button>
                     </mat-radio-group>
                 </div>
+                <div fxFlex fxLayout="column" style="overflow: auto;">
+                    <div fxFlex="none">
+                        <mat-selection-list #listaSeleccionableAlmacenes class="filter-selection-list" [(ngModel)]="filtro.almacenes">
+                            <mat-list-item class="list-title-option">
+                                <div fxLayout="row" class="list-title-item">
+                                    <div fxFlex>Almacenes: &nbsp;</div>
+                                    <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.selectAll()" [matTooltip]="'Seleccionar Todos'" color="accent"><mat-icon>done_all</mat-icon></button>
+                                    <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.deselectAll()" [matTooltip]="'Seleccionar Ninguno'"><mat-icon>filter_none</mat-icon></button>
+                                </div>
+                            </mat-list-item>
+                            <mat-list-item *ngIf="filtroCatalogos['almacenes'].length == 0" disabled>
+                                Sin Almacenes
+                            </mat-list-item>
+                            <mat-list-option *ngFor="let almacen of filtroCatalogos['almacenes']" [value]="almacen.id">
+                            {{almacen.nombre}}
+                            </mat-list-option>
+                        </mat-selection-list>
+                    </div>
+                    
+                    <div fxFlex="none" class="filter-checkbox">
+                        <mat-checkbox [(ngModel)]="filtro.incluir_almacenes_ajenos">Incluir Almacenes Ajenos</mat-checkbox>
+                    </div>
+                    
+                    <div fxFlex="none" class="filter-field">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Tipo de Articulo:</mat-label>
+                            <mat-select [(value)]="filtro.tipo_articulo">
+                                <mat-option value="0">Todos</mat-option>
+                                <mat-option *ngFor="let tipo of filtroCatalogos['tipos_articulo']" [value]="tipo.id">{{tipo.descripcion}}</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    
+                    <div fxFlex="none" class="filter-field">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Existencias:</mat-label>
+                            <mat-select [(value)]="filtro.existencias">
+                                <mat-option *ngFor="let existencia of filtroCatalogos['existencias']" [value]="existencia.key">{{existencia.value}}</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
 
-                <div fxFlex="none">
-                    <mat-selection-list #listaSeleccionableAlmacenes class="filter-selection-list" [(ngModel)]="filtro.almacenes">
-                        <mat-list-item class="list-title-option">
-                            <div fxLayout="row" class="list-title-item">
-                                <div fxFlex>Almacenes: &nbsp;</div>
-                                <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.selectAll()" [matTooltip]="'Seleccionar Todos'" color="accent"><mat-icon>done_all</mat-icon></button>
-                                <button fxFlex="none" mat-icon-button (click)="listaSeleccionableAlmacenes.deselectAll()" [matTooltip]="'Seleccionar Ninguno'"><mat-icon>filter_none</mat-icon></button>
-                            </div>
-                        </mat-list-item>
-                        <mat-list-item *ngIf="filtroCatalogos['almacenes'].length == 0" disabled>
-                            Sin Almacenes
-                        </mat-list-item>
-                        <mat-list-option *ngFor="let almacen of filtroCatalogos['almacenes']" [value]="almacen.id">
-                          {{almacen.nombre}}
-                        </mat-list-option>
-                    </mat-selection-list>
-                </div>
-                
-                <div fxFlex="none" class="filter-checkbox">
-                    <mat-checkbox [(ngModel)]="filtro.incluir_almacenes_ajenos">Incluir Almacenes Ajenos</mat-checkbox>
-                </div>
-                
-                <div fxFlex="none" class="filter-field">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Tipo de Articulo:</mat-label>
-                        <mat-select [(value)]="filtro.tipo_articulo">
-                            <mat-option value="0">Todos</mat-option>
-                            <mat-option *ngFor="let tipo of filtroCatalogos['tipos_articulo']" [value]="tipo.id">{{tipo.descripcion}}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                </div>
-                
-                <div fxFlex="none" class="filter-field">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Existencias:</mat-label>
-                        <mat-select [(value)]="filtro.existencias">
-                            <mat-option *ngFor="let existencia of filtroCatalogos['existencias']" [value]="existencia.key">{{existencia.value}}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                </div>
+                    <div fxFlex="none" class="filter-field">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Caducidades:</mat-label>
+                            <mat-select [(value)]="filtro.caducidades">
+                                <mat-option *ngFor="let caducidad of filtroCatalogos['caducidades']" [value]="caducidad.key">{{caducidad.value}}</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
 
-                <div fxFlex="none" class="filter-field">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Caducidades:</mat-label>
-                        <mat-select [(value)]="filtro.caducidades">
-                            <mat-option *ngFor="let caducidad of filtroCatalogos['caducidades']" [value]="caducidad.key">{{caducidad.value}}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                </div>
+                    <div fxFlex="none" class="filter-field">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Catalogo de la Unidad:</mat-label>
+                            <mat-select [(value)]="filtro.catalogo_unidad">
+                                <mat-option *ngFor="let catalogo of filtroCatalogos['catalogo_unidad']" [value]="catalogo.key">{{catalogo.value}}</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
 
-                <div fxFlex="none" class="filter-field">
-                    <mat-form-field appearance="fill">
-                        <mat-label>Catalogo de la Unidad:</mat-label>
-                        <mat-select [(value)]="filtro.catalogo_unidad">
-                            <mat-option *ngFor="let catalogo of filtroCatalogos['catalogo_unidad']" [value]="catalogo.key">{{catalogo.value}}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                </div>
+                    <div fxFlex="none" class="filter-checkbox">
+                        <mat-checkbox [(ngModel)]="filtro.incluir_catalogo_completo">Incluir Catalogo Completo</mat-checkbox>
+                    </div>
 
-                <div fxFlex="none" class="filter-checkbox">
-                    <mat-checkbox [(ngModel)]="filtro.incluir_catalogo_completo">Incluir Catalogo Completo</mat-checkbox>
+                    <div fxFlex="none" class="filter-checkbox">
+                        <mat-checkbox [(ngModel)]="filtro.con_resguardo">Con Resguardo Capturado</mat-checkbox>
+                    </div>
                 </div>
-
-                <div fxFlex="none" class="filter-checkbox">
-                    <mat-checkbox [(ngModel)]="filtro.con_resguardo">Con Resguardo Capturado</mat-checkbox>
-                </div>
-
                 <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="filter-buttons">
                     <button mat-stroked-button fxFlex="none" (click)="quitarFiltro()" [disabled]="!filtroAplicado || isLoading"><mat-icon>undo</mat-icon></button>
                     <button mat-flat-button color="accent" fxFlex (click)="aplicarFiltro()" [disabled]="isLoading"><mat-icon>filter_alt</mat-icon> Aplicar Filtro</button>

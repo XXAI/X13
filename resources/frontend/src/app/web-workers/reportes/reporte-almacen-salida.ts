@@ -337,6 +337,7 @@ export class ReporteAlmacenSalida{
               }else{
                 stock_cantidad = parseInt(item.cantidad);
               }
+
               //if(stock_cantidad > 0){
                 let articulo = (typeof item.articulo == 'object')?item.articulo:item;
   
@@ -370,7 +371,7 @@ export class ReporteAlmacenSalida{
               //}
             }
 
-            if(stocks.length == 0){
+            /*if(stocks.length == 0){
               let articulo = (typeof item.articulo == 'object')?item.articulo:item;
               let item_pdf = [
                 { text: (conteo_real++),                                                style: 'tabla_datos_center'},
@@ -381,7 +382,7 @@ export class ReporteAlmacenSalida{
                 { text: numberFormat(0),                                                style: 'tabla_datos_center'},
               ];
               datos.content[1].table.body.push(item_pdf);
-            }
+            }*/
           //}
         }
 

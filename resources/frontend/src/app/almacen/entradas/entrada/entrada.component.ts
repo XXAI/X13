@@ -907,6 +907,12 @@ export class EntradaComponent implements OnInit {
       this.puedeEditarDatosEncabezado = true;
       this.verBoton.concluir_modificacion = true;
       this.protegerDatosFormulario();
+
+      if(modificacion.nivel_modificacion == 2){
+        console.log('trabajar modificacion de articulos');
+        this.puedeEditarListaArticulos = true;
+        this.verBoton.agregar_articulos = true;
+      }
     }
   }
 
