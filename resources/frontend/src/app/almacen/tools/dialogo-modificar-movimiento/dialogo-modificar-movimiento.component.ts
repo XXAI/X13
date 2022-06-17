@@ -66,7 +66,7 @@ export class DialogoModificarMovimientoComponent implements OnInit {
     this.modificarForm = this.formBuilder.group({
       id:[''],
       solicitado_fecha:[this.hoy,Validators.required],
-      nivel_modificacion:['1'],
+      nivel_modificacion:[1],
       motivo_modificacion:['',Validators.required],
     });
 

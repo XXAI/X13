@@ -52,6 +52,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     if(this.articulo.tipo_formulario == 'MEDS'){
       formConfig = {
         id:[''],
+        stock_id:[''],
         lote:['',Validators.required],
         codigo_barras:[''],
         cantidad:['',Validators.required],
@@ -61,7 +62,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         iva:[''],
       };
       
-      if(this.articulo.tiene_fecha_caducidad){
+      if(this.articulo.tiene_fecha_caducidad > 0){
         formConfig.fecha_caducidad = ['',[Validators.required,CustomValidator.isValidDate()]];
       }else{
         formConfig.fecha_caducidad = ['',CustomValidator.isValidDate()];
@@ -69,6 +70,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     }else if(this.articulo.tipo_formulario == 'ACTVO'){
       formConfig = {
         id:[''],
+        stock_id:[''],
         marca:[''],
         marca_id:[''],
         modelo:['',],
@@ -190,8 +192,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
 
     let item = JSON.parse(JSON.stringify(this.articulo.lotes[index]));
     item.memo_fecha = new Date(item.memo_fecha + 'T00:00:00');
-    item.fecha_caducidad = new Date(item.fecha_caducidad + 'T00:00:00');
-
+    if(item.fecha_caducidad){
+      item.fecha_caducidad = new Date(item.fecha_caducidad + 'T00:00:00');
+    }
+    
     if(item.memo_folio){
       this.toggleCartaCanje(true);
     }else{
@@ -283,6 +287,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       this.formLote.get('lote').updateValueAndValidity();
       //this.formLote.get('lote').markAsUntouched();
     }
+
     if(this.formLote.valid){
       this.checarCaducidadFormulario();
       
@@ -304,6 +309,9 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         }
 
         loteData.estatus_caducidad = this.estatusCaducidad;
+        loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
+      }else{
+        loteData.estatus_caducidad = 1;
         loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
       }
       

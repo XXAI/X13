@@ -271,6 +271,14 @@ class ModificacionMovimientosController extends Controller{
                 $movimiento->movimientoHijo()->update($datos_movimiento_entrada);
             }
 
+            if($modificacion->nivel_modificacion == 2){
+                $response = $this->modificarArticulos($movimiento,$parametros['articulos_modificados']);
+                if(!$response['estatus']){
+                    DB::rollback();
+                    return response()->json(['error'=>$response['mensaje'],'parametros'=>$response],HttpResponse::HTTP_OK);
+                }
+            }
+
             $modificacion->registro_original = json_encode($datos_originales);
             $modificacion->registro_modificado = json_encode($datos_modificados);
             $modificacion->modificado_usuario_id = $loggedUser->id;
@@ -298,5 +306,100 @@ class ModificacionMovimientosController extends Controller{
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
+    }
+
+    private function modificarArticulos($movimiento,$lista_articulos){
+        $movimiento->observaciones = '-D-';
+        $movimiento->save();
+        $response_estatus = false;
+        $mensaje = 'Guardado con éxito';
+        $conteo_claves = 0;
+        $conteo_articulos = 0;
+
+        $movimiento->load('listaArticulos.stock');
+
+        $lista_raw = $movimiento->listaArticulos;
+        $lista_articulos_original = [];
+        for($i = 0; $i < count($lista_raw); $i++){
+            $item = $lista_raw[$i];
+            if(!isset($lista_articulos_original[$item->bien_servicio_id])){
+                $lista_articulos_original[$item->bien_servicio_id] = [];
+                $conteo_claves++;
+            }
+            $lista_articulos_original[$item->bien_servicio_id][$item->id.'-'.$item->stock_id] = [
+                'id' => $item->id,
+                'stock_id' => $item->stock_id,
+                'item' => $item,
+            ];
+        }
+
+        for($i = 0; $i < count($lista_articulos); $i++){
+            $articulo_id = $lista_articulos[$i]['id'];
+            
+            for($j = 0; $j < count($lista_articulos[$i]['lotes']); $j++){
+                $lote = $lista_articulos[$i]['lotes'][$j];
+
+                if(isset($lote['id']) && $lote['id']){
+                    if(isset($lista_articulos_original[$articulo_id][$lote['id'].'-'.$lote['stock_id']])){
+                        //Se encontro, hay que modificar
+                        $actualizar_datos = false;
+
+                        $item_base = $lista_articulos_original[$articulo_id][$lote['id'].'-'.$lote['stock_id']]['item'];
+                        $stock_original = [
+                            'empaque_detalle_id'=>$item_base->stock->empaque_detalle_id,
+                            //'programa_id'       =>$item_base->stock->programa_id,
+                            'marca_id'          =>$item_base->stock->marca_id,
+                            'modelo'            =>$item_base->stock->modelo,
+                            'no_serie'          =>$item_base->stock->no_serie,
+                            'lote'              =>$item_base->stock->lote,
+                            'fecha_caducidad'   =>$item_base->stock->fecha_caducidad,
+                            'codigo_barras'     =>$item_base->stock->codigo_barras,
+                        ];
+                        
+                        foreach ($stock_original as $key => $value) {
+                            if(isset($lote[$key]) && $stock_original[$key] != $lote[$key]){
+                                $actualizar_datos = true;
+                                $conteo_articulos++;
+                                break;
+                            }
+                        }
+
+                        if($actualizar_datos){
+                            //Agregar programa id al finalizar la modificacion en el cliente
+                            //Si se actualizan datos checar si ya existe el lote con datos actualizados para agregarlo ahi, y dejar el lote anterior en 0s
+                            $lote_guardado = Stock::where('almacen_id',$item_base->stock->almacen_id)->where('bien_servicio_id',$item_base->stock->bien_servicio_id);
+                            foreach ($stock_original as $key => $value) {
+                                if(isset($lote[$key])){
+                                    $lote_guardado = $lote_guardado->where($key,$lote[$key]);
+                                }
+                            }
+                            $lote_guardado = $lote_guardado->first();
+                            //Si no existe actualizar el lote actual)
+                            //Checar existencias contra la cantidad de entrada en el lote actual para validar que el lote solo tenga una entrada o si se necesita dividir en dos lotes (sumar todas las salidas y entradas a la existencia actual para la validación)
+                            $item_base->stock->update($lote);
+                        }
+                        
+                        //Checar cantidad de entrada
+                        $articulo_movimiento_original = [
+                            'modo_movimiento'   => $item_base->modo_movimiento,
+                            'cantidad'          => $item_base->cantidad,
+                            'precio_unitario'   => $item_base->precio_unitario,
+                            'iva'               => $item_base->iva,
+                        ];
+                        
+                        $mensaje = 'Cambio datos';
+                    }else{
+                        //No se encontro, debería estar
+                        $response_estatus = false;
+                        $mensaje = 'No se encontró';
+                        break 2;
+                    }
+                }else{
+                    //Es nuevo, hay que crear
+                }
+            }
+        }
+
+        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje.'='.$conteo_articulos, 'data'=>$lista_articulos_original];
     }
 }

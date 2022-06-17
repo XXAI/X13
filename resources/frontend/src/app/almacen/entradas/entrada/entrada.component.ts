@@ -538,6 +538,8 @@ export class EntradaComponent implements OnInit {
         articulo.total_monto += lista_articulos[i].total_monto;
 
         let lote:any = {
+          id:                 lista_articulos[i].id,
+          stock_id:           (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined,
           modo_movimiento:    lista_articulos[i].modo_movimiento,
           lote:               (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
           fecha_caducidad:    (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
@@ -561,7 +563,6 @@ export class EntradaComponent implements OnInit {
         }
 
         if(tipo_movimiento_clave == 'RCPCN' && estatus == 'PERE'){
-          lote.stock_id = (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined;
           lote.cantidad = (lista_articulos[i].cantidad_recibida === null)?lista_articulos[i].cantidad:lista_articulos[i].cantidad_recibida;
           lote.cantidad_enviada = lista_articulos[i].cantidad;
           lote.cantidad_recibida_anterior = lote.cantidad_enviada - lote.cantidad;
@@ -938,6 +939,25 @@ export class EntradaComponent implements OnInit {
         params.proveedor_id = (params.proveedor)?params.proveedor.id:null;
         params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
 
+        if(this.puedeEditarListaArticulos){
+          params.articulos_modificados = [];
+          this.dataSourceArticulos.data.forEach(item =>{
+            let articulo:any = {
+              id: item.id,
+              total_cantidad: item.total_piezas,
+              lotes: []
+            };
+
+            item.lotes.forEach(loteData =>{
+              let lote:any = JSON.parse(JSON.stringify(loteData));
+              delete lote.empaque_detalle;
+              articulo.lotes.push(lote);
+            });
+            params.articulos_modificados.push(articulo);
+          });
+          //params.articulos_modificados = this.dataSourceArticulos.data;
+        }
+
         this.almacenService.guardarModificacion(this.datosEntrada.id,params).subscribe(
           response =>{
             if(response.error) {
@@ -955,6 +975,8 @@ export class EntradaComponent implements OnInit {
                 this.datosEntrada = response.data.movimiento;
                 this.estatusMovimiento = response.data.movimiento.estatus;
                 this.puedeEditarDatosEncabezado = false;
+                this.puedeEditarListaArticulos = false;
+                this.verBoton.agregar_articulos = false;
                 this.verBoton.concluir_modificacion = false;
                 this.verBoton.modificar_entrada = true;
               }
