@@ -944,6 +944,7 @@ export class EntradaComponent implements OnInit {
           this.dataSourceArticulos.data.forEach(item =>{
             let articulo:any = {
               id: item.id,
+              clave: item.clave,
               total_cantidad: item.total_piezas,
               lotes: []
             };

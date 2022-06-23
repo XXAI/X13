@@ -153,7 +153,7 @@ export class ListaComponent implements OnInit {
       width: '40%',
       disableClose: false,
       data:{registro: row, formulario: this.formulario, catalogo: this.selectedCatalogo.value},
-      panelClass: 'no-padding-dialog'
+      //panelClass: 'no-padding-dialog'
     };
 
     const dialogRef = this.dialog.open(DialogoRegistroComponent, configDialog);
