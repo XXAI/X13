@@ -10,9 +10,10 @@ import { InnerArticuloAdminListaLotesComponent } from './inner-articulo-admin-li
 import { DialogoCancelarResultadoComponent } from './dialogo-cancelar-resultado/dialogo-cancelar-resultado.component';
 import { DialogoSubirArchivoComponent } from './dialogo-subir-archivo/dialogo-subir-archivo.component';
 import { ToolsModule } from '../tools/tools.module';
+import { DialogoModificarStockComponent } from './dialogo-modificar-stock/dialogo-modificar-stock.component';
 
 @NgModule({
-  declarations: [ListaComponent, EntradaComponent, InnerArticuloAdminListaLotesComponent, DialogoCancelarResultadoComponent, DialogoSubirArchivoComponent],
+  declarations: [ListaComponent, EntradaComponent, InnerArticuloAdminListaLotesComponent, DialogoCancelarResultadoComponent, DialogoSubirArchivoComponent, DialogoModificarStockComponent],
   imports: [
     CommonModule,
     SharedModule,

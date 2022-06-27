@@ -1,0 +1,101 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.datos-articulo{
+    padding: 5px;
+    background-color:#420101;
+    color:whitesmoke;
+    border-radius: 4px 4px 0px 0px;
+}
+
+.fake-input{
+    border-radius: 4px;
+    padding: 0.75em;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: 1.125;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    letter-spacing: normal;
+    color: rgba(255,255,255,.87);
+    cursor:default;
+    /*background-color: rgba(0,0,0,.04);*/
+}
+
+.fake-input:hover{
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.fake-input .label{
+    display: block;
+    font-size: small;
+    color: rgba(255,255,255,.54);
+    white-space: nowrap;
+}
+
+.fake-input .value{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    white-space: nowrap;
+    padding: 0 5px;
+}
+
+.fake-input .value-text{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    padding: 0 5px;
+}
+
+.tabla-movimientos{
+    overflow: auto;
+}
+
+.lista-movimientos-table{
+    width: 100%;
+    cursor: default;
+}
+
+.lista-movimientos-table th{
+    text-align: center;
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.lista-movimientos-table tr.mat-header-row {
+    height: 35px;
+}
+
+.lista-movimientos-table tr.mat-row:hover {
+    background-color: #F5F5F5;
+    font-weight: 500;
+}
+
+.concluido-color > td{
+    color:#07a8ff;
+}
+
+.concluido-color.elemento-actual > td{
+    background-color:#07a8ff !important;
+    color: white !important;
+}
+
+.cancelado-color > td{
+    color:#ff2a2a;
+}
+
+.peticion-modificacion-color > td{
+    color:#b000e6;
+}
+
+.modificacion-aprobada-color > td{
+    color:#b000e6;
+}

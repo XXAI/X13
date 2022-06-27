@@ -393,8 +393,9 @@ class AlmacenExistenciasController extends Controller
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $lotes = MovimientoArticulo::select('movimientos_articulos.movimiento_id as id','movimientos_articulos.cantidad','movimientos_articulos.modo_movimiento','movimientos_articulos.direccion_movimiento','movimientos.folio','catalogo_tipos_movimiento.descripcion as tipo_movimiento','movimientos.fecha_movimiento',
-                                        'almacen_movimiento.nombre as almacen_movimiento','unidad_medica_movimiento.nombre as unidad_medica_movimiento','area_servicio_movimiento.descripcion as area_servicio_movimiento','catalogo_tipos_solicitud.descripcion as tipo_solicitud','movimientos.estatus')
+            $lotes = MovimientoArticulo::select('movimientos_articulos.movimiento_id as id','movimientos_articulos.cantidad','movimientos_articulos.modo_movimiento','movimientos_articulos.direccion_movimiento','movimientos.folio','catalogo_tipos_movimiento.descripcion as tipo_movimiento',
+                                        'movimientos.fecha_movimiento','almacen_movimiento.nombre as almacen_movimiento','unidad_medica_movimiento.nombre as unidad_medica_movimiento','area_servicio_movimiento.descripcion as area_servicio_movimiento','catalogo_tipos_solicitud.descripcion as tipo_solicitud',
+                                        'movimientos.estatus','movimientos_articulos.stock_id','movimientos_articulos.id as mov_articulo_id','movimientos.documento_folio')
                             ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
                             ->leftJoin('catalogo_tipos_movimiento','catalogo_tipos_movimiento.id','=','movimientos.tipo_movimiento_id')
                             ->leftJoin('almacenes as almacen_movimiento','almacen_movimiento.id','=','movimientos.almacen_movimiento_id')

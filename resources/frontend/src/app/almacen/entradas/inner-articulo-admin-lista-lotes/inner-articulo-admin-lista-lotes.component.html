@@ -38,7 +38,7 @@
                     </td>
 
                     <td width="1" style="white-space: nowrap;" *ngIf="edicionActiva && !modoRecepcion">
-                        <button mat-icon-button color="primary" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button>
+                        <button mat-icon-button [color]="(modificacionActiva && lote.stock_id)?'accent':'primary'" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button>
                         <!--button class="small-icon-button" mat-icon-button color="warn" (click)="eliminarLote(i)"><mat-icon>delete</mat-icon></button-->
                     </td>
                 </ng-container>

@@ -1,10 +1,12 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, Input, SimpleChange, Output, EventEmitter, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { MatInput } from '@angular/material/input';
 import { Observable } from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 import { CustomValidator } from 'src/app/utils/classes/custom-validator';
+import { DialogoModificarStockComponent } from '../dialogo-modificar-stock/dialogo-modificar-stock.component';
 
 @Component({
   selector: 'inner-articulo-admin-lista-lotes',
@@ -20,12 +22,14 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
   @Input() fechaMovimiento: Date;
   @Input() catalogoMarcas: any[];
   @Input() modoRecepcion: boolean;
+  @Input() modificacionActiva: boolean;
 
   @Output() cambiosEnLotes = new EventEmitter<any>();
 
   constructor(
     private formBuilder: FormBuilder,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private dialog: MatDialog, 
   ) { }
 
   filteredMarcas: Observable<string[]>;
@@ -184,13 +188,32 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       this.cancelarEdicion();
     }
 
+    let lote_guardado = this.articulo.lotes[index];
+
+    if(this.modificacionActiva && lote_guardado.id && lote_guardado.stock_id){
+      const dialogRef = this.dialog.open(DialogoModificarStockComponent, {
+        width: '80%',
+        height:'80%',
+        disableClose: false,
+        panelClass: 'no-padding-dialog',
+        data:{stock: lote_guardado, articulo: this.articulo},
+      });
+  
+      dialogRef.afterClosed().subscribe(response => {
+        if(response){
+          console.log(response);
+        }
+      });
+      return;
+    }
+
     this.loteEditIndex = index;
 
-    let result = this.verificarFechaCaducidad(this.articulo.lotes[index].fecha_caducidad);
+    let result = this.verificarFechaCaducidad(lote_guardado.fecha_caducidad);
     this.estatusCaducidad = result.estatus; //Caducado
     this.etiquetaEstatus = result.label;
 
-    let item = JSON.parse(JSON.stringify(this.articulo.lotes[index]));
+    let item = JSON.parse(JSON.stringify(lote_guardado));
     item.memo_fecha = new Date(item.memo_fecha + 'T00:00:00');
     if(item.fecha_caducidad){
       item.fecha_caducidad = new Date(item.fecha_caducidad + 'T00:00:00');

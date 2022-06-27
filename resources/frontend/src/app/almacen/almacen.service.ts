@@ -12,6 +12,7 @@ export class AlmacenService {
   url_catalogos = `${environment.base_url}/almacen-movimientos-catalogos`;
   url_admin_mods = `${environment.base_url}/movimientos-administrar-modificacion/`;
   url_guardar_mods = `${environment.base_url}/guardar-modificacion/`;
+  url_movimientos_stock = `${environment.base_url}/almacen-existencias/movimientos/`;
 
   constructor(private http: HttpClient) { }
 
@@ -41,6 +42,14 @@ export class AlmacenService {
 
   guardarModificacion(id,payload):Observable<any> {
     return this.http.put<any>(this.url_guardar_mods+id,payload).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  cargarMovimientosStock(id):Observable<any>{
+    return this.http.get<any>(this.url_movimientos_stock+id,{params:{}}).pipe(
       map( response => {
         return response;
       })

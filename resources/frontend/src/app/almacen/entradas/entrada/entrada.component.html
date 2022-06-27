@@ -543,6 +543,7 @@
                                                                             [fechaMovimiento]="(formMovimiento.get('fecha_movimiento'))?formMovimiento.get('fecha_movimiento').value:datosEntrada.fecha_movimiento"
                                                                             [catalogoMarcas]="catalogos['marcas']"
                                                                             [modoRecepcion]="modoRecepcion"
+                                                                            [modificacionActiva]="verBoton.concluir_modificacion"
                                                                             (cambiosEnLotes)="aplicarCambios($event)">
                                         </inner-articulo-admin-lista-lotes>
                                     </div>
