@@ -76,10 +76,40 @@
 
 .lista-movimientos-table tr.mat-row:hover {
     background-color: #F5F5F5;
+}
+
+.lista-movimientos-table tr.mat-row.salida {
+    font-style: italic;
+}
+
+.lista-movimientos-table tr.mat-row td {
+    color:rgba(0, 0, 0, 0.65);
+}
+
+.lista-movimientos-table tr.mat-row.selectable{
+    color: black;
+    background-color: #F5F5F5;
+}
+
+.lista-movimientos-table tr.mat-row.selectable:hover {
+    background-color: white !important;
+    cursor: pointer;
     font-weight: 500;
 }
 
-.concluido-color > td{
+.lista-movimientos-table tr.mat-row.selected td {
+    font-style: oblique;
+    background-color: lightsteelblue;
+    cursor: pointer;
+    font-weight: 500;
+    color: darkslateblue;
+}
+
+.lista-movimientos-table tr.mat-row.selected td .mat-icon {
+    color: darkslateblue;
+}
+
+.concluido-color > td .mat-icon{
     color:#07a8ff;
 }
 
@@ -88,14 +118,32 @@
     color: white !important;
 }
 
-.cancelado-color > td{
+.elemento-actual > td .mat-icon{
+    color: white !important;
+}
+
+.cancelado-color > td .mat-icon{
     color:#ff2a2a;
 }
 
-.peticion-modificacion-color > td{
+.peticion-modificacion-color > td .mat-icon{
     color:#b000e6;
 }
 
-.modificacion-aprobada-color > td{
+.modificacion-aprobada-color > td .mat-icon{
     color:#b000e6;
+}
+
+.panel-acciones{
+    padding: 8px; 
+    background-color: whitesmoke;
+}
+
+.panel-acciones .accion{
+    background-color: cadetblue;
+    font-size: small;
+    color: whitesmoke;
+    padding: 3px;
+    border-radius: 3px;
+    cursor: default;
 }

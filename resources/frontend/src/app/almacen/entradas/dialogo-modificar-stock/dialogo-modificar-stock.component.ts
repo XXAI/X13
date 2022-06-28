@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -37,7 +37,14 @@ export class DialogoModificarStockComponent implements OnInit {
   mostrarCartaCanje: boolean;
   marcadoParaEliminar: boolean;
 
-  respaldoStock:any;
+  indexSeleccionable: number;
+  salidasSeleccionadas: any;
+  contadorSalidas: number;
+  seleccionSalidasActivada: boolean;
+
+  respaldoStock: any;
+  accionLote: string;
+  accionSalidas: string;
 
   formStock: FormGroup;
   fechaActual: Date;
@@ -65,9 +72,11 @@ export class DialogoModificarStockComponent implements OnInit {
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
   ngOnInit(): void {
-    console.log(this.data);
     let formConfig:any;
     this.fechaActual = new Date();
+    this.salidasSeleccionadas = {};
+    this.contadorSalidas = 0;
+    this.seleccionSalidasActivada = false;
 
     this.piezasXEmpaque = 1;
     if(this.data.stock.empaque_detalle){
@@ -98,7 +107,7 @@ export class DialogoModificarStockComponent implements OnInit {
         stock_id:[''],
         marca:[''],
         marca_id:[''],
-        modelo:['',],
+        modelo: [''],
         no_serie:['',Validators.required],
         cantidad:['',Validators.required],
         entrada_piezas:[''],
@@ -112,12 +121,46 @@ export class DialogoModificarStockComponent implements OnInit {
     this.formStock.patchValue(this.data.stock);
 
     this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock));
-
+    
     this.formStock.valueChanges.subscribe(
       changes => {
-        console.log('Cambio datos:',changes);
-        if(this.respaldoStock.cantidad != changes.cantidad || this.respaldoStock.entrada_piezas != changes.entrada_piezas){
-          console.log('Cambio Cantidad:', changes.cantidad);
+        let cambios_datos:boolean;
+        let cambios_cantidad:boolean;
+        for(const key in changes){
+          if(this.respaldoStock[key] != changes[key]){
+            if(key == 'cantidad' || key == 'entrada_piezas'){
+              cambios_cantidad = true;
+            }else{
+              cambios_datos = true;
+            }
+          }
+        }
+
+        if(cambios_datos && this.resumenMovimientos.ENT.total > 0){
+          this.accionLote = 'create';
+        }else if(cambios_datos && this.resumenMovimientos.ENT.total == 0){
+          this.accionLote = 'edit';
+        }else if(cambios_cantidad){
+          this.accionLote = 'edit';
+        }else{
+          this.accionLote = '';
+        }
+
+        if(this.accionLote == 'create' && this.resumenMovimientos.SAL.total > 0){
+          this.accionSalidas = 'select';
+          this.seleccionSalidasActivada = true;
+
+          if(this.resumenMovimientos.SAL.total > this.resumenMovimientos.ENT.total){
+            //Aqui hacer validaciones para que tenga que seleccionar salidas de manera obligatoria, o marcar error
+          }
+        }else if(this.accionLote == 'edit' && this.resumenMovimientos.SAL.total > 0){
+          this.seleccionSalidasActivada = false;
+          if(cambios_cantidad){
+            //this.accionSalidas = 'modify';
+            //validar existencias despues del cambio en base a las salidas
+          }
+        }else{
+          this.seleccionSalidasActivada = false;
         }
       }
     );
@@ -135,6 +178,7 @@ export class DialogoModificarStockComponent implements OnInit {
           //this.alertPanel.mostrarError('Error: '+errorMessage);
         } else {
           console.log(response);
+          let index = 0;
           response.data.forEach(item => {
             if(item.tipo_solicitud){
               item.destino_origen = item.tipo_solicitud;
@@ -145,7 +189,14 @@ export class DialogoModificarStockComponent implements OnInit {
             }else if (item.almacen_movimiento){
               item.destino_origen = item.almacen_movimiento;
             }
+            item.no_index = index++;
           });
+
+          this.indexSeleccionable = response.data.findIndex(x => x.mov_articulo_id == this.data.stock.id);
+
+          //calcular página inicial
+          let initial_page = Math.ceil((this.indexSeleccionable+1)/this.pageSize);
+          this.lotesPaginator.pageIndex = initial_page - 1;
 
           this.dataSourceMovimientos = new MatTableDataSource<any>(response.data);
           this.dataSourceMovimientos.paginator = this.lotesPaginator;
@@ -176,24 +227,6 @@ export class DialogoModificarStockComponent implements OnInit {
 
           this.resumenMovimientos['SAL']['uni'] -= (this.resumenMovimientos['SAL']['total'] % this.piezasXEmpaque);
           this.resumenMovimientos['SAL']['nrm'] += Math.floor(this.resumenMovimientos['SAL']['total'] / this.piezasXEmpaque);
-
-          /*
-          if(this.resumenMovimientos['ENT']['uni'] > 0){
-            let entradas_por_pieza = Math.floor(this.resumenMovimientos['ENT']['uni']/this.piezasXEmpaque);
-            this.resumenMovimientos['ENT']['uni'] -= (entradas_por_pieza*this.piezasXEmpaque);
-            this.resumenMovimientos['ENT']['nrm'] += entradas_por_pieza;
-          }
-          this.resumenMovimientos['ENT']['total'] = (this.resumenMovimientos['ENT']['nrm'] * this.piezasXEmpaque) + this.resumenMovimientos['ENT']['uni'];
-
-          if(this.resumenMovimientos['SAL']['uni'] > 0){
-            let salidas_por_pieza = Math.floor(this.resumenMovimientos['SAL']['uni']/this.piezasXEmpaque);
-            this.resumenMovimientos['SAL']['uni'] -= (salidas_por_pieza*this.piezasXEmpaque);
-            this.resumenMovimientos['SAL']['nrm'] += salidas_por_pieza;
-          }
-          this.resumenMovimientos['SAL']['total'] = (this.resumenMovimientos['SAL']['nrm'] * this.piezasXEmpaque) + this.resumenMovimientos['SAL']['uni'];
-          */
-
-          console.log(this.resumenMovimientos);
         }
         this.isLoadingMovimientos = false;
       },
@@ -224,10 +257,50 @@ export class DialogoModificarStockComponent implements OnInit {
 
   marcarEliminarLote(){
     this.marcadoParaEliminar = !this.marcadoParaEliminar;
+    for(const key in this.formStock.controls) {
+      if(key != 'id'){
+        if(this.marcadoParaEliminar){
+          this.formStock.get(key).disable();
+        }else{
+          this.formStock.get(key).enable();
+        }
+      }
+    }
+
+    if(this.marcadoParaEliminar){
+      this.formStock.patchValue(this.respaldoStock);
+      this.accionLote = 'delete';
+      if(this.resumenMovimientos.SAL.total > 0 && this.resumenMovimientos.ENT.total == 0){
+        this.accionSalidas = 'delete';
+        this.seleccionSalidasActivada = false;
+      }else if(this.resumenMovimientos.SAL.total > 0 && this.resumenMovimientos.ENT.total > 0){
+        this.accionSalidas = 'delete';
+        this.seleccionSalidasActivada = true;
+      }else{
+        this.accionSalidas = '';
+        this.seleccionSalidasActivada = false;
+      }
+    }else{
+      this.accionLote = '';
+      this.accionSalidas = '';
+      this.seleccionSalidasActivada = false;
+    }
+  }
+
+  seleccionarSalida(index,id,direccion){
+    if(index > this.indexSeleccionable && direccion == 'SAL' && this.seleccionSalidasActivada){
+      if(!this.salidasSeleccionadas[id]){
+        this.salidasSeleccionadas[id] = true;
+        this.contadorSalidas++;
+      }else{
+        this.salidasSeleccionadas[id] = false;
+        this.contadorSalidas--;
+      }
+    }
   }
 
   cancelarEdicion(){
-    //
+    this.dialogRef.close();
   }
 
   previewMovimiento(id){
@@ -241,11 +314,6 @@ export class DialogoModificarStockComponent implements OnInit {
     };
 
     this.subDialogRef = this.dialog.open(DialogoPreviewMovimientoComponent, configDialog);
-    this.subDialogRef.afterClosed().subscribe(dialogResponse => {
-      if(dialogResponse){
-        console.log('Response: ',dialogResponse);
-      }
-    });
   }
 
   displayFn(marca: any): string {
