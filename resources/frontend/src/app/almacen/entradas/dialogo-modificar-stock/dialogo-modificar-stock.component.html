@@ -1,26 +1,27 @@
 <section fxLayout="column" style="height: 100%; overflow: hidden; flex: 1 1 0%;"> <!-- Main Body <<<<<<< -->
     <section fxFlex fxLayout="column">
-        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" [style.fontSize.px]="15">
-            <mat-card fxFlex fxLayout="row raw"  fxLayoutGap="5px" *ngIf="data.articulo" class="datos-articulo">
-                <div fxFlex class="fake-input">
-                    <span class="label">Clave:</span>
-                    <span class="value">{{data.articulo.clave}}</span>
-                </div>
-                <div fxFlex class="fake-input">
-                    <span class="label">Descripcion:</span>
-                    <span class="value-text">{{data.articulo.nombre}}</span>
-                </div>
-            </mat-card>
+        <div fxFlex="none" fxLayout="row" class="encabezado caducidad-{{coloresCaducidad[estatusCaducidad]}}" [ngClass]="{'a-eliminar':marcadoParaEliminar}">
+            <div fxFlex="none">
+                <mat-icon>{{listaIconosEstatus[estatusCaducidad]}}</mat-icon>
+            </div>
+            <div flFlex="none" *ngIf="data.articulo">
+                {{data.articulo.clave}}: {{data.articulo.nombre}}
+            </div>
+            <div fxFlex></div>
+            <div fxFlex="none">
+                Fecha Movimiento: {{data.fecha_movimiento | date}}
+            </div>
         </div>
+        <mat-divider></mat-divider>
         <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;">
-            <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" fxLayoutAlign="space-between center" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
-                <mat-form-field fxFlex>
+            <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
+                <mat-form-field fxFlex="none">
                     <mat-label>Lote</mat-label>
                     <input matInput formControlName="lote" required autocomplete="off" [disabled]="marcadoParaEliminar">
                     <mat-error *ngIf="formStock.get('lote').hasError('required')">Este campo es obligatorio</mat-error>
                     <mat-error *ngIf="formStock.get('lote').hasError('duplicated')">Los datos de este Lote ya fueron capturados</mat-error>
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Fecha Caducidad</mat-label>
                     <input matInput formControlName="fecha_caducidad" [required]="data.articulo.tiene_fecha_caducidad > 0" [matDatepicker]="pickerCaducidad" (dateInput)="checarCaducidadFormulario()" readonly>
                     <span *ngIf="estatusCaducidad > 1" matSuffix><mat-icon color="warn">priority_high</mat-icon></span>
@@ -30,11 +31,11 @@
                     <mat-hint align="end" style="color:red;" *ngIf="estatusCaducidad > 1">{{etiquetaEstatus}}</mat-hint>
                     <mat-error *ngIf="formStock.get('fecha_caducidad').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Código de Barras</mat-label>
                     <input matInput formControlName="codigo_barras" autocomplete="off" [disabled]="marcadoParaEliminar">
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Cantidad<span *ngIf="formStock.get('entrada_piezas').value"> (Piezas)</span></mat-label>
                     <button mat-icon-button matSuffix (click)="formStock.get('entrada_piezas').patchValue(!formStock.get('entrada_piezas').value)" [disabled]="marcadoParaEliminar">
                         <mat-icon>{{formStock.get('entrada_piezas').value ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
@@ -51,7 +52,7 @@
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Precio Unitario</mat-label>
                     <input matInput formControlName="precio_unitario" type="number" autocomplete="off" [disabled]="marcadoParaEliminar">
                     <span matPrefix>$&nbsp;</span>
@@ -88,7 +89,7 @@
                     <input matInput formControlName="cantidad" type="number" required autocomplete="off" [disabled]="marcadoParaEliminar">
                     <mat-error *ngIf="formStock.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Precio Unitario</mat-label>
                     <input matInput formControlName="precio_unitario" type="number" autocomplete="off" [disabled]="marcadoParaEliminar">
                     <span matPrefix>$&nbsp;</span>
@@ -129,7 +130,8 @@
                 <span fxFlex="fill"></span>
             </div>
         </div>
-        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="padding: 8px; background-color: whitesmoke;">
+        <mat-divider></mat-divider>
+        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="padding: 8px;">
             <button fxFlex="none" mat-button (click)="toggleCartaCanje(!mostrarCartaCanje)" *ngIf="estatusCaducidad > 1" color="accent">
                 <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> Carta de Canje
             </button>
@@ -138,23 +140,35 @@
                 <mat-icon fontSet="{{(!marcadoParaEliminar)?'material-icons-outlined':''}}">delete</mat-icon> {{(marcadoParaEliminar)?'Marcado para Eliminar':'Marcar para Eliminar'}}
             </button>
             <div fxFlex></div>
-            <button fxFlex="none" mat-button (click)="cancelarEdicion()" >Cancelar</button>
+            <button fxFlex="none" mat-stroked-button (click)="cancelarEdicion()" >Cancelar</button>
             <button fxFlex="none" color="accent" mat-flat-button [disabled]="!formStock.valid" (click)="aceptarCambiosStock()">Aceptar</button>
         </div>
         <mat-divider></mat-divider>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="panel-acciones">
             <div fxFlex fxLayout="row" fxLayoutGap="5px">
-                <span>Acciones:</span> 
-                        <span *ngIf="accionLote == 'create'" class="accion">Crear Nuevo Lote</span> <span *ngIf="accionLote == 'edit'" class="accion">Editar Lote Existente</span> 
+                <span class="etiqueta">Acciones:</span> 
+                        <span *ngIf="accionLote == 'create'" class="accion">Crear Nuevo Lote</span> 
+                        <span *ngIf="accionLote == 'edit'" class="accion">Editar Lote Existente</span> 
                         <span *ngIf="accionLote == 'delete' && resumenMovimientos.ENT.total == 0" class="accion">Eliminar Lote Completo</span>
                         <span *ngIf="accionLote == 'delete' && resumenMovimientos.ENT.total > 0" class="accion">Eliminar Existencias del Lote</span>
-                        <span *ngIf="seleccionSalidasActivada && contadorSalidas == 0 && accionSalidas == 'select'"class="accion">Seleccionar Salidas a Modificar</span> 
-                        <span *ngIf="seleccionSalidasActivada && contadorSalidas > 0 && accionSalidas == 'select'"class="accion">Aplicar en {{contadorSalidas | number:'1.0-0'}} Salidas</span> 
+                        <span *ngIf="seleccionSalidasActivada && accionSalidas == 'select'"class="accion">Aplicar en {{contadorSalidas | number:'1.0-0'}} Salidas</span> 
                         <span *ngIf="accionSalidas == 'none'"class="accion">Sin Modificar Salidas</span> 
                         <span *ngIf="seleccionSalidasActivada && accionSalidas == 'delete'"class="accion">Eliminar de {{contadorSalidas | number:'1.0-0'}} Salidas</span>
                         <span *ngIf="!seleccionSalidasActivada && accionSalidas == 'delete'"class="accion">Eliminar de Salidas</span>
             </div>
-            <div fxFlex="none">
+            <div fxFlex="none" fxLayout="row" class="existencias">
+                <div fxFlex="none" *ngIf="existenciasLote">
+                    Existencias:&nbsp;
+                </div>
+                <div fxFlex="none" *ngIf="existenciasLote">
+                    {{existenciasLote.cantidad|number:'1.0-0'}} <span *ngIf="existenciasLote.piezas > 0">({{existenciasLote.piezas|number:'1.0-0'}})</span>
+                </div>
+                <div fxFlex="none" *ngIf="existenciasNuevoLote">
+                    <mat-icon class="icono">double_arrow</mat-icon>
+                </div>
+                <div fxFlex="none" *ngIf="existenciasNuevoLote">
+                    {{existenciasNuevoLote.cantidad|number:'1.0-0'}} <span *ngIf="existenciasNuevoLote.piezas > 0">({{existenciasNuevoLote.piezas|number:'1.0-0'}})</span>
+                </div>
             </div>
         </div>
         <div fxFlex fxLayout="column">

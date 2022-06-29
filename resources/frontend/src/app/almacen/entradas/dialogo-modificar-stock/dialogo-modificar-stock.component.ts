@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -12,6 +13,7 @@ import { DialogoPreviewMovimientoComponent } from '../../tools/dialogo-preview-m
 export interface DialogData {
   stock: any;
   articulo: any;
+  fecha_movimiento: Date;
 }
 
 @Component({
@@ -29,6 +31,7 @@ export class DialogoModificarStockComponent implements OnInit {
     private dialog: MatDialog, 
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private almacenService: AlmacenService,
+    private datePipe: DatePipe,
   ) { }
 
   isLoading: boolean;
@@ -39,8 +42,11 @@ export class DialogoModificarStockComponent implements OnInit {
 
   indexSeleccionable: number;
   salidasSeleccionadas: any;
+  totalPiezasSalidas: number;
   contadorSalidas: number;
   seleccionSalidasActivada: boolean;
+  existenciasLote: any;
+  existenciasNuevoLote: any;
 
   respaldoStock: any;
   accionLote: string;
@@ -48,8 +54,10 @@ export class DialogoModificarStockComponent implements OnInit {
 
   formStock: FormGroup;
   fechaActual: Date;
-
-  estatusCaducidad: number;
+  
+  estatusCaducidad: number;  // 0 = Sin Caducidad, 1 = Normal, 2 = Por Caducar, 3 = Caducado
+  coloresCaducidad: any = {1:'verde', 2:'ambar', 3:'rojo'};
+  listaIconosEstatus: any = {1:'task_alt', 2:'notification_important', 3:'warning'};
   etiquetaEstatus: string;
 
   catalogoMarcas: any[];
@@ -72,16 +80,20 @@ export class DialogoModificarStockComponent implements OnInit {
   listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
 
   ngOnInit(): void {
+    console.log(this.data);
     let formConfig:any;
     this.fechaActual = new Date();
     this.salidasSeleccionadas = {};
     this.contadorSalidas = 0;
+    this.totalPiezasSalidas = 0;
     this.seleccionSalidasActivada = false;
 
     this.piezasXEmpaque = 1;
     if(this.data.stock.empaque_detalle){
       this.piezasXEmpaque = this.data.stock.empaque_detalle.piezas_x_empaque;
     }
+
+    this.estatusCaducidad = this.data.stock.estatus_caducidad;
     
     if(this.data.articulo.tipo_formulario == 'MEDS'){
       formConfig = {
@@ -162,6 +174,8 @@ export class DialogoModificarStockComponent implements OnInit {
         }else{
           this.seleccionSalidasActivada = false;
         }
+
+        this.calcularExistencias();
       }
     );
 
@@ -177,7 +191,6 @@ export class DialogoModificarStockComponent implements OnInit {
           //this.sharedService.showSnackBar(errorMessage, null, 3000);
           //this.alertPanel.mostrarError('Error: '+errorMessage);
         } else {
-          console.log(response);
           let index = 0;
           response.data.forEach(item => {
             if(item.tipo_solicitud){
@@ -190,6 +203,12 @@ export class DialogoModificarStockComponent implements OnInit {
               item.destino_origen = item.almacen_movimiento;
             }
             item.no_index = index++;
+
+            if(item.modo_movimiento == 'UNI'){
+              item.cantidad_piezas = item.cantidad;
+            }else{
+              item.cantidad_piezas = item.cantidad * this.piezasXEmpaque;
+            }
           });
 
           this.indexSeleccionable = response.data.findIndex(x => x.mov_articulo_id == this.data.stock.id);
@@ -227,6 +246,8 @@ export class DialogoModificarStockComponent implements OnInit {
 
           this.resumenMovimientos['SAL']['uni'] -= (this.resumenMovimientos['SAL']['total'] % this.piezasXEmpaque);
           this.resumenMovimientos['SAL']['nrm'] += Math.floor(this.resumenMovimientos['SAL']['total'] / this.piezasXEmpaque);
+
+          this.calcularExistencias();
         }
         this.isLoadingMovimientos = false;
       },
@@ -248,11 +269,65 @@ export class DialogoModificarStockComponent implements OnInit {
   }
 
   checarCaducidadFormulario(){
-    //
+    //this.estatusCaducidad = this.data.stock.estatus_caducidad;
+    if(this.formStock.get('fecha_caducidad')){
+      let fecha = this.formStock.get('fecha_caducidad').value;
+      fecha = this.datePipe.transform(fecha, 'yyyy-MM-dd');
+
+      let result = this.verificarFechaCaducidad(fecha);
+      this.estatusCaducidad = result.estatus; //Caducado
+      this.etiquetaEstatus = result.label;
+    }
   }
 
-  toggleCartaCanje(toggle){
-    //
+  verificarFechaCaducidad(fecha_caducidad):any{
+    this.estatusCaducidad = 1;
+    this.etiquetaEstatus = '';
+    let estatus_caducidad:any = {estatus:1, label:''};
+
+    //if(this.formLote.get('fecha_caducidad').value){
+    if(fecha_caducidad){
+      let fecha_caducidad_date = new Date(fecha_caducidad + 'T00:00:00');
+      
+      let fecha_comparacion = this.fechaActual;
+      if(this.data.fecha_movimiento){
+        fecha_comparacion = this.data.fecha_movimiento;
+      }
+
+      let diferencia_fechas = new Date(fecha_caducidad_date.getTime() - fecha_comparacion.getTime());
+      let diferencia_dias = Math.floor(diferencia_fechas.getTime() / (1000*60*60*24));
+
+      if (diferencia_dias < 0){
+        estatus_caducidad.estatus = 3;
+        estatus_caducidad.label = 'Caducado';
+      }else if (diferencia_dias >= 90){
+        estatus_caducidad.estatus = 1;
+        estatus_caducidad.label = '';
+      }else{
+        estatus_caducidad.estatus = 2;
+        estatus_caducidad.label = 'Por caducar';
+      }
+    }
+
+    return estatus_caducidad;
+  }
+
+  toggleCartaCanje(mostrar:boolean){
+    this.mostrarCartaCanje = mostrar;
+
+    if(this.mostrarCartaCanje){
+      if(!this.formStock.get('memo_folio')){
+        this.formStock.addControl('memo_folio',new FormControl('',Validators.required));
+        this.formStock.addControl('memo_fecha',new FormControl('',Validators.required));
+        this.formStock.addControl('vigencia_meses',new FormControl('',Validators.required));
+      }
+    }else{
+      if(this.formStock.get('memo_folio')){
+        this.formStock.removeControl('memo_folio');
+        this.formStock.removeControl('memo_fecha');
+        this.formStock.removeControl('vigencia_meses');
+      }
+    }
   }
 
   marcarEliminarLote(){
@@ -285,17 +360,54 @@ export class DialogoModificarStockComponent implements OnInit {
       this.accionSalidas = '';
       this.seleccionSalidasActivada = false;
     }
+    this.checarCaducidadFormulario();
+    this.calcularExistencias();
   }
 
   seleccionarSalida(index,id,direccion){
     if(index > this.indexSeleccionable && direccion == 'SAL' && this.seleccionSalidasActivada){
       if(!this.salidasSeleccionadas[id]){
-        this.salidasSeleccionadas[id] = true;
+        this.salidasSeleccionadas[id] = this.dataSourceMovimientos.data[index].cantidad_piezas;
+        this.totalPiezasSalidas += this.salidasSeleccionadas[id];
         this.contadorSalidas++;
       }else{
-        this.salidasSeleccionadas[id] = false;
+        this.totalPiezasSalidas -= this.salidasSeleccionadas[id];
+        this.salidasSeleccionadas[id] = 0;
         this.contadorSalidas--;
       }
+      this.calcularExistencias();
+    }
+  }
+
+  calcularExistencias(){
+    let existenciasCalculadas = this.resumenMovimientos.ENT.total - this.resumenMovimientos.SAL.total;
+    if(this.accionLote != 'delete' && this.accionLote != 'create'){
+      existenciasCalculadas += this.formStock.get('cantidad').value;
+    }
+    if(this.totalPiezasSalidas > 0){
+      existenciasCalculadas += this.totalPiezasSalidas;
+    }
+
+    this.existenciasLote = {
+      cantidad: Math.floor(existenciasCalculadas / this.piezasXEmpaque),
+      piezas: existenciasCalculadas % this.piezasXEmpaque,
+      existencia_piezas: existenciasCalculadas,
+    };
+
+    if(this.accionLote == 'create'){
+      let form_cantidad = this.formStock.get('cantidad').value;
+      if(!this.formStock.get('entrada_piezas').value){
+        form_cantidad = form_cantidad * this.piezasXEmpaque;
+      }
+      form_cantidad -= this.totalPiezasSalidas;
+
+      this.existenciasNuevoLote = {
+        cantidad: Math.floor(form_cantidad / this.piezasXEmpaque),
+        piezas: form_cantidad % this.piezasXEmpaque,
+        existencia_piezas: form_cantidad,
+      }
+    }else{
+      this.existenciasNuevoLote = null;
     }
   }
 

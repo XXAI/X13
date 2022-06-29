@@ -196,7 +196,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         height:'80%',
         disableClose: false,
         panelClass: 'no-padding-dialog',
-        data:{stock: lote_guardado, articulo: this.articulo},
+        data:{stock: lote_guardado, articulo: this.articulo, fecha_movimiento: this.fechaMovimiento},
       });
   
       dialogRef.afterClosed().subscribe(response => {
