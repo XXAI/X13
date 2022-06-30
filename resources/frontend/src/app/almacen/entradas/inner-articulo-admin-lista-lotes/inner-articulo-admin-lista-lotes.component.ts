@@ -202,6 +202,10 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       dialogRef.afterClosed().subscribe(response => {
         if(response){
           console.log(response);
+          //Mover a funcion
+          //AplicarCambiosLote
+          //Agregra lista de salidas y acciones
+          //Si esta repetido volver a abrir el dialogo
         }
       });
       return;
@@ -314,8 +318,17 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     if(this.formLote.valid){
       this.checarCaducidadFormulario();
       
-      let monto_iva = 0;
       let loteData = this.formLote.value;
+      let estado_anterior = this.obtenerEstadoActualArticulo();
+      
+      let respuesta = this.aplicarCambiosLote(loteData, this.loteEditIndex, this.estatusCaducidad);
+
+      if(!respuesta.success){
+        console.log('error: ',respuesta.error);
+        this.formLote.get('lote').setErrors({duplicated:true});
+        return false;
+      }
+      /*let monto_iva = 0;
 
       if(loteData.marca){
         loteData.marca_id = loteData.marca.id;
@@ -346,8 +359,6 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       }
       loteData.total_monto = +loteData.cantidad * (loteData.precio_unitario + monto_iva);
 
-      let estado_anterior = this.obtenerEstadoActualArticulo();
-
       if(this.articulo.lotes[this.loteEditIndex].hash){
         this.articulo.total_piezas -= +this.articulo.lotes[this.loteEditIndex].cantidad;
         this.articulo.total_monto -= +this.articulo.lotes[this.loteEditIndex].total_monto;
@@ -377,6 +388,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
         });
         this.articulo.estatus = estatus_articulo;
       }
+      */
       this.cancelarEdicion();
 
       this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
@@ -387,6 +399,69 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     }else{
       this.formLote.markAllAsTouched();
     }
+  }
+
+  private aplicarCambiosLote(loteData, loteEditIndex, estatusCaducidad){
+    let monto_iva = 0;
+
+    if(loteData.marca){
+      loteData.marca_id = loteData.marca.id;
+    }
+
+    if(loteData.empaque_detalle_id && this.articulo.empaque_detalle){
+      loteData.empaque_detalle = this.articulo.empaque_detalle.find(x => x.id == loteData.empaque_detalle_id);
+    }
+
+    if(loteData.fecha_caducidad){
+      loteData.fecha_caducidad = this.datePipe.transform(loteData.fecha_caducidad, 'yyyy-MM-dd');
+      if(loteData.memo_fecha){
+        loteData.memo_fecha = this.datePipe.transform(loteData.memo_fecha, 'yyyy-MM-dd');
+      }
+
+      loteData.estatus_caducidad = estatusCaducidad;
+      loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
+    }else{
+      loteData.estatus_caducidad = 1;
+      loteData.icono_estatus = this.listaIconosEstatus[loteData.estatus_caducidad];
+    }
+    
+    loteData.hash = this.generarHashLote(loteData);
+    loteData.precio_unitario = parseFloat(loteData.precio_unitario||0);
+
+    if(+loteData.iva > 0){
+      monto_iva = (+loteData.iva * loteData.precio_unitario) / 100;
+    }
+    loteData.total_monto = +loteData.cantidad * (loteData.precio_unitario + monto_iva);
+
+    let loteIndex = this.articulo.lotes.findIndex(x => x.hash === loteData.hash);
+    if(loteIndex >= 0 && loteIndex != loteEditIndex){
+      return {success: false, error:'duplicated'};
+    }
+
+    if(this.articulo.lotes[loteEditIndex].hash){
+      this.articulo.total_piezas -= +this.articulo.lotes[loteEditIndex].cantidad;
+      this.articulo.total_monto -= +this.articulo.lotes[loteEditIndex].total_monto;
+      this.articulo.lotes[loteEditIndex] = loteData;
+      this.articulo.total_piezas += +loteData.cantidad;
+      this.articulo.total_monto += loteData.total_monto;
+    }else{
+      this.articulo.lotes.push(loteData);
+      this.articulo.total_piezas += +loteData.cantidad;
+      this.articulo.total_monto += loteData.total_monto;
+      this.articulo.no_lotes += 1;
+    }
+
+    if(loteData.fecha_caducidad){
+      let estatus_articulo = 1;
+      this.articulo.lotes.forEach(loteData => {
+        if(estatus_articulo < loteData.estatus_caducidad){
+          estatus_articulo = loteData.estatus_caducidad;
+        }
+      });
+      this.articulo.estatus = estatus_articulo;
+    }
+
+    return {success: true};
   }
 
   eliminarLote(index:number){

@@ -14,7 +14,7 @@
         </div>
         <mat-divider></mat-divider>
         <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;">
-            <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
+            <div fxFlex="100" fxLayout="row raw" fxLayoutGap="2px" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
                 <mat-form-field fxFlex="none">
                     <mat-label>Lote</mat-label>
                     <input matInput formControlName="lote" required autocomplete="off" [disabled]="marcadoParaEliminar">
@@ -31,7 +31,7 @@
                     <mat-hint align="end" style="color:red;" *ngIf="estatusCaducidad > 1">{{etiquetaEstatus}}</mat-hint>
                     <mat-error *ngIf="formStock.get('fecha_caducidad').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
-                <mat-form-field fxFlex="none">
+                <mat-form-field fxFlex>
                     <mat-label>Código de Barras</mat-label>
                     <input matInput formControlName="codigo_barras" autocomplete="off" [disabled]="marcadoParaEliminar">
                 </mat-form-field>
@@ -43,7 +43,7 @@
                     <input matInput formControlName="cantidad" type="number" required autocomplete="off" [disabled]="marcadoParaEliminar">
                     <mat-error *ngIf="formStock.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
-                <mat-form-field fxFlex="50">
+                <mat-form-field fxFlex>
                     <mat-label>Detalles</mat-label>
                     <mat-select formControlName="empaque_detalle_id" [disabled]="marcadoParaEliminar">
                         <mat-option *ngIf="!data.articulo.empaque_detalle || data.articulo.empaque_detalle.length == 0">Sin Detalles Asignados</mat-option>
@@ -62,12 +62,12 @@
                     <input matInput formControlName="iva" type="number" autocomplete="off" [disabled]="marcadoParaEliminar">
                 </mat-form-field>
             </div>
-            <div fxFlex="100" fxLayout="row raw" fxLayoutGap="5px" fxLayoutAlign="space-between center" *ngIf="data.articulo.tipo_formulario == 'ACTVO'">
-                <mat-form-field fxFlex>
+            <div fxFlex="100" fxLayout="row raw" fxLayoutGap="2px" fxLayoutAlign="space-between center" *ngIf="data.articulo.tipo_formulario == 'ACTVO'">
+                <mat-form-field fxFlex="none">
                     <mat-label>No. de Serie</mat-label>
                     <input matInput formControlName="no_serie" required autocomplete="off" [disabled]="marcadoParaEliminar">
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Modelo</mat-label>
                     <input matInput formControlName="modelo" autocomplete="off" [disabled]="marcadoParaEliminar">
                 </mat-form-field>
@@ -84,7 +84,7 @@
                         </mat-option>
                     </mat-autocomplete>
                 </mat-form-field>
-                <mat-form-field fxFlex>
+                <mat-form-field fxFlex="none">
                     <mat-label>Cantidad</mat-label>
                     <input matInput formControlName="cantidad" type="number" required autocomplete="off" [disabled]="marcadoParaEliminar">
                     <mat-error *ngIf="formStock.get('cantidad').hasError('required')">Este campo es obligatorio</mat-error>
@@ -104,17 +104,17 @@
                 <span fxFlex="fill"></span>
                 <div fxFlex="18" class="cc-campo">
                     <div class="cc-etiqueta">
-                        <div>Carta de Canje: </div>
+                        <div><mat-icon>sync</mat-icon><br>Carta de Canje: </div>
                     </div>
                 </div>
                 <mat-form-field fxFlex="20" class="cc-campo">
                     <mat-label>Folio de Memo</mat-label>
-                    <input matInput formControlName="memo_folio" type="text" autocomplete="off">
+                    <input matInput formControlName="memo_folio" type="text" autocomplete="off" required>
                     <mat-error *ngIf="formStock.get('memo_folio').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
                 <mat-form-field  fxFlex="20" class="cc-campo">
                     <mat-label>Fecha de Memo</mat-label>
-                    <input matInput formControlName="memo_fecha" [max]="fechaActual" [matDatepicker]="pickerMemo" readonly>
+                    <input matInput formControlName="memo_fecha" [max]="fechaActual" [matDatepicker]="pickerMemo" readonly required>
                     <mat-datepicker-toggle matPrefix [for]="pickerMemo"></mat-datepicker-toggle>
                     <mat-datepicker #pickerMemo startView="year"></mat-datepicker>
                     <mat-hint align="start"><mat-icon>arrow_upward</mat-icon>Click para seleccionar</mat-hint>
@@ -122,7 +122,7 @@
                 </mat-form-field >
                 <mat-form-field fxFlex="16" class="cc-campo">
                     <mat-label>Vigencia</mat-label>
-                    <input matInput formControlName="vigencia_meses" type="number" autocomplete="off">
+                    <input matInput formControlName="vigencia_meses" type="number" autocomplete="off" required>
                     <span matSuffix>Meses</span>
                     <mat-error *ngIf="formStock.get('vigencia_meses').hasError('required')">Este campo es obligatorio</mat-error>
                 </mat-form-field>
@@ -132,16 +132,16 @@
         </div>
         <mat-divider></mat-divider>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="padding: 8px;">
-            <button fxFlex="none" mat-button (click)="toggleCartaCanje(!mostrarCartaCanje)" *ngIf="estatusCaducidad > 1" color="accent">
-                <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> Carta de Canje
+            <button fxFlex="none" mat-button [ngClass]="{'mat-stroked-button':(mostrarCartaCanje)}" (click)="toggleCartaCanje(!mostrarCartaCanje)" [disabled]="estatusCaducidad == 1">
+                <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> {{(mostrarCartaCanje)?'Quitar':'Agregar'}} Carta de Canje
             </button>
             <div fxFlex></div>
-            <button fxFlex="none" mat-button [ngClass]="{'mat-stroked-button':(marcadoParaEliminar)}" color="warn" (click)="marcarEliminarLote()">
+            <button fxFlex="none" mat-button [ngClass]="{'mat-flat-button':(marcadoParaEliminar)}" color="warn" (click)="marcarEliminarLote()">
                 <mat-icon fontSet="{{(!marcadoParaEliminar)?'material-icons-outlined':''}}">delete</mat-icon> {{(marcadoParaEliminar)?'Marcado para Eliminar':'Marcar para Eliminar'}}
             </button>
             <div fxFlex></div>
             <button fxFlex="none" mat-stroked-button (click)="cancelarEdicion()" >Cancelar</button>
-            <button fxFlex="none" color="accent" mat-flat-button [disabled]="!formStock.valid" (click)="aceptarCambiosStock()">Aceptar</button>
+            <button fxFlex="none" color="primary" mat-flat-button [disabled]="!formStock.valid" (click)="aceptarCambiosStock()">Aceptar</button>
         </div>
         <mat-divider></mat-divider>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" class="panel-acciones">

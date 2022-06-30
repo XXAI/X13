@@ -274,7 +274,11 @@ class ModificacionMovimientosController extends Controller{
             }
 
             if($modificacion->nivel_modificacion == 2){
-                $response = $this->modificarArticulos($movimiento,$parametros['articulos_modificados']);
+                if($movimiento->direccion_movimiento == 'ENT'){
+                    //Movimiento de entrada
+                    $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados']);
+                }
+                //$response = $this->modificarArticulos($movimiento,$parametros['articulos_modificados']);
                 if(!$response['estatus']){
                     DB::rollback();
                     return response()->json(['error'=>$response['mensaje'],'parametros'=>$response],HttpResponse::HTTP_OK);
@@ -308,6 +312,21 @@ class ModificacionMovimientosController extends Controller{
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
         }
+    }
+
+    private function modificarArticulosEntrada($movimiento,$lista_articulos){
+        $loggedUser = auth()->userOrFail();
+        $response_estatus = false;
+        $mensaje = '|-- Guardado con Éxito --|';
+        $bitacora_modificaciones = [];
+        $es_recepcion = false;
+
+        $conteo_claves = 0;
+        $conteo_articulos = 0;
+
+        $movimiento->load('tipoMovimiento','listaArticulos.stock');
+
+        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones];
     }
 
     private function modificarArticulos($movimiento,$lista_articulos){

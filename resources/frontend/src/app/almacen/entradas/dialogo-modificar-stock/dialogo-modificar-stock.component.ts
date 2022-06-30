@@ -264,8 +264,24 @@ export class DialogoModificarStockComponent implements OnInit {
   }
 
   aceptarCambiosStock(){
-    let datos_form = this.formStock.value;
-    console.log(datos_form);
+    let datos_form:any = this.formStock.value;
+    let lista_salidas:number[] = [];
+    
+    for (const key in this.salidasSeleccionadas) {
+      if(this.salidasSeleccionadas[key]){
+        lista_salidas.push(+key);
+      }
+    }
+
+    let datos_respuesta:any = {
+      formulario: datos_form,
+      respaldo: this.respaldoStock,
+      lista_salidas: lista_salidas,
+      accion_lote: this.accionLote,
+      accion_salidas: this.accionSalidas,
+    };
+    
+    this.dialogRef.close(datos_respuesta);
   }
 
   checarCaducidadFormulario(){
@@ -360,6 +376,7 @@ export class DialogoModificarStockComponent implements OnInit {
       this.accionSalidas = '';
       this.seleccionSalidasActivada = false;
     }
+    this.toggleCartaCanje(false);
     this.checarCaducidadFormulario();
     this.calcularExistencias();
   }
