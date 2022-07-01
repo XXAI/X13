@@ -18,7 +18,7 @@
             <tr *ngIf="articulo.lotes.length <= 0">
                 <td colspan="7" class="no-results-found">No existen lotes capturados</td>
             </tr>
-            <tr *ngFor="let lote of articulo.lotes; let i = index" class="caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">
+            <tr *ngFor="let lote of articulo.lotes; let i = index" class="caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}" [ngClass]="{'marcado-borrar':lote.marcado_borrar}">
                 <ng-container *ngIf="loteEditIndex != i">
                     <td *ngIf="articulo.tipo_formulario == 'MEDS'"><mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon></td>
                     <td *ngIf="articulo.tipo_formulario == 'MEDS'" width="1" style="white-space: nowrap;">{{lote.lote}}<br>{{lote.fecha_caducidad | date:'dd-MM-yyyy'}}</td>
@@ -38,7 +38,7 @@
                     </td>
 
                     <td width="1" style="white-space: nowrap;" *ngIf="edicionActiva && !modoRecepcion">
-                        <button mat-icon-button [color]="(modificacionActiva && lote.stock_id)?'accent':'primary'" (click)="editarLote(i)"><mat-icon>edit</mat-icon></button>
+                        <button mat-icon-button [color]="(modificacionActiva && lote.stock_id)?'accent':'primary'" (click)="editarLote(i)"><mat-icon fontSet="{{(modificacionActiva && lote.stock_id)?'':'material-icons-outlined'}}">{{(modificacionActiva && lote.stock_id)?'edit_square':'edit'}}</mat-icon></button>
                         <!--button class="small-icon-button" mat-icon-button color="warn" (click)="eliminarLote(i)"><mat-icon>delete</mat-icon></button-->
                     </td>
                 </ng-container>

@@ -13,6 +13,9 @@
             </div>
         </div>
         <mat-divider></mat-divider>
+        <div fxFlex="none">
+            <alert-panel></alert-panel>
+        </div>
         <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;">
             <div fxFlex="100" fxLayout="row raw" fxLayoutGap="2px" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
                 <mat-form-field fxFlex="none">
@@ -140,6 +143,7 @@
                 <mat-icon fontSet="{{(!marcadoParaEliminar)?'material-icons-outlined':''}}">delete</mat-icon> {{(marcadoParaEliminar)?'Marcado para Eliminar':'Marcar para Eliminar'}}
             </button>
             <div fxFlex></div>
+            <button fxFlex="none" mat-stroked-button [disabled]="!descartarCambios" (click)="descartarCambiosStock()" color="primary"><mat-icon>undo</mat-icon></button>
             <button fxFlex="none" mat-stroked-button (click)="cancelarEdicion()" >Cancelar</button>
             <button fxFlex="none" color="primary" mat-flat-button [disabled]="!formStock.valid" (click)="aceptarCambiosStock()">Aceptar</button>
         </div>
@@ -151,22 +155,22 @@
                         <span *ngIf="accionLote == 'edit'" class="accion">Editar Lote Existente</span> 
                         <span *ngIf="accionLote == 'delete' && resumenMovimientos.ENT.total == 0" class="accion">Eliminar Lote Completo</span>
                         <span *ngIf="accionLote == 'delete' && resumenMovimientos.ENT.total > 0" class="accion">Eliminar Existencias del Lote</span>
-                        <span *ngIf="seleccionSalidasActivada && accionSalidas == 'select'"class="accion">Aplicar en {{contadorSalidas | number:'1.0-0'}} Salidas</span> 
                         <span *ngIf="accionSalidas == 'none'"class="accion">Sin Modificar Salidas</span> 
-                        <span *ngIf="seleccionSalidasActivada && accionSalidas == 'delete'"class="accion">Eliminar de {{contadorSalidas | number:'1.0-0'}} Salidas</span>
-                        <span *ngIf="!seleccionSalidasActivada && accionSalidas == 'delete'"class="accion">Eliminar de Salidas</span>
+                        <span *ngIf="seleccionSalidasActivada && accionSalidas == 'select'" class="accion">Aplicar en {{contadorSalidas | number:'1.0-0'}} Salidas</span> 
+                        <span *ngIf="seleccionSalidasActivada && accionSalidas == 'delete'" class="accion">Eliminar de {{contadorSalidas | number:'1.0-0'}} Salidas</span>
+                        <span *ngIf="!seleccionSalidasActivada && accionSalidas == 'delete-all'"class="accion">Eliminar de Salidas</span>
             </div>
             <div fxFlex="none" fxLayout="row" class="existencias">
                 <div fxFlex="none" *ngIf="existenciasLote">
                     Existencias:&nbsp;
                 </div>
-                <div fxFlex="none" *ngIf="existenciasLote">
+                <div fxFlex="none" *ngIf="existenciasLote" [ngClass]="{'negativos':existenciasLote.existencia_piezas < 0}">
                     {{existenciasLote.cantidad|number:'1.0-0'}} <span *ngIf="existenciasLote.piezas > 0">({{existenciasLote.piezas|number:'1.0-0'}})</span>
                 </div>
                 <div fxFlex="none" *ngIf="existenciasNuevoLote">
                     <mat-icon class="icono">double_arrow</mat-icon>
                 </div>
-                <div fxFlex="none" *ngIf="existenciasNuevoLote">
+                <div fxFlex="none" *ngIf="existenciasNuevoLote" [ngClass]="{'negativos':existenciasNuevoLote.existencia_piezas < 0}">
                     {{existenciasNuevoLote.cantidad|number:'1.0-0'}} <span *ngIf="existenciasNuevoLote.piezas > 0">({{existenciasNuevoLote.piezas|number:'1.0-0'}})</span>
                 </div>
             </div>

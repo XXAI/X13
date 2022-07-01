@@ -202,10 +202,49 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       dialogRef.afterClosed().subscribe(response => {
         if(response){
           console.log(response);
+          let estado_anterior = this.obtenerEstadoActualArticulo();
+
           //Mover a funcion
-          //AplicarCambiosLote
-          //Agregra lista de salidas y acciones
-          //Si esta repetido volver a abrir el dialogo
+          if(response.accion_lote == 'delete'){
+            if(!this.articulo.lotes[index].marcado_borrar){
+              this.articulo.lotes[index].marcado_borrar = true;
+              this.articulo.lotes[index].accion_lote = response.accion_lote;
+              this.articulo.lotes[index].accion_salidas = response.accion_salidas;
+
+              this.articulo.total_piezas -= +this.articulo.lotes[index].cantidad;
+              this.articulo.total_monto -= this.articulo.lotes[index].total_monto;
+              this.articulo.no_lotes -= 1;
+            }
+            this.articulo.lotes[index].lista_salidas = response.lista_salidas;
+          }else{
+            //AplicarCambiosLote
+            let restaurar_cantidad = 0;
+            let restaurar_monto = 0;
+            if(this.articulo.lotes[index].marcado_borrar){
+              restaurar_cantidad = +this.articulo.lotes[index].cantidad;
+              restaurar_monto = this.articulo.lotes[index].total_monto;
+            }
+
+            let respuesta = this.aplicarCambiosLote(response.formulario,index,response.estatus_caducidad);
+            if(respuesta.success){
+              //Agregra lista de salidas y acciones
+              if(restaurar_cantidad){
+                this.articulo.total_piezas += restaurar_cantidad;
+                this.articulo.total_monto += restaurar_monto;
+                this.articulo.no_lotes += 1;
+              }
+              
+              this.articulo.lotes[index].respaldo = response.respaldo;
+              this.articulo.lotes[index].lista_salidas = response.lista_salidas;
+              this.articulo.lotes[index].accion_lote = response.accion_lote;
+              this.articulo.lotes[index].accion_salidas = response.accion_salidas;
+            }else{
+              //Si esta repetido volver a abrir el dialogo
+              console.log('lote repetido:::: ',response);
+            }
+          }
+
+          this.cambiosEnLotes.emit({accion:'ActualizarCantidades',value:estado_anterior});
         }
       });
       return;
@@ -401,7 +440,7 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
     }
   }
 
-  private aplicarCambiosLote(loteData, loteEditIndex, estatusCaducidad){
+  private aplicarCambiosLote(loteData:any, loteEditIndex:number, estatusCaducidad:number){
     let monto_iva = 0;
 
     if(loteData.marca){

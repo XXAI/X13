@@ -85,6 +85,10 @@
     color: darkslateblue;
 }
 
+.pendiente-recepcion-color > td .mat-icon{
+    color:#dc8503 !important;
+}
+
 .concluido-color > td .mat-icon{
     color:#07a8ff;
 }
@@ -138,6 +142,11 @@
     height: auto;
     width: auto;
     font-size: 17px;
+}
+
+.panel-acciones .existencias .negativos{
+    color: red;
+    font-weight: bold;
 }
 
 .caducidad-verde{

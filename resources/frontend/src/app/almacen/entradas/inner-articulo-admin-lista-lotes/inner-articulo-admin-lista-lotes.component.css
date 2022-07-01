@@ -146,3 +146,8 @@
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;    
 }
+
+.marcado-borrar td{
+    text-decoration: line-through;
+    color: red;
+}

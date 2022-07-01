@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { CustomValidator } from 'src/app/utils/classes/custom-validator';
 import { AlmacenService } from '../../almacen.service';
 import { DialogoPreviewMovimientoComponent } from '../../tools/dialogo-preview-movimiento/dialogo-preview-movimiento.component';
+import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
 
 export interface DialogData {
   stock: any;
@@ -24,6 +25,7 @@ export interface DialogData {
 export class DialogoModificarStockComponent implements OnInit {
   @ViewChild(MatPaginator) lotesPaginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(AlertPanelComponent) alertPanel:AlertPanelComponent;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -36,6 +38,8 @@ export class DialogoModificarStockComponent implements OnInit {
 
   isLoading: boolean;
   isLoadingMovimientos: boolean;
+
+  descartarCambios: boolean;
 
   mostrarCartaCanje: boolean;
   marcadoParaEliminar: boolean;
@@ -94,6 +98,11 @@ export class DialogoModificarStockComponent implements OnInit {
     }
 
     this.estatusCaducidad = this.data.stock.estatus_caducidad;
+
+    this.resumenMovimientos = {
+      'ENT':{'nrm':0,'uni':0,'total':0},
+      'SAL':{'nrm':0,'uni':0,'total':0}
+    };
     
     if(this.data.articulo.tipo_formulario == 'MEDS'){
       formConfig = {
@@ -130,20 +139,58 @@ export class DialogoModificarStockComponent implements OnInit {
     }
     
     this.formStock = this.formBuilder.group(formConfig);
-    this.formStock.patchValue(this.data.stock);
 
-    this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock));
+    if(this.data.stock.precio_unitario == 0){
+      this.data.stock.precio_unitario = null;
+    }
+
+    //let result = this.verificarFechaCaducidad(this.data.stock.fecha_caducidad);
+    //this.estatusCaducidad = result.estatus; //Caducado
+    //this.etiquetaEstatus = result.label;
+
+    /*let item = JSON.parse(JSON.stringify(this.data.stock));
+    item.memo_fecha = new Date(item.memo_fecha + 'T00:00:00');
+    if(item.fecha_caducidad){
+      item.fecha_caducidad = new Date(item.fecha_caducidad + 'T00:00:00');
+    }*/
+    
+    if(this.data.stock.memo_folio){
+      this.toggleCartaCanje(true);
+    }else{
+      this.toggleCartaCanje(false);
+    }
+
+    this.formStock.patchValue(this.data.stock);
+    this.checarCaducidadFormulario();
+
+    if(this.data.stock.respaldo){
+      this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock.respaldo));
+      this.accionLote = this.data.stock.accion_lote;
+      this.accionSalidas = this.data.stock.accion_salidas;
+      if(this.accionSalidas != 'none' && this.accionSalidas != ''){
+        this.seleccionSalidasActivada = true;
+      }
+    }else{
+      this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock));
+    }
+    
+    if(this.accionLote && this.accionLote != 'delete'){
+      this.descartarCambios = true;
+    }
     
     this.formStock.valueChanges.subscribe(
       changes => {
         let cambios_datos:boolean;
         let cambios_cantidad:boolean;
+        let cambios_precio:boolean;
         for(const key in changes){
           if(this.respaldoStock[key] != changes[key]){
             if(key == 'cantidad' || key == 'entrada_piezas'){
               cambios_cantidad = true;
-            }else{
+            }else if(key != 'precio_unitario' && key != 'iva'){
               cambios_datos = true;
+            }else{
+              cambios_precio = true;
             }
           }
         }
@@ -152,7 +199,7 @@ export class DialogoModificarStockComponent implements OnInit {
           this.accionLote = 'create';
         }else if(cambios_datos && this.resumenMovimientos.ENT.total == 0){
           this.accionLote = 'edit';
-        }else if(cambios_cantidad){
+        }else if(cambios_cantidad || cambios_precio){
           this.accionLote = 'edit';
         }else{
           this.accionLote = '';
@@ -173,6 +220,14 @@ export class DialogoModificarStockComponent implements OnInit {
           }
         }else{
           this.seleccionSalidasActivada = false;
+        }
+
+        if(!this.seleccionSalidasActivada){
+          this.accionSalidas = '';
+        }
+
+        if(cambios_cantidad || cambios_datos || cambios_precio){
+          this.descartarCambios = true;
         }
 
         this.calcularExistencias();
@@ -221,10 +276,6 @@ export class DialogoModificarStockComponent implements OnInit {
           this.dataSourceMovimientos.paginator = this.lotesPaginator;
           this.dataSourceMovimientos.sort = this.sort;
 
-          this.resumenMovimientos = {
-            'ENT':{'nrm':0,'uni':0,'total':0},
-            'SAL':{'nrm':0,'uni':0,'total':0}
-          }
           response.resumen.forEach(item => {
             if(this.resumenMovimientos[item.direccion_movimiento]){
               if(item.modo_movimiento == 'UNI'){
@@ -235,10 +286,10 @@ export class DialogoModificarStockComponent implements OnInit {
             }
           });
 
-          if(!this.data.stock.entrada_piezas){
-            this.resumenMovimientos['ENT']['total'] -= this.data.stock.cantidad * this.piezasXEmpaque;
+          if(!this.respaldoStock.entrada_piezas){
+            this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad * this.piezasXEmpaque;
           }else{
-            this.resumenMovimientos['ENT']['total'] -= this.data.stock.cantidad;
+            this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad;
           }
 
           this.resumenMovimientos['ENT']['uni'] -= (this.resumenMovimientos['ENT']['total'] % this.piezasXEmpaque);
@@ -246,6 +297,17 @@ export class DialogoModificarStockComponent implements OnInit {
 
           this.resumenMovimientos['SAL']['uni'] -= (this.resumenMovimientos['SAL']['total'] % this.piezasXEmpaque);
           this.resumenMovimientos['SAL']['nrm'] += Math.floor(this.resumenMovimientos['SAL']['total'] / this.piezasXEmpaque);
+
+          if(this.data.stock.marcado_borrar){
+            this.marcarEliminarLote();
+          }
+
+          if(this.data.stock.lista_salidas && this.data.stock.lista_salidas.length > 0){
+            this.data.stock.lista_salidas.forEach(id =>{
+              let index = this.dataSourceMovimientos.data.findIndex(x => x.mov_articulo_id == id);
+              this.seleccionarSalida(index,id,'SAL');
+            });
+          }
 
           this.calcularExistencias();
         }
@@ -263,9 +325,35 @@ export class DialogoModificarStockComponent implements OnInit {
     );
   }
 
+  descartarCambiosStock(){
+    if(this.descartarCambios){
+      this.salidasSeleccionadas = {};
+      this.contadorSalidas = 0;
+      this.totalPiezasSalidas = 0;
+      this.seleccionSalidasActivada = false;
+
+      this.formStock.reset();
+      if(this.respaldoStock.memo_folio){
+        this.toggleCartaCanje(true);
+      }else{
+        this.toggleCartaCanje(false);
+      }
+
+      this.formStock.patchValue(this.respaldoStock);
+      this.checarCaducidadFormulario();
+      this.calcularExistencias();
+      this.descartarCambios = false;
+    }
+  }
+
   aceptarCambiosStock(){
     let datos_form:any = this.formStock.value;
     let lista_salidas:number[] = [];
+
+    if(this.existenciasLote.existencia_piezas < 0 || (this.existenciasNuevoLote && this.existenciasNuevoLote.existencia_piezas < 0)){
+      this.alertPanel.mostrarError('Error: La existencias del lote alcanzan numeros negativos');
+      return false;
+    }
     
     for (const key in this.salidasSeleccionadas) {
       if(this.salidasSeleccionadas[key]){
@@ -276,6 +364,7 @@ export class DialogoModificarStockComponent implements OnInit {
     let datos_respuesta:any = {
       formulario: datos_form,
       respaldo: this.respaldoStock,
+      estatus_caducidad: this.estatusCaducidad,
       lista_salidas: lista_salidas,
       accion_lote: this.accionLote,
       accion_salidas: this.accionSalidas,
@@ -359,11 +448,13 @@ export class DialogoModificarStockComponent implements OnInit {
     }
 
     if(this.marcadoParaEliminar){
-      this.formStock.patchValue(this.respaldoStock);
+      this.descartarCambiosStock();
+      //this.formStock.patchValue(this.respaldoStock);
       this.accionLote = 'delete';
       if(this.resumenMovimientos.SAL.total > 0 && this.resumenMovimientos.ENT.total == 0){
-        this.accionSalidas = 'delete';
+        this.accionSalidas = 'delete-all';
         this.seleccionSalidasActivada = false;
+        this.totalPiezasSalidas = this.resumenMovimientos.SAL.total;
       }else if(this.resumenMovimientos.SAL.total > 0 && this.resumenMovimientos.ENT.total > 0){
         this.accionSalidas = 'delete';
         this.seleccionSalidasActivada = true;
@@ -375,9 +466,13 @@ export class DialogoModificarStockComponent implements OnInit {
       this.accionLote = '';
       this.accionSalidas = '';
       this.seleccionSalidasActivada = false;
+      this.salidasSeleccionadas = {};
+      this.contadorSalidas = 0;
+      this.totalPiezasSalidas = 0;
     }
-    this.toggleCartaCanje(false);
-    this.checarCaducidadFormulario();
+
+    //this.toggleCartaCanje(false);
+    //this.checarCaducidadFormulario();
     this.calcularExistencias();
   }
 
@@ -401,6 +496,8 @@ export class DialogoModificarStockComponent implements OnInit {
     if(this.accionLote != 'delete' && this.accionLote != 'create'){
       existenciasCalculadas += this.formStock.get('cantidad').value;
     }
+
+    //totalPiezasSalidas contiene el total de todas las salidas seleccionadas para ser movidas/borradas
     if(this.totalPiezasSalidas > 0){
       existenciasCalculadas += this.totalPiezasSalidas;
     }
