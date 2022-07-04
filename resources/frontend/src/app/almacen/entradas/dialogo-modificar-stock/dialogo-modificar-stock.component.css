@@ -86,7 +86,7 @@
 }
 
 .pendiente-recepcion-color > td .mat-icon{
-    color:#dc8503 !important;
+    color:#dc8503;
 }
 
 .concluido-color > td .mat-icon{

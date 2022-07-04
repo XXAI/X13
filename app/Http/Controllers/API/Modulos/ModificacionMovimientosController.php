@@ -274,6 +274,7 @@ class ModificacionMovimientosController extends Controller{
             }
 
             if($modificacion->nivel_modificacion == 2){
+                $response = [ 'estatus'=> false ];
                 if($movimiento->direccion_movimiento == 'ENT'){
                     //Movimiento de entrada
                     $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados']);
@@ -326,12 +327,395 @@ class ModificacionMovimientosController extends Controller{
 
         $movimiento->load('tipoMovimiento','listaArticulos.stock');
 
+        $movimiento_articulos_bd = []; //=> $lista_articulos_original
+        for($i = 0; $i < count($movimiento->listaArticulos); $i++){
+            $item = $movimiento->listaArticulos[$i];
+            if(!isset($movimiento_articulos_bd[$item->bien_servicio_id])){
+                $movimiento_articulos_bd[$item->bien_servicio_id] = [];
+                $conteo_claves++;
+            }
+            $movimiento_articulos_bd[$item->bien_servicio_id][$item->id.'-'.$item->stock_id] = [
+                'movimiento_articulo_id' => $item->id, //movimiento_articulo_id
+                'stock_id' => $item->stock_id, //stock_id
+                'encontrado' => false,
+                'item' => $item, //{ movimiento_articulo.stock }
+            ];
+        }
+        $bitacora_modificaciones[] = '+Se inicia recorrido de articulo: ---------------------------------------------- Total Claves: '.$conteo_claves;
+
+        $total_conteo_articulo = count($lista_articulos);
+        for($i = 0; $i < $total_conteo_articulo; $i++){
+            $articulo_id = $lista_articulos[$i]['id'];
+            $articulo_clave = $lista_articulos[$i]['clave'];
+            $bitacora_modificaciones[] = '|--+ Trabajando Articulo: '.$articulo_clave.' [Total Lotes: '.count($lista_articulos[$i]['lotes']).' ]';
+
+            $total_conteo_lotes = count($lista_articulos[$i]['lotes']);
+            for($j = 0; $j < $total_conteo_lotes; $j++){
+                /***  Datos del lote recibido del cliente, lo datos nuevos que reemplazarán lo guardado en la base de datos  ***/
+                $lote = $lista_articulos[$i]['lotes'][$j];
+
+                $lote['programa_id'] = $movimiento->programa_id;//Asignamos el id del programa del movimiento de entrada
+
+                //Se obtiene el modo de entrada del lote
+                if($lote['entrada_piezas']){
+                    $modo_movimiento = 'UNI';
+                }else{
+                    $modo_movimiento = 'NRM';
+                }
+                $bitacora_modificaciones[] = '   |--+ Se Obtiene el Lote: '.$lote['lote'].' y su Modo de Entrada: '.$modo_movimiento;
+
+                if($lote['cantidad'] < 0){
+                    $response_estatus = false;
+                    $mensaje = 'La cantidad asignada al lote: '.$lote['lote'].' del articulo con clave: '.$articulo_clave.' es negativa.';
+                    break 2;
+                }
+
+                /***  Si existe id, es un lote creado anteriomente, por lo tanto se validará si es necesario modificar  ***/
+                if(isset($lote['id']) && $lote['id']){
+                    //$lote[id] == movimiento_articulo_id
+
+                    /***  Si se encuentra dentro de los articulos guardados del movimiento, iniciar proceso de validación y modificación(id: movimiento_articulo->id, stock_id: movimiento_articulo->stock_id)  ***/
+                    if(isset($movimiento_articulos_bd[$articulo_id][$lote['id'].'-'.$lote['stock_id']])){
+                        $bitacora_modificaciones[] = '      |--+ Revisando Lote: '.$lote['lote'];
+
+                        /***  Se marca el elemento para indicar que si existe en el request, por lo tanto no debe eliminarse, todos los lotes marcados con [encontrado = false], seran eliminados de la base de datos  ***/
+                        $movimiento_articulos_bd[$articulo_id][$lote['id'].'-'.$lote['stock_id']]['encontrado'] = true;
+                        
+                        $actualizar_datos = false; //Para determinar si hubo cambios, y se deben modificar datos
+                        $nuevo_stock = null; //Nuevo stock a guardar/crear
+                        $salidas_seleccionadas_total = ['normal'=>0,'piezas'=>0];
+                        $salidas_seleccionadas_lista = [];
+
+                        //{ movimiento_articulo.stock }
+                        $movimiento_articulo_db = $movimiento_articulos_bd[$articulo_id][$lote['id'].'-'.$lote['stock_id']]['item'];
+
+                        //Obtener las salidas seleccionadas(ids para actualizar), y sumar las cantidad para realizar operaciones de ajustes de existencias
+                        if(isset($lote['lista_salidas']) && count($lote['lista_salidas']) > 0){
+                            //TODO::
+                        }
+
+                        /***  Datos originales del stock, para comparativas y calculos de existencias anteriores  ***/
+                        $stock_db = [
+                            'empaque_detalle_id'=>$movimiento_articulo_db->stock->empaque_detalle_id,
+                            'programa_id'       =>$movimiento_articulo_db->stock->programa_id,
+                            'marca_id'          =>$movimiento_articulo_db->stock->marca_id,
+                            'modelo'            =>$movimiento_articulo_db->stock->modelo,
+                            'no_serie'          =>$movimiento_articulo_db->stock->no_serie,
+                            'lote'              =>$movimiento_articulo_db->stock->lote,
+                            'fecha_caducidad'   =>$movimiento_articulo_db->stock->fecha_caducidad,
+                            'codigo_barras'     =>$movimiento_articulo_db->stock->codigo_barras,
+                        ];
+                        
+                        /***  Se checa si hay algun cambio en los datos del lote, de ser asi se procederá a validar las modificaciones  ***/
+                        foreach ($stock_db as $key => $value) {
+                            if(isset($lote[$key]) && $stock_db[$key] != $lote[$key]){
+                                $actualizar_datos = true;
+                                break;
+                            }
+                        }
+
+                        /***  Si hay datos a modificar en los lotes y el movimieto es de tipo recepción, regresar error, ya que las recepciónes solo deben poder modificar la cantidad recibida  ***/
+                        if($movimiento->tipoMovimiento->clave == 'RCPCN' && $actualizar_datos){
+                            $response_estatus = false;
+                            $mensaje = 'El tipo de movimiento no permite este nivel de modificación.';
+                            break 2;
+                        }
+
+                        /***  Si es necesario actualizar los datos o se modifico la cantidad de entrada, se procedera a validar la modificación  ***/
+                        if( $actualizar_datos || $lote['cantidad'] != $movimiento_articulo_db->cantidad ){
+                            $bitacora_modificaciones[] = '      |--+ Modificar Datos del Lote: '.$stock_db['lote'];
+                            
+                            if($actualizar_datos){
+                                /***  Se checa si ya existe algun otro stock con los datos que se actualizarán, en caso de ser asi se agregarian a dicho stock las cantidades del movimiento actual  ***/
+                                $nuevo_stock = Stock::where('almacen_id',$movimiento_articulo_db->stock->almacen_id)->where('bien_servicio_id',$movimiento_articulo_db->stock->bien_servicio_id)->where('id','!=',$movimiento_articulo_db->stock->id);
+                                foreach ($stock_db as $key => $value) {
+                                    if(isset($lote[$key])){
+                                        $nuevo_stock = $nuevo_stock->where($key,$lote[$key]);
+                                    }
+                                }
+                                $nuevo_stock = $nuevo_stock->first();
+                                if($nuevo_stock){
+                                    $bitacora_modificaciones[] = '      |--+ Se Encontró Nuevo Stock: '.$lote['lote'];
+                                }
+                            }
+
+                            //Agregamos cantidad al stock_db, para facilitar comparaciones y calculos
+                            $stock_db['cantidad'] = $movimiento_articulo_db->cantidad;
+
+                            /******************************************************************************************************************************************************
+                             * Inicio: Obtenemos el detalle del empaque, tanto el anterior como el nuevo, en caso de que se haya modificado ese dato                              *
+                             *                                                                                                                                                    */
+                            $piezas_x_empaque = 1;
+                            $nuevo_piezas_x_empaque = 1;
+
+                            $detalle_empaque = BienServicioEmpaqueDetalle::find($stock_db['empaque_detalle_id']);
+                            if($detalle_empaque){
+                                $piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
+                            }
+                            $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Guardado: '.$piezas_x_empaque;
+
+                            if($lote['empaque_detalle_id'] != $stock_db['empaque_detalle_id']){
+                                $detalle_empaque = BienServicioEmpaqueDetalle::find($lote['empaque_detalle_id']);
+                                if($detalle_empaque){
+                                    $nuevo_piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
+                                }
+                            }else{
+                                $nuevo_piezas_x_empaque = $piezas_x_empaque;
+                            }
+                            $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Nuevo: '.$nuevo_piezas_x_empaque;
+                            /*                                                                                                                                                    *
+                             * Fin: Obtenemos el detalle del empaque, tanto el anterior como el nuevo, en caso de que se haya modificado ese dato                                 *
+                             ******************************************************************************************************************************************************/
+
+                             /******************************************************************************************************************************************************
+                             * Inicio: Sacamos un resumen de los movimientos de Entrada y Salida, excluyendo el movimiento de Entrada que se esta modificando                     *
+                             *                                                                                                                                                    */
+                            $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
+                                                                ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
+                                                                ->where(function($where){
+                                                                    $where->where('movimientos.estatus','!=','BOR')->where('movimientos.estatus','!=','CAN');
+                                                                })
+                                                                ->where('movimientos_articulos.stock_id',$movimiento_articulo_db->stock_id)
+                                                                ->where('movimientos_articulos.id','!=',$movimiento_articulo_db->id)
+                                                                ->groupBy('movimientos_articulos.stock_id')
+                                                                ->groupBy('movimientos_articulos.direccion_movimiento')
+                                                                ->groupBy('movimientos_articulos.modo_movimiento')
+                                                                ->get();
+                            //Se calculan el total de Entradas y Salidas por Pieza (Unidosis)
+                            $total_entradas_piezas = 0;
+                            $total_salidas_piezas = 0;
+                            for($k  = 0; $k < count($suma_movimientos); $k++){
+                                $suma = $suma_movimientos[$k];
+                                if($suma->direccion_movimiento == 'ENT'){
+                                    if($suma->modo_movimiento == 'UNI'){
+                                        $total_entradas_piezas += $suma->cantidad;
+                                    }else{
+                                        $total_entradas_piezas += ($suma->cantidad * $nuevo_piezas_x_empaque);
+                                    }
+                                }else if($suma->direccion_movimiento == 'SAL'){
+                                    if($suma->modo_movimiento == 'UNI'){
+                                        $total_salidas_piezas += $suma->cantidad;
+                                    }else{
+                                        $total_salidas_piezas += ($suma->cantidad * $nuevo_piezas_x_empaque);
+                                    }
+                                }
+                            }
+                            $bitacora_modificaciones[] = '      |--+ Se Obtiene La Suma de los Movimientos Relacionados al Lote: '.$lote['lote'].' [Total Entradas: '.$total_entradas_piezas.', Total Salidas: '.$total_salidas_piezas.', Existencias: '.($total_entradas_piezas-$total_salidas_piezas).']';
+                            /*                                                                                                                                                    *
+                             * Fin: Sacamos un resumen de los movimientos de Entrada y Salida, excluyendo el movimiento de Entrada que se esta modificando                        *
+                             ******************************************************************************************************************************************************/
+
+                            $ajustar_existencias = ($lote['cantidad'] != $stock_db['cantidad'] || $lote['empaque_detalle_id'] != $stock_db['empaque_detalle_id']);
+
+                            /************************************************************  Las acciones a realizar seran en base al total de Entradas y Salidas que tenga el stock(lote)  ************************************************************/
+                            if(!$nuevo_stock && $total_entradas_piezas == 0){
+                                /******************************************************************************************************************************************************
+                                 * Inicio: No hay otros movimientos de Entrada                                                                                                        *
+                                 *                                                                                                                                                    */
+                                /***  Si no hay nuevo stock y no hay otras entradas, se puede modificar el lote sin problemas: accion_lote = edit  ***/
+                                if($actualizar_datos){
+                                    $movimiento_articulo_db->stock->update($lote);
+                                    $bitacora_modificaciones[] = '      |--+ Se Actualizaron los Datos del Stock con Lote: '.$lote['lote'].' Accion recibida:'.$lote['accion_lote'];
+                                }
+
+                                /***  Si se modifico la cantidad o el detalle del empaque  ***/
+                                if($ajustar_existencias){ 
+
+                                    /***  Se calculan las cantidades a usar como existencias  ***/
+                                    if($modo_movimiento == 'UNI'){
+                                        $existencias = floor($lote['cantidad'] / $nuevo_piezas_x_empaque);
+                                        $existencias_piezas = $lote['cantidad'];
+                                    }else{
+                                        $existencias = $lote['cantidad'];
+                                        $existencias_piezas = ($lote['cantidad'] * $nuevo_piezas_x_empaque);
+                                    }
+
+                                    if($total_salidas_piezas > 0){
+                                        /***  Se recalculan las existencias, en base a las salidas  ***/
+                                        $existencias_piezas -= $total_salidas_piezas;
+                                        $existencias = floor($existencias_piezas / $nuevo_piezas_x_empaque);
+
+                                        //Si las exitencias son negativas, regresar error
+                                        if($existencias_piezas < 0){
+                                            $response_estatus = false;
+                                            $mensaje = 'Error: La existencias del Lote: '.$lote['lote'].' perteneciente al Articulo con clave: '.$articulo_clave.', alcanzan valores negativos.';
+                                            break 2;
+                                        }
+
+                                        if($actualizar_datos){
+                                            //Checar si salidas son transferencias
+                                            $lista_movimiento_id_salidas = MovimientoArticulo::select('movimiento_id')->where('direccion_movimiento','SAL')->where('bien_servicio_id',$articulo_id)->where('stock_id',$movimiento_articulo_db->stock_id)->groupBy('movimiento_id')->get();
+                                            $lista_movimiento_id_salidas = $lista_movimiento_id_salidas->pluck('movimiento_id');
+                                            //Obtener la lista de ids de los movimientos de transferencia
+                                            $tipo_movimiento = TipoMovimiento::where('clave','LMCN')->where('movimiento','SAL')->first();
+                                            $lista_movimientos_transferencias = Movimiento::select('id')->where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->whereIn('id',$lista_movimiento_id_salidas)->where('direccion_movimiento','SAL')->get();
+                                            $lista_movimientos_transferencias = $lista_movimientos_transferencias->pluck('id');
+                                            //Estatus de conflicto en las entradas/recepciones de las salidas(transferencias) de este stock
+                                            $tipo_movimiento = TipoMovimiento::where('clave','RCPCN')->where('movimiento','ENT')->first();
+                                            $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->update(['estatus'=>'CONF']);
+                                            $bitacora_modificaciones[] = '      |--+ Se Marcan las entradas que sean recepciones de transferencias, del Stock modificado con Lote: '.$stock_db['lote'];
+                                            $bitacora_modificaciones[] = '      |--+ Se Marcaron las entradas por traspaso del stock editado: '.json_encode($movimientos_modificados);
+                                        }
+                                    }
+
+                                    $movimiento_articulo_db->stock->existencia = $existencias;
+                                    $movimiento_articulo_db->stock->existencia_piezas = $existencias_piezas;
+                                    $movimiento_articulo_db->stock->save();
+                                    $bitacora_modificaciones[] = '      |--+ Se Actualizaron Existencias del Stock con Lote: '.$stock_db['lote'].' [ Existencia Piezas: '.$movimiento_articulo_db->stock->existencia_piezas.' ]';
+                                }
+                                /*                                                                                                                                                    *
+                                 * Fin: No hay otros movimientos de Entrada                                                                                                           *
+                                 ******************************************************************************************************************************************************/
+                                
+                            }else if($total_entradas_piezas > 0){
+                                /******************************************************************************************************************************************************
+                                 * Inicio: Hay otros movimientos de Entrada                                                                                                           *
+                                 *                                                                                                                                                    */
+                                
+                                 /***  Si no hay nuevo stock y no hay otras entradas, se puede modificar el lote sin problemas: accion_lote = edit  ***/
+                                if(!$nuevo_stock && $actualizar_datos){
+                                    /***  Si no hay nuevo stock y hay otras entradas, se creara un nuevo stock con los datos recibidos en el request: accion_lote = create  ***/
+                                    $datos_nuevo_stock = [
+                                        'unidad_medica_id'  =>$movimiento_articulo_db->stock->unidad_medica_id,
+                                        'almacen_id'        =>$movimiento_articulo_db->stock->almacen_id,
+                                        'bien_servicio_id'  =>$movimiento_articulo_db->stock->bien_servicio_id,
+                                        'empaque_detalle_id'=>(isset($lote['empaque_detalle_id']))?$lote['empaque_detalle_id']:null,
+                                        'programa_id'       =>(isset($lote['programa_id']))?$lote['programa_id']:null,
+                                        'marca_id'          =>(isset($lote['marca_id']))?$lote['marca_id']:null,
+                                        'modelo'            =>(isset($lote['modelo']))?$lote['modelo']:null,
+                                        'no_serie'          =>(isset($lote['no_serie']))?$lote['no_serie']:null,
+                                        'lote'              =>(isset($lote['lote']))?$lote['lote']:null,
+                                        'fecha_caducidad'   =>(isset($lote['fecha_caducidad']))?$lote['fecha_caducidad']:null,
+                                        'codigo_barras'     =>(isset($lote['codigo_barras']))?$lote['codigo_barras']:null,
+                                        'existencia'        =>0,
+                                        'existencia_piezas' =>0,
+                                        'user_id'           =>$loggedUser->id,
+                                    ];
+                                    $nuevo_stock = Stock::create($datos_nuevo_stock);
+                                    $bitacora_modificaciones[] = '      |--+ Se Crea un Nuevo Stock con Lote: '.$lote['lote'].' accion:'.$lote['accion_lote'];
+                                }
+
+                                //Checar si se seleccionaron salidas, afectara a las existencias
+
+                                if($nuevo_stock){
+                                    /***  Si se va a guardar en otro lote, se restan las existencias originales del lote actual, ya que estas se moveran  ***/
+                                    /***  Calcular las existencias con las cantidades originales  ***/
+                                    if($modo_movimiento == 'UNI'){
+                                        $cantidad = floor($stock_db['cantidad'] / $piezas_x_empaque);
+                                        $cantidad_piezas = $stock_db['cantidad'];
+                                    }else{
+                                        $cantidad = $stock_db['cantidad'];
+                                        $cantidad_piezas = ($stock_db['cantidad'] * $piezas_x_empaque);
+                                    }
+
+                                    $existencias_piezas = $movimiento_articulo_db->stock->existencia_piezas - $cantidad_piezas;
+                                    //Checar si se movieron salidas al nuevo stock, sumar las cantidades de las salidas que se muevan al otro stock
+                                    //TODO::hacer calculos para ajustar existencias en relacion a las salidas seleccioandas
+
+                                    if($existencias_piezas < 0){
+                                        $response_estatus = false;
+                                        $mensaje = 'Error: La existencias del Lote: '.$lote['lote'].' perteneciente al Articulo con clave: '.$articulo_clave.', alcanzan valores negativos.';
+                                        break 2;
+                                    }
+
+                                    $existencias = floor($existencias_piezas / $nuevo_piezas_x_empaque);
+
+                                    $movimiento_articulo_db->stock->existencia = $existencias;
+                                    $movimiento_articulo_db->stock->existencia_piezas = $existencias_piezas;
+                                    $movimiento_articulo_db->stock->save();
+                                }else if($ajustar_existencias){
+                                    /***  Recalcular las exitencias en base a las nuevas cantidades ***/
+                                    if($modo_movimiento == 'UNI'){ //Recalcular existencias con datos de empaque cantidades nuevos/actuales
+                                        $nuevas_existencias = floor($lote['cantidad'] / $nuevo_piezas_x_empaque);
+                                        $nuevas_existencias_piezas = $lote['cantidad'];
+                                    }else{
+                                        $nuevas_existencias = $lote['cantidad'];
+                                        $nuevas_existencias_piezas = ($lote['cantidad'] * $nuevo_piezas_x_empaque);
+                                    }
+
+                                    //Se recalculan las existencias en base a las cantidades modificadas
+                                    $existencias_piezas = ($total_entradas_piezas + $nuevas_existencias_piezas) - $total_salidas_piezas;
+                                    $existencias = floor($existencias_piezas / $nuevo_piezas_x_empaque);
+
+                                    if($existencias_piezas < 0){
+                                        $response_estatus = false;
+                                        $mensaje = 'Error: La existencias del Lote: '.$lote['lote'].' perteneciente al Articulo con clave: '.$articulo_clave.', alcanzan valores negativos.';
+                                        break 2;
+                                    }
+
+                                    $movimiento_articulo_db->stock->existencia = $existencias;
+                                    $movimiento_articulo_db->stock->existencia_piezas = $existencias_piezas;
+                                    $movimiento_articulo_db->stock->save();
+                                }
+                                $bitacora_modificaciones[] = '      |--+ Se Actualizaron Existencias del Lote: '.$stock_db['lote'].' [ Existencia Piezas: '.$movimiento_articulo_db->stock->existencia_piezas.' ]';
+
+                                /*                                                                                                                                                    *
+                                 * Fin: Hay otros movimientos de Entrada                                                                                                              *
+                                 ******************************************************************************************************************************************************/
+                            }
+
+                            /******************************************************************************************************************************************************
+                             * Inicio: Si se guardan los datos en otro stock, diferente al actual                                                                                   *
+                             *                                                                                                                                                    */
+                            if($nuevo_stock){
+                                 /***  Calcular la cantidad a agregar a existencias del nuevo stock ***/
+                                 if($modo_movimiento == 'UNI'){
+                                    $cantidad = floor($lote['cantidad'] / $nuevo_piezas_x_empaque);
+                                    $cantidad_piezas = $lote['cantidad'];
+                                }else{
+                                    $cantidad = $lote['cantidad'];
+                                    $cantidad_piezas = ($lote['cantidad'] * $nuevo_piezas_x_empaque);
+                                }
+
+                                /***  Se aplican las salidas existentes a las existencias calculadas ***/
+                                if($modificar_salidas){ //Si hay, se restan las salidas capturadas del lote
+                                    /*$existencias_piezas -= $restar_salidas_otro_lote;
+                                    $existencias = floor($existencias_piezas / $nuevo_piezas_x_empaque);
+                                    $restar_salidas_otro_lote = 0;*/
+                                }
+
+                                //Checar si las cantidades son negativas, regresar error?
+                                if($cantidad_piezas < 0){ 
+                                    $response_estatus = false;
+                                    $mensaje = 'La existencias del Lote: '.$lote['lote'].' alcanzan valores negativos.';
+                                    break 2;
+                                }
+
+                                $nuevo_stock->existencia += $cantidad;
+                                $nuevo_stock->existencia_piezas += $cantidad_piezas;
+                                $nuevo_stock->save();
+                                $bitacora_modificaciones[] = '      |--+ Se Actualizaron las Existencias del Otro Stock con Lote: '.$lote['lote'].' [ Existencia Piezas: '.$nuevo_stock->existencia_piezas.' ]';
+
+                                /***  Si el lote anterior tenia salidas capturadas, mover estas salidas a el otro lote ***/
+                                /*if($actualizar_salidas_otro_lote){
+                                    MovimientoArticulo::where('direccion_movimiento','SAL')->where('bien_servicio_id',$articulo_id)->where('stock_id',$movimiento_articulo_db->stock_id)->update(['stock_id'=>$nuevo_stock->id]);
+                                    $actualizar_salidas_otro_lote = false;
+                                    $bitacora_modificaciones[] = '      |--+ Se Modificaron las Salidas del Lote: '.$lote['lote'];
+                                }*/
+
+                                //Modificamos la referencia al stock
+                                $movimiento_articulo_db->stock_id = $nuevo_stock->id;
+                                //$mensaje .= '|-- Lote Editado OTRO: '.$nuevo_stock->lote.' --|';
+                            }
+                            /*                                                                                                                                                    *
+                             * Fin: Si se guardan los datos en otro stock, diferente al actual                                                                                      *
+                             ******************************************************************************************************************************************************/
+                        }
+                    }else{
+                        /***  Si no se encuentra dentro de los articulos guardados del movimiento, regresar error  ***/
+                        $bitacora_modificaciones[] = '   |--+ No se encontró Lote: '.$lote['lote'] . ' -- Error';
+                        $response_estatus = false;
+                        break 2;
+                    }
+                }
+
+            }
+        }
+
         return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones];
     }
 
     private function modificarArticulos($movimiento,$lista_articulos){
-        //$movimiento->observaciones = '-D-';
-        //$movimiento->save();
         $loggedUser = auth()->userOrFail();
         $restar_salidas_otro_lote = 0;
         $actualizar_salidas_otro_lote = false;
@@ -450,24 +834,24 @@ class ModificacionMovimientosController extends Controller{
                             /******************************************************************************************************************************************************
                              * Inicio: Obtenemos el detalle del empaque, tanto el anterior como el nuevo, en caso de que se haya modificado ese dato                              *
                              *                                                                                                                                                    */
-                            $piezas_x_empaque = 1;
-                            $nuevo_piezas_x_empaque = 1;
+                                $piezas_x_empaque = 1;
+                                $nuevo_piezas_x_empaque = 1;
 
-                            $detalle_empaque = BienServicioEmpaqueDetalle::find($stock_original['empaque_detalle_id']);
-                            if($detalle_empaque){
-                                $piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
-                            }
-                            $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Original: '.$piezas_x_empaque;
-
-                            if($lote['empaque_detalle_id'] != $stock_original['empaque_detalle_id']){
-                                $detalle_empaque = BienServicioEmpaqueDetalle::find($lote['empaque_detalle_id']);
+                                $detalle_empaque = BienServicioEmpaqueDetalle::find($stock_original['empaque_detalle_id']);
                                 if($detalle_empaque){
-                                    $nuevo_piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
+                                    $piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
                                 }
-                            }else{
-                                $nuevo_piezas_x_empaque = $piezas_x_empaque;
-                            }
-                            $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Nuevo: '.$nuevo_piezas_x_empaque;
+                                $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Original: '.$piezas_x_empaque;
+
+                                if($lote['empaque_detalle_id'] != $stock_original['empaque_detalle_id']){
+                                    $detalle_empaque = BienServicioEmpaqueDetalle::find($lote['empaque_detalle_id']);
+                                    if($detalle_empaque){
+                                        $nuevo_piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
+                                    }
+                                }else{
+                                    $nuevo_piezas_x_empaque = $piezas_x_empaque;
+                                }
+                                $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Nuevo: '.$nuevo_piezas_x_empaque;
                             /*                                                                                                                                                    *
                              * Fin: Obtenemos el detalle del empaque, tanto el anterior como el nuevo, en caso de que se haya modificado ese dato                                 *
                              ******************************************************************************************************************************************************/
@@ -475,37 +859,37 @@ class ModificacionMovimientosController extends Controller{
                             /******************************************************************************************************************************************************
                              * Inicio: Sacamos un resumen de los movimientos de Entrada y Salida, excluyendo el movimiento de Entrada que se esta modificando                     *
                              *                                                                                                                                                    */
-                            $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
-                                                    ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
-                                                    ->where(function($where){
-                                                        $where->where('movimientos.estatus','!=','BOR')->where('movimientos.estatus','!=','CAN');
-                                                    })
-                                                    ->where('movimientos_articulos.stock_id',$movimiento_articulo_db->stock_id)
-                                                    ->where('movimientos_articulos.id','!=',$movimiento_articulo_db->id)
-                                                    ->groupBy('movimientos_articulos.stock_id')
-                                                    ->groupBy('movimientos_articulos.direccion_movimiento')
-                                                    ->groupBy('movimientos_articulos.modo_movimiento')
-                                                    ->get();
-                            //Se calculan el total de Entradas y Salidas por Pieza (Unidosis)
-                            $total_entradas_piezas = 0;
-                            $total_salidas_piezas = 0;
-                            for($k  = 0; $k < count($suma_movimientos); $k++){
-                                $suma = $suma_movimientos[$k];
-                                if($suma->direccion_movimiento == 'ENT'){
-                                    if($suma->modo_movimiento == 'UNI'){
-                                        $total_entradas_piezas += $suma->cantidad;
-                                    }else{
-                                        $total_entradas_piezas += ($suma->cantidad * $nuevo_piezas_x_empaque);
-                                    }
-                                }else if($suma->direccion_movimiento == 'SAL'){
-                                    if($suma->modo_movimiento == 'UNI'){
-                                        $total_salidas_piezas += $suma->cantidad;
-                                    }else{
-                                        $total_salidas_piezas += ($suma->cantidad * $nuevo_piezas_x_empaque);
+                                $suma_movimientos = MovimientoArticulo::select(DB::raw('SUM(movimientos_articulos.cantidad) as cantidad'), 'movimientos_articulos.modo_movimiento', 'movimientos_articulos.direccion_movimiento' )
+                                                        ->leftJoin('movimientos','movimientos.id','=','movimientos_articulos.movimiento_id')
+                                                        ->where(function($where){
+                                                            $where->where('movimientos.estatus','!=','BOR')->where('movimientos.estatus','!=','CAN');
+                                                        })
+                                                        ->where('movimientos_articulos.stock_id',$movimiento_articulo_db->stock_id)
+                                                        ->where('movimientos_articulos.id','!=',$movimiento_articulo_db->id)
+                                                        ->groupBy('movimientos_articulos.stock_id')
+                                                        ->groupBy('movimientos_articulos.direccion_movimiento')
+                                                        ->groupBy('movimientos_articulos.modo_movimiento')
+                                                        ->get();
+                                //Se calculan el total de Entradas y Salidas por Pieza (Unidosis)
+                                $total_entradas_piezas = 0;
+                                $total_salidas_piezas = 0;
+                                for($k  = 0; $k < count($suma_movimientos); $k++){
+                                    $suma = $suma_movimientos[$k];
+                                    if($suma->direccion_movimiento == 'ENT'){
+                                        if($suma->modo_movimiento == 'UNI'){
+                                            $total_entradas_piezas += $suma->cantidad;
+                                        }else{
+                                            $total_entradas_piezas += ($suma->cantidad * $nuevo_piezas_x_empaque);
+                                        }
+                                    }else if($suma->direccion_movimiento == 'SAL'){
+                                        if($suma->modo_movimiento == 'UNI'){
+                                            $total_salidas_piezas += $suma->cantidad;
+                                        }else{
+                                            $total_salidas_piezas += ($suma->cantidad * $nuevo_piezas_x_empaque);
+                                        }
                                     }
                                 }
-                            }
-                            $bitacora_modificaciones[] = '      |--+ Se Obtiene La Suma de los Movimientos Relacionados al Lote: '.$lote['lote'].' [Total Entradas: '.$total_entradas_piezas.', Total Salidas: '.$total_salidas_piezas.']';
+                                $bitacora_modificaciones[] = '      |--+ Se Obtiene La Suma de los Movimientos Relacionados al Lote: '.$lote['lote'].' [Total Entradas: '.$total_entradas_piezas.', Total Salidas: '.$total_salidas_piezas.']';
                             /*                                                                                                                                                    *
                              * Fin: Sacamos un resumen de los movimientos de Entrada y Salida, excluyendo el movimiento de Entrada que se esta modificando                        *
                              ******************************************************************************************************************************************************/
@@ -702,46 +1086,46 @@ class ModificacionMovimientosController extends Controller{
                             /******************************************************************************************************************************************************
                              * Inicio: Si se guardan los datos en otro lote diferente al actual                                                                                   *
                              *                                                                                                                                                    */
-                            if($otro_lote_guardado){
-                                /***  Recalcular las exitencias en base a las nuevas cantidades ***/
-                                if($modo_movimiento == 'UNI'){
-                                    $existencias = floor($lote['cantidad'] / $nuevo_piezas_x_empaque);
-                                    $existencias_piezas = $lote['cantidad'];
-                                }else{
-                                    $existencias = $lote['cantidad'];
-                                    $existencias_piezas = ($lote['cantidad'] * $nuevo_piezas_x_empaque);
+                                if($otro_lote_guardado){
+                                    /***  Recalcular las exitencias en base a las nuevas cantidades ***/
+                                    if($modo_movimiento == 'UNI'){
+                                        $existencias = floor($lote['cantidad'] / $nuevo_piezas_x_empaque);
+                                        $existencias_piezas = $lote['cantidad'];
+                                    }else{
+                                        $existencias = $lote['cantidad'];
+                                        $existencias_piezas = ($lote['cantidad'] * $nuevo_piezas_x_empaque);
+                                    }
+
+                                    /***  Se aplican las salidas existentes a las existencias calculadas ***/
+                                    if($actualizar_salidas_otro_lote && $restar_salidas_otro_lote > 0){ //Si hay, se restan las salidas capturadas del lote
+                                        $existencias_piezas -= $restar_salidas_otro_lote;
+                                        $existencias = floor($existencias_piezas / $nuevo_piezas_x_empaque);
+                                        $restar_salidas_otro_lote = 0;
+                                    }
+
+                                    //Checar si las exitencias son negativas, regresar error
+                                    if($existencias_piezas < 0){ 
+                                        $response_estatus = false;
+                                        $mensaje = 'La existencias del Lote: '.$lote['lote'].' alcanzan valores negativos.';
+                                        break 2;
+                                    }
+
+                                    $otro_lote_guardado->existencia += $existencias;
+                                    $otro_lote_guardado->existencia_piezas += $existencias_piezas;
+                                    $otro_lote_guardado->save();
+                                    $bitacora_modificaciones[] = '      |--+ Se Actualizaron las Existencias del Otro Lote: '.$lote['lote'].' [ Existencia Piezas: '.$otro_lote_guardado->existencia_piezas.' ]';
+
+                                    /***  Si el lote anterior tenia salidas capturadas, mover estas salidas a el otro lote ***/
+                                    if($actualizar_salidas_otro_lote){
+                                        MovimientoArticulo::where('direccion_movimiento','SAL')->where('bien_servicio_id',$articulo_id)->where('stock_id',$movimiento_articulo_db->stock_id)->update(['stock_id'=>$otro_lote_guardado->id]);
+                                        $actualizar_salidas_otro_lote = false;
+                                        $bitacora_modificaciones[] = '      |--+ Se Modificaron las Salidas del Lote: '.$lote['lote'];
+                                    }
+
+                                    //Modificamos la referencia al stock
+                                    $movimiento_articulo_db->stock_id = $otro_lote_guardado->id;
+                                    //$mensaje .= '|-- Lote Editado OTRO: '.$otro_lote_guardado->lote.' --|';
                                 }
-
-                                /***  Se aplican las salidas existentes a las existencias calculadas ***/
-                                if($actualizar_salidas_otro_lote && $restar_salidas_otro_lote > 0){ //Si hay, se restan las salidas capturadas del lote
-                                    $existencias_piezas -= $restar_salidas_otro_lote;
-                                    $existencias = floor($existencias_piezas / $nuevo_piezas_x_empaque);
-                                    $restar_salidas_otro_lote = 0;
-                                }
-
-                                //Checar si las exitencias son negativas, regresar error
-                                if($existencias_piezas < 0){ 
-                                    $response_estatus = false;
-                                    $mensaje = 'La existencias del Lote: '.$lote['lote'].' alcanzan valores negativos.';
-                                    break 2;
-                                }
-
-                                $otro_lote_guardado->existencia += $existencias;
-                                $otro_lote_guardado->existencia_piezas += $existencias_piezas;
-                                $otro_lote_guardado->save();
-                                $bitacora_modificaciones[] = '      |--+ Se Actualizaron las Existencias del Otro Lote: '.$lote['lote'].' [ Existencia Piezas: '.$otro_lote_guardado->existencia_piezas.' ]';
-
-                                /***  Si el lote anterior tenia salidas capturadas, mover estas salidas a el otro lote ***/
-                                if($actualizar_salidas_otro_lote){
-                                    MovimientoArticulo::where('direccion_movimiento','SAL')->where('bien_servicio_id',$articulo_id)->where('stock_id',$movimiento_articulo_db->stock_id)->update(['stock_id'=>$otro_lote_guardado->id]);
-                                    $actualizar_salidas_otro_lote = false;
-                                    $bitacora_modificaciones[] = '      |--+ Se Modificaron las Salidas del Lote: '.$lote['lote'];
-                                }
-
-                                //Modificamos la referencia al stock
-                                $movimiento_articulo_db->stock_id = $otro_lote_guardado->id;
-                                //$mensaje .= '|-- Lote Editado OTRO: '.$otro_lote_guardado->lote.' --|';
-                            }
                             /*                                                                                                                                                    *
                              * Fin: Si se guardan los datos en otro lote diferente al actual                                                                                      *
                              ******************************************************************************************************************************************************/
