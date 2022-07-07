@@ -56,6 +56,8 @@ export class DialogoModificarStockComponent implements OnInit {
   accionLote: string;
   accionSalidas: string;
 
+  infoMessage: string;
+
   formStock: FormGroup;
   fechaActual: Date;
   
@@ -90,6 +92,7 @@ export class DialogoModificarStockComponent implements OnInit {
     this.salidasSeleccionadas = {};
     this.contadorSalidas = 0;
     this.totalPiezasSalidas = 0;
+    this.infoMessage = '';
     this.seleccionSalidasActivada = false;
 
     this.piezasXEmpaque = 1;
@@ -108,6 +111,7 @@ export class DialogoModificarStockComponent implements OnInit {
       formConfig = {
         id:[''],
         stock_id:[''],
+        programa_id:[''],
         lote:['',Validators.required],
         codigo_barras:[''],
         cantidad:['',Validators.required],
@@ -126,6 +130,7 @@ export class DialogoModificarStockComponent implements OnInit {
       formConfig = {
         id:[''],
         stock_id:[''],
+        programa_id:[''],
         marca:[''],
         marca_id:[''],
         modelo: [''],
@@ -159,9 +164,6 @@ export class DialogoModificarStockComponent implements OnInit {
     }else{
       this.toggleCartaCanje(false);
     }
-
-    this.formStock.patchValue(this.data.stock);
-    this.checarCaducidadFormulario();
 
     if(this.data.stock.respaldo){
       this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock.respaldo));
@@ -224,6 +226,12 @@ export class DialogoModificarStockComponent implements OnInit {
 
         if(!this.seleccionSalidasActivada){
           this.accionSalidas = '';
+        }
+
+        if(this.respaldoStock['programa_id'] != changes['programa_id']){
+          this.infoMessage = 'El Programa ha sido modificado';
+        }else{
+          this.infoMessage = '';
         }
 
         if(cambios_cantidad || cambios_datos || cambios_precio){
@@ -298,6 +306,9 @@ export class DialogoModificarStockComponent implements OnInit {
           this.resumenMovimientos['SAL']['uni'] -= (this.resumenMovimientos['SAL']['total'] % this.piezasXEmpaque);
           this.resumenMovimientos['SAL']['nrm'] += Math.floor(this.resumenMovimientos['SAL']['total'] / this.piezasXEmpaque);
 
+          this.formStock.patchValue(this.data.stock);
+          this.checarCaducidadFormulario();
+
           if(this.data.stock.marcado_borrar){
             this.marcarEliminarLote();
           }
@@ -332,6 +343,8 @@ export class DialogoModificarStockComponent implements OnInit {
       this.totalPiezasSalidas = 0;
       this.seleccionSalidasActivada = false;
 
+      let programa_id = this.formStock.get('programa_id').value;
+
       this.formStock.reset();
       if(this.respaldoStock.memo_folio){
         this.toggleCartaCanje(true);
@@ -339,10 +352,14 @@ export class DialogoModificarStockComponent implements OnInit {
         this.toggleCartaCanje(false);
       }
 
-      this.formStock.patchValue(this.respaldoStock);
+      this.descartarCambios = false;
+
+      let respaldo = JSON.parse(JSON.stringify(this.respaldoStock));
+      respaldo.programa_id = programa_id;
+      this.formStock.patchValue(respaldo);
+
       this.checarCaducidadFormulario();
       this.calcularExistencias();
-      this.descartarCambios = false;
     }
   }
 

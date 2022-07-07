@@ -118,6 +118,20 @@
     padding: 8px; 
     background-color: black;
     color: whitesmoke;
+    justify-content: center;
+    align-items: center;
+}
+
+.panel-acciones .icono{
+    height: 24px;
+    cursor: default;
+}
+
+.panel-acciones .icono .mat-icon{
+    font-size: 24px;
+    width: 24px !important;
+    height: 24px !important;
+    line-height: 24px !important;
 }
 
 .panel-acciones .etiqueta{

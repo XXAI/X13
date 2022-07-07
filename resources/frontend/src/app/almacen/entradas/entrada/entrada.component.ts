@@ -25,6 +25,7 @@ import { DialogoModificarMovimientoComponent } from '../../tools/dialogo-modific
 import { Location } from '@angular/common';
 import { MovimientosLocalStorageService } from '../../tools/movimientos-local-storage.service';
 import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
+import { DialogoHistorialModificacionesComponent } from '../../tools/dialogo-historial-modificaciones/dialogo-historial-modificaciones.component';
 
 @Component({
   selector: 'app-entrada',
@@ -540,6 +541,7 @@ export class EntradaComponent implements OnInit {
         let lote:any = {
           id:                 lista_articulos[i].id,
           stock_id:           (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined,
+          programa_id:        (lista_articulos[i].stock)?lista_articulos[i].stock.programa_id:undefined,
           modo_movimiento:    lista_articulos[i].modo_movimiento,
           lote:               (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
           fecha_caducidad:    (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
@@ -863,6 +865,21 @@ export class EntradaComponent implements OnInit {
     }
   }
 
+  verHistorialModificaciones(){
+    let configDialog = {
+      width: '80%',
+      //minHeight: '470px',
+      height: 'auto',
+      disableClose: false,
+      data:{id:this.datosEntrada.id},
+      panelClass: 'no-padding-dialog'
+    };
+
+    if(this.datosEntrada && (this.datosEntrada.estatus == 'FIN' || this.datosEntrada.estatus == 'PERE')){
+      const dialogRef = this.dialog.open(DialogoHistorialModificacionesComponent, configDialog);
+    }
+  }
+
   activarModificacionEntrada(){
     let configDialog = {
       width: '400px',
@@ -920,7 +937,7 @@ export class EntradaComponent implements OnInit {
   protegerDatosFormulario(){
     let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','documento_folio','observaciones'];
     if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
-      mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+      mostrar_campos.push('tipo_movimiento_id','programa','programa_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
     }
     this.reconfigurarFormulario(mostrar_campos);
   }
@@ -933,10 +950,12 @@ export class EntradaComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(valid => {
       if(valid){
+        this.alertPanel.cerrarAlerta();
         this.isSaving = true;
         let params:any = this.formMovimiento.value;
         params.fecha_movimiento = this.datepipe.transform(params.fecha_movimiento, 'yyyy-MM-dd');
         params.proveedor_id = (params.proveedor)?params.proveedor.id:null;
+        params.programa_id = (params.programa)?params.programa.id:null;
         params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
 
         if(this.puedeEditarListaArticulos){
@@ -995,6 +1014,19 @@ export class EntradaComponent implements OnInit {
           }
         );
       }
+    });
+  }
+
+  programaSeleccionado(programa:any){
+    this.dataSourceArticulos.data.forEach(articulo =>{
+      articulo.lotes.forEach(stock => {
+        if(this.verBoton.concluir_modificacion){
+          if(!stock.respaldo){
+            stock.respaldo = JSON.parse(JSON.stringify(stock));
+          }
+          stock.programa_id = programa.id;
+        }
+      });
     });
   }
   

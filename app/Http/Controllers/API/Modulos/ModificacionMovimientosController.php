@@ -33,6 +33,27 @@ use App\Models\MovimientoArticulo;
 use App\Models\User;
 
 class ModificacionMovimientosController extends Controller{
+    public function listarHistorialModificaciones(Request $request, $id){
+        try{
+            $movimiento = Movimiento::find($id);
+            if(!$movimiento){
+                return response()->json(['error'=>"Movimiento no encontrado"],HttpResponse::HTTP_OK);
+            }
+
+            if($movimiento->estatus == 'BOR'){
+                return response()->json(['error'=>"El movimiento no tiene el estatus requerido para ejecutar esta acción"],HttpResponse::HTTP_OK);
+            }
+
+            $modificaciones = MovimientoModificacion::conDescripciones()->with('modificacionesArticulos')->where('movimiento_id',$id)->get();
+            //$modificacion->load('solicitadoUsuario','aprobadoUsuario','canceladoUsuario');
+            //TODO::crear ruta en API
+
+            return response()->json(['data'=>$modificaciones],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     public function administrarModificacion(Request $request, $id){
         try{
             DB::beginTransaction();
@@ -139,6 +160,7 @@ class ModificacionMovimientosController extends Controller{
                 'unidad_medica_movimiento_id',
                 'area_servicio_movimiento_id',
                 'tipo_movimiento_id',
+                'programa_id',
                 'proveedor_id',
                 'referencia_folio',
                 'referencia_fecha'
@@ -192,6 +214,10 @@ class ModificacionMovimientosController extends Controller{
 
             if(isset($parametros['proveedor_id']) && $datos_originales['proveedor_id'] != $datos_modificados['proveedor_id']){
                 $datos_modificados['proveedor'] = $parametros['proveedor'];
+            }
+
+            if(isset($parametros['programa_id']) && $datos_originales['programa_id'] != $datos_modificados['programa_id']){
+                $datos_modificados['programa'] = $parametros['programa'];
             }
 
             if(isset($parametros['personal_medico']) && $parametros['personal_medico']){
@@ -273,15 +299,29 @@ class ModificacionMovimientosController extends Controller{
                 $movimiento->movimientoHijo()->update($datos_movimiento_entrada);
             }
 
+            
             if($modificacion->nivel_modificacion == 2){
                 $response = [ 'estatus'=> false ];
                 if($movimiento->direccion_movimiento == 'ENT'){
                     //Movimiento de entrada
+                    $movimiento->programa_id = $datos_modificados['programa_id'];
                     $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados']);
                 }
                 if(!$response['estatus']){
                     DB::rollback();
                     return response()->json(['error'=>$response['mensaje'],'parametros'=>$response],HttpResponse::HTTP_OK);
+                }
+                
+                if(count($response['lista_modificaciones']) > 0){
+                    $datos_originales['total_articulos'] = $movimiento->total_articulos;
+                    $datos_originales['total_claves'] = $movimiento->total_claves;
+                    $datos_originales['total_monto'] = $movimiento->total_monto;
+                    
+                    $datos_modificados['total_articulos'] = $response['datos_modificados_movimiento']['total_articulos'];
+                    $datos_modificados['total_claves'] = $response['datos_modificados_movimiento']['total_claves'];
+                    $datos_modificados['total_monto'] = $response['datos_modificados_movimiento']['total_monto'];
+
+                    $modificacion->modificacionesArticulos()->createMany($response['lista_modificaciones']);
                 }
             }
 
@@ -365,7 +405,7 @@ class ModificacionMovimientosController extends Controller{
 
                 if($lote['cantidad'] < 0){
                     $response_estatus = false;
-                    $mensaje = 'La cantidad asignada al lote: '.$lote['lote'].' del articulo con clave: '.$articulo_clave.' es negativa.';
+                    $mensaje = 'La cantidad asignada al articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].' es negativa';
                     break 2;
                 }
 
@@ -376,6 +416,11 @@ class ModificacionMovimientosController extends Controller{
                     /***  Si se encuentra dentro de los articulos guardados del movimiento, iniciar proceso de validación y modificación(id: movimiento_articulo->id, stock_id: movimiento_articulo->stock_id)  ***/
                     if(isset($movimiento_articulos_bd[$articulo_id][$lote['id'].'-'.$lote['stock_id']])){
                         $bitacora_modificaciones[] = '      |--+ Revisando Lote: '.$lote['lote'];
+
+                        $actualizar_datos = false; //Para determinar si hubo cambios, y se deben modificar datos
+                        $nuevo_stock = null; //Nuevo stock a guardar/crear
+                        $salidas_seleccionadas_total = ['normal'=>0,'piezas'=>0];
+                        $salidas_seleccionadas_lista = [];
 
                         /***  Se marca el elemento para indicar que si existe en el request, todos los registros debe encontrarse de lo contrario marcar error  ***/
                         $movimiento_articulos_bd[$articulo_id][$lote['id'].'-'.$lote['stock_id']]['encontrado'] = true;
@@ -442,11 +487,6 @@ class ModificacionMovimientosController extends Controller{
                             continue;
                         }
                         
-                        $actualizar_datos = false; //Para determinar si hubo cambios, y se deben modificar datos
-                        $nuevo_stock = null; //Nuevo stock a guardar/crear
-                        $salidas_seleccionadas_total = ['normal'=>0,'piezas'=>0];
-                        $salidas_seleccionadas_lista = [];
-
                         //Obtener las salidas seleccionadas(ids para actualizar), y sumar las cantidad para realizar operaciones de ajustes de existencias
                         if(isset($lote['lista_salidas']) && count($lote['lista_salidas']) > 0){
                             $salidas_seleccionadas_lista = MovimientoArticulo::where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('stock_id',$lote['stock_id'])->where('direccion_movimiento','SAL')->get();
@@ -458,6 +498,21 @@ class ModificacionMovimientosController extends Controller{
                                 }
                             }
                         }
+
+                        /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
+                        $registro_original = [
+                            'movimiento_articulo' => $movimiento_articulo_db->toArray(),
+                            'salidas_seleccionadas'=>null,
+                            'recepcion_transferencias'=>null,
+                            'nuevo_stock'=>null
+                        ];
+
+                        $registro_modificado = [
+                            'movimiento_articulo'=>null,
+                            'salidas_seleccionadas'=>null,
+                            'recepcion_transferencias'=>null, 
+                            'nuevo_stock'=>null
+                        ];
 
                         /***  Si es necesario actualizar los datos o se modifico la cantidad de entrada, se procedera a validar la modificación  ***/
                         $ajustar_existencias = false;
@@ -475,6 +530,7 @@ class ModificacionMovimientosController extends Controller{
                                 $nuevo_stock = $nuevo_stock->first();
                                 if($nuevo_stock){
                                     $bitacora_modificaciones[] = '      |--+ Se Encontró Nuevo Stock: '.$lote['lote'];
+                                    $registro_original['nuevo_stock'] = $nuevo_stock->toArray();
                                 }
                             }
 
@@ -546,19 +602,6 @@ class ModificacionMovimientosController extends Controller{
 
                             $ajustar_existencias = ($lote['cantidad'] != $stock_db['cantidad'] || $piezas_x_empaque != $nuevo_piezas_x_empaque);
 
-                            /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
-                            $registro_original = [
-                                    'movimiento_articulo' => $movimiento_articulo_db->toArray(),
-                                    'salidas_seleccionadas'=>null,
-                                    'recepcion_transferencias'=>null
-                                ];
-                            $registro_modificado = [
-                                    'movimiento_articulo'=>null,
-                                    'salidas_seleccionadas'=>null,
-                                    'recepcion_transferencias'=>null, 
-                                    'nuevo_stock'=>null
-                                ];
-
                             /************************************************************  Las acciones a realizar seran en base al total de Entradas y Salidas que tenga el stock(lote)  ************************************************************/
                             if(!$nuevo_stock && $total_entradas_piezas == 0){
                                 /******************************************************************************************************************************************************
@@ -568,7 +611,7 @@ class ModificacionMovimientosController extends Controller{
                                 /***  Si no hay nuevo stock y no hay otras entradas, se puede modificar el lote sin problemas: accion_lote = edit  ***/
                                 if($actualizar_datos){
                                     $movimiento_articulo_db->stock->update($lote);
-                                    $bitacora_modificaciones[] = '      |--+ Se Actualizaron los Datos del Stock con Lote: '.$lote['lote'].' Accion recibida:'.$lote['accion_lote'];
+                                    $bitacora_modificaciones[] = '      |--+ Se Actualizaron los Datos del Stock con Lote: '.$lote['lote'];
                                 }
 
                                 /***  Si se modifico la cantidad o el detalle del empaque  ***/
@@ -591,7 +634,7 @@ class ModificacionMovimientosController extends Controller{
                                         //Si las exitencias son negativas, regresar error
                                         if($existencias_piezas < 0){
                                             $response_estatus = false;
-                                            $mensaje = 'Error: La existencias del Lote: '.$lote['lote'].' perteneciente al Articulo con clave: '.$articulo_clave.', alcanzan valores negativos.';
+                                            $mensaje = 'Las existencias del articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].', alcanzan valores negativos';
                                             break 2;
                                         }
 
@@ -616,14 +659,14 @@ class ModificacionMovimientosController extends Controller{
                                     //Estatus de conflicto en las entradas/recepciones de las salidas(transferencias) de este stock
                                     $tipo_movimiento = TipoMovimiento::where('clave','RCPCN')->where('movimiento','ENT')->first();
 
-                                    $movimientos_recepcion = Movimiento::select('id','folio','documento_folio','estatus','upated_at','modificado_por_usuario_id')->where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
+                                    $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
                                                                         ->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                     $registro_original['recepcion_transferencias'] = $movimientos_recepcion->toArray();
 
                                     $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
                                                                         ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
 
-                                    $movimientos_recepcion = Movimiento::select('id','folio','documento_folio','estatus','upated_at','modificado_por_usuario_id')->where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
+                                    $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
                                                                         ->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                     $registro_modificado['recepcion_transferencias'] = $movimientos_recepcion->toArray();
 
@@ -658,7 +701,7 @@ class ModificacionMovimientosController extends Controller{
                                         'user_id'           =>$loggedUser->id,
                                     ];
                                     $nuevo_stock = Stock::create($datos_nuevo_stock);
-                                    $bitacora_modificaciones[] = '      |--+ Se Crea un Nuevo Stock con Lote: '.$lote['lote'].' accion:'.$lote['accion_lote'];
+                                    $bitacora_modificaciones[] = '      |--+ Se Crea un Nuevo Stock con Lote: '.$lote['lote'];
                                 }
 
                                 if($nuevo_stock){
@@ -683,7 +726,7 @@ class ModificacionMovimientosController extends Controller{
 
                                     if($existencias_piezas < 0){
                                         $response_estatus = false;
-                                        $mensaje = 'Error: La existencias del Lote: '.$lote['lote'].' perteneciente al Articulo con clave: '.$articulo_clave.', alcanzan valores negativos.';
+                                        $mensaje = 'Las existencias del articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].', alcanzan valores negativos';
                                         break 2;
                                     }
 
@@ -708,7 +751,7 @@ class ModificacionMovimientosController extends Controller{
 
                                     if($existencias_piezas < 0){
                                         $response_estatus = false;
-                                        $mensaje = 'Error: La existencias del Lote: '.$lote['lote'].' perteneciente al Articulo con clave: '.$articulo_clave.', alcanzan valores negativos.';
+                                        $mensaje = 'Las existencias del articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].', alcanzan valores negativos';
                                         break 2;
                                     }
 
@@ -793,7 +836,7 @@ class ModificacionMovimientosController extends Controller{
 
                                 if($existencias_piezas < 0){ 
                                     $response_estatus = false;
-                                    $mensaje = 'La existencias del Lote: '.$lote['lote'].' alcanzan valores negativos.';
+                                    $mensaje = 'Las existencias del articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].', alcanzan valores negativos';
                                     break 2;
                                 }
 
@@ -822,14 +865,14 @@ class ModificacionMovimientosController extends Controller{
                                         //Estatus de conflicto en las entradas/recepciones de las salidas(transferencias) de este stock
                                         $tipo_movimiento = TipoMovimiento::where('clave','RCPCN')->where('movimiento','ENT')->first();
     
-                                        $movimientos_recepcion = Movimiento::select('id','folio','documento_folio','estatus','upated_at','modificado_por_usuario_id')->where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
+                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
                                                                             ->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                         $registro_original['recepcion_transferencias'] = $movimientos_recepcion->toArray();
     
                                         $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
                                                                             ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
     
-                                        $movimientos_recepcion = Movimiento::select('id','folio','documento_folio','estatus','upated_at','modificado_por_usuario_id')->where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
+                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')
                                                                             ->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                         $registro_modificado['recepcion_transferencias'] = $movimientos_recepcion->toArray();
     
@@ -849,10 +892,6 @@ class ModificacionMovimientosController extends Controller{
                             /*                                                                                                                                                    *
                              * Fin: Si se guardan los datos en otro stock, diferente al actual                                                                                    *
                              ******************************************************************************************************************************************************/
-
-                            /*if($actualizar_datos || $ajustar_existencias || $nuevo_lote){
-                                $listado_modificaciones[] = ['tipo_modificacion'=>'UPD', 'movimiento_articulo_id'=>$movimiento_articulo_db->id, 'registro_original'=>json_encode($registro_original), 'registro_modificado'=>json_encode($registro_modificado)];
-                            }*/
                         }
 
                         $diferencias_precios = ($lote['precio_unitario'] != $movimiento_articulo_db->precio_unitario || $lote['iva'] != $movimiento_articulo_db->iva);
@@ -876,13 +915,25 @@ class ModificacionMovimientosController extends Controller{
                         $response_estatus = false;
                         break 2;
                     }
+
                 }else{ //-> if(isset($lote['id']) && $lote['id'])
+                    $nuevo_piezas_x_empaque = 1;
+                    $detalle_empaque = BienServicioEmpaqueDetalle::find($lote['empaque_detalle_id']);
+                    if($detalle_empaque){
+                        $nuevo_piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
+                    }
                     if($modo_movimiento == 'UNI'){
                         $existencias = floor($lote['cantidad'] / $nuevo_piezas_x_empaque);
                         $existencias_piezas = $lote['cantidad'];
                     }else{
                         $existencias = $lote['cantidad'];
                         $existencias_piezas = ($lote['cantidad'] * $nuevo_piezas_x_empaque);
+                    }
+
+                    if($existencias_piezas < 0){ 
+                        $response_estatus = false;
+                        $mensaje = 'Las existencias del articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].', alcanzan valores negativos';
+                        break 2;
                     }
 
                     $nuevo_lote = [
@@ -946,10 +997,15 @@ class ModificacionMovimientosController extends Controller{
         }
 
         $conteos_movimiento = MovimientoArticulo::select(DB::raw('SUM(cantidad) as total_articulos'), DB::raw('COUNT(DISTINCT bien_servicio_id) as total_claves'), DB::raw('SUM(total_monto) as total_monto'))->where('movimiento_id',$movimiento->id)->first();
-        $movimiento->update(['total_articulos'=>$conteos_movimiento->total_articulos, 'total_claves'=>$conteos_movimiento->total_claves, 'total_monto'=>$conteos_movimiento->total_monto,'modificado_por_usuario_id'=>$loggedUser->id]);
+        
+        $datos_movimiento = [
+            'total_articulos' => $conteos_movimiento->total_articulos, 
+            'total_claves' => $conteos_movimiento->total_claves, 
+            'total_monto' => $conteos_movimiento->total_monto,
+        ];
 
         $bitacora_modificaciones[] = '|--+ Actualizando Movmiento: '.$movimiento->folio;
 
-        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones];
+        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento];
     }
 }

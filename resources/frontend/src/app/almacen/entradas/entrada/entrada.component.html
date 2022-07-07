@@ -54,39 +54,43 @@
                 <span>Duplicar Entrada</span>
             </button>
 
-            <mat-divider *ngIf="verBoton['modificar_entrada']"></mat-divider>
+            <!--mat-divider *ngIf="verBoton['modificar_entrada']"></mat-divider-->
             <button mat-menu-item *ngIf="verBoton['modificar_entrada']" (click)="activarModificacionEntrada()">
                 <mat-icon color="admin">admin_panel_settings</mat-icon>
                 <span>Modificar Entrada</span>
             </button>
 
-            <mat-divider *ngIf="verBoton['crear_salida']"></mat-divider>
+            <!--mat-divider *ngIf="verBoton['crear_salida']"></mat-divider-->
             <button mat-menu-item *ngIf="verBoton['crear_salida']" [routerLink]="'/almacen/salidas/nueva'" [state]="{data:{movimiento_id:datosEntrada.id}}">
                 <mat-icon color="primary">reply</mat-icon>
                 <span>Crear Salida</span>
             </button>
 
-            <mat-divider *ngIf="verBoton['eliminar']"></mat-divider>
+            <!--mat-divider *ngIf="verBoton['eliminar']"></mat-divider-->
             <button mat-menu-item style="color:red;" *ngIf="verBoton['eliminar']" (click)="eliminarEntrada()">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Eliminar Entrada</span>
             </button>
 
             <div [ifHasPermission]="'XwFSazUr0aCZcAYtcdjYkw69N9amlutP'">
-                <mat-divider *ngIf="verBoton['cancelar']"></mat-divider>
+                <!--mat-divider *ngIf="verBoton['cancelar']"></mat-divider-->
                 <button mat-menu-item style="color:red;" *ngIf="verBoton['cancelar']" (click)="cancelarEntrada()">
                     <mat-icon color="warn">cancel</mat-icon>
                     <span>Cancelar Entrada</span>
                 </button>
             </div>
 
-            <mat-divider *ngIf="verBoton['descartar_cambios']"></mat-divider>
+            <!--mat-divider *ngIf="verBoton['descartar_cambios']"></mat-divider-->
             <button mat-menu-item *ngIf="verBoton['descartar_cambios']" (click)="descartarCambiosLocalStorage()">
                 <mat-icon>undo</mat-icon>
                 <span>Descartar Cambios</span>
             </button>
 
             <mat-divider></mat-divider>
+            <button mat-menu-item (click)="verHistorialModificaciones()">
+                <mat-icon>timeline</mat-icon>
+                <span>Historial de Modificaciones</span>
+            </button>
             <button mat-menu-item (click)="generarPDF()">
                 <mat-icon>print</mat-icon>
                 <span>Imprimir</span>
@@ -224,7 +228,7 @@
                     <button mat-icon-button matPrefix>
                         <mat-icon>list_alt</mat-icon>
                     </button>
-                    <mat-autocomplete autoActiveFirstOption #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto">
+                    <mat-autocomplete autoActiveFirstOption #autoProgramas="matAutocomplete" [displayWith]="getDisplayFn('descripcion')" panelWidth="auto" (optionSelected)="programaSeleccionado($event.option.value)">
                         <mat-option *ngIf="catalogos['programas'].length == 0" value="">No hay programas capturados</mat-option>
                         <mat-option *ngFor="let programa of filteredProgramas | async" [value]="programa">
                             {{programa.descripcion}}
