@@ -491,6 +491,7 @@ export class ListaComponent implements OnInit {
       
       let config = {
         mostrar_montos:false,
+        vacunas: true,
       };
       reportWorker.postMessage({data:{items: obj, config:config, fecha_actual: this.fechaActual},reporte:'almacen/entrada'});
       this.isLoading = false;

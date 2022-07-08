@@ -102,6 +102,10 @@ export class ReporteAlmacenEntrada{
               fontSize: 6,
               alignment: "right"
             },
+            tabla_datos_left:{
+              fontSize: 8,
+              alignment: "left"
+            },
             entrada_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
@@ -406,6 +410,87 @@ export class ReporteAlmacenEntrada{
               ]
             }
           });
+        }
+
+        if(reportData.config.vacunas){
+
+          datos.content.push({
+            layout: 'noBorders',
+            table: {
+             widths: ['*'],
+              margin: [0,0,0,0],
+              body: [
+                [
+                  { text: "\n\n\n\n\n\n\n\n\n\n\n\n", style: "tabla_datos"}
+                ]
+              ]
+            }
+          });
+
+          datos.content.push({
+            layout: 'noBorders',
+            table: {
+            widths: [50, 120, 20, 45, 60, 100, 50, 50],
+            margin: [0,0,0,0,0,0],
+              body: [
+                [
+
+                  // {text: "NOMBRE: ", style: "tabla_encabezado_datos"},
+                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
+
+                  // {text: "CARGO: ", style: "tabla_encabezado_datos"},
+                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
+
+                  {text: "NOMBRE: _________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "CARGO: __________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+
+
+                ],
+                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
+                [
+
+                  // {text: "FIRMA: ", style: "tabla_encabezado_datos"},
+                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
+
+                  // {text: "SELLO Y FECHA: ", style: "tabla_encabezado_datos"},
+                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
+
+
+                  {text: "FIRMA: ____________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "SELLO Y FECHA: ___________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+              
+                ],
+                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
+                [
+
+                  // {text: "TEMPERATURA DE RECEPCIÓN:", style: "tabla_datos_left", colSpan:2},{},
+                  // {text: "___________________________________________________________________", style: "tabla_datos_left", colSpan:6},{},{},{},{},{},
+
+                  {text: "TEMPERATURA DE RECEPCIÓN: _______________________________________________", style: "tabla_datos_left", colSpan:8},{},{},{},{},{},{},{}
+
+                ],
+                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
+                [
+
+                  {text: "TEMPERATURA DURANTE EL TRAYECTO: _______________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "ADECUADA: ", style: "tabla_encabezado_datos"},
+                  {text: "_________", style: "tabla_datos_left"},
+
+                  {text: "INADECUADA: ", style: "tabla_encabezado_datos"},
+                  {text: "_________", style: "tabla_datos_left"},
+
+                ],
+                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
+                [
+
+                  {text: "CANTIDAD RECIBIDA: _______________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "FECHA REAL ENTREGADA: _______________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+
+                ]
+              ]
+            }
+          });
+
         }
         return datos;
     }
