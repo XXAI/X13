@@ -870,7 +870,7 @@ export class EntradaComponent implements OnInit {
       width: '80%',
       //minHeight: '470px',
       height: 'auto',
-      disableClose: false,
+      disableClose: true,
       data:{id:this.datosEntrada.id},
       panelClass: 'no-padding-dialog'
     };

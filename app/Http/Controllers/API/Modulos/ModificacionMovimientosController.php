@@ -33,7 +33,7 @@ use App\Models\MovimientoArticulo;
 use App\Models\User;
 
 class ModificacionMovimientosController extends Controller{
-    public function listarHistorialModificaciones(Request $request, $id){
+    public function obtenerHistorialModificaciones(Request $request, $id){
         try{
             $movimiento = Movimiento::find($id);
             if(!$movimiento){
@@ -44,7 +44,7 @@ class ModificacionMovimientosController extends Controller{
                 return response()->json(['error'=>"El movimiento no tiene el estatus requerido para ejecutar esta acción"],HttpResponse::HTTP_OK);
             }
 
-            $modificaciones = MovimientoModificacion::conDescripciones()->with('modificacionesArticulos')->where('movimiento_id',$id)->get();
+            $modificaciones = MovimientoModificacion::conDescripciones()->with('modificacionesArticulos')->where('movimiento_id',$id)->orderBy('updated_at','DESC')->get();
             //$modificacion->load('solicitadoUsuario','aprobadoUsuario','canceladoUsuario');
             //TODO::crear ruta en API
 
@@ -356,7 +356,7 @@ class ModificacionMovimientosController extends Controller{
 
     private function modificarArticulosEntrada($movimiento,$lista_articulos){
         $loggedUser = auth()->userOrFail();
-        $response_estatus = false;
+        $response_estatus = true;
         $mensaje = '|-- Guardado con Éxito --|';
         $listado_modificaciones = []; //['tipo_modificacion'=>('ADD'|'DEL'|'UPD'), 'movimiento_articulo_id'=>0, 'registro_original'=>json, 'registro_modificado'=>json]
         $bitacora_modificaciones = [];

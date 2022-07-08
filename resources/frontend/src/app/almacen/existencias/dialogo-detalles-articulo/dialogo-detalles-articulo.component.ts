@@ -79,7 +79,6 @@ export class DialogoDetallesArticuloComponent implements OnInit {
     this.existencias = {cantidad:0, piezas:0, x_pieza:1};
     this.resguardos = {cantidad:0, piezas:0};
     this.almacenSeleccionado = {id:0};
-    this.dataSourceLotes = new MatTableDataSource<any>([]);
     this.datosFiltrados = false;
     this.almacenesAjenos = false;
 

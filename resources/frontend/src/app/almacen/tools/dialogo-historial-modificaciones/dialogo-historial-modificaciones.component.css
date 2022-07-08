@@ -22,6 +22,10 @@
     background-color: #787878;
     border-radius: 0px;
 }
+.datos-modificacion{
+    padding: 8px;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+}
 
 .fake-input{
     border-radius: 4px 4px 0 0;
@@ -32,5 +36,152 @@
     font-family: Roboto, "Helvetica Neue", sans-serif;
     letter-spacing: normal;
     color: rgba(0,0,0,.87);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.fake-input:hover{
     background-color: rgba(0,0,0,.04);
+    cursor: default;
+}
+
+.fake-input .label{
+    display: block;
+    font-size: small;
+    color: rgba(0,0,0,.54);
+    white-space: nowrap;
+}
+
+.fake-input .value{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    white-space: nowrap;
+    padding: 0 5px;
+}
+
+.fake-input .value-text{
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.42);
+    padding: 0 5px;
+}
+
+::ng-deep .mini-spinner.mat-progress-spinner circle {
+    /*stroke: whitesmoke !important;*/
+    stroke: rgba(0,0,0,.40);
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.lista-items{
+    overflow: hidden;
+    border-top: 1px solid rgba(0,0,0,.12);
+    border-right: 1px solid rgba(0,0,0,.12);
+    padding: 0px;
+}
+
+.encabezado{
+    padding: 5px;
+    font-weight: 500;
+    background-color: cadetblue;
+    color: whitesmoke;
+}
+
+.campo-filtro{
+    background-color: #d5d5d5;
+}
+
+.lista{
+    overflow: auto;
+}
+
+.lista .mat-list-base{
+    padding-top: 0px;
+}
+
+.small-icon{
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+    color: rgba(255,255,255,0.45);
+}
+
+.small-search-input{
+    padding: 5px 5px 5px 5px;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field{
+    width: 100%;
+    background-color: #d5d5d5;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field > .mat-form-field-wrapper { 
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-flex > .mat-form-field-infix { 
+    padding: 0px !important;
+}
+
+:host ::ng-deep .small-search-input > .mat-form-field-appearance-outline .mat-form-field-infix { 
+    padding: 0.8em 0em 0.5em 0em !important;
+    border-top:none;
+}
+
+.item-detalles{
+    border-top: 1px solid rgba(0,0,0,.12);
+    background-color: whitesmoke;
+    border-radius: 0px 4px 4px 0px;
+    box-sizing: border-box;
+    border-right: 1px solid rgba(0,0,0,.12);
+    border-bottom: 1px solid rgba(0,0,0,.12);
+}
+
+.item-detalles .encabezado{
+    padding: 5px;
+    font-weight: 500;
+    background-color: lightslategrey;
+    color: whitesmoke;
+}
+
+.no-seleccionado{
+    margin: 10px;
+    padding: 40px;
+    text-align: center;
+    font-style: italic;
+    color: #4a4848;
+    border-radius: 5px;
+    background-color: whitesmoke;
+    cursor: default;
+}
+
+.detalles-movimiento{
+    padding: 8px;
+    display: table;
+}
+
+.detalles-movimiento .encabezado-detalle{
+    color: whitesmoke;
+    background-color: #4a4848;
+    padding: 5px;
+}
+
+.detalles-movimiento .etiqueta{
+    font-weight: 500;
+}
+
+.detalles-movimiento .detalle {
+    display: table-cell;
+    cursor: default;
+    background:#eee;
+}
+
+.detalles-movimiento .detalle:nth-child(odd){
+    background:#ddd;
 }

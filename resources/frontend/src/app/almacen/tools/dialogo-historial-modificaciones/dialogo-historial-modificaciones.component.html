@@ -1,4 +1,4 @@
-<section fxLayout="column" fxLayoutAlign="start" style="min-height:470px; overflow: auto; flex: 1 1 0%;">
+<section fxLayout="column" fxLayoutAlign="start" style="min-height:470px; overflow: auto; flex: 1 1 0%;" (document:keydown.escape)="cancelarAccion()">
     <section fxFlex="none" class="dialog-toolbar">
         <div fxLayout="row">
             <div fxFlex="none" class="label-info">
@@ -9,12 +9,93 @@
             <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
         </div>
     </section>
-    <section fxFlex fxLayout="row" style="padding: 8px;">
-        <div fxFlex="none">
-            lista de modificaciones hechas
-        </div>
-        <div fxFlex>
-            detalles de la modificacion seleccionada
+    <section fxFlex fxLayout="row" style="padding: 8px; overflow: hidden;">
+        <mat-card fxFlex="none" fxLayout="column" class="lista-items">
+            <div fxFlex="none" class="encabezado" fxLayout="row"><span fxFlex="none">Modificaciones:</span> <span fxFlex></span> <span fxFlex="none" *ngIf="dataSourceMods">{{dataSourceMods.filteredData.length}}/{{dataSourceMods.data.length}}</span></div>
+            <div fxFlex="none" fxLayout="row" class="campo-filtro">
+                <div fxFlex class="small-search-input">
+                    <mat-form-field fxFlex appearance="outline">
+                        <input matInput [(ngModel)]="filtroMods" (keyup)="aplicarFiltroMods($event)" placeholder="Filtrar" autocomplete="off">
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxFlex class="lista">
+                <mat-selection-list #listaSeleccionable [multiple]="false" (selectionChange)="seleccionarModificacion($event)">
+                    <mat-list-option *ngIf="isLoadingMods" disabled class="no-results-found">
+                        <div fxLayout="row">
+                            <div fxFlex="none">
+                                <mat-spinner class="mini-spinner" [diameter]="20" [mode]="'indeterminate'"></mat-spinner>
+                            </div>
+                            <div fxFlex>
+                                Cargando Historial . . .
+                            </div>
+                        </div>
+                    </mat-list-option>
+                    <mat-list-option *ngIf="!isLoadingMods && dataSourceMods.filteredData.length == 0" disabled class="no-results-found">
+                        Sin Resultados
+                    </mat-list-option>
+                    <mat-list-option *ngFor="let modificacion of dataSourceMods.filteredData" [value]="modificacion">
+                        <mat-icon mat-list-icon>{{listaEstatusIconos[modificacion.estatus]}}</mat-icon>
+                        <div mat-line><span class="item-label">Solicitado: </span>{{modificacion.solicitado_usuario}}</div>
+                        <div mat-line><span class="item-label">Fecha:</span> {{modificacion.solicitado_fecha | date}}</div>
+                        <div mat-line><span class="item-label">Nivel:</span> {{(modificacion.nivel == 1)?'Solo Encabezado':'Incluir Articulos'}}</div>
+                    </mat-list-option>
+                </mat-selection-list>
+            </div>
+        </mat-card>
+        <div fxFlex fxLayout="column" class="item-detalles">
+            <div fxFlex="none" class="encabezado" *ngIf="modSeleccionada">Aprobó: {{datosModificacion.aprobado_usuario||'---'}}</div>
+            <div fxFlex="none" class="no-seleccionado" *ngIf="!modSeleccionada">
+                <span>Seleccione un elemento de la lista</span>
+            </div>
+            <div fxFlex fxLayout="column" *ngIf="modSeleccionada" style="overflow: hidden;">
+                <div fxFlex="none" fxLayout="row wrap" class="datos-modificacion">
+                    <div fxFlex="100" class="fake-input">
+                        <span class="label">Motivo:</span>
+                        <span class="value-text">{{datosModificacion.motivo_modificacion}}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Estatus:</span>
+                        <span class="value">{{listaEstatusLabels[datosModificacion.estatus]}}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Solicitado:</span>
+                        <span class="value">{{datosModificacion.solicitado_fecha}}</span>
+                    </div>
+                    <div fxFlex class="fake-input" *ngIf="datosModificacion.cancelado_fecha">
+                        <span class="label">Cancelado:</span>
+                        <span class="value">{{datosModificacion.cancelado_fecha}}</span>
+                    </div>
+                    <div fxFlex class="fake-input" *ngIf="!datosModificacion.cancelado_fecha">
+                        <span class="label">Aprobado:</span>
+                        <span class="value">{{datosModificacion.aprobado_fecha||'---'}}</span>
+                    </div>
+                    <div fxFlex class="fake-input">
+                        <span class="label">Modificado:</span>
+                        <span class="value">{{datosModificacion.modificado_fecha||'---'}}</span>
+                    </div>
+                </div>
+                <div fxflex fxLayout="row" style="overflow: auto;">
+                    <div fxFlex fxLayout="column" class="detalles-movimiento">
+                        <div fxFlex="none" class="no-seleccionado" *ngIf="datosModificacion.datos_movimiento.length == 0">
+                            <span>Sin Registro de Modificaciones</span>
+                        </div>
+                        <div fxFlex="none" class="encabezado-detalle">
+                            <span>Movimiento:</span>
+                        </div>
+                        <div fxFlex="none" *ngFor="let item of datosModificacion.datos_movimiento" class="detalle">
+                            <span class="etiqueta">{{item.etiqueta}} : </span><span>{{item.valor.original}}</span> &raquo; <span>{{item.valor.modificado}}</span>
+                        </div>
+                        <div fxFlex="none" class="encabezado-detalle">
+                            <span>Articulos:</span>
+                        </div>
+                        <div fxFlex="none" *ngFor="let item of datosModificacion.modificaciones_articulos">
+                            {{item.tipo_modificacion}}
+                            {{item.datos_registrados | json}}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 </section>
