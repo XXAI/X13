@@ -63,8 +63,8 @@ export class ReporteAlmacenEntrada{
                     text:fecha_hoy.toString(),
                     alignment:'right',
                     fontSize: 6,
-                }
-              ]
+                  },
+              ],
             }
           },
           content: [],
@@ -102,10 +102,6 @@ export class ReporteAlmacenEntrada{
               fontSize: 6,
               alignment: "right"
             },
-            tabla_datos_left:{
-              fontSize: 8,
-              alignment: "left"
-            },
             entrada_title:{
               alignment:"right",
               fillColor:"#DEDEDE",
@@ -142,7 +138,12 @@ export class ReporteAlmacenEntrada{
               italics: true,
               fontSize: 55,
               alignment:"center",
-            }
+            },
+            tabla_datos_left:{
+              fontSize: 7,
+              alignment: "left"
+            },
+
           }
         };
 
@@ -421,7 +422,7 @@ export class ReporteAlmacenEntrada{
               margin: [0,0,0,0],
               body: [
                 [
-                  { text: "\n\n\n\n\n\n\n\n\n\n\n\n", style: "tabla_datos"}
+                  { text: "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", style: "tabla_datos"}
                 ]
               ]
             }
@@ -430,61 +431,41 @@ export class ReporteAlmacenEntrada{
           datos.content.push({
             layout: 'noBorders',
             table: {
-            widths: [50, 120, 20, 45, 60, 100, 50, 50],
+            widths: ['*', '*', '*', '*', '*', '*', '*', '*'],
             margin: [0,0,0,0,0,0],
               body: [
                 [
 
-                  // {text: "NOMBRE: ", style: "tabla_encabezado_datos"},
-                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
-
-                  // {text: "CARGO: ", style: "tabla_encabezado_datos"},
-                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
-
-                  {text: "NOMBRE: _________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
-                  {text: "CARGO: __________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
-
+                  {text: "NOMBRE:\n_____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "CARGO:\n ____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
 
                 ],
-                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
                 [
 
-                  // {text: "FIRMA: ", style: "tabla_encabezado_datos"},
-                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
-
-                  // {text: "SELLO Y FECHA: ", style: "tabla_encabezado_datos"},
-                  // {text: "___________________________________________________________________", style: "tabla_datos_center", colSpan:3},{},{},
-
-
-                  {text: "FIRMA: ____________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
-                  {text: "SELLO Y FECHA: ___________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "FIRMA:\n\n\n\n _____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "SELLO Y FECHA:\n\n\n\n ____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
               
                 ],
-                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
                 [
 
-                  // {text: "TEMPERATURA DE RECEPCIÓN:", style: "tabla_datos_left", colSpan:2},{},
-                  // {text: "___________________________________________________________________", style: "tabla_datos_left", colSpan:6},{},{},{},{},{},
-
-                  {text: "TEMPERATURA DE RECEPCIÓN: _______________________________________________", style: "tabla_datos_left", colSpan:8},{},{},{},{},{},{},{}
+                  {text: "TEMPERATURA DE RECEPCIÓN:\n _____________________________________________________________________________________", style: "tabla_datos_left", colSpan:8},{},{},{},{},{},{},{}
 
                 ],
-                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
                 [
 
-                  {text: "TEMPERATURA DURANTE EL TRAYECTO: _______________________", style: "tabla_datos_left", colSpan:4},{},{},{},
-                  {text: "ADECUADA: ", style: "tabla_encabezado_datos"},
-                  {text: "_________", style: "tabla_datos_left"},
+                  {text: "TEMPERATURA DURANTE EL TRAYECTO:\n_____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "ADECUADA:\n______________________________________", style: "tabla_datos_left", colSpan:2},{},
 
-                  {text: "INADECUADA: ", style: "tabla_encabezado_datos"},
-                  {text: "_________", style: "tabla_datos_left"},
+                  {text: "INADECUADA:\n________________________________________", style: "tabla_datos_left", colSpan:2},{},
+
+                  // {text: "INADECUADA: ", style: "tabla_encabezado_datos"},
+                  // {text: "_________", style: "tabla_datos_left"},
 
                 ],
-                [{text: "\n", colSpan:7},{},{},{},{},{},{},{}],
                 [
 
-                  {text: "CANTIDAD RECIBIDA: _______________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
-                  {text: "FECHA REAL ENTREGADA: _______________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "CANTIDAD RECIBIDA:\n_____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
+                  {text: "FECHA REAL ENTREGADA:\n____________________________________________________________________________________", style: "tabla_datos_left", colSpan:4},{},{},{},
 
                 ]
               ]
