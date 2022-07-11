@@ -27,4 +27,8 @@ class MovimientoArticulo extends Model{
     public function movimiento(){
         return $this->belongsTo('App\Models\Movimiento','movimiento_id');
     }
+
+    public function usuario(){
+        return $this->belongsTo('App\Models\User','user_id');
+    }
 }

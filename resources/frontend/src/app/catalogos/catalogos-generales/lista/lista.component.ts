@@ -150,7 +150,7 @@ export class ListaComponent implements OnInit {
 
   mostrarDialogo(row:any = null){
     let configDialog = {
-      width: '40%',
+      width: '60%',
       disableClose: false,
       data:{registro: row, formulario: this.formulario, catalogo: this.selectedCatalogo.value},
       //panelClass: 'no-padding-dialog'

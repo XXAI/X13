@@ -47,4 +47,8 @@ class Stock extends Model{
     public function cartaCanje(){
         return $this->hasOne('App\Models\CartaCanje','stock_id');
     }
+
+    public function usuario(){
+        return $this->belongsTo('App\Models\User','user_id');
+    }
 }

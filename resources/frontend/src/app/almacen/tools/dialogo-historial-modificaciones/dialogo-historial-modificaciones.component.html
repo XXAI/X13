@@ -1,4 +1,4 @@
-<section fxLayout="column" fxLayoutAlign="start" style="min-height:470px; overflow: auto; flex: 1 1 0%;" (document:keydown.escape)="cancelarAccion()">
+<section fxLayout="column" fxLayoutAlign="start" style="height: 100%; overflow: auto; flex: 1 1 0%;" (document:keydown.escape)="cancelarAccion()">
     <section fxFlex="none" class="dialog-toolbar">
         <div fxLayout="row">
             <div fxFlex="none" class="label-info">
@@ -90,8 +90,43 @@
                             <span>Articulos:</span>
                         </div>
                         <div fxFlex="none" *ngFor="let item of datosModificacion.modificaciones_articulos">
-                            {{item.tipo_modificacion}}
-                            {{item.datos_registrados | json}}
+                            <table>
+                                <tr>
+                                    <th>
+                                        {{item.tipo_modificacion_descripcion}}
+                                    </th>
+                                </tr>
+                                <tr *ngFor="let item of item.comparativa_datos">
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <th colspan="3">
+                                                    {{item.titulo}}
+                                                </th>
+                                            </tr>
+                                            <tr *ngFor="let object of item.datos | keyvalue">
+                                                <td *ngIf="object.key != 'stock'">{{object.key}}</td>
+                                                <td *ngIf="object.key != 'stock'">{{object.value.original}}</td>
+                                                <td *ngIf="object.key != 'stock'">{{object.value.modificado}}</td>
+                                                <td *ngIf="object.key == 'stock'" colspan="3">
+                                                    <table>
+                                                        <tr>
+                                                            <th colspan="3">
+                                                                {{object.key}}
+                                                            </th>
+                                                        </tr>
+                                                        <tr *ngFor="let sub_object of object.value | keyvalue">
+                                                            <td>{{sub_object.key}}</td>
+                                                            <td>{{sub_object.value.original}}</td>
+                                                            <td>{{sub_object.value.modificado}}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>

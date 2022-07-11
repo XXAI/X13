@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div fxFlex fxLayout="column" class="item-detalles">
-                <div fxFlex="none" class="encabezado">Detalles del Lote:</div>
+                <div fxFlex="none" class="encabezado">{{(loteSeleccionado && datosLote)?'Programa: '+datosLote.programa:'Detalles del Lote:'}}</div>
                 <div fxFlex="none" class="detalles-sin-lote" *ngIf="!loteSeleccionado">
                     <span>Seleccione un lote</span>
                 </div>

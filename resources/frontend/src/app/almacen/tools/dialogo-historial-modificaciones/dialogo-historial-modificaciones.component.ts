@@ -96,15 +96,104 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
             }
 
             element.modificaciones_articulos.forEach(element => {
+              switch (element.tipo_modificacion) {
+                case 'UPD':
+                  element.tipo_modificacion_descripcion = 'Se actualizaron datos:';
+                  break;
+                case 'DEL':
+                  element.tipo_modificacion_descripcion = 'Se eliminaron registros:';
+                  break;
+                case 'ADD':
+                  element.tipo_modificacion_descripcion = 'Se agregaron de registros';
+                  break;    
+                default:
+                  element.tipo_modificacion_descripcion = 'Sin tipo de modificacion establecida:';
+                  break;
+              }
+              let datos_registrados:any = {};
+
+              console.log('modificaciones_articulos: ',element.tipo_modificacion_descripcion);
+
               element.registro_original = JSON.parse(element.registro_original);
-              let datos_registrados:any[] = [];
-              for(const key in element.registro_original) {
+              datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_original,'original');
+              /*for(const key in element.registro_original) {
                 if(Object.prototype.hasOwnProperty.call(element.registro_original, key)) {
-                  datos_registrados.push(key);
+                  if(element.registro_original[key]){
+                    if(typeof element.registro_original[key] == 'object'){
+                      let tempobject = element.registro_original[key];
+                      datos_registrados[key] = {};
+                      for(const inner_key in tempobject) {
+                        if(Object.prototype.hasOwnProperty.call(tempobject, inner_key)) {
+                          datos_registrados[key][inner_key] = {original:tempobject[inner_key],modificado:''};
+                        }
+                      }
+                    }else{
+                      datos_registrados[key] = {original: element.registro_original[key], modificado:''};
+                    }
+                  }
+                }
+              }*/
+
+              element.registro_modificado = JSON.parse(element.registro_modificado);
+              datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_modificado,'modificado');
+              /*for(const key in element.registro_modificado) {
+                if(Object.prototype.hasOwnProperty.call(element.registro_modificado, key)) {
+                  if(element.registro_modificado[key]){
+                    if(typeof element.registro_modificado[key] == 'object'){
+                      let tempobject = element.registro_modificado[key];
+                      if(!datos_registrados[key]){
+                        datos_registrados[key] = {};
+                      };
+                      for(const inner_key in tempobject) {
+                        if(Object.prototype.hasOwnProperty.call(tempobject, inner_key)) {
+                          if(!datos_registrados[key][inner_key]){
+                            datos_registrados[key][inner_key] = {original:'',modificado:''};
+                          }
+                          datos_registrados[key][inner_key].modificado = tempobject[inner_key];
+                        }
+                      }
+                    }else{
+                      if(!datos_registrados[key]){
+                        datos_registrados[key] = {original:'', modificado:''};
+                      }
+                      datos_registrados[key].modificado = element.registro_modificado[key];
+                    }
+                  }
+                }
+              }*/
+              let comparativa_datos:any[] = [];
+              for(const key in datos_registrados) {
+                if(datos_registrados[key]){
+                  let seccion_comparativa:any = {};
+                  switch (key) {
+                    case 'movimiento_articulo':
+                      seccion_comparativa.titulo = 'Datos del Articulo:';
+                      break;
+                    case 'stock':
+                      seccion_comparativa.titulo = 'Datos del Stock:';
+                      break;
+                    case 'nuevo_stock':
+                      seccion_comparativa.titulo = 'Datos del Nuevo Stock:';
+                      break;
+                    case 'recepcion_transferencias':
+                      seccion_comparativa.titulo = 'Datos de las Transferencias:';
+                      break;
+                    case 'salidas_relacionadas':
+                      seccion_comparativa.titulo = 'Datos de las Salidas Relacionadas:';
+                      break;
+                    case 'salidas_seleccionadas':
+                        seccion_comparativa.titulo = 'Datos de las Salidas Seleccionadas:';
+                        break;
+                    default:
+                      seccion_comparativa.titulo = 'Sección sin titulo:';
+                      break;
+                  }
+                  seccion_comparativa.datos = datos_registrados[key];
+                  comparativa_datos.push(seccion_comparativa);
                 }
               }
+              element.comparativa_datos = comparativa_datos;
               element.datos_registrados = datos_registrados;
-              element.registro_modificado = JSON.parse(element.registro_modificado);
             });
           });
           this.dataSourceMods.data = response.data;
@@ -121,6 +210,25 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
         this.isLoadingMods = false;
       }
     );
+  }
+
+  private generarObjetoDiferencias(diferencias:any, objeto:any, nivel:string):any{
+    for(const parametro in objeto) {
+      if(Object.prototype.hasOwnProperty.call(objeto, parametro)) {
+        if(objeto[parametro]){
+          if(!diferencias[parametro]){
+            diferencias[parametro] = {};
+          }
+          if(typeof objeto[parametro] == 'object'){
+            diferencias[parametro] = this.generarObjetoDiferencias(diferencias[parametro],objeto[parametro],nivel);
+          }else{
+            diferencias[parametro][nivel] = objeto[parametro];
+          }
+        }
+      }
+    }
+
+    return diferencias;
   }
 
   seleccionarModificacion(event){

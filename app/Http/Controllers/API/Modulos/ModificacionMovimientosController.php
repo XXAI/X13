@@ -364,7 +364,7 @@ class ModificacionMovimientosController extends Controller{
 
         $conteo_claves = 0;
 
-        $movimiento->load('tipoMovimiento','listaArticulos.stock');
+        $movimiento->load(['tipoMovimiento','listaArticulos'=>function($listaArticulos){ $listaArticulos->with('stock.usuario','usuario'); }]);
 
         $movimiento_articulos_bd = []; //=> $lista_articulos_original
         for($i = 0; $i < count($movimiento->listaArticulos); $i++){
@@ -455,31 +455,76 @@ class ModificacionMovimientosController extends Controller{
                             break 2;
                         }
 
+                        /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
+                        $registro_original = [
+                            'articulo'=>['id'=>$articulo_id, 'clave'=>$articulo_clave],
+                            //'movimiento_articulo' => $movimiento_articulo_db->toArray(),
+                            //'stock'=>null,
+                            //'nuevo_stock'=>null,
+                            //'salidas_seleccionadas'=>null,
+                            //'recepcion_transferencias'=>null,
+                        ];
+
+                        $registro_modificado = [
+                            //'movimiento_articulo'=>null,
+                            //'stock'=>null,
+                            //'nuevo_stock'=>null,
+                            //'salidas_seleccionadas'=>null,
+                            //'recepcion_transferencias'=>null, 
+                        ];
+
                         /***  Si el lote esta marcado para ser eliminado  ***/
                         if(isset($lote['marcado_borrar']) && $lote['marcado_borrar']){
-                            $registro_original = ['movimiento_articulo'=>$movimiento_articulo_db->toArray(), 'salidas_relacionadas'=>null];
-                            $registro_modificado = ['movimiento_articulo'=>null, 'salidas_relacionadas'=>null];
-                            $salidas_relacionadas = [];
+                            $registro_original['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'user_id'=>$movimiento_articulo_db->user_id, 'user'=>$movimiento_articulo_db->usuario->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
+                            
+                            //$salidas_seleccionadas = [];
                             //Si existen salidas seleccionadas para eliminar 
                             if(isset($lote['lista_salidas']) && count($lote['lista_salidas']) > 0){
-                                $registro_original['salidas_relacionadas'] = [];
-                                $salidas_eliminar_stock = MovimientoArticulo::with('movimiento')->where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('stock_id',$lote['stock_id'])->where('direccion_movimiento','SAL')->get();
+                                $registro_original['salidas_seleccionadas'] = [];
+                                $registro_modificado['salidas_seleccionadas'] = [];
+
+                                $salidas_eliminar_stock = MovimientoArticulo::with('movimiento.modificadoPor')->where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('stock_id',$lote['stock_id'])->where('direccion_movimiento','SAL')->get();
                                 for($k = 0; $k < count($salidas_eliminar_stock); $k++){
                                     $ma_eliminar = $salidas_eliminar_stock[$k];
-                                    $registro_original['salidas_relacionadas'][] = $ma_eliminar->toArray();
+                                    $registro_original['salidas_seleccionadas'][] = [
+                                        'id' => $ma_eliminar->id,
+                                        'movimiento_id' => $ma_eliminar->movimiento_id,
+                                        'movimiento_folio' => $ma_eliminar->movimiento->folio,
+                                        'movimiento_total_articulos' => $ma_eliminar->movimiento->total_articulos,
+                                        'movimiento_total_claves' => $ma_eliminar->movimiento->total_claves,
+                                        'movimiento_total_monto' => $ma_eliminar->movimiento->total_monto,
+                                        'movimiento_modificado_por_usuario_id' => $ma_eliminar->movimiento->modificado_por_usuario_id,
+                                        'movimiento_modificado_por_usuario' => $ma_eliminar->movimiento->modificado_por->username,
+                                        'cantidad' => $ma_eliminar->cantidad,
+                                        'user_id' => $ma_eliminar->user_id,
+                                        'deleted_at' => $ma_eliminar->deleted_at,
+                                    ];
 
                                     $conteos_movimiento = MovimientoArticulo::select(DB::raw('SUM(cantidad) as total_articulos'), DB::raw('COUNT(DISTINCT bien_servicio_id) as total_claves'), DB::raw('SUM(total_monto) as total_monto'))
                                                                             ->where('movimiento_id',$ma_eliminar->movimiento_id)->where('id','!=',$ma_eliminar->id)->first();
                                     $ma_eliminar->movimiento->update(['total_articulos'=>$conteos_movimiento->total_articulos, 'total_claves'=>$conteos_movimiento->total_claves, 'total_monto'=>$conteos_movimiento->total_monto,'modificado_por_usuario_id'=>$loggedUser->id]);
+                                    $ma_eliminar->update(['user_id' => $loggedUser->id]);
                                     $ma_eliminar->delete();
 
-                                    $salidas_relacionadas[] = $ma_eliminar->toArray();
+                                    $registro_modificado['salidas_seleccionadas'][] = [
+                                        'id' => $ma_eliminar->id,
+                                        'movimiento_id' => $ma_eliminar->movimiento_id,
+                                        'movimiento_folio' => $ma_eliminar->movimiento->folio,
+                                        'movimiento_total_articulos' => $ma_eliminar->movimiento->total_articulos,
+                                        'movimiento_total_claves' => $ma_eliminar->movimiento->total_claves,
+                                        'movimiento_total_monto' => $ma_eliminar->movimiento->total_monto,
+                                        'movimiento_modificado_por_usuario_id' => $ma_eliminar->movimiento->modificado_por_usuario_id,
+                                        'movimiento_modificado_por_usuario' => $loggedUser->username,
+                                        'cantidad' => $ma_eliminar->cantidad,
+                                        'user_id' => $ma_eliminar->user_id,
+                                        'deleted_at' => $ma_eliminar->deleted_at,
+                                    ];
                                 }
                             }
+                            $movimiento_articulo_db->update(['user_id'=>$loggedUser->id]);
                             $movimiento_articulo_db->delete();
 
-                            $registro_modificado['movimiento_articulo'] = $movimiento_articulo_db->toArray();
-                            $registro_modificado['salidas_relacionadas'] = $salidas_relacionadas;
+                            $registro_modificado['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'user_id'=>$movimiento_articulo_db->user_id, 'user' => $loggedUser->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
 
                             $bitacora_modificaciones[] = '      |--+ Se eliminó el Lote: '.$lote['lote'];
 
@@ -498,21 +543,6 @@ class ModificacionMovimientosController extends Controller{
                                 }
                             }
                         }
-
-                        /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
-                        $registro_original = [
-                            'movimiento_articulo' => $movimiento_articulo_db->toArray(),
-                            'salidas_seleccionadas'=>null,
-                            'recepcion_transferencias'=>null,
-                            'nuevo_stock'=>null
-                        ];
-
-                        $registro_modificado = [
-                            'movimiento_articulo'=>null,
-                            'salidas_seleccionadas'=>null,
-                            'recepcion_transferencias'=>null, 
-                            'nuevo_stock'=>null
-                        ];
 
                         /***  Si es necesario actualizar los datos o se modifico la cantidad de entrada, se procedera a validar la modificación  ***/
                         $ajustar_existencias = false;

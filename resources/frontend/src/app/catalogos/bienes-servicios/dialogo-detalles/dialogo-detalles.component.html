@@ -10,7 +10,7 @@
             <div fxFlex>
             </div>
             <button *ngIf="tieneExistencias" fxFlex="none" class="boton-accion-medio" mat-flat-button color="accent" (click)="verListaExistencias()">
-                <mat-icon>sync_alt</mat-icon> {{(esListaExistencias)?'Datos Articulo':'Ver Lista de Unidades con Existencias'}}
+                <mat-icon>sync_alt</mat-icon> {{(esListaExistencias)?'Datos Articulo':'Existencia en Unidades'}}
             </button>
             <div fxFlex>
             </div>
@@ -147,7 +147,7 @@
         </mat-card>
     </section>
 
-    <section fxFlex fxLayout="column" style="padding: 10px;" *ngIf="!esListaExistencias">
+    <section fxFlex fxLayout="column" style="padding: 8px; overflow: auto;" *ngIf="!esListaExistencias">
         <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="5px" [formGroup]="formArticulo" [style.fontSize.px]="15">
             <div fxFlex="100" fxLayout="row" fxLayoutGap="5px">
                 <mat-form-field fxFlex>

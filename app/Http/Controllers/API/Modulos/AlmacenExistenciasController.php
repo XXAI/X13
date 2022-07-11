@@ -363,10 +363,12 @@ class AlmacenExistenciasController extends Controller
             }
             
 
-            $lotes = Stock::select('stocks.*', DB::raw('COUNT(DISTINCT movimientos_articulos.id) as movimientos'),'bienes_servicios_empaque_detalles.descripcion as empaque_detalle','bienes_servicios_empaque_detalles.piezas_x_empaque','catalogo_unidades_medida.descripcion as unidad_medida')
+            $lotes = Stock::select('stocks.*', DB::raw('COUNT(DISTINCT movimientos_articulos.id) as movimientos'),'bienes_servicios_empaque_detalles.descripcion as empaque_detalle','bienes_servicios_empaque_detalles.piezas_x_empaque','catalogo_unidades_medida.descripcion as unidad_medida',
+                                    'programas.descripcion as programa')
                             ->leftJoin('movimientos_articulos','movimientos_articulos.stock_id','=','stocks.id')
                             ->leftJoin('bienes_servicios_empaque_detalles','bienes_servicios_empaque_detalles.id','=','stocks.empaque_detalle_id')
                             ->leftJoin('catalogo_unidades_medida','catalogo_unidades_medida.id','=','bienes_servicios_empaque_detalles.unidad_medida_id')
+                            ->leftJoin('programas','programas.id','=','stocks.programa_id')
                             ->groupBy('stocks.id')
                             ->where('stocks.bien_servicio_id',$params['articulo'])
                             ->where('stocks.almacen_id',$params['almacen'])

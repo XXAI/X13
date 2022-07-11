@@ -868,8 +868,7 @@ export class EntradaComponent implements OnInit {
   verHistorialModificaciones(){
     let configDialog = {
       width: '80%',
-      //minHeight: '470px',
-      height: 'auto',
+      height: '90%',
       disableClose: true,
       data:{id:this.datosEntrada.id},
       panelClass: 'no-padding-dialog'

@@ -223,6 +223,9 @@
     padding: 5px;
     font-weight: 500;
     background-color: cadetblue;
+    color: whitesmoke;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .campo-filtro{
