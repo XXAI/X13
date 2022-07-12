@@ -963,6 +963,7 @@ export class EntradaComponent implements OnInit {
             let articulo:any = {
               id: item.id,
               clave: item.clave,
+              nombre: item.nombre,
               total_cantidad: item.total_piezas,
               lotes: []
             };
