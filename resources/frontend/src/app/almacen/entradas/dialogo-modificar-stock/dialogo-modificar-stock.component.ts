@@ -509,9 +509,14 @@ export class DialogoModificarStockComponent implements OnInit {
   }
 
   calcularExistencias(){
+    let form_cantidad = this.formStock.get('cantidad').value;
+    if(!this.formStock.get('entrada_piezas').value){
+      form_cantidad = form_cantidad * this.piezasXEmpaque;
+    }
+    
     let existenciasCalculadas = this.resumenMovimientos.ENT.total - this.resumenMovimientos.SAL.total;
     if(this.accionLote != 'delete' && this.accionLote != 'create'){
-      existenciasCalculadas += this.formStock.get('cantidad').value;
+      existenciasCalculadas += form_cantidad;
     }
 
     //totalPiezasSalidas contiene el total de todas las salidas seleccionadas para ser movidas/borradas
@@ -526,10 +531,6 @@ export class DialogoModificarStockComponent implements OnInit {
     };
 
     if(this.accionLote == 'create'){
-      let form_cantidad = this.formStock.get('cantidad').value;
-      if(!this.formStock.get('entrada_piezas').value){
-        form_cantidad = form_cantidad * this.piezasXEmpaque;
-      }
       form_cantidad -= this.totalPiezasSalidas;
 
       this.existenciasNuevoLote = {

@@ -90,39 +90,33 @@
                             <span>Articulos:</span>
                         </div>
                         <div fxFlex="none" *ngFor="let item of datosModificacion.modificaciones_articulos">
-                            <table>
-                                <tr>
-                                    <th>
-                                        {{item.tipo_modificacion_descripcion}}
-                                    </th>
+                            <table style="width: 100%;" class="table-{{item.datos_articulo_modificado.clase}}">
+                                <tr class="cambios-encabezado-articulo">
+                                    <td width="1" class="titulo-tipo">
+                                        {{item.datos_articulo_modificado.tipo}}
+                                    </td>
+                                    <td class="titulo-descripcion">
+                                        <div class="titulo">{{item.datos_articulo_modificado.clave}}</div>
+                                        <div class="subtitulo">{{item.datos_articulo_modificado.nombre}}</div>
+                                    </td>
                                 </tr>
-                                <tr *ngFor="let item of item.comparativa_datos">
-                                    <td>
+                                <tr class="cambios-lista-detalles" *ngFor="let item of item.comparativa_datos">
+                                    <td colspan="2">
                                         <table>
-                                            <tr>
-                                                <th colspan="3">
-                                                    {{item.titulo}}
-                                                </th>
-                                            </tr>
-                                            <tr *ngFor="let object of item.datos | keyvalue">
-                                                <td *ngIf="object.key != 'stock'">{{object.key}}</td>
-                                                <td *ngIf="object.key != 'stock'">{{object.value.original}}</td>
-                                                <td *ngIf="object.key != 'stock'">{{object.value.modificado}}</td>
-                                                <td *ngIf="object.key == 'stock'" colspan="3">
-                                                    <table>
-                                                        <tr>
-                                                            <th colspan="3">
-                                                                {{object.key}}
-                                                            </th>
-                                                        </tr>
-                                                        <tr *ngFor="let sub_object of object.value | keyvalue">
-                                                            <td>{{sub_object.key}}</td>
-                                                            <td>{{sub_object.value.original}}</td>
-                                                            <td>{{sub_object.value.modificado}}</td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
+                                            <thead>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        {{item.titulo}}
+                                                    </td>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let object of item.datos | keyvalue" [ngClass]="{'modificado':object.value.original != object.value.modificado}">
+                                                    <td width="1" class="etiqueta">{{(object.value.etiqueta)?object.value.etiqueta:object.key}}</td>
+                                                    <td>{{object.value.original||'[ ]'}}</td>
+                                                    <td>{{object.value.modificado||'[ ]'}}</td>
+                                                </tr>
+                                            </tbody>
                                         </table>
                                     </td>
                                 </tr>

@@ -10,5 +10,5 @@ class TipoAlmacen extends Model{
     
     use SoftDeletes;
     protected $table = 'catalogo_tipos_almacen';
-    protected $fillable = ['id','clave','descripcion'];
+    protected $fillable = ['clave','descripcion'];
 }

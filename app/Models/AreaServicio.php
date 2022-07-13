@@ -10,5 +10,5 @@ class AreaServicio extends Model{
     
     use SoftDeletes;
     protected $table = 'catalogo_areas_servicios';  
-    protected $fillable = ['id','descripcion'];
+    protected $fillable = ['descripcion'];
 }

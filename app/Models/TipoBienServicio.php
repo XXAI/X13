@@ -10,5 +10,5 @@ class TipoBienServicio extends Model{
     
     use SoftDeletes;
     protected $table = 'catalogo_tipos_bien_servicio';
-    protected $fillable = ['id','descripcion','clave_form'];
+    protected $fillable = ['descripcion','clave_form'];
 }

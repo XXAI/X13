@@ -10,7 +10,7 @@ class Concepto extends Model{
     
     use SoftDeletes;
     protected $table = 'cog_conceptos';  
-    protected $fillable = ['id','clave','clave_capitulo','anio','descripcion'];    
+    protected $fillable = ['clave','clave_capitulo','anio','descripcion'];    
 
     public function partidasGenericas(){
         return $this->hasMany('App\Models\PartidaGenerica','clave_concepto');

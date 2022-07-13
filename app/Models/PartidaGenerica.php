@@ -10,7 +10,7 @@ class PartidaGenerica extends Model{
     
     use SoftDeletes;
     protected $table = 'cog_partidas_genericas';  
-    protected $fillable = ['id','clave','clave_concepto','anio','descripcion'];    
+    protected $fillable = ['clave','clave_concepto','anio','descripcion'];    
 
     public function partidasEspecificas(){
         return $this->hasMany('App\Models\PartidaEspecifica','clave_partida_generica');

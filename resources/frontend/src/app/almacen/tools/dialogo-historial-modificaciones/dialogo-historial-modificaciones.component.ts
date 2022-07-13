@@ -4,6 +4,7 @@ import { MatSelectionList } from '@angular/material/list';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedService } from 'src/app/shared/shared.service';
 import { AlmacenService } from '../../almacen.service';
+import { DecimalPipe } from '@angular/common';
 
 export interface DialogData {
   id: number;
@@ -22,6 +23,7 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
     private almacenService: AlmacenService, 
     private sharedService: SharedService,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    private decimalPipe: DecimalPipe,
   ) { }
 
   isLoadingMods: boolean;
@@ -90,90 +92,70 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
             for(const key in datos_movimiento) {
               if(Object.prototype.hasOwnProperty.call(datos_movimiento, key)) {
                 element.datos_movimiento.push({
-                  etiqueta: key, valor: datos_movimiento[key]
+                  etiqueta: this.formatearEtiqueta(key), valor: datos_movimiento[key]
                 });
               }
             }
 
             element.modificaciones_articulos.forEach(element => {
+              element.registro_original = JSON.parse(element.registro_original);
+              element.registro_modificado = JSON.parse(element.registro_modificado);
+
+              let tipo_modificacion_descripcion:string;
+              let clase_tipo_modificacion: string;
               switch (element.tipo_modificacion) {
                 case 'UPD':
-                  element.tipo_modificacion_descripcion = 'Se actualizaron datos:';
+                  tipo_modificacion_descripcion = 'Editado:';
+                  clase_tipo_modificacion = 'edit';
                   break;
                 case 'DEL':
-                  element.tipo_modificacion_descripcion = 'Se eliminaron registros:';
+                  tipo_modificacion_descripcion = 'Eliminado:';
+                  clase_tipo_modificacion = 'delete';
                   break;
                 case 'ADD':
-                  element.tipo_modificacion_descripcion = 'Se agregaron de registros';
+                  tipo_modificacion_descripcion = 'Agregado:';
+                  clase_tipo_modificacion = 'add';
                   break;    
                 default:
-                  element.tipo_modificacion_descripcion = 'Sin tipo de modificacion establecida:';
+                  tipo_modificacion_descripcion = 'Sin tipo:';
+                  clase_tipo_modificacion = 'none';
                   break;
               }
+              console.log(element);
+              let articulo:any = {};
+              if(element.registro_original && element.registro_original.articulo){
+                articulo = element.registro_original.articulo;
+                delete element.registro_original.articulo;
+              }else if(element.registro_modificado && element.registro_modificado.articulo){
+                articulo = element.registro_modificado.articulo;
+                delete element.registro_modificado.articulo;
+              }
+
+              element.datos_articulo_modificado = {
+                'tipo': tipo_modificacion_descripcion,
+                'clase': clase_tipo_modificacion,
+                'clave': articulo.clave,
+                'nombre': articulo.nombre,
+              };
+
               let datos_registrados:any = {};
-
-              console.log('modificaciones_articulos: ',element.tipo_modificacion_descripcion);
-
-              element.registro_original = JSON.parse(element.registro_original);
-              datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_original,'original');
-              /*for(const key in element.registro_original) {
-                if(Object.prototype.hasOwnProperty.call(element.registro_original, key)) {
-                  if(element.registro_original[key]){
-                    if(typeof element.registro_original[key] == 'object'){
-                      let tempobject = element.registro_original[key];
-                      datos_registrados[key] = {};
-                      for(const inner_key in tempobject) {
-                        if(Object.prototype.hasOwnProperty.call(tempobject, inner_key)) {
-                          datos_registrados[key][inner_key] = {original:tempobject[inner_key],modificado:''};
-                        }
-                      }
-                    }else{
-                      datos_registrados[key] = {original: element.registro_original[key], modificado:''};
-                    }
-                  }
-                }
-              }*/
-
-              element.registro_modificado = JSON.parse(element.registro_modificado);
+              datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_original,'original');              
               datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_modificado,'modificado');
-              /*for(const key in element.registro_modificado) {
-                if(Object.prototype.hasOwnProperty.call(element.registro_modificado, key)) {
-                  if(element.registro_modificado[key]){
-                    if(typeof element.registro_modificado[key] == 'object'){
-                      let tempobject = element.registro_modificado[key];
-                      if(!datos_registrados[key]){
-                        datos_registrados[key] = {};
-                      };
-                      for(const inner_key in tempobject) {
-                        if(Object.prototype.hasOwnProperty.call(tempobject, inner_key)) {
-                          if(!datos_registrados[key][inner_key]){
-                            datos_registrados[key][inner_key] = {original:'',modificado:''};
-                          }
-                          datos_registrados[key][inner_key].modificado = tempobject[inner_key];
-                        }
-                      }
-                    }else{
-                      if(!datos_registrados[key]){
-                        datos_registrados[key] = {original:'', modificado:''};
-                      }
-                      datos_registrados[key].modificado = element.registro_modificado[key];
-                    }
-                  }
-                }
-              }*/
+              
+              console.log('trabajados:',datos_registrados);
               let comparativa_datos:any[] = [];
               for(const key in datos_registrados) {
                 if(datos_registrados[key]){
                   let seccion_comparativa:any = {};
                   switch (key) {
                     case 'movimiento_articulo':
-                      seccion_comparativa.titulo = 'Datos del Articulo:';
+                      seccion_comparativa.titulo = 'Datos del Articulo en el Movimiento:';
                       break;
                     case 'stock':
-                      seccion_comparativa.titulo = 'Datos del Stock:';
+                      seccion_comparativa.titulo = 'Datos del Stock (Lote) en Existencias:';
                       break;
                     case 'nuevo_stock':
-                      seccion_comparativa.titulo = 'Datos del Nuevo Stock:';
+                      seccion_comparativa.titulo = 'Datos del Nuevo Stock (Lote):';
                       break;
                     case 'recepcion_transferencias':
                       seccion_comparativa.titulo = 'Datos de las Transferencias:';
@@ -216,19 +198,62 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
     for(const parametro in objeto) {
       if(Object.prototype.hasOwnProperty.call(objeto, parametro)) {
         if(objeto[parametro]){
+          if(parametro == 'id' || parametro.endsWith('_id')){
+            continue;
+          }
+
           if(!diferencias[parametro]){
             diferencias[parametro] = {};
           }
+
           if(typeof objeto[parametro] == 'object'){
             diferencias[parametro] = this.generarObjetoDiferencias(diferencias[parametro],objeto[parametro],nivel);
           }else{
+            if(!objeto[parametro]){
+              objeto[parametro] = '[ ]';
+            }
+            if(parametro == 'updated_at' || parametro == 'deleted_at' || parametro == 'created_at'){
+              objeto[parametro] = objeto[parametro].substring(0,10);
+            }else if(parametro == 'total_monto' || parametro == 'precio_unitario'){
+              objeto[parametro] = '$ ' + this.decimalPipe.transform(objeto[parametro],'1.0-2');
+            }else if((parametro != 'lote' && parametro != 'no_serie' && parametro != 'modelo') && !isNaN(objeto[parametro])){
+              objeto[parametro] = this.decimalPipe.transform(objeto[parametro],'1.0-0');
+            }
+
             diferencias[parametro][nivel] = objeto[parametro];
+
+            if(!diferencias[parametro]['etiqueta']){
+              let etiqueta:string;
+              switch (parametro) {
+                case 'user':
+                  etiqueta = 'Usuario:';
+                  break;
+                case 'updated_at':
+                  etiqueta = 'Actualizado el:';
+                  break;
+                case 'deleted_at':
+                  etiqueta = 'Borrado el:';
+                  break;
+                case 'created_at':
+                  etiqueta = 'Creado el:';
+                  break;
+                default:
+                  etiqueta = this.formatearEtiqueta(parametro);
+                  break;
+              }
+              diferencias[parametro]['etiqueta'] = etiqueta;
+            }
           }
         }
       }
     }
 
     return diferencias;
+  }
+  
+  private formatearEtiqueta(string:string) {
+    string = string.replace('_',' ');
+    return string.charAt(0).toUpperCase() + string.slice(1) + ':';
   }
 
   seleccionarModificacion(event){

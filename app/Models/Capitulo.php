@@ -10,7 +10,7 @@ class Capitulo extends Model{
     
     use SoftDeletes;
     protected $table = 'cog_capitulos';  
-    protected $fillable = ['id','clave','anio','descripcion'];    
+    protected $fillable = ['clave','anio','descripcion'];    
 
     public function conceptos(){
         return $this->hasMany('App\Models\Concepto','clave_capitulo');

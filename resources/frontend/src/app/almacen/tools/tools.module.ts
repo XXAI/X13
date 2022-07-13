@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { DialogoCancelarMovimientoComponent } from './dialogo-cancelar-movimiento/dialogo-cancelar-movimiento.component';
 import { SharedModule } from 'src/app/shared/shared.module';
@@ -19,6 +19,9 @@ import { DialogoHistorialModificacionesComponent } from './dialogo-historial-mod
   exports: [
     DialogoCancelarMovimientoComponent,
     WidgetBuscadorArticulosComponent
+  ],
+  providers:[
+    DecimalPipe
   ]
 })
 export class ToolsModule { }

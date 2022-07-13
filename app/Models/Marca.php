@@ -9,5 +9,5 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Marca extends Model{
     use SoftDeletes;
     protected $table = 'catalogo_marcas';  
-    protected $fillable = ['id','nombre'];
+    protected $fillable = ['nombre'];
 }

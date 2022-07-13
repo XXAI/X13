@@ -10,5 +10,5 @@ class Servidor extends Model{
     public $incrementing = false;
     protected $keyType = 'string';
     protected $table = 'servidores';  
-    protected $fillable = ['id','nombre','secret_key','clues','tiene_internet','version','principal','ultima_sincronizacion'];
+    protected $fillable = ['nombre','secret_key','clues','tiene_internet','version','principal','ultima_sincronizacion'];
 }

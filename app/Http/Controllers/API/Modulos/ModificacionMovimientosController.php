@@ -166,7 +166,7 @@ class ModificacionMovimientosController extends Controller{
                 'referencia_folio',
                 'referencia_fecha'
             ];
-
+            
             DB::beginTransaction();
 
             $fecha_hoy = date("Y-m-d");
@@ -304,7 +304,7 @@ class ModificacionMovimientosController extends Controller{
                 $movimiento->movimientoHijo()->update($datos_movimiento_entrada);
             }
 
-            
+
             if($modificacion->nivel_modificacion == 2){
                 $response = [ 'estatus'=> false ];
                 if($movimiento->direccion_movimiento == 'ENT'){
@@ -315,6 +315,7 @@ class ModificacionMovimientosController extends Controller{
                     }
                     $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados']);
                 }
+
                 if(!$response['estatus']){
                     DB::rollback();
                     return response()->json(['error'=>$response['mensaje'],'parametros'=>$response],HttpResponse::HTTP_OK);
@@ -363,8 +364,9 @@ class ModificacionMovimientosController extends Controller{
     }
 
     private function modificarArticulosEntrada($movimiento,$lista_articulos){
+        DB::enableQueryLog();
         $loggedUser = auth()->userOrFail();
-        $response_estatus = false;
+        $response_estatus = true;
         $mensaje = '|-- Guardado con Éxito --|';
         $listado_modificaciones = []; //['tipo_modificacion'=>('ADD'|'DEL'|'UPD'), 'movimiento_articulo_id'=>0, 'registro_original'=>json, 'registro_modificado'=>json]
         $bitacora_modificaciones = [];
@@ -493,9 +495,17 @@ class ModificacionMovimientosController extends Controller{
                         /***  Si el lote esta marcado para ser eliminado  ***/
                         if(isset($lote['marcado_borrar']) && $lote['marcado_borrar']){
                             $registro_original['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'user_id'=>$movimiento_articulo_db->user_id, 'user'=>$movimiento_articulo_db->usuario->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
+
+                            $piezas_x_empaque = 1;
+                            $detalle_empaque = BienServicioEmpaqueDetalle::find($stock_db['empaque_detalle_id']);
+                            if($detalle_empaque){
+                                $piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
+                            }
+                            $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Guardado: '.$piezas_x_empaque;
                             
                             //$salidas_seleccionadas = [];
                             //Si existen salidas seleccionadas para eliminar 
+                            $total_salidas_piezas = 0;
                             if(isset($lote['lista_salidas']) && count($lote['lista_salidas']) > 0){
                                 $registro_original['salidas_seleccionadas'] = [];
                                 $registro_modificado['salidas_seleccionadas'] = [];
@@ -536,12 +546,18 @@ class ModificacionMovimientosController extends Controller{
                                         'user_id'                               => $ma_eliminar->user_id,
                                         'deleted_at'                            => $ma_eliminar->deleted_at,
                                     ];
+
+                                    //TODO:: calcular el total de salidas por pieza
                                 }
                             }
                             $movimiento_articulo_db->update(['user_id'=>$loggedUser->id]);
                             $movimiento_articulo_db->delete();
 
                             $registro_modificado['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'user_id'=>$movimiento_articulo_db->user_id, 'user' => $loggedUser->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
+
+                            /*** Hay que actualizar las existencias del Lote, en base a la cantidad que se elimino tamado en cuenta que se eliminaron las salidas correspondientes***/
+                            //TODO:: Restar la cantidad eliminada y sumar las salidas eliminadas, para corregir las existencias en el lote
+                            //TODO:: Agregar validaciones y modificaciones concernientes a la carta de canje
 
                             $bitacora_modificaciones[] = '      |--+ Se eliminó el Lote: '.$lote['lote'];
 
@@ -620,11 +636,11 @@ class ModificacionMovimientosController extends Controller{
                                         'almacen_id'        => $nuevo_stock->almacen_id,
                                         'almacen'           => $nuevo_stock->almacen->nombre,
                                         'empaque_detalle_id'=> $nuevo_stock->empaque_detalle_id,
-                                        'empaque_detalle'   => $nuevo_stock->empaqueDetalle->descripcion,
+                                        'empaque_detalle'   => ($nuevo_stock->empaqueDetalle)?$nuevo_stock->empaqueDetalle->descripcion:null,
                                         'programa_id'       => $nuevo_stock->programa_id,
                                         'programa'          => $nuevo_stock->programa->descripcion,
                                         'marca_id'          => $nuevo_stock->marca_id,
-                                        'marca'             => $nuevo_stock->marca->nombre,
+                                        'marca'             => ($nuevo_stock->marca)?$nuevo_stock->marca->nombre:null,
                                         'modelo'            => $nuevo_stock->modelo,
                                         'no_serie'          => $nuevo_stock->no_serie,
                                         'lote'              => $nuevo_stock->lote,
@@ -707,7 +723,7 @@ class ModificacionMovimientosController extends Controller{
                              * Fin: Sacamos un resumen de los movimientos de Entrada y Salida, excluyendo el movimiento de Entrada que se esta modificando                        *
                              ******************************************************************************************************************************************************/
 
-                            $ajustar_existencias = ($lote['cantidad'] != $stock_db['cantidad'] || $piezas_x_empaque != $nuevo_piezas_x_empaque);
+                            $ajustar_existencias = (intval($lote['cantidad']) != intval($stock_db['cantidad']) || $piezas_x_empaque != $nuevo_piezas_x_empaque);
 
                             /************************************************************  Las acciones a realizar seran en base al total de Entradas y Salidas que tenga el stock(lote)  ************************************************************/
                             if(!$nuevo_stock && $total_entradas_piezas == 0){
@@ -1279,7 +1295,8 @@ class ModificacionMovimientosController extends Controller{
                         'updated_at'        => $nuevo_stock->updated_at,
                     ];
 
-                    $listado_modificaciones[] = ['tipo_modificacion'=>'ADD', 'movimiento_articulo_id'=>$nuevo_articulo->id, 'registro_original'=>null, 'registro_modificado'=>json_encode($registro_modificado)];
+                    $registro_original = ['articulo'=>['id'=>$articulo_id, 'clave'=>$articulo_clave, 'nombre'=>$articulo_nombre]];
+                    $listado_modificaciones[] = ['tipo_modificacion'=>'ADD', 'movimiento_articulo_id'=>$nuevo_articulo->id, 'registro_original'=>json_encode($registro_original), 'registro_modificado'=>json_encode($registro_modificado)];
 
                     $bitacora_modificaciones[] = '   |--+ Creando Lote: '.$lote['lote'];
                 }
@@ -1295,7 +1312,15 @@ class ModificacionMovimientosController extends Controller{
         ];
 
         $bitacora_modificaciones[] = '|--+ Actualizando Movmiento: '.$movimiento->folio;
+        $query_log = DB::getQueryLog();
+        $queries = [];
+        for($i = 0; $i < count($query_log); $i++){
+            $query = $query_log[$i]['query'];
+            if(strpos($query,'select') === false){
+                $queries[] = $query_log[$i];
+            }
+        }
 
-        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento];
+        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje,'log'=>$queries, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento];
     }
 }

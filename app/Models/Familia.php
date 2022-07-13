@@ -10,7 +10,7 @@ class Familia extends Model{
     
     use SoftDeletes;
     protected $table = 'familias';  
-    protected $fillable = ['id','nombre'];    
+    protected $fillable = ['nombre'];    
 
     public function bienesServicios(){
         return $this->hasMany('App\Models\BienesServicios','familia_id');

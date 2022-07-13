@@ -185,3 +185,88 @@
 .detalles-movimiento .detalle:nth-child(odd){
     background:#ddd;
 }
+
+.table-none .cambios-encabezado-articulo{
+    background-color: cadetblue;
+    color: whitesmoke;
+    font-weight: normal;
+}
+
+.table-edit .cambios-encabezado-articulo{
+    background-color: #6495ed;
+    color: whitesmoke;
+    font-weight: normal;
+}
+
+.table-edit .cambios-lista-detalles{
+    background-color: #6495ed;
+}
+
+.table-add .cambios-encabezado-articulo{
+    background-color: #2ead50;
+    color: whitesmoke;
+    font-weight: normal;
+}
+
+.table-add .cambios-lista-detalles{
+    background-color: #2ead50;
+}
+
+.table-delete .cambios-encabezado-articulo{
+    background-color: #ad2e2e;
+    color: whitesmoke;
+    font-weight: normal;
+}
+
+.table-delete .cambios-lista-detalles{
+    background-color: #ad2e2e;
+}
+
+.cambios-encabezado-articulo .titulo-descripcion{
+    background-color: rgba(255, 255, 255, 0.20);
+}
+
+.cambios-lista-detalles table{
+    background-color: rgba(255, 255, 255, 0.20);
+    width: 100%;
+}
+
+.cambios-lista-detalles table thead tr{
+    padding: 5px;
+    color: whitesmoke;
+    font-weight: 500;
+    text-align: center;
+}
+
+.cambios-lista-detalles table tbody tr{
+    background-color: rgba(255,255,255,0.45);
+    color: rgba(0,0,0,.65);
+}
+
+.cambios-lista-detalles table tbody tr.modificado{
+    background-color: rgba(255,255,255,0.20);
+    font-weight: 400;
+    color: black;
+}
+.cambios-lista-detalles table tbody td.etiqueta{
+    white-space: nowrap;
+}
+
+.cambios-encabezado-articulo .titulo-tipo{
+    padding: 8px;
+}
+
+.cambios-encabezado-articulo .titulo-descripcion{
+    padding: 8px;
+    text-align: left;
+}
+
+.cambios-encabezado-articulo .titulo{
+    font-weight: 500;
+}
+
+.cambios-encabezado-articulo .subtitulo{
+    font-size: small;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
