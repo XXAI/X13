@@ -157,6 +157,9 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
                     case 'nuevo_stock':
                       seccion_comparativa.titulo = 'Datos del Nuevo Stock (Lote):';
                       break;
+                    case 'carta_canje':
+                      seccion_comparativa.titulo = 'Datos de la Carta de Canje:';
+                      break;
                     case 'recepcion_transferencias':
                       seccion_comparativa.titulo = 'Datos de las Transferencias:';
                       break;
@@ -216,7 +219,7 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
               objeto[parametro] = objeto[parametro].substring(0,10);
             }else if(parametro == 'total_monto' || parametro == 'precio_unitario'){
               objeto[parametro] = '$ ' + this.decimalPipe.transform(objeto[parametro],'1.0-2');
-            }else if((parametro != 'lote' && parametro != 'no_serie' && parametro != 'modelo') && !isNaN(objeto[parametro])){
+            }else if((parametro != 'lote' && parametro != 'no_serie' && parametro != 'modelo' && parametro != 'memo_folio') && !isNaN(objeto[parametro])){
               objeto[parametro] = this.decimalPipe.transform(objeto[parametro],'1.0-0');
             }
 

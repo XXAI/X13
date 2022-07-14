@@ -11,6 +11,8 @@ use App\Http\Requests;
 use DB;
 use Hash;
 
+use Carbon\Carbon;
+
 use App\Models\Almacen;
 use App\Models\Programa;
 use App\Models\Proveedor;
@@ -30,6 +32,7 @@ use App\Models\Solicitud;
 use App\Models\MovimientoModificacion;
 use App\Models\Movimiento;
 use App\Models\MovimientoArticulo;
+use App\Models\CartaCanje;
 use App\Models\User;
 
 class ModificacionMovimientosController extends Controller{
@@ -425,6 +428,11 @@ class ModificacionMovimientosController extends Controller{
                     break 2;
                 }
 
+                /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
+                ////'movimiento_articulo','stock','nuevo_stock','carta_canje','salidas_seleccionadas','recepcion_transferencias'
+                $registro_original = [ 'articulo'=>['id'=>$articulo_id, 'clave'=>$articulo_clave, 'nombre'=>$articulo_nombre] ];
+                $registro_modificado = [];
+
                 /***  Si existe id, es un lote creado anteriomente, por lo tanto se validará si es necesario modificar  ***/
                 if(isset($lote['id']) && $lote['id']){
                     //$lote[id] == movimiento_articulo_id
@@ -472,32 +480,14 @@ class ModificacionMovimientosController extends Controller{
                             break 2;
                         }
 
-                        /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
-                        $registro_original = [
-                            'articulo'=>['id'=>$articulo_id, 'clave'=>$articulo_clave, 'nombre'=>$articulo_nombre],
-                            //'movimiento_articulo' => $movimiento_articulo_db->toArray(),
-                            //'stock'=>null,
-                            //'nuevo_stock'=>null,
-                            //'carta_canje'=>null,
-                            //'salidas_seleccionadas'=>null,
-                            //'recepcion_transferencias'=>null,
-                        ];
-
-                        $registro_modificado = [
-                            //'movimiento_articulo'=>null,
-                            //'stock'=>null,
-                            //'nuevo_stock'=>null,
-                            //'carta_canje'=>null,
-                            //'salidas_seleccionadas'=>null,
-                            //'recepcion_transferencias'=>null, 
-                        ];
-
                         /***  Si el lote esta marcado para ser eliminado  ***/
                         if(isset($lote['marcado_borrar']) && $lote['marcado_borrar']){
-                            $registro_original['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'user_id'=>$movimiento_articulo_db->user_id, 'user'=>$movimiento_articulo_db->usuario->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
+                            $stock_afectado = $movimiento_articulo_db->stock;
+
+                            $registro_original['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'stock_id'=>$movimiento_articulo_db->stock_id, 'user_id'=>$movimiento_articulo_db->user_id, 'user'=>$movimiento_articulo_db->usuario->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
 
                             $piezas_x_empaque = 1;
-                            $detalle_empaque = BienServicioEmpaqueDetalle::find($stock_db['empaque_detalle_id']);
+                            $detalle_empaque = BienServicioEmpaqueDetalle::find($stock_afectado->empaque_detalle_id);
                             if($detalle_empaque){
                                 $piezas_x_empaque = $detalle_empaque->piezas_x_empaque;
                             }
@@ -505,7 +495,7 @@ class ModificacionMovimientosController extends Controller{
                             
                             //$salidas_seleccionadas = [];
                             //Si existen salidas seleccionadas para eliminar 
-                            $total_salidas_piezas = 0;
+                            $total_salidas_pzas = 0;
                             if(isset($lote['lista_salidas']) && count($lote['lista_salidas']) > 0){
                                 $registro_original['salidas_seleccionadas'] = [];
                                 $registro_modificado['salidas_seleccionadas'] = [];
@@ -522,6 +512,7 @@ class ModificacionMovimientosController extends Controller{
                                         'movimiento_total_monto'                => $ma_eliminar->movimiento->total_monto,
                                         'movimiento_modificado_por_usuario_id'  => $ma_eliminar->movimiento->modificado_por_usuario_id,
                                         'movimiento_modificado_por_usuario'     => $ma_eliminar->movimiento->modificado_por->username,
+                                        'modo_movimiento'                       => $ma_eliminar->modo_movimiento,
                                         'cantidad'                              => $ma_eliminar->cantidad,
                                         'user_id'                               => $ma_eliminar->user_id,
                                         'deleted_at'                            => $ma_eliminar->deleted_at,
@@ -542,22 +533,75 @@ class ModificacionMovimientosController extends Controller{
                                         'movimiento_total_monto'                => $ma_eliminar->movimiento->total_monto,
                                         'movimiento_modificado_por_usuario_id'  => $ma_eliminar->movimiento->modificado_por_usuario_id,
                                         'movimiento_modificado_por_usuario'     => $loggedUser->username,
+                                        'modo_movimiento'                       => $ma_eliminar->modo_movimiento,
                                         'cantidad'                              => $ma_eliminar->cantidad,
                                         'user_id'                               => $ma_eliminar->user_id,
                                         'deleted_at'                            => $ma_eliminar->deleted_at,
                                     ];
 
                                     //TODO:: calcular el total de salidas por pieza
+                                    if($ma_eliminar->modo_movimiento == 'UNI'){
+                                        $total_salidas_pzas += $ma_eliminar->cantidad;
+                                    }else{
+                                        $total_salidas_pzas += $ma_eliminar->cantidad * $piezas_x_empaque;
+                                    }
                                 }
                             }
                             $movimiento_articulo_db->update(['user_id'=>$loggedUser->id]);
                             $movimiento_articulo_db->delete();
 
-                            $registro_modificado['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'user_id'=>$movimiento_articulo_db->user_id, 'user' => $loggedUser->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
+                            $registro_modificado['movimiento_articulo'] = ['id'=>$movimiento_articulo_db->id, 'stock_id'=>$movimiento_articulo_db->stock_id, 'user_id'=>$movimiento_articulo_db->user_id, 'user' => $loggedUser->username, 'cantidad'=>$movimiento_articulo_db->cantidad, 'deleted_at'=>$movimiento_articulo_db->deleted_at];
 
-                            /*** Hay que actualizar las existencias del Lote, en base a la cantidad que se elimino tamado en cuenta que se eliminaron las salidas correspondientes***/
-                            //TODO:: Restar la cantidad eliminada y sumar las salidas eliminadas, para corregir las existencias en el lote
-                            //TODO:: Agregar validaciones y modificaciones concernientes a la carta de canje
+                            /*** Hay que actualizar las existencias del Lote, en base a la cantidad que se elimino tomando en cuenta que se eliminaron las salidas correspondientes***/
+                            $registro_original['stock'] = $this->plantillaRegistroStock($stock_afectado,$stock_afectado->usuario);
+
+                            // Restar la cantidad eliminada y sumar las salidas eliminadas, para corregir las existencias en el lote, idealmente debe quedar en 0 si no hay otras entradas
+                            if($movimiento_articulo_db->modo_movimiento == 'UNI'){
+                                $cantidad_entrada_pzas = $movimiento_articulo_db->cantidad;
+                            }else{
+                                $cantidad_entrada_pzas = $movimiento_articulo_db->cantidad * $piezas_x_empaque;
+                            }
+
+                            $stock_afectado->existencia_piezas -= ($cantidad_entrada_pzas - $total_salidas_pzas);
+                            $stock_afectado->existencia = floor($stock_afectado->existencia_piezas / $piezas_x_empaque);
+
+                            if($stock_afectado->resguardo_piezas){
+                                if($stock_afectado->resguardo_piezas > $stock_afectado->existencia_piezas){
+                                    $stock_afectado->resguardo_piezas = $stock_afectado->existencia_piezas;
+
+                                    $modificaciones = $this->ajustarResguardos($stock_afectado);
+                                    $registro_original['resguardos'] = $modificaciones['resguardos_originales'];
+                                    $registro_modificado['resguardos'] = $modificaciones['resguardos_modificados'];
+                                }
+                            }
+
+                            $stock_afectado->user_id = $loggedUser->id;
+                            $stock_afectado->save();
+
+                            $registro_modificado['stock'] = $this->plantillaRegistroStock($stock_afectado,$loggedUser);
+
+                            //Borrar la carta de canje en el caso de tener una asignada
+                            $stock_afectado->load('cartaCanje');
+                            if($stock_afectado->cartaCanje){
+                                $registro_original['carta_canje'] = [
+                                    'cantidad' => $stock_afectado->cartaCanje->cantidad,
+                                    'memo_folio' => $stock_afectado->cartaCanje->memo_folio,
+                                    'memo_fecha' => $stock_afectado->cartaCanje->memo_fecha,
+                                    'vigencia_meses' => $stock_afectado->cartaCanje->vigencia_meses,
+                                    'deleted_at' => $stock_afectado->cartaCanje->deleted_at,
+                                ];
+
+                                $stock_afectado->cartaCanje->delete();
+
+                                $registro_modificado['carta_canje'] = [
+                                    'cantidad' => $stock_afectado->cartaCanje->cantidad,
+                                    'memo_folio' => $stock_afectado->cartaCanje->memo_folio,
+                                    'memo_fecha' => $stock_afectado->cartaCanje->memo_fecha,
+                                    'vigencia_meses' => $stock_afectado->cartaCanje->vigencia_meses,
+                                    'deleted_at' => $stock_afectado->cartaCanje->deleted_at,
+                                ];
+                                $bitacora_modificaciones[] = '      |--+ Se eliminó la Carta de Canje del Lote: '.$lote['lote'];
+                            }
 
                             $bitacora_modificaciones[] = '      |--+ Se eliminó el Lote: '.$lote['lote'];
 
@@ -592,7 +636,8 @@ class ModificacionMovimientosController extends Controller{
                             'updated_at'        => $movimiento_articulo_db->updated_at, 
                         ];
 
-                        $registro_original['stock'] = [
+                        $registro_original['stock'] = $this->plantillaRegistroStock($movimiento_articulo_db->stock,$movimiento_articulo_db->stock->usuario);
+                        /*$registro_original['stock'] = [
                             'id'                => $movimiento_articulo_db->stock->id,
                             'almacen_id'        => $movimiento_articulo_db->stock->almacen_id,
                             'almacen'           => $movimiento_articulo_db->stock->almacen->nombre,
@@ -613,7 +658,7 @@ class ModificacionMovimientosController extends Controller{
                             'user_id'           => $movimiento_articulo_db->stock->user_id,
                             'user'              => $movimiento_articulo_db->stock->usuario->username,
                             'updated_at'        => $movimiento_articulo_db->stock->updated_at,
-                        ];
+                        ];*/
                         
                         /***  Si es necesario actualizar los datos o se modifico la cantidad de entrada, se procedera a validar la modificación  ***/
                         $ajustar_existencias = false;
@@ -631,7 +676,8 @@ class ModificacionMovimientosController extends Controller{
                                 $nuevo_stock = $nuevo_stock->with('usuario','almacen','programa','empaqueDetalle','marca')->first();
                                 if($nuevo_stock){
                                     $bitacora_modificaciones[] = '      |--+ Se Encontró Nuevo Stock: '.$lote['lote'];
-                                    $registro_original['nuevo_stock'] = [
+                                    $registro_original['nuevo_stock'] = $this->plantillaRegistroStock($nuevo_stock,$nuevo_stock->usuario);
+                                    /*$registro_original['nuevo_stock'] = [
                                         'id'                => $nuevo_stock->id,
                                         'almacen_id'        => $nuevo_stock->almacen_id,
                                         'almacen'           => $nuevo_stock->almacen->nombre,
@@ -652,7 +698,7 @@ class ModificacionMovimientosController extends Controller{
                                         'user_id'           => $nuevo_stock->user_id,
                                         'user'              => $nuevo_stock->usuario->username,
                                         'updated_at'        => $nuevo_stock->updated_at,
-                                    ];
+                                    ];*/
                                 }
                             }
 
@@ -913,11 +959,15 @@ class ModificacionMovimientosController extends Controller{
                             if(intval($movimiento_articulo_db->stock->resguardo_piezas) > 0 && intval($movimiento_articulo_db->stock->resguardo_piezas) > $movimiento_articulo_db->stock->existencia_piezas){
                                 $movimiento_articulo_db->stock->resguardo_piezas = $movimiento_articulo_db->stock->existencia_piezas;
 
-                                $movimiento_articulo_db->stock->load(['resguardoDetalle'=>function($resguardoDetalle){
+                                $modificaciones = $this->ajustarResguardos($movimiento_articulo_db->stock);
+                                $registro_original['resguardos'] = $modificaciones['resguardos_originales'];
+                                $registro_modificado['resguardos'] = $modificaciones['resguardos_modificados'];
+
+                                //$registro_original['movimiento_articulo'] = $movimiento_articulo_db->toArray(); //Se agrega de nuevo ahora con los detalles del resguardo
+
+                                /*$movimiento_articulo_db->stock->load(['resguardoDetalle'=>function($resguardoDetalle){
                                     $resguardoDetalle->where('cantidad_restante','>',0);
                                 }]);
-
-                                $registro_original['movimiento_articulo'] = $movimiento_articulo_db->toArray(); //Se agrega de nuevo ahora con los detalles del resguardo
 
                                 $cantidades_restantes = $movimiento_articulo_db->stock->existencia_piezas;
                                 foreach ($movimiento_articulo_db->stock->resguardoDetalle as $resguardo){
@@ -969,7 +1019,7 @@ class ModificacionMovimientosController extends Controller{
                                             'updated_at'            => $resguardo->updated_at
                                         ];
                                     }
-                                }
+                                }*/
                                 
                                 $bitacora_modificaciones[] = '      |--+ Se Actualizaron los Resguardos del Lote: '.$stock_original['lote'].' [ Existencia Piezas: '.$movimiento_articulo_db->stock->resguardo_piezas.' ]';
                             }
@@ -1095,7 +1145,8 @@ class ModificacionMovimientosController extends Controller{
 
                                 //Agregar registro nuevo stock
                                 $nuevo_stock->load('usuario','almacen','programa','empaqueDetalle','marca');
-                                $registro_modificado['nuevo_stock'] = [
+                                $registro_modificado['nuevo_stock'] = $this->plantillaRegistroStock($nuevo_stock,$nuevo_stock->usuario);
+                                /*$registro_modificado['nuevo_stock'] = [
                                     'id'                => $nuevo_stock->id,
                                     'almacen_id'        => $nuevo_stock->almacen_id,
                                     'almacen'           => $nuevo_stock->almacen->nombre,
@@ -1116,13 +1167,91 @@ class ModificacionMovimientosController extends Controller{
                                     'user_id'           => $nuevo_stock->user_id,
                                     'user'              => $nuevo_stock->usuario->username,
                                     'updated_at'        => $nuevo_stock->updated_at,
-                                ];
+                                ];*/
                                 
                                 //Modificamos la referencia al stock
                                 $movimiento_articulo_db->stock_id = $nuevo_stock->id;
                             }
                             /*                                                                                                                                                    *
                              * Fin: Si se guardan los datos en otro stock, diferente al actual                                                                                    *
+                             ******************************************************************************************************************************************************/
+
+                            /******************************************************************************************************************************************************
+                            * Inicio: Hacer las moficaciones pertienentes si el lote tiene capturado una carja de canje                                                           *
+                            *                                                                                                                                                     */
+
+                            $movimiento_articulo_db->stock->load('cartaCanje');
+                            $carta_canje = $movimiento_articulo_db->stock->cartaCanje;
+                            $datos_carta_canje = false;
+
+                            if(isset($lote['memo_folio']) && $lote['memo_folio']){
+                                $vigencia_fecha = Carbon::createFromFormat('Y-m-d', $movimiento->fecha_movimiento);
+
+                                $datos_carta_canje = [
+                                    'movimiento_id'         => $movimiento->id,
+                                    'movimiento_articulo_id'=> $movimiento_articulo_db->id,
+                                    'bien_servicio_id'      => $articulo_id,
+                                    'cantidad'              => $lote['cantidad'],
+                                    'memo_folio'            => $lote['memo_folio'],
+                                    'memo_fecha'            => $lote['memo_fecha'],
+                                    'vigencia_meses'        => $lote['vigencia_meses'],
+                                    'vigencia_fecha'        => $vigencia_fecha->addMonths($lote['vigencia_meses']),
+                                    'estatus'               => 'PEN',
+                                    //'creado_por_usuario_id' => $loggedUser->id
+                                ];
+
+                                if($nuevo_stock){
+                                    $datos_carta_canje['stock_id'] = $nuevo_stock->id;
+                                }else{
+                                    $datos_carta_canje['stock_id'] = $movimiento_articulo_db->stock_id;
+                                }
+                            }
+
+                            if($carta_canje){
+                                $registro_original['carta_canje'] = [
+                                    'id'                    => $carta_canje->id,
+                                    'movimiento_articulo_id'=> $carta_canje->movimiento_articulo_id,
+                                    'stock_id'              => $carta_canje->stock_id,
+                                    'cantidad'              => $carta_canje->cantidad,
+                                    'memo_folio'            => $carta_canje->memo_folio,
+                                    'memo_fecha'            => $carta_canje->memo_fecha,
+                                    'vigencia_meses'        => $carta_canje->vigencia_meses,
+                                    'updated_at'            => $carta_canje->updated_at,
+                                ];
+                            }
+
+                            if($carta_canje && !$datos_carta_canje){
+                                //Borrar carta canje
+                                $carta_canje->delete();
+                                $registro_original['carta_canje']['deleted_at'] = null;
+                                $bitacora_modificaciones[] = '      |--+ Se eliminó la Carta de Canje del Lote: '.$lote['lote'];
+                            }else if($carta_canje && $datos_carta_canje){
+                                $carta_canje->update($datos_carta_canje);
+                                $bitacora_modificaciones[] = '      |--+ Se modificó la Carta de Canje del Lote: '.$lote['lote'];
+                            }else if(!$carta_canje && $datos_carta_canje){
+                                $datos_carta_canje['creado_por_usuario_id'] = $loggedUser->id;
+                                $carta_canje = CartaCanje::create($datos_carta_canje);
+                                $bitacora_modificaciones[] = '      |--+ Se creó una Carta de Canje para el Lote: '.$lote['lote'];
+                            }
+
+                            if($carta_canje){
+                                $registro_modificado['carta_canje'] = [
+                                    'id'                    => $carta_canje->id,
+                                    'movimiento_articulo_id'=> $carta_canje->movimiento_articulo_id,
+                                    'stock_id'              => $carta_canje->stock_id,
+                                    'cantidad'              => $carta_canje->cantidad,
+                                    'memo_folio'            => $carta_canje->memo_folio,
+                                    'memo_fecha'            => $carta_canje->memo_fecha,
+                                    'vigencia_meses'        => $carta_canje->vigencia_meses,
+                                    'updated_at'            => $carta_canje->updated_at,
+                                ];
+
+                                if($carta_canje->deleted_at){
+                                    $registro_modificado['carta_canje']['deleted_at'] = $carta_canje->deleted_at;
+                                }
+                            }
+                            /*                                                                                                                                                    *
+                             * Fin: Hacer las moficaciones pertienentes si el lote tiene capturado una carja de canje                                                             *
                              ******************************************************************************************************************************************************/
                         }
 
@@ -1153,7 +1282,8 @@ class ModificacionMovimientosController extends Controller{
                             ];
                             
                             $movimiento_articulo_db->stock->load('almacen','empaqueDetalle','programa','marca');
-                            $registro_modificado['stock'] = [
+                            $registro_modificado['stock'] = $this->plantillaRegistroStock($movimiento_articulo_db->stock,$loggedUser);
+                            /*$registro_modificado['stock'] = [
                                 'id'                => $movimiento_articulo_db->stock->id,
                                 'almacen_id'        => $movimiento_articulo_db->stock->almacen_id,
                                 'almacen'           => $movimiento_articulo_db->stock->almacen->nombre,
@@ -1174,7 +1304,7 @@ class ModificacionMovimientosController extends Controller{
                                 'user_id'           => $loggedUser->id,
                                 'user'              => $loggedUser->username,
                                 'updated_at'        => $movimiento_articulo_db->stock->updated_at,
-                            ];
+                            ];*/
 
                             $listado_modificaciones[] = ['tipo_modificacion'=>'UPD', 'movimiento_articulo_id'=>$movimiento_articulo_db->id, 'registro_original'=>json_encode($registro_original), 'registro_modificado'=>json_encode($registro_modificado)];
                         }
@@ -1272,28 +1402,39 @@ class ModificacionMovimientosController extends Controller{
                     ];
                     
                     $nuevo_stock->load('almacen','programa','empaqueDetalle','marca');
-                    $registro_modificado['stock'] = [
-                        'id'                => $nuevo_stock->id,
-                        'almacen_id'        => $nuevo_stock->almacen_id,
-                        'almacen'           => $nuevo_stock->almacen->nombre,
-                        'empaque_detalle_id'=> $nuevo_stock->empaque_detalle_id,
-                        'empaque_detalle'   => ($nuevo_stock->empaqueDetalle)?$nuevo_stock->empaqueDetalle->descripcion:null,
-                        'programa_id'       => $nuevo_stock->programa_id,
-                        'programa'          => ($nuevo_stock->programa)?$nuevo_stock->programa->descripcion:null,
-                        'marca_id'          => $nuevo_stock->marca_id,
-                        'marca'             => ($nuevo_stock->marca)?$nuevo_stock->marca->nombre:null,
-                        'modelo'            => $nuevo_stock->modelo,
-                        'no_serie'          => $nuevo_stock->no_serie,
-                        'lote'              => $nuevo_stock->lote,
-                        'fecha_caducidad'   => $nuevo_stock->fecha_caducidad,
-                        'codigo_barras'     => $nuevo_stock->codigo_barras,
-                        'existencia'        => $nuevo_stock->existencia,
-                        'existencia_piezas' => $nuevo_stock->existencia_piezas,
-                        'resguardo_piezas'  => $nuevo_stock->resguardo_piezas,
-                        'user_id'           => $loggedUser->id,
-                        'user'              => $loggedUser->username,
-                        'updated_at'        => $nuevo_stock->updated_at,
-                    ];
+                    $registro_modificado['stock'] = $this->plantillaRegistroStock($nuevo_stock,$loggedUser);
+                    
+                    if(isset($lote['memo_folio']) && $lote['memo_folio']){
+                        $vigencia_fecha = Carbon::createFromFormat('Y-m-d', $movimiento->fecha_movimiento);
+
+                        $datos_carta_canje = [
+                            'movimiento_id'         => $movimiento->id,
+                            'movimiento_articulo_id'=> $movimiento_articulo_db->id,
+                            'stock_id'              => $nuevo_stock->id,
+                            'bien_servicio_id'      => $articulo_id,
+                            'cantidad'              => $lote['cantidad'],
+                            'memo_folio'            => $lote['memo_folio'],
+                            'memo_fecha'            => $lote['memo_fecha'],
+                            'vigencia_meses'        => $lote['vigencia_meses'],
+                            'vigencia_fecha'        => $vigencia_fecha->addMonths($lote['vigencia_meses']),
+                            'estatus'               => 'PEN',
+                            'creado_por_usuario_id' => $loggedUser->id
+                        ];
+
+                        $carta_canje = CartaCanje::create($datos_carta_canje);
+
+                        if($carta_canje){
+                            $registro_modificado['carta_canje'] = [
+                                'id'                => $carta_canje->id,
+                                'stock_id'          => $carta_canje->stock_id,
+                                'cantidad'          => $carta_canje->cantidad,
+                                'memo_folio'        => $carta_canje->memo_folio,
+                                'memo_fecha'        => $carta_canje->memo_fecha,
+                                'vigencia_meses'    => $carta_canje->vigencia_meses,
+                                'updated_at'        => $carta_canje->updated_at,
+                            ];
+                        }
+                    }
 
                     $registro_original = ['articulo'=>['id'=>$articulo_id, 'clave'=>$articulo_clave, 'nombre'=>$articulo_nombre]];
                     $listado_modificaciones[] = ['tipo_modificacion'=>'ADD', 'movimiento_articulo_id'=>$nuevo_articulo->id, 'registro_original'=>json_encode($registro_original), 'registro_modificado'=>json_encode($registro_modificado)];
@@ -1322,5 +1463,96 @@ class ModificacionMovimientosController extends Controller{
         }
 
         return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje,'log'=>$queries, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento];
+    }
+
+    private function ajustarResguardos($stock){
+        $modificaciones = [];
+
+        $stock->load(['resguardoDetalle'=>function($resguardoDetalle){
+            $resguardoDetalle->where('cantidad_restante','>',0);
+        }]);
+
+        $cantidades_restantes = $stock->existencia_piezas;
+        foreach ($stock->resguardoDetalle as $resguardo){
+            $respaldo_resguardo = [
+                'id'                    => $resguardo->id,
+                'stock_id'              => $resguardo->stock_id,
+                'cantidad_resguardada'  => $resguardo->cantidad_resguardada,
+                'cantidad_restante'     => $resguardo->cantidad_restante,
+                'updated_at'            => $resguardo->updated_at
+            ];
+
+            $cantidad_resguardo = $resguardo->cantidad_resguardada;
+            $cantidad_resguardo_piezas = $resguardo->cantidad_resguardada;
+            if($resguardo->son_piezas != 1){
+                $cantidad_resguardo_piezas = $resguardo->cantidad_resguardada * $nuevo_piezas_x_empaque;
+            }
+
+            if($cantidades_restantes > $cantidad_resguardo_piezas){
+                $cantidades_restantes -= $cantidad_resguardo_piezas;
+            }else{
+                if($cantidades_restantes > 0){
+                    $resguardo->cantidad_resguardada = ($resguardo->son_piezas == 1)?$cantidades_restantes:ceil($cantidades_restantes/$nuevo_piezas_x_empaque);
+                    $cantidades_restantes = 0;
+                }else{
+                    $resguardo->cantidad_resguardada = 0;
+                }
+
+                $cantidad_resguardo_piezas =  ($resguardo->son_piezas == 1)?$resguardo->cantidad_resguardada:($resguardo->cantidad_resguardada * $nuevo_piezas_x_empaque);
+                
+                if($resguardo->cantidad_restante > $cantidad_resguardo_piezas){
+                    $resguardo->cantidad_restante = $cantidad_resguardo_piezas;
+                }
+            }
+
+            if($resguardo->cantidad_resguardada != $respaldo_resguardo['cantidad_resguardada'] || $resguardo->cantidad_restante != $respaldo_resguardo['cantidad_restante']){
+                $resguardo->save();
+
+                if(!isset($modificaciones['resguardos_originales'])){
+                    $modificaciones = ['resguardos_originales'=>[], 'resguardos_modificados'=>[]];
+                }
+
+                $modificaciones['resguardos_originales'][] = $respaldo_resguardo;
+                $modificaciones['resguardos_modificados'][] = [
+                    'id'                    => $resguardo->id,
+                    'stock_id'              => $resguardo->stock_id,
+                    'cantidad_resguardada'  => $resguardo->cantidad_resguardada,
+                    'cantidad_restante'     => $resguardo->cantidad_restante,
+                    'updated_at'            => $resguardo->updated_at
+                ];
+            }
+        }
+
+        return $modificaciones;
+    }
+
+    private function plantillaRegistroStock($datosStock,$datosUsuario){
+        if(!$datosStock->almacen){
+            $datosStock->load('almacen','programa','empaqueDetalle','marca');
+        }
+        $plantilla = [
+            'id'                => $datosStock->id,
+            'almacen_id'        => $datosStock->almacen_id,
+            'almacen'           => $datosStock->almacen->nombre,
+            'empaque_detalle_id'=> $datosStock->empaque_detalle_id,
+            'empaque_detalle'   => ($datosStock->empaqueDetalle)?$datosStock->empaqueDetalle->descripcion:null,
+            'programa_id'       => $datosStock->programa_id,
+            'programa'          => ($datosStock->programa)?$datosStock->programa->descripcion:null,
+            'marca_id'          => $datosStock->marca_id,
+            'marca'             => ($datosStock->marca)?$datosStock->marca->nombre:null,
+            'modelo'            => $datosStock->modelo,
+            'no_serie'          => $datosStock->no_serie,
+            'lote'              => $datosStock->lote,
+            'fecha_caducidad'   => $datosStock->fecha_caducidad,
+            'codigo_barras'     => $datosStock->codigo_barras,
+            'existencia'        => $datosStock->existencia,
+            'existencia_piezas' => $datosStock->existencia_piezas,
+            'resguardo_piezas'  => $datosStock->resguardo_piezas,
+            'user_id'           => $datosUsuario->id,
+            'user'              => $datosUsuario->username,
+            'updated_at'        => $datosStock->updated_at,
+        ];
+
+        return $plantilla;
     }
 }
