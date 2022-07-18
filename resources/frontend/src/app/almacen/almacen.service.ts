@@ -8,12 +8,16 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AlmacenService {
-  url_articulos = `${environment.base_url}/buscar-articulos`;
-  url_catalogos = `${environment.base_url}/almacen-movimientos-catalogos`;
-  url_admin_mods = `${environment.base_url}/movimientos-administrar-modificacion/`;
-  url_guardar_mods = `${environment.base_url}/guardar-modificacion/`;
-  url_historial_mods = `${environment.base_url}/historial-modificaciones/`;
-  url_movimientos_stock = `${environment.base_url}/almacen-existencias/movimientos/`;
+  private url_articulos = `${environment.base_url}/buscar-articulos`;
+  private url_catalogos = `${environment.base_url}/almacen-movimientos-catalogos`;
+  private url_admin_mods = `${environment.base_url}/movimientos-administrar-modificacion/`;
+  private url_guardar_mods = `${environment.base_url}/guardar-modificacion/`;
+  private url_historial_mods = `${environment.base_url}/historial-modificaciones/`;
+  private url_movimientos_stock = `${environment.base_url}/almacen-existencias/movimientos/`;
+
+  listaIconos: any    = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',        'MOD':'note_alt',                'CONF':'notification_important'};
+  listaClaves: any    = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',     'MOD':'modificacion-aprobada',   'CONF':'conflicto'};
+  listaEtiquetas: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',  'MOD':'Modificación Activa',     'CONF':'Conflicto'};
 
   constructor(private http: HttpClient) { }
 

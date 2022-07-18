@@ -122,6 +122,11 @@ table tr:hover{
   color:#ff2a2a !important;
 }
 
+.conflicto-color{
+  color: whitesmoke !important;
+  background-color: #eb0808;
+}
+
 .cancelado{
   color:#ff2a2a !important;
 }

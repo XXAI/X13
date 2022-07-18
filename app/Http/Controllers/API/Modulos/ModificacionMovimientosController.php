@@ -312,7 +312,9 @@ class ModificacionMovimientosController extends Controller{
                 $response = [ 'estatus'=> false ];
                 if($movimiento->direccion_movimiento == 'ENT'){
                     //Movimiento de entrada
-                    $movimiento->programa_id = $datos_modificados['programa_id'];
+                    if(isset($datos_modificados['programa_id']) && $datos_modificados['programa_id']){
+                        $movimiento->programa_id = $datos_modificados['programa_id'];
+                    }
                     if(isset($datos_modificados['almacen_id']) && $datos_modificados['almacen_id']){
                         $movimiento->almacen_id = $datos_modificados['almacen_id'];
                     }
@@ -429,7 +431,7 @@ class ModificacionMovimientosController extends Controller{
                 }
 
                 /***  Preparamos los objetos que guardaran los originales y modificados para el historial de modificaciones  ***/
-                ////'movimiento_articulo','stock','nuevo_stock','carta_canje','salidas_seleccionadas','recepcion_transferencias'
+                ////'movimiento_articulo','stock','nuevo_stock','carta_canje','salidas_seleccionadas','movimientos_recepciones'
                 $registro_original = [ 'articulo'=>['id'=>$articulo_id, 'clave'=>$articulo_clave, 'nombre'=>$articulo_nombre] ];
                 $registro_modificado = [];
 
@@ -506,12 +508,12 @@ class ModificacionMovimientosController extends Controller{
                                     $registro_original['salidas_seleccionadas'][] = [
                                         'id'                                    => $ma_eliminar->id,
                                         'movimiento_id'                         => $ma_eliminar->movimiento_id,
-                                        'movimiento_folio'                      => $ma_eliminar->movimiento->folio,
-                                        'movimiento_total_articulos'            => $ma_eliminar->movimiento->total_articulos,
-                                        'movimiento_total_claves'               => $ma_eliminar->movimiento->total_claves,
-                                        'movimiento_total_monto'                => $ma_eliminar->movimiento->total_monto,
-                                        'movimiento_modificado_por_usuario_id'  => $ma_eliminar->movimiento->modificado_por_usuario_id,
-                                        'movimiento_modificado_por_usuario'     => $ma_eliminar->movimiento->modificado_por->username,
+                                        'folio'                                 => $ma_eliminar->movimiento->folio,
+                                        'total_articulos'                       => $ma_eliminar->movimiento->total_articulos,
+                                        'total_claves'                          => $ma_eliminar->movimiento->total_claves,
+                                        'total_monto'                           => $ma_eliminar->movimiento->total_monto,
+                                        'modificado_por_usuario_id'             => $ma_eliminar->movimiento->modificado_por_usuario_id,
+                                        'modificado_por_usuario'                => $ma_eliminar->movimiento->modificado_por->username,
                                         'modo_movimiento'                       => $ma_eliminar->modo_movimiento,
                                         'cantidad'                              => $ma_eliminar->cantidad,
                                         'user_id'                               => $ma_eliminar->user_id,
@@ -584,21 +586,21 @@ class ModificacionMovimientosController extends Controller{
                             $stock_afectado->load('cartaCanje');
                             if($stock_afectado->cartaCanje){
                                 $registro_original['carta_canje'] = [
-                                    'cantidad' => $stock_afectado->cartaCanje->cantidad,
-                                    'memo_folio' => $stock_afectado->cartaCanje->memo_folio,
-                                    'memo_fecha' => $stock_afectado->cartaCanje->memo_fecha,
-                                    'vigencia_meses' => $stock_afectado->cartaCanje->vigencia_meses,
-                                    'deleted_at' => $stock_afectado->cartaCanje->deleted_at,
+                                    'cantidad'          => $stock_afectado->cartaCanje->cantidad,
+                                    'memo_folio'        => $stock_afectado->cartaCanje->memo_folio,
+                                    'memo_fecha'        => $stock_afectado->cartaCanje->memo_fecha,
+                                    'vigencia_meses'    => $stock_afectado->cartaCanje->vigencia_meses,
+                                    'deleted_at'        => $stock_afectado->cartaCanje->deleted_at,
                                 ];
 
                                 $stock_afectado->cartaCanje->delete();
 
                                 $registro_modificado['carta_canje'] = [
-                                    'cantidad' => $stock_afectado->cartaCanje->cantidad,
-                                    'memo_folio' => $stock_afectado->cartaCanje->memo_folio,
-                                    'memo_fecha' => $stock_afectado->cartaCanje->memo_fecha,
-                                    'vigencia_meses' => $stock_afectado->cartaCanje->vigencia_meses,
-                                    'deleted_at' => $stock_afectado->cartaCanje->deleted_at,
+                                    'cantidad'          => $stock_afectado->cartaCanje->cantidad,
+                                    'memo_folio'        => $stock_afectado->cartaCanje->memo_folio,
+                                    'memo_fecha'        => $stock_afectado->cartaCanje->memo_fecha,
+                                    'vigencia_meses'    => $stock_afectado->cartaCanje->vigencia_meses,
+                                    'deleted_at'        => $stock_afectado->cartaCanje->deleted_at,
                                 ];
                                 $bitacora_modificaciones[] = '      |--+ Se eliminó la Carta de Canje del Lote: '.$lote['lote'];
                             }
@@ -839,7 +841,6 @@ class ModificacionMovimientosController extends Controller{
                                             'updated_at'                => $movimientos_recepcion[$k]->updated_at,
                                         ];
                                     }
-                                    //$registro_original['recepcion_transferencias'] = [$movimientos_recepcion->toArray()];
 
                                     $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
                                                                         ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
@@ -855,7 +856,6 @@ class ModificacionMovimientosController extends Controller{
                                             'updated_at'                => $movimientos_recepcion[$k]->updated_at,
                                         ];
                                     }
-                                    //$registro_modificado['recepcion_transferencias'] = $movimientos_recepcion->toArray();
 
                                     $bitacora_modificaciones[] = '      |--+ Se Marcan las entradas que sean recepciones de transferencias, del Stock modificado con Lote: '.$stock_db['lote'];
                                     $bitacora_modificaciones[] = '      |--+ Se Marcaron las entradas por traspaso del stock editado: '.json_encode($movimientos_modificados);
@@ -1108,7 +1108,6 @@ class ModificacionMovimientosController extends Controller{
                                         $tipo_movimiento = TipoMovimiento::where('clave','RCPCN')->where('movimiento','ENT')->first();
     
                                         $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
-                                        //$registro_original['recepcion_transferencias'] = $movimientos_recepcion->toArray();
                                         $registro_original['movimientos_recepciones'] = [];
                                         for($k = 0; $k < count($movimientos_recepcion); $k++){
                                             $registro_original['movimientos_recepciones'][] = [
@@ -1124,7 +1123,6 @@ class ModificacionMovimientosController extends Controller{
                                                                             ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
     
                                         $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
-                                        //$registro_modificado['recepcion_transferencias'] = $movimientos_recepcion->toArray();
                                         $registro_modificado['movimientos_recepciones'] = [];
                                         for($k = 0; $k < count($movimientos_recepcion); $k++){
                                             $registro_modificado['movimientos_recepciones'][] = [

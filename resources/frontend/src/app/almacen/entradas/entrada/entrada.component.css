@@ -256,6 +256,11 @@ table td {
     color:#ff2a2a;
 }
 
+.conflicto-color{
+    color: whitesmoke !important;
+    background-color: #eb0808;
+}
+
 .expirado-color{
     color:#fdcd2f;
 }
@@ -508,6 +513,11 @@ tr.tabla-row-articulo-detalle{
 .cancelado-bg-color{
     background-color:#ff2a2a;
     color:whitesmoke;
+}
+
+.conflicto-bg-color{
+    background-color: #eb0808;
+    color: whitesmoke;
 }
 
 .fake-input{

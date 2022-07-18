@@ -73,29 +73,12 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
           response.data.forEach(element => {
             element.registro_original = JSON.parse(element.registro_original);
             element.registro_modificado = JSON.parse(element.registro_modificado);
-            let datos_movimiento:any = {};
-            for(const key in element.registro_original) {
-              if(Object.prototype.hasOwnProperty.call(element.registro_original, key)) {
-                datos_movimiento[key] = {original: element.registro_original[key], modificado:''};
-              }
-            }
-            for(const key in element.registro_modificado) {
-              if(Object.prototype.hasOwnProperty.call(element.registro_modificado, key)) {
-                if(!datos_movimiento[key]){
-                  datos_movimiento[key] = {original:'', modificado: element.registro_modificado[key]};
-                }else{
-                  datos_movimiento[key].modificado = element.registro_modificado[key];
-                }
-              }
-            }
-            element.datos_movimiento = [];
-            for(const key in datos_movimiento) {
-              if(Object.prototype.hasOwnProperty.call(datos_movimiento, key)) {
-                element.datos_movimiento.push({
-                  etiqueta: this.formatearEtiqueta(key), valor: datos_movimiento[key]
-                });
-              }
-            }
+            
+            let modificaciones_movimiento:any = {};
+            modificaciones_movimiento = this.generarObjetoDiferencias(modificaciones_movimiento,element.registro_original,'original');
+            modificaciones_movimiento = this.generarObjetoDiferencias(modificaciones_movimiento,element.registro_modificado,'modificado');
+
+            element.datos_movimiento = modificaciones_movimiento;
 
             element.modificaciones_articulos.forEach(element => {
               element.registro_original = JSON.parse(element.registro_original);
@@ -121,7 +104,7 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
                   clase_tipo_modificacion = 'none';
                   break;
               }
-              console.log(element);
+              
               let articulo:any = {};
               if(element.registro_original && element.registro_original.articulo){
                 articulo = element.registro_original.articulo;
@@ -142,7 +125,7 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
               datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_original,'original');              
               datos_registrados = this.generarObjetoDiferencias(datos_registrados,element.registro_modificado,'modificado');
               
-              console.log('trabajados:',datos_registrados);
+              //console.log('trabajados:',datos_registrados);
               let comparativa_datos:any[] = [];
               for(const key in datos_registrados) {
                 if(datos_registrados[key]){
@@ -163,17 +146,22 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
                     case 'recepcion_transferencias':
                       seccion_comparativa.titulo = 'Datos de las Transferencias:';
                       break;
-                    case 'salidas_relacionadas':
-                      seccion_comparativa.titulo = 'Datos de las Salidas Relacionadas:';
+                    case 'movimientos_recepciones':
+                      seccion_comparativa.titulo = 'Datos de los Movimientos de Recepción:';
                       break;
                     case 'salidas_seleccionadas':
-                        seccion_comparativa.titulo = 'Datos de las Salidas Seleccionadas:';
-                        break;
+                      seccion_comparativa.titulo = 'Datos de las Salidas Seleccionadas:';
+                      break;
                     default:
                       seccion_comparativa.titulo = 'Sección sin titulo:';
                       break;
                   }
-                  seccion_comparativa.datos = datos_registrados[key];
+                  if(datos_registrados[key].es_arreglo){
+                    seccion_comparativa.es_arreglo = true;
+                    seccion_comparativa.datos = Object.values(datos_registrados[key].items);
+                  }else{
+                    seccion_comparativa.datos = datos_registrados[key];
+                  }
                   comparativa_datos.push(seccion_comparativa);
                 }
               }
@@ -209,11 +197,27 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
             diferencias[parametro] = {};
           }
 
+          if(objeto[parametro] && objeto[parametro].constructor == Array){
+            if(!diferencias[parametro].items){
+              diferencias[parametro] = {es_arreglo: true, items:{}};
+            }
+
+            objeto[parametro].forEach(element => {
+              let item:any;
+              item = diferencias[parametro].items[element.id]||{};
+              
+              item = this.generarObjetoDiferencias(item,element,nivel);
+              diferencias[parametro].items[element.id] = item;
+            });
+            //console.log('asdfsdfsdf:',parametro);
+            continue;
+          }
+
           if(typeof objeto[parametro] == 'object'){
             diferencias[parametro] = this.generarObjetoDiferencias(diferencias[parametro],objeto[parametro],nivel);
           }else{
             if(!objeto[parametro]){
-              objeto[parametro] = '[ ]';
+              objeto[parametro] = '---';
             }
             if(parametro == 'updated_at' || parametro == 'deleted_at' || parametro == 'created_at'){
               objeto[parametro] = objeto[parametro].substring(0,10);

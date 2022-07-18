@@ -90,6 +90,7 @@ class AlmacenMovimientosController extends Controller{
                     ['clave'=>'PERE','descripcion'=>'Pendiente de Recepción'],
                     ['clave'=>'SOL','descripcion'=>'Petición de Modificación'],
                     ['clave'=>'MOD','descripcion'=>'Modificación Activa'],
+                    ['clave'=>'CONF','descripcion'=>'Conflicto'],
                 ];
             }
 

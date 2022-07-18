@@ -112,14 +112,18 @@ export class EntradaComponent implements OnInit {
   listadoEstatusUsuarios: any[];
   verListadoUsuarios: boolean;
 
-  listaEstatusIconos: any = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',        'MOD':'note_alt'};
-  listaEstatusClaves: any = { 'NV':'nuevo',   'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',     'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'NV':'Nuevo',   'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',  'MOD':'Modificación Activa'};
+  listaEstatusIconos: any;
+  listaEstatusClaves: any;
+  listaEstatusLabels: any;
   
   estatusArticulosColores = {1:'verde', 2:'ambar', 3:'rojo'};
   estatusArticulosIconos = {1:'check_circle_outline', 2:'notification_important', 3:'warning'};
   
   ngOnInit() {
+    this.listaEstatusIconos = this.almacenService.listaIconos;
+    this.listaEstatusClaves = this.almacenService.listaClaves;
+    this.listaEstatusLabels = this.almacenService.listaEtiquetas;
+
     this.authUser = this.authService.getUserData();
     this.localStorageService.tipoMovimiento = 'entradas';
 
@@ -224,6 +228,17 @@ export class EntradaComponent implements OnInit {
     }
 
     let almacen = this.catalogos['almacenes'].find(item => item.id == almacen_id);
+
+    if(this.verBoton.concluir_modificacion && this.dataSourceArticulos){
+      this.dataSourceArticulos.data.forEach(articulo =>{
+        articulo.lotes.forEach(stock => {
+          if(!stock.respaldo){
+            stock.respaldo = JSON.parse(JSON.stringify(stock));
+          }
+          stock.almacen_id = almacen.id;
+        });
+      });
+    }
 
     if(this.formMovimiento.get('tipo_movimiento_id')){
       this.catalogos['tipos_movimiento'] = almacen.tipos_movimiento;
@@ -936,8 +951,12 @@ export class EntradaComponent implements OnInit {
   protegerDatosFormulario(){
     let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','documento_folio','observaciones'];
     if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
-      mostrar_campos.push('tipo_movimiento_id','programa','programa_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+      mostrar_campos.push('tipo_movimiento_id','almacen_id','programa','programa_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+    }else{
+      this.modoRecepcion = true;
+      this.totalesRecibidos.recibidos = 0;
     }
+
     this.reconfigurarFormulario(mostrar_campos);
   }
 
@@ -1018,16 +1037,16 @@ export class EntradaComponent implements OnInit {
   }
 
   programaSeleccionado(programa:any){
-    this.dataSourceArticulos.data.forEach(articulo =>{
-      articulo.lotes.forEach(stock => {
-        if(this.verBoton.concluir_modificacion){
+    if(this.verBoton.concluir_modificacion){
+      this.dataSourceArticulos.data.forEach(articulo =>{
+        articulo.lotes.forEach(stock => {
           if(!stock.respaldo){
             stock.respaldo = JSON.parse(JSON.stringify(stock));
           }
           stock.programa_id = programa.id;
-        }
+        });
       });
-    });
+    }
   }
   
   concluirMovimiento(){

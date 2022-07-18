@@ -83,9 +83,27 @@
                         <div fxFlex="none" class="encabezado-detalle">
                             <span>Movimiento:</span>
                         </div>
-                        <div fxFlex="none" *ngFor="let item of datosModificacion.datos_movimiento" class="detalle">
-                            <span class="etiqueta">{{item.etiqueta}} : </span><span>{{item.valor.original}}</span> &raquo; <span>{{item.valor.modificado}}</span>
+                        <div fxFlex="none" class="detalle">
+                            <table class="table-modificacion">
+                                <thead>
+                                    <tr>
+                                        <th>Valor</th>
+                                        <th>Original</th>
+                                        <th>Modificado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let item of datosModificacion.datos_movimiento | keyvalue" [ngClass]="{'modificado':item.value.original != item.value.modificado}">
+                                        <td>{{item.value.etiqueta}}</td>
+                                        <td>{{item.value.original}}</td>
+                                        <td>{{item.value.modificado}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
+                        <!--div fxFlex="none" *ngFor="let item of datosModificacion.datos_movimiento" class="detalle">
+                            <span class="etiqueta">{{item.etiqueta}} : </span><span>{{item.valor.original}}</span> &raquo; <span>{{item.valor.modificado}}</span>
+                        </div-->
                         <div fxFlex="none" class="encabezado-detalle">
                             <span>Articulos:</span>
                         </div>
@@ -110,12 +128,45 @@
                                                     </td>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody *ngIf="!item.es_arreglo">
                                                 <tr *ngFor="let object of item.datos | keyvalue" [ngClass]="{'modificado':object.value.original != object.value.modificado}">
                                                     <td width="1" class="etiqueta">{{(object.value.etiqueta)?object.value.etiqueta:object.key}}</td>
-                                                    <td>{{object.value.original||'[ ]'}}</td>
-                                                    <td>{{object.value.modificado||'[ ]'}}</td>
+                                                    <td>{{object.value.original||'---'}}</td>
+                                                    <td>{{object.value.modificado||'---'}}</td>
                                                 </tr>
+                                            </tbody>
+                                            <tbody *ngIf="item.es_arreglo">
+                                                <ng-template ngFor let-object [ngForOf]="item.datos" let-i="index">
+                                                    <tr>
+                                                        <td width="1" class="etiqueta">{{ object.folio.etiqueta }}</td>
+                                                        <td colspan="2">{{object.folio.original||'---'}}</td>
+                                                    </tr>
+                                                    <tr *ngIf="object.estatus" [ngClass]="{'modificado':object.estatus.original != object.estatus.modificado}">
+                                                        <td width="1" class="etiqueta">{{(object.estatus.etiqueta)?object.estatus.etiqueta:object.key}}</td>
+                                                        <td>{{object.estatus.original||'---'}}</td>
+                                                        <td>{{object.estatus.modificado||'---'}}</td>
+                                                    </tr>
+                                                    <tr *ngIf="object.cantidad" [ngClass]="{'modificado':object.cantidad.original != object.cantidad.modificado}">
+                                                        <td width="1" class="etiqueta">{{(object.cantidad.etiqueta)?object.cantidad.etiqueta:object.key}}</td>
+                                                        <td>{{object.cantidad.original||'---'}}</td>
+                                                        <td>{{object.cantidad.modificado||'---'}}</td>
+                                                    </tr>
+                                                    <tr *ngIf="object.modificado_por_usuario" [ngClass]="{'modificado':object.modificado_por_usuario.original != object.modificado_por_usuario.modificado}">
+                                                        <td width="1" class="etiqueta">{{(object.modificado_por_usuario.etiqueta)?object.modificado_por_usuario.etiqueta:object.key}}</td>
+                                                        <td>{{object.modificado_por_usuario.original||'---'}}</td>
+                                                        <td>{{object.modificado_por_usuario.modificado||'---'}}</td>
+                                                    </tr>
+                                                    <tr *ngIf="object.updated_at" [ngClass]="{'modificado':object.updated_at.original != object.updated_at.modificado}">
+                                                        <td width="1" class="etiqueta">{{(object.updated_at.etiqueta)?object.updated_at.etiqueta:object.key}}</td>
+                                                        <td>{{object.updated_at.original||'---'}}</td>
+                                                        <td>{{object.updated_at.modificado||'---'}}</td>
+                                                    </tr>
+                                                    <tr *ngIf="object.deleted_at" [ngClass]="{'modificado':object.deleted_at.original != object.deleted_at.modificado}">
+                                                        <td width="1" class="etiqueta">{{(object.deleted_at.etiqueta)?object.deleted_at.etiqueta:object.key}}</td>
+                                                        <td>{{object.deleted_at.original||'---'}}</td>
+                                                        <td>{{object.deleted_at.modificado||'---'}}</td>
+                                                    </tr>
+                                                </ng-template>
                                             </tbody>
                                         </table>
                                     </td>

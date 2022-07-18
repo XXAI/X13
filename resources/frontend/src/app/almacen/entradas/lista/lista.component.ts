@@ -30,7 +30,15 @@ export class ListaComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatTable) usersTable: MatTable<any>;
 
-  constructor(private datepipe: DatePipe, private sharedService: SharedService, private entradasService: EntradasService, private almacenService: AlmacenService, public dialog: MatDialog, public mediaObserver: MediaObserver, private localStorageService: MovimientosLocalStorageService, private router: Router) { }
+  constructor(
+    private datepipe: DatePipe, 
+    private sharedService: SharedService, 
+    private entradasService: EntradasService, 
+    private almacenService: AlmacenService, 
+    public dialog: MatDialog, 
+    public mediaObserver: MediaObserver, 
+    private localStorageService: MovimientosLocalStorageService, 
+    private router: Router){ }
 
   isLoading: boolean = false;
   mediaSize: string;
@@ -56,10 +64,10 @@ export class ListaComponent implements OnInit {
   currentPage: number = 0;
   pageSize: number = 20;
   selectedItemIndex: number = -1;
-
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
+  
+  listaEstatusIconos: any;
+  listaEstatusClaves: any;
+  listaEstatusLabels: any;
 
   displayedColumns: string[] = ['id','folio','folio_referencia','almacen','fecha_movimiento','totales_claves_articulos','total_monto','dato_usuario','actions']; //,'descripcion','proveedor','programa', 'total_articulos'
   listadoMovimientos: any = [];
@@ -68,6 +76,10 @@ export class ListaComponent implements OnInit {
   fechaActual:Date = new Date();
 
   ngOnInit() {
+    this.listaEstatusIconos = this.almacenService.listaIconos;
+    this.listaEstatusClaves = this.almacenService.listaClaves;
+    this.listaEstatusLabels = this.almacenService.listaEtiquetas;
+
     this.localStorageService.tipoMovimiento = 'entradas';
     this.datosRecuperados = this.localStorageService.getDatosID();
     this.mediaObserver.media$.subscribe(

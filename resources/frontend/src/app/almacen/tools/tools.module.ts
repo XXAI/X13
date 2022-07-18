@@ -18,7 +18,7 @@ import { DialogoHistorialModificacionesComponent } from './dialogo-historial-mod
   ],
   exports: [
     DialogoCancelarMovimientoComponent,
-    WidgetBuscadorArticulosComponent
+    WidgetBuscadorArticulosComponent,
   ],
   providers:[
     DecimalPipe
