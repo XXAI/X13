@@ -557,6 +557,7 @@ export class EntradaComponent implements OnInit {
           id:                 lista_articulos[i].id,
           stock_id:           (lista_articulos[i].stock)?lista_articulos[i].stock.id:undefined,
           programa_id:        (lista_articulos[i].stock)?lista_articulos[i].stock.programa_id:undefined,
+          almacen_id:         (lista_articulos[i].stock)?lista_articulos[i].stock.almacen_id:undefined,
           modo_movimiento:    lista_articulos[i].modo_movimiento,
           lote:               (lista_articulos[i].stock)?lista_articulos[i].stock.lote:lista_articulos[i].lote,
           fecha_caducidad:    (lista_articulos[i].stock)?lista_articulos[i].stock.fecha_caducidad:lista_articulos[i].fecha_caducidad,
@@ -913,12 +914,13 @@ export class EntradaComponent implements OnInit {
       dialogRef.afterClosed().subscribe(dialogResponse => {
         if(dialogResponse){
           if(dialogResponse.estatus != 'CAN'){
-            this.datosEntrada.modificacion_activa = dialogResponse;
+            this.datosEntrada.modificacion_activa = dialogResponse;            
             this.cargarDatosModificacion(dialogResponse);
 
-            this.checarAlmacenSeleccionado();
             this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
             this.formMovimiento.patchValue(this.datosEntrada);
+            this.checarAlmacenSeleccionado();
+            this.formMovimiento.get('tipo_movimiento_id').patchValue(this.datosEntrada.tipo_movimiento_id);
           }else{
             this.datosEntrada.modificacion_activa = null;
             this.puedeEditarDatosEncabezado = false;
@@ -975,6 +977,16 @@ export class EntradaComponent implements OnInit {
         params.proveedor_id = (params.proveedor)?params.proveedor.id:null;
         params.programa_id = (params.programa)?params.programa.id:null;
         params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
+        
+        if(params.almacen_id){
+          let almacen = this.catalogos['almacenes'].find(item => item.id == params.almacen_id);
+          params.almacen = almacen;
+        }
+
+        if(params.turno_id){
+          let turno = this.catalogos['turnos'].find(item => item.id == params.turno_id);
+          params.turno = turno;
+        }
 
         if(this.puedeEditarListaArticulos){
           params.articulos_modificados = [];

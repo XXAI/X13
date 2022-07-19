@@ -160,8 +160,8 @@
                 <span *ngIf="seleccionSalidasActivada && accionSalidas == 'delete'" class="accion">Eliminar de {{contadorSalidas | number:'1.0-0'}} Salidas</span>
                 <span *ngIf="!seleccionSalidasActivada && accionSalidas == 'delete-all'"class="accion">Eliminar de Salidas</span>
             </div>
-            <div fxFlex="none" class="icono" *ngIf="infoMessage">
-                <mat-icon [matTooltip]="infoMessage" [matTooltipPosition]="'before'">info</mat-icon>
+            <div fxFlex="none" class="icono" *ngIf="!marcadoParaEliminar">
+                <mat-icon *ngFor="let message of infoMessage" [matTooltip]="message" [matTooltipPosition]="'before'">info</mat-icon>
             </div>
             <div fxFlex="none" fxLayout="row" class="existencias">
                 <div fxFlex="none" *ngIf="existenciasLote">

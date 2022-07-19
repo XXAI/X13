@@ -133,7 +133,7 @@
                         <th mat-header-cell *matHeaderCellDef> Referencia </th>
                         <td mat-cell *matCellDef="let row" style="text-align: center;">
                             {{(row.referencia_folio)?row.referencia_folio:'---'}}<br>
-                            <span class="added-data" *ngIf="row.referencia_fecha">Fecha: {{row.referencia_fecha}}</span>
+                            <span class="added-data" *ngIf="row.referencia_fecha">{{row.referencia_fecha}}</span>
                         </td>
                     </ng-container>
 

@@ -56,7 +56,7 @@ export class DialogoModificarStockComponent implements OnInit {
   accionLote: string;
   accionSalidas: string;
 
-  infoMessage: string;
+  infoMessage: string[];
 
   formStock: FormGroup;
   fechaActual: Date;
@@ -92,7 +92,7 @@ export class DialogoModificarStockComponent implements OnInit {
     this.salidasSeleccionadas = {};
     this.contadorSalidas = 0;
     this.totalPiezasSalidas = 0;
-    this.infoMessage = '';
+    this.infoMessage = [];
     this.seleccionSalidasActivada = false;
 
     this.piezasXEmpaque = 1;
@@ -230,10 +230,14 @@ export class DialogoModificarStockComponent implements OnInit {
           this.accionSalidas = '';
         }
 
+        this.infoMessage = [];
+        
         if(this.respaldoStock['programa_id'] != changes['programa_id']){
-          this.infoMessage = 'El Programa ha sido modificado';
-        }else{
-          this.infoMessage = '';
+          this.infoMessage.push('El Programa ha sido modificado');
+        }
+
+        if(this.respaldoStock['almacen_id'] != changes['almacen_id']){
+          this.infoMessage.push('El Almacen ha sido modificado');
         }
 
         if(cambios_cantidad || cambios_datos || cambios_precio){
@@ -346,6 +350,7 @@ export class DialogoModificarStockComponent implements OnInit {
       this.seleccionSalidasActivada = false;
 
       let programa_id = this.formStock.get('programa_id').value;
+      let almacen_id = this.formStock.get('almacen_id').value;
 
       this.formStock.reset();
       if(this.respaldoStock.memo_folio){
@@ -358,6 +363,7 @@ export class DialogoModificarStockComponent implements OnInit {
 
       let respaldo = JSON.parse(JSON.stringify(this.respaldoStock));
       respaldo.programa_id = programa_id;
+      respaldo.almacen_id = almacen_id;
       this.formStock.patchValue(respaldo);
 
       this.checarCaducidadFormulario();

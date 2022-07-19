@@ -48,8 +48,6 @@ class ModificacionMovimientosController extends Controller{
             }
 
             $modificaciones = MovimientoModificacion::conDescripciones()->with('modificacionesArticulos')->where('movimiento_id',$id)->orderBy('updated_at','DESC')->get();
-            //$modificacion->load('solicitadoUsuario','aprobadoUsuario','canceladoUsuario');
-            //TODO::crear ruta en API
 
             return response()->json(['data'=>$modificaciones],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
@@ -176,7 +174,7 @@ class ModificacionMovimientosController extends Controller{
             $loggedUser = auth()->userOrFail();
             $parametros = $request->all();
 
-            $movimiento = Movimiento::find($id);
+            $movimiento = Movimiento::with('unidadMedicaMovimiento','almacenMovimiento','areaServicioMovimiento','programa','turno','paciente','personalMedico','tipoMovimiento','almacen','proveedor','modificadoPor')->find($id);
             if(!$movimiento){
                 return response()->json(['error'=>"Movimiento no encontrado"],HttpResponse::HTTP_OK);
             }
@@ -210,36 +208,69 @@ class ModificacionMovimientosController extends Controller{
             $datos_originales = [];
             $datos_modificados = [];
             foreach ($campos_editables as $key) {
+                $datos_originales[$key] = $movimiento_original[$key];
                 if(isset($parametros[$key])){
-                    $datos_originales[$key] = $movimiento_original[$key];
                     $datos_modificados[$key] = $parametros[$key];
+                }else{
+                    $datos_modificados[$key] = null;
                 }
             }
 
+            if(isset($parametros['turno_id']) && $datos_originales['turno_id'] != $datos_modificados['turno_id']){
+                $datos_modificados['turno'] = $parametros['turno']['descripcion'];
+                $datos_originales['turno'] = $movimiento->turno->descripcion;
+            }
+
+            if(isset($parametros['tipo_movimiento_id']) && $datos_originales['tipo_movimiento_id'] != $datos_modificados['tipo_movimiento_id']){
+                $datos_modificados['tipo_movimiento'] = $parametros['tipo_movimiento']['descripcion'];
+                $datos_originales['tipo_movimiento'] = $movimiento->tipoMovimiento->descripcion;
+            }
+
             if(isset($parametros['proveedor_id']) && $datos_originales['proveedor_id'] != $datos_modificados['proveedor_id']){
-                $datos_modificados['proveedor'] = $parametros['proveedor'];
+                $datos_modificados['proveedor'] = $parametros['proveedor']['nombre'];
+                $datos_originales['proveedor'] = $movimiento->proveedor->nombre;
             }
 
             if(isset($parametros['programa_id']) && $datos_originales['programa_id'] != $datos_modificados['programa_id']){
-                $datos_modificados['programa'] = $parametros['programa'];
+                $datos_modificados['programa'] = $parametros['programa']['descripcion'];
+                $datos_originales['programa'] = $movimiento->programa->descripcion;
             }
 
             if(isset($parametros['almacen_id']) && $datos_originales['almacen_id'] != $datos_modificados['almacen_id']){
-                $datos_modificados['almacen'] = $parametros['almacen'];
+                $datos_modificados['almacen'] = $parametros['almacen']['nombre'];
+                $datos_originales['almacen'] = $movimiento->almacen->nombre;
+            }
+
+            if(isset($parametros['almacen_movimiento_id']) && $datos_originales['almacen_movimiento_id'] != $datos_modificados['almacen_movimiento_id']){
+                $datos_modificados['almacen_movimiento'] = $parametros['almacen_movimiento']['nombre'];
+                $datos_originales['almacen_movimiento'] = $movimiento->almacenMovimiento->nombre;
+            }
+
+            if(isset($parametros['unidad_medica_movimiento_id']) && $datos_originales['unidad_medica_movimiento_id'] != $datos_modificados['unidad_medica_movimiento_id']){
+                $datos_modificados['unidad_medica_movimiento'] = $parametros['unidad_medica_movimiento']['nombre'];
+                $datos_originales['unidad_medica_movimiento'] = $movimiento->unidadMedicaMovimiento->nombre;
+            }
+
+            if(isset($parametros['area_servicio_movimiento_id']) && $datos_originales['area_servicio_movimiento_id'] != $datos_modificados['area_servicio_movimiento_id']){
+                $datos_modificados['area_servicio_movimiento'] = $parametros['area_servicio_movimiento']['descripcion'];
+                $datos_originales['area_servicio_movimiento'] = $movimiento->areaServicioMovimiento->descripcion;
             }
 
             if(isset($parametros['personal_medico']) && $parametros['personal_medico']){
                 $personal_medico = $parametros['personal_medico'];
-                if(isset($personal_medico['clave']) && $personal_medico['clave'] == 'NEW'){
-                    $nuevo_personal= PersonalMedico::create([
-                        'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
-                        'nombre_completo' => $personal_medico['nombre_completo'],
-                        'puede_recetar' => ($tipo_movimiento->clave == 'RCTA')?true:false,
-                    ]);
-                    $datos_modificados['personal_medico_id'] = $nuevo_personal->id;
-                    $datos_modificados['personal_medico'] = $nuevo_personal->toArray();
-                }else{
-                    $datos_modificados['personal_medico_id'] = $personal_medico['id'];
+
+                if($datos_originales['personal_medico_id'] != $personal_medico['id']){
+                    if(isset($personal_medico['clave']) && $personal_medico['clave'] == 'NEW'){
+                        $nuevo_personal= PersonalMedico::create([
+                            'unidad_medica_id' => $loggedUser->unidad_medica_asignada_id,
+                            'nombre_completo' => $personal_medico['nombre_completo'],
+                            'puede_recetar' => ($tipo_movimiento->clave == 'RCTA')?true:false,
+                        ]);
+                        $datos_modificados['personal_medico_id'] = $nuevo_personal->id;
+                        $datos_modificados['personal_medico'] = $personal_medico['nombre_completo'];
+                    }else{
+                        $datos_modificados['personal_medico_id'] = $personal_medico['id'];
+                    }
                 }
             }
 
@@ -339,6 +370,11 @@ class ModificacionMovimientosController extends Controller{
                 }
             }
 
+            $datos_originales['modificado_por_usuario_id'] = $movimiento->modificado_por_usuario_id;
+            $datos_originales['modificado_por'] = $movimiento->modificadoPor->username;
+            $datos_modificados['modificado_por_usuario_id'] = $loggedUser->id;
+            $datos_modificados['modificado_por'] = $loggedUser->username;
+
             $modificacion->registro_original = json_encode($datos_originales);
             $modificacion->registro_modificado = json_encode($datos_modificados);
             $modificacion->modificado_usuario_id = $loggedUser->id;
@@ -346,7 +382,6 @@ class ModificacionMovimientosController extends Controller{
             $modificacion->estatus = 'FIN';
             $modificacion->save();
             
-            $datos_modificados['modificado_por_usuario_id'] = $loggedUser->id;
             $movimiento->update($datos_modificados);
 
             DB::commit();
@@ -495,29 +530,38 @@ class ModificacionMovimientosController extends Controller{
                             }
                             $bitacora_modificaciones[] = '      |--+ Se Obtiene Piezas x Empaque Guardado: '.$piezas_x_empaque;
                             
-                            //$salidas_seleccionadas = [];
+                            $salidas_seleccionadas = [];
+                            $total_otras_entradas = MovimientoArticulo::where('stock_id',$stock_afectado->id)->where('id','!=',$movimiento_articulo_db->id)->where('direccion_movimiento','ENT')->select(DB::raw('SUM(cantidad) as cantidad'),DB::raw('COUNT(DISTINCT movimiento_id) as total_movimientos'))
+                                                                        ->groupBy('id')->first();
+                            if($total_otras_entradas && $total_otras_entradas->cantidad > 0){
+                                $salidas_seleccionadas = $lote['lista_salidas'];
+                            }else{
+                                $salidas_del_lote = MovimientoArticulo::where('stock_id',$stock_afectado->id)->where('direccion_movimiento','SAL')->get();
+                                $salidas_seleccionadas = $salidas_del_lote->pluck('id');
+                            }
+
                             //Si existen salidas seleccionadas para eliminar 
                             $total_salidas_pzas = 0;
-                            if(isset($lote['lista_salidas']) && count($lote['lista_salidas']) > 0){
+                            if(count($salidas_seleccionadas) > 0){
                                 $registro_original['salidas_seleccionadas'] = [];
                                 $registro_modificado['salidas_seleccionadas'] = [];
 
-                                $salidas_eliminar_stock = MovimientoArticulo::with('movimiento.modificadoPor')->where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('stock_id',$lote['stock_id'])->where('direccion_movimiento','SAL')->get();
+                                $salidas_eliminar_stock = MovimientoArticulo::with('movimiento.modificadoPor')->where('bien_servicio_id',$articulo_id)->whereIn('id',$salidas_seleccionadas)->where('stock_id',$stock_afectado->id)->where('direccion_movimiento','SAL')->get();
                                 for($k = 0; $k < count($salidas_eliminar_stock); $k++){
                                     $ma_eliminar = $salidas_eliminar_stock[$k];
                                     $registro_original['salidas_seleccionadas'][] = [
-                                        'id'                                    => $ma_eliminar->id,
-                                        'movimiento_id'                         => $ma_eliminar->movimiento_id,
-                                        'folio'                                 => $ma_eliminar->movimiento->folio,
-                                        'total_articulos'                       => $ma_eliminar->movimiento->total_articulos,
-                                        'total_claves'                          => $ma_eliminar->movimiento->total_claves,
-                                        'total_monto'                           => $ma_eliminar->movimiento->total_monto,
-                                        'modificado_por_usuario_id'             => $ma_eliminar->movimiento->modificado_por_usuario_id,
-                                        'modificado_por_usuario'                => $ma_eliminar->movimiento->modificado_por->username,
-                                        'modo_movimiento'                       => $ma_eliminar->modo_movimiento,
-                                        'cantidad'                              => $ma_eliminar->cantidad,
-                                        'user_id'                               => $ma_eliminar->user_id,
-                                        'deleted_at'                            => $ma_eliminar->deleted_at,
+                                        'id'                            => $ma_eliminar->id,
+                                        'movimiento_id'                 => $ma_eliminar->movimiento_id,
+                                        'folio'                         => $ma_eliminar->movimiento->folio,
+                                        'total_articulos'               => $ma_eliminar->movimiento->total_articulos,
+                                        'total_claves'                  => $ma_eliminar->movimiento->total_claves,
+                                        'total_monto'                   => $ma_eliminar->movimiento->total_monto,
+                                        'modificado_por_usuario_id'     => $ma_eliminar->movimiento->modificado_por_usuario_id,
+                                        'modificado_por'                => $ma_eliminar->movimiento->modificadoPor->username,
+                                        'modo_movimiento'               => $ma_eliminar->modo_movimiento,
+                                        'cantidad'                      => $ma_eliminar->cantidad,
+                                        'user_id'                       => $ma_eliminar->user_id,
+                                        'deleted_at'                    => $ma_eliminar->deleted_at,
                                     ];
 
                                     $conteos_movimiento = MovimientoArticulo::select(DB::raw('SUM(cantidad) as total_articulos'), DB::raw('COUNT(DISTINCT bien_servicio_id) as total_claves'), DB::raw('SUM(total_monto) as total_monto'))
@@ -527,18 +571,18 @@ class ModificacionMovimientosController extends Controller{
                                     $ma_eliminar->delete();
 
                                     $registro_modificado['salidas_seleccionadas'][] = [
-                                        'id'                                    => $ma_eliminar->id,
-                                        'movimiento_id'                         => $ma_eliminar->movimiento_id,
-                                        'movimiento_folio'                      => $ma_eliminar->movimiento->folio,
-                                        'movimiento_total_articulos'            => $ma_eliminar->movimiento->total_articulos,
-                                        'movimiento_total_claves'               => $ma_eliminar->movimiento->total_claves,
-                                        'movimiento_total_monto'                => $ma_eliminar->movimiento->total_monto,
-                                        'movimiento_modificado_por_usuario_id'  => $ma_eliminar->movimiento->modificado_por_usuario_id,
-                                        'movimiento_modificado_por_usuario'     => $loggedUser->username,
-                                        'modo_movimiento'                       => $ma_eliminar->modo_movimiento,
-                                        'cantidad'                              => $ma_eliminar->cantidad,
-                                        'user_id'                               => $ma_eliminar->user_id,
-                                        'deleted_at'                            => $ma_eliminar->deleted_at,
+                                        'id'                            => $ma_eliminar->id,
+                                        'movimiento_id'                 => $ma_eliminar->movimiento_id,
+                                        'folio'                         => $ma_eliminar->movimiento->folio,
+                                        'total_articulos'               => $ma_eliminar->movimiento->total_articulos,
+                                        'total_claves'                  => $ma_eliminar->movimiento->total_claves,
+                                        'total_monto'                   => $ma_eliminar->movimiento->total_monto,
+                                        'modificado_por_usuario_id'     => $loggedUser->id,
+                                        'modificado_por'                => $loggedUser->username,
+                                        'modo_movimiento'               => $ma_eliminar->modo_movimiento,
+                                        'cantidad'                      => $ma_eliminar->cantidad,
+                                        'user_id'                       => $ma_eliminar->user_id,
+                                        'deleted_at'                    => $ma_eliminar->deleted_at,
                                     ];
 
                                     //TODO:: calcular el total de salidas por pieza
@@ -830,35 +874,37 @@ class ModificacionMovimientosController extends Controller{
                                     //Estatus de conflicto en las entradas/recepciones de las salidas(transferencias) de este stock
                                     $tipo_movimiento = TipoMovimiento::where('clave','RCPCN')->where('movimiento','ENT')->first();
 
-                                    $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
-                                    $registro_original['movimientos_recepciones'] = [];
-                                    for($k = 0; $k < count($movimientos_recepcion); $k++){
-                                        $registro_original['movimientos_recepciones'][] = [
-                                            'id'                        => $movimientos_recepcion[$k]->id,
-                                            'folio'                     => $movimientos_recepcion[$k]->folio,
-                                            'estatus'                   => $movimientos_recepcion[$k]->estatus,
-                                            'modificado_por_usuario_id' => $movimientos_recepcion[$k]->modificado_por_usuario_id,
-                                            'updated_at'                => $movimientos_recepcion[$k]->updated_at,
-                                        ];
+                                    if(count($lista_movimientos_transferencias)){
+                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
+                                        $registro_original['movimientos_recepciones'] = [];
+                                        for($k = 0; $k < count($movimientos_recepcion); $k++){
+                                            $registro_original['movimientos_recepciones'][] = [
+                                                'id'                        => $movimientos_recepcion[$k]->id,
+                                                'folio'                     => $movimientos_recepcion[$k]->folio,
+                                                'estatus'                   => $movimientos_recepcion[$k]->estatus,
+                                                'modificado_por_usuario_id' => $movimientos_recepcion[$k]->modificado_por_usuario_id,
+                                                'updated_at'                => $movimientos_recepcion[$k]->updated_at,
+                                            ];
+                                        }
+
+                                        $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
+                                                                            ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
+
+                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
+                                        $registro_modificado['movimientos_recepciones'] = [];
+                                        for($k = 0; $k < count($movimientos_recepcion); $k++){
+                                            $registro_modificado['movimientos_recepciones'][] = [
+                                                'id'                        => $movimientos_recepcion[$k]->id,
+                                                'folio'                     => $movimientos_recepcion[$k]->folio,
+                                                'estatus'                   => $movimientos_recepcion[$k]->estatus,
+                                                'modificado_por_usuario_id' => $movimientos_recepcion[$k]->modificado_por_usuario_id,
+                                                'updated_at'                => $movimientos_recepcion[$k]->updated_at,
+                                            ];
+                                        }
+
+                                        $bitacora_modificaciones[] = '      |--+ Se Marcan las entradas que sean recepciones de transferencias, del Stock modificado con Lote: '.$stock_db['lote'];
+                                        $bitacora_modificaciones[] = '      |--+ Se Marcaron las entradas por traspaso del stock editado: '.json_encode($movimientos_modificados);
                                     }
-
-                                    $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
-                                                                        ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
-
-                                    $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
-                                    $registro_modificado['movimientos_recepciones'] = [];
-                                    for($k = 0; $k < count($movimientos_recepcion); $k++){
-                                        $registro_modificado['movimientos_recepciones'][] = [
-                                            'id'                        => $movimientos_recepcion[$k]->id,
-                                            'folio'                     => $movimientos_recepcion[$k]->folio,
-                                            'estatus'                   => $movimientos_recepcion[$k]->estatus,
-                                            'modificado_por_usuario_id' => $movimientos_recepcion[$k]->modificado_por_usuario_id,
-                                            'updated_at'                => $movimientos_recepcion[$k]->updated_at,
-                                        ];
-                                    }
-
-                                    $bitacora_modificaciones[] = '      |--+ Se Marcan las entradas que sean recepciones de transferencias, del Stock modificado con Lote: '.$stock_db['lote'];
-                                    $bitacora_modificaciones[] = '      |--+ Se Marcaron las entradas por traspaso del stock editado: '.json_encode($movimientos_modificados);
                                 }
                                 /*                                                                                                                                                    *
                                  * Fin: No hay otros movimientos de Entrada                                                                                                           *
