@@ -308,6 +308,9 @@ export class InnerArticuloAdminListaLotesComponent implements OnInit {
       
       let fecha_comparacion = this.fechaActual;
       if(this.fechaMovimiento){
+        if(typeof this.fechaMovimiento === 'string'){
+          this.fechaMovimiento = new Date(this.fechaMovimiento + 'T00:00:00');
+        }
         fecha_comparacion = this.fechaMovimiento;
       }
 

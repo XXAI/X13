@@ -918,9 +918,11 @@ export class EntradaComponent implements OnInit {
             this.cargarDatosModificacion(dialogResponse);
 
             this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
-            this.formMovimiento.patchValue(this.datosEntrada);
+            this.formMovimiento.get('almacen_id').patchValue(this.datosEntrada.almacen_id);
             this.checarAlmacenSeleccionado();
             this.formMovimiento.get('tipo_movimiento_id').patchValue(this.datosEntrada.tipo_movimiento_id);
+            this.checarTipoMovimientoSeleccinado();
+            this.formMovimiento.patchValue(this.datosEntrada);
           }else{
             this.datosEntrada.modificacion_activa = null;
             this.puedeEditarDatosEncabezado = false;
@@ -940,20 +942,22 @@ export class EntradaComponent implements OnInit {
     if(modificacion.estatus == 'MOD' && modificacion.solicitado_usuario_id == this.authUser.id){
       this.puedeEditarDatosEncabezado = true;
       this.verBoton.concluir_modificacion = true;
-      this.protegerDatosFormulario();
+      this.protegerDatosFormulario(modificacion.nivel_modificacion);
 
       if(modificacion.nivel_modificacion == 2){
-        console.log('trabajar modificacion de articulos');
         this.puedeEditarListaArticulos = true;
         this.verBoton.agregar_articulos = true;
       }
     }
   }
 
-  protegerDatosFormulario(){
+  protegerDatosFormulario(nivel:number){
     let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','documento_folio','observaciones'];
     if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
-      mostrar_campos.push('tipo_movimiento_id','almacen_id','programa','programa_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+      mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+      if(nivel == 2){
+        mostrar_campos.push('almacen_id','programa','programa_id');
+      }
     }else{
       this.modoRecepcion = true;
       this.totalesRecibidos.recibidos = 0;
@@ -974,6 +978,7 @@ export class EntradaComponent implements OnInit {
         this.isSaving = true;
         let params:any = this.formMovimiento.value;
         params.fecha_movimiento = this.datepipe.transform(params.fecha_movimiento, 'yyyy-MM-dd');
+        params.referencia_fecha = this.datepipe.transform(params.referencia_fecha, 'yyyy-MM-dd');
         params.proveedor_id = (params.proveedor)?params.proveedor.id:null;
         params.programa_id = (params.programa)?params.programa.id:null;
         params.unidad_medica_movimiento_id = (params.unidad_medica_movimiento)?params.unidad_medica_movimiento.id:null;
@@ -986,6 +991,11 @@ export class EntradaComponent implements OnInit {
         if(params.turno_id){
           let turno = this.catalogos['turnos'].find(item => item.id == params.turno_id);
           params.turno = turno;
+        }
+
+        if(params.tipo_movimiento_id){
+          let tipo_movimiento = this.catalogos['tipos_movimiento'].find(item => item.id == params.tipo_movimiento_id);
+          params.tipo_movimiento = tipo_movimiento;
         }
 
         if(this.puedeEditarListaArticulos){

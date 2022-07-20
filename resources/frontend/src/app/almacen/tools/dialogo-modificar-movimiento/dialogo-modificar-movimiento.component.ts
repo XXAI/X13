@@ -106,6 +106,14 @@ export class DialogoModificarMovimientoComponent implements OnInit {
     this.modificarForm.updateValueAndValidity();
   }
 
+  cancelarAccion(){
+    if(this.mostrarErrores){
+      this.mostrarErrores = false;
+    }else{
+      this.cerrar();
+    }
+  }
+
   cerrar(){
     this.dialogRef.close(this.data.modificacion);
   }

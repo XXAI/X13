@@ -101,13 +101,10 @@
                                 </tbody>
                             </table>
                         </div>
-                        <!--div fxFlex="none" *ngFor="let item of datosModificacion.datos_movimiento" class="detalle">
-                            <span class="etiqueta">{{item.etiqueta}} : </span><span>{{item.valor.original}}</span> &raquo; <span>{{item.valor.modificado}}</span>
-                        </div-->
                         <div fxFlex="none" class="encabezado-detalle">
                             <span>Articulos:</span>
                         </div>
-                        <div fxFlex="none" *ngFor="let item of datosModificacion.modificaciones_articulos">
+                        <div fxFlex="none" class="elementos-modificados" *ngFor="let item of datosModificacion.modificaciones_articulos">
                             <table style="width: 100%;" class="table-{{item.datos_articulo_modificado.clase}}">
                                 <tr class="cambios-encabezado-articulo">
                                     <td width="1" class="titulo-tipo">

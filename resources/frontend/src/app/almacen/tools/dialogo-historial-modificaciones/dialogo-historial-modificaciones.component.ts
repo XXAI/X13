@@ -223,7 +223,7 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
               objeto[parametro] = objeto[parametro].substring(0,10);
             }else if(parametro == 'total_monto' || parametro == 'precio_unitario'){
               objeto[parametro] = '$ ' + this.decimalPipe.transform(objeto[parametro],'1.0-2');
-            }else if((parametro != 'lote' && parametro != 'no_serie' && parametro != 'modelo' && parametro != 'memo_folio') && !isNaN(objeto[parametro])){
+            }else if((parametro != 'lote' && parametro != 'no_serie' && parametro != 'modelo' && parametro != 'memo_folio' && parametro != 'referencia_folio' && parametro != 'documento_folio') && !isNaN(objeto[parametro])){
               objeto[parametro] = this.decimalPipe.transform(objeto[parametro],'1.0-0');
             }
 

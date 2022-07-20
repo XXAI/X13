@@ -161,6 +161,10 @@
     cursor: default;
 }
 
+.elementos-modificados{
+    border-top: 2px dashed black;
+}
+
 .detalles-movimiento{
     padding: 8px;
     display: table;
