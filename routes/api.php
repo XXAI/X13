@@ -94,6 +94,7 @@ Route::group(['middleware'=>'auth'],function($router){
     Route::put('movimientos-administrar-modificacion/{id}',     'API\Modulos\ModificacionMovimientosController@administrarModificacion');
     Route::put('guardar-modificacion/{id}',                     'API\Modulos\ModificacionMovimientosController@guardarModificacion');
     Route::get('historial-modificaciones/{id}',                 'API\Modulos\ModificacionMovimientosController@obtenerHistorialModificaciones');
+    Route::get('conflicto-modificacion/{id}',                   'API\Modulos\ModificacionMovimientosController@obtenerConflictoModificacion');
     Route::apiResource('almacen-entradas',                      'API\Modulos\AlmacenEntradaController');
     Route::put('almacen-entradas-cancelar/{id}',                'API\Modulos\AlmacenEntradaController@cancelarMovimiento');
     Route::apiResource('almacen-salidas',                       'API\Modulos\AlmacenSalidaController');

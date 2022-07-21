@@ -60,12 +60,12 @@
                 </td>
                 <td width="1" style="white-space: nowrap;">{{lote.restante | number:'1.0-0'}}</td>
             </tr>
-            <tr *ngIf="articulo.nuevos_lotes.length > 0">
+            <!--tr *ngIf="articulo.nuevos_lotes.length > 0">
                 <td colspan="7">
                     Nuevos Lotes
                 </td>
-            </tr>
-            <tr *ngFor="let lote of articulo.nuevos_lotes; let i = index">
+            </tr-->
+            <!--tr *ngFor="let lote of articulo.nuevos_lotes; let i = index">
                 <ng-container *ngIf="loteEditIndex != i">
                     <td>
                         <mat-icon class="small-icon caducidad-{{coloresCaducidad[lote.estatus_caducidad]}}">{{lote.icono_estatus}}</mat-icon>
@@ -98,14 +98,6 @@
                                 <mat-hint align="start" *ngIf="!etiquetaEstatus"><mat-icon>arrow_upward</mat-icon>Click para seleccionar</mat-hint>
                                 <mat-hint align="end" style="color:red;" *ngIf="estatusCaducidad > 1">{{etiquetaEstatus}}</mat-hint>
                                 <mat-error *ngIf="formLote.get('fecha_caducidad').hasError('required')">Este campo es obligatorio</mat-error>
-
-                                <!--mat-label>Fecha Caducidad</mat-label>
-                                <input matInput mascaraFecha formControlName="fecha_caducidad" [required]="articulo.tiene_fecha_caducidad > 0" (keydown.enter)="guardarCambiosLote()" (blur)="checarCaducidadFormulario()" autocomplete="off">
-                                <mat-hint *ngIf="!etiquetaEstatus">Formato: aaaa-mm-dd</mat-hint>
-                                <mat-hint align="end" style="color:red;" *ngIf="estatusCaducidad > 1">{{etiquetaEstatus}}</mat-hint>
-                                <span *ngIf="estatusCaducidad > 1" matPrefix><mat-icon color="warn">priority_high</mat-icon></span>
-                                <mat-error *ngIf="formLote.get('fecha_caducidad').hasError('isValidDate')">La fecha no es valida</mat-error>
-                                <mat-error *ngIf="formLote.get('fecha_caducidad').hasError('required')">Este campo es obligatorio</mat-error-->
                             </mat-form-field>
                             <mat-form-field fxFlex>
                                 <mat-label>Código de Barras</mat-label>
@@ -133,21 +125,7 @@
                         </section>
                     </td>
                 </ng-container>
-            </tr>
+            </tr-->
         </tbody>
-        <tfoot>
-            <!--tr class="nota-pie">
-                <td colspan="7">
-                    * Este lote contiene existencias en resguardo, por lo que es posible que no se puedan surtir ciertas cantidades
-                </td>
-            </tr-->
-            <!--tr *ngIf="edicionActiva && loteEditIndex < 0">
-                <ng-container>
-                    <td colspan="6">
-                        <button class="medium-button" mat-button (click)="agregarLote()"><mat-icon>add_circle</mat-icon> Agregar Lote</button>
-                    </td>
-                </ng-container>
-            </tr-->
-        </tfoot>
     </table>
 </div>

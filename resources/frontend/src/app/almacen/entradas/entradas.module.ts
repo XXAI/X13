@@ -11,9 +11,10 @@ import { DialogoCancelarResultadoComponent } from './dialogo-cancelar-resultado/
 import { DialogoSubirArchivoComponent } from './dialogo-subir-archivo/dialogo-subir-archivo.component';
 import { ToolsModule } from '../tools/tools.module';
 import { DialogoModificarStockComponent } from './dialogo-modificar-stock/dialogo-modificar-stock.component';
+import { DialogoResolverConflictoComponent } from './dialogo-resolver-conflicto/dialogo-resolver-conflicto.component';
 
 @NgModule({
-  declarations: [ListaComponent, EntradaComponent, InnerArticuloAdminListaLotesComponent, DialogoCancelarResultadoComponent, DialogoSubirArchivoComponent, DialogoModificarStockComponent],
+  declarations: [ListaComponent, EntradaComponent, InnerArticuloAdminListaLotesComponent, DialogoCancelarResultadoComponent, DialogoSubirArchivoComponent, DialogoModificarStockComponent, DialogoResolverConflictoComponent],
   imports: [
     CommonModule,
     SharedModule,

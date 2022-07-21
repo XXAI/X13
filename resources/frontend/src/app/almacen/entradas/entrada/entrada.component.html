@@ -11,6 +11,9 @@
             <button fxFlex="none" mat-button *ngIf="verBoton['concluir_modificacion']" [matTooltip]="'Concluir Modificación'" [disabled]="isSaving || !formMovimiento.valid" (click)="concluirModificacion()" [class.button-spinner]="isSaving">
                 <mat-icon>all_inbox</mat-icon>
             </button>
+            <button fxFlex="none" mat-button *ngIf="verBoton['resolver_conflicto']" [matTooltip]="'Resolver Conflicto'" [disabled]="isSaving || isLoading" (click)="resolverConflictoEntrada()">
+                <mat-icon>build</mat-icon>
+            </button>
             <div fxFlex></div>
             <div fxFlex="none" *ngIf="datosEntrada && datosEntrada.folio" class="label-info">
                 <span>{{datosEntrada.folio}}</span>

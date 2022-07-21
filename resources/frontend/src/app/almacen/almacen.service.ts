@@ -13,6 +13,7 @@ export class AlmacenService {
   private url_admin_mods = `${environment.base_url}/movimientos-administrar-modificacion/`;
   private url_guardar_mods = `${environment.base_url}/guardar-modificacion/`;
   private url_historial_mods = `${environment.base_url}/historial-modificaciones/`;
+  private url_conflicto_mods = `${environment.base_url}/conflicto-modificacion/`;
   private url_movimientos_stock = `${environment.base_url}/almacen-existencias/movimientos/`;
 
   listaIconos: any    = { 'NV':'save_as', 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',        'MOD':'note_alt',                'CONF':'notification_important'};
@@ -55,6 +56,14 @@ export class AlmacenService {
 
   historialModificaciones(id):Observable<any> {
     return this.http.get<any>(this.url_historial_mods+id,{}).pipe(
+      map( response => {
+        return response;
+      })
+    );
+  }
+
+  confictoModificacion(id):Observable<any> {
+    return this.http.get<any>(this.url_conflicto_mods+id,{}).pipe(
       map( response => {
         return response;
       })

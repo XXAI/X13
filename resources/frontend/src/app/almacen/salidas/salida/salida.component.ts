@@ -539,21 +539,23 @@ export class SalidaComponent implements OnInit {
       }
       
       if(lista_articulos[i].stock){
+        let stock:any = lista_articulos[i].stock;
         let lote:any = {
-          id: lista_articulos[i].stock.id,
-          empaque_detalle: lista_articulos[i].stock.empaque_detalle,
-          lote: lista_articulos[i].stock.lote,
-          codigo_barras: lista_articulos[i].stock.codigo_barras,
-          fecha_caducidad: lista_articulos[i].stock.fecha_caducidad,
-          no_serie:lista_articulos[i].stock.no_serie,
-          modelo:lista_articulos[i].stock.modelo,
-          programa: (lista_articulos[i].stock.programa)?lista_articulos[i].stock.programa.descripcion:'Sin Programa',
-          marca: (lista_articulos[i].stock.marca)?lista_articulos[i].stock.marca:'Sin Marca',
-          existencia: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia,
-          existencia_empaque: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia,
-          existencia_piezas: (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia_piezas,
+          id: stock.id,
+          empaque_detalle: stock.empaque_detalle,
+          lote: stock.lote,
+          codigo_barras: stock.codigo_barras,
+          fecha_caducidad: stock.fecha_caducidad,
+          no_serie:stock.no_serie,
+          modelo:stock.modelo,
+          programa: (stock.programa)?stock.programa.descripcion:'Sin Programa',
+          marca: (stock.marca)?stock.marca:'Sin Marca',
+          existencia: (!precarga)?lista_articulos[i].cantidad_anterior:stock.existencia,
+          existencia_empaque: (!precarga)?lista_articulos[i].cantidad_anterior:stock.existencia,
+          existencia_piezas: (!precarga)?lista_articulos[i].cantidad_anterior:stock.existencia_piezas,
+          resguardo_piezas: +stock.resguardo_piezas,
           salida: lista_articulos[i].cantidad,
-          restante: ((!precarga)?+lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia) - +lista_articulos[i].cantidad,
+          restante: ((!precarga)?+lista_articulos[i].cantidad_anterior:stock.existencia) - +lista_articulos[i].cantidad,
         };
 
         if(precarga){
@@ -573,8 +575,8 @@ export class SalidaComponent implements OnInit {
         this.totalesSalida.articulos += lote.salida;
         articulo.total_piezas += lote.salida;
         articulo.total_lotes++;
-        articulo.existencias_empaque += (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia;
-        articulo.existencias_unidades += (!precarga)?lista_articulos[i].cantidad_anterior:lista_articulos[i].stock.existencia_piezas;  
+        articulo.existencias_empaque += (!precarga)?lista_articulos[i].cantidad_anterior:stock.existencia;
+        articulo.existencias_unidades += (!precarga)?lista_articulos[i].cantidad_anterior:stock.existencia_piezas;  
       }
       articulo.existencias = (articulo.surtir_en_unidades)?articulo.existencias_unidades:articulo.existencias_empaque;
       articulo.existencias_restantes = articulo.existencias - articulo.total_piezas;

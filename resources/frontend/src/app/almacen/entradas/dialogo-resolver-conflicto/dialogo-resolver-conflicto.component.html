@@ -1,0 +1,127 @@
+<section fxLayout="column" fxLayoutAlign="start" style="height: 100%; overflow: auto; flex: 1 1 0%;" (document:keydown.escape)="cancelarAccion()">
+    <section fxFlex="none" class="dialog-toolbar">
+        <div fxLayout="row">
+            <div fxFlex="none" class="label-info">
+                <mat-icon>build</mat-icon> Resolver Conflicto:
+            </div>
+            <div fxFlex>
+            </div>
+            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
+        </div>
+    </section>
+    <section fxFlex fxLayout="column" style="padding: 8px; overflow: hidden;">
+        <mat-card fxFlex="none" fxLayout="row raw" fxLayoutGap="5px" [style.fontSize.px]="15" *ngIf="datosEntrada" class="datos-movimiento">
+            <div fxFlex class="fake-input">
+                <span class="label">Fecha Entrada:</span>
+                <span class="value">{{datosEntrada.fecha_movimiento | date:'MMMM d, y' }}</span>
+            </div>
+            <div fxFlex class="fake-input">
+                <span class="label">Almacen:</span>
+                <span class="value">{{datosEntrada.almacen.nombre }}</span>
+            </div>
+            <div fxFlex class="fake-input">
+                <span class="label">Tipo de Entrada:</span>
+                <span class="value">{{datosEntrada.tipo_movimiento.descripcion }}</span>
+            </div>
+            <div fxFlex class="fake-input">
+                <span class="label">Turno:</span>
+                <span class="value">{{datosEntrada.turno.nombre }}</span>
+            </div>
+            <div fxFlex class="fake-input">
+                <span class="label">Programa:</span>
+                <span class="value">{{(datosEntrada.programa)?datosEntrada.programa.descripcion:'---' }}</span>
+            </div>
+            <div fxFlex class="fake-input">
+                <span class="label">Folio-Documento:</span>
+                <span class="value">{{ datosEntrada.documento_folio||'---' }}</span>
+            </div>
+            <div fxFlex class="fake-input" *ngIf="datosEntrada.almacen_movimiento">
+                <span class="label">Almacén Origen:</span>
+                <span class="value">{{ datosEntrada.almacen_movimiento.nombre }}</span>
+            </div>
+            <div fxFlex="none" fxLayout="row">
+                <div fxFlex class="fake-input">
+                    <span class="label">No de Referencia:</span>
+                    <span class="value">{{ datosEntrada.referencia_folio||'---' }}</span>
+                </div>
+                <div fxFlex class="fake-input">
+                    <span class="label">Fecha de Referencia:</span>
+                    <span class="value">{{(datosEntrada.referencia_fecha)?(datosEntrada.referencia_fecha | date:'MMMM d, y'):'---' }}</span>
+                </div>
+            </div>
+            <div fxFlex class="fake-input">
+                <span class="label">Observaciones:</span>
+                <span class="value">{{ datosEntrada.observaciones||'---' }}</span>
+            </div>
+        </mat-card>
+        <div fxFlex fxLayout="column">
+            <!--div fxFlex class="tabla-articulos">
+                <table mat-table [dataSource]="dataSourceArticulos" class="lista-articulos-table" matSort>
+                    <ng-container matColumnDef="estatus_articulo">
+                        <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Estatus </th>
+                        <td mat-cell *matCellDef="let row">
+                            <mat-icon matTooltip="{{row.estatus_desc}}">{{row.estatus_icono}}</mat-icon>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="datos_articulo">
+                        <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Datos del Articulo </th>
+                        <td mat-cell *matCellDef="let row">
+                            {{row.clave}}<br>
+                            <span>{{row.descripcion}}</span>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="folio">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Folio </th>
+                        <td mat-cell *matCellDef="let row">
+                            {{row.folio}}<br>
+                            {{(row.documento_folio)?row.documento_folio:'---'}}
+                        </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="destino_origen">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-lg> Destino | Origen </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;" fxHide.lt-lg>
+                            {{row.tipo_movimiento}}<br>
+                            {{(row.destino_origen)?row.destino_origen:'---'}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="modo_movimiento">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1" style="white-space: nowrap; padding:0px 5px;"> Modo </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
+                            {{row.direccion_movimiento}}<br>
+                            {{row.modo_movimiento}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="cantidad">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1" style="white-space: nowrap; padding:0px 5px;"> Cantidad </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
+                            {{row.cantidad | number:'1.0-0'}}
+                        </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="noResultsFound">
+                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron Movimientos </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="loadingData">
+                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> Cargando Datos </td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row class="tabla-row-articulo {{listaEstatusClaves[row.estatus]}}-color" *matRowDef="let row; let i = index; columns: displayedColumns;" (click)="seleccionarSalida(row.no_index,row.mov_articulo_id,row.direccion_movimiento)" 
+                        [ngClass]="{'salida':row.direccion_movimiento == 'SAL','elemento-actual':data.stock.id == row.mov_articulo_id, 'selectable':(row.no_index > indexSeleccionable && row.direccion_movimiento == 'SAL' && seleccionSalidasActivada), 'selected':(salidasSeleccionadas[row.mov_articulo_id] && seleccionSalidasActivada)}">
+                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': (dataSourceMovimientos && dataSourceMovimientos.filteredData.length > 0) || isLoadingMovimientos}"></tr>
+                    <tr mat-footer-row *matFooterRowDef="['loadingData']" class="no-results-found" [ngClass]="{'hide': !isLoadingMovimientos}"></tr>
+                </table>
+                <mat-progress-bar *ngIf="isLoadingMovimientos" mode="indeterminate" [color]="'accent'"></mat-progress-bar>
+            </div>
+            <div fxFlex="none">
+                <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" showFirstLastButtons></mat-paginator>
+            </div-->
+        </div>
+    </section>
+</section>

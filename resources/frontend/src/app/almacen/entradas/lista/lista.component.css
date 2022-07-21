@@ -3,6 +3,10 @@
     min-height: 200px;
 }
 
+.my-tooltip {
+  white-space: pre-line;
+}
+
 .data-table-container {
     position: relative;
     max-height: 400px;

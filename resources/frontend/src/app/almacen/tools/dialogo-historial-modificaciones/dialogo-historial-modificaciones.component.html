@@ -44,12 +44,24 @@
             </div>
         </mat-card>
         <div fxFlex fxLayout="column" class="item-detalles">
-            <div fxFlex="none" class="encabezado" *ngIf="modSeleccionada">Aprobó: {{datosModificacion.aprobado_usuario||'---'}}</div>
+            <div fxFlex="none" class="encabezado" *ngIf="modSeleccionada">
+                <span *ngIf="datosModificacion.aprobado_nombre && !datosModificacion.cancelado_nombre">Aprobado Por: {{datosModificacion.aprobado_nombre}}</span>
+                <span *ngIf="datosModificacion.cancelado_nombre">Cancelado Por: {{datosModificacion.cancelado_nombre}}</span>
+                <span *ngIf="!datosModificacion.cancelado_nombre && !datosModificacion.aprobado_nombre">Sin Aprobar</span>
+            </div>
             <div fxFlex="none" class="no-seleccionado" *ngIf="!modSeleccionada">
                 <span>Seleccione un elemento de la lista</span>
             </div>
             <div fxFlex fxLayout="column" *ngIf="modSeleccionada" style="overflow: hidden;">
                 <div fxFlex="none" fxLayout="row wrap" class="datos-modificacion">
+                    <div fxFlex="100" class="fake-input" *ngIf="!datosModificacion.modificado_nombre">
+                        <span class="label">Solicitado Por:</span>
+                        <span class="value">{{datosModificacion.solicitado_nombre}}</span>
+                    </div>
+                    <div fxFlex="100" class="fake-input" *ngIf="datosModificacion.modificado_nombre">
+                        <span class="label">Modificado Por:</span>
+                        <span class="value">{{datosModificacion.modificado_nombre}}</span>
+                    </div>
                     <div fxFlex="100" class="fake-input">
                         <span class="label">Motivo:</span>
                         <span class="value-text">{{datosModificacion.motivo_modificacion}}</span>
@@ -70,7 +82,7 @@
                         <span class="label">Aprobado:</span>
                         <span class="value">{{datosModificacion.aprobado_fecha||'---'}}</span>
                     </div>
-                    <div fxFlex class="fake-input">
+                    <div fxFlex class="fake-input" *ngIf="!datosModificacion.cancelado_fecha">
                         <span class="label">Modificado:</span>
                         <span class="value">{{datosModificacion.modificado_fecha||'---'}}</span>
                     </div>

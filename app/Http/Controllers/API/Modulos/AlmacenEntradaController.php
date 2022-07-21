@@ -562,24 +562,6 @@ class AlmacenEntradaController extends Controller
                                 'cantidad_anterior'     => $cantidad_anterior,
                                 'user_id'               => $loggedUser->id,
                             ];
-
-                            /*if(isset($lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id])){
-                                $articulo_guardado = $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id];
-                                $articulo_guardado->stock_id                = $lote_guardado->id;
-                                $articulo_guardado->bien_servicio_id        = $articulo['id'];
-                                $articulo_guardado->direccion_movimiento    = 'ENT';
-                                $articulo_guardado->modo_movimiento         = (isset($lote['entrada_piezas']) && $lote['entrada_piezas'])?'UNI':'NRM'; //$modo_movimiento;
-                                $articulo_guardado->cantidad                = $lote['cantidad'];
-                                $articulo_guardado->precio_unitario         = ($lote['precio_unitario'])?$lote['precio_unitario']:null;
-                                $articulo_guardado->iva                     = ($lote['iva'])?$lote['iva']:null;
-                                $articulo_guardado->total_monto             = ($lote['total_monto'])?$lote['total_monto']:null;
-                                $articulo_guardado->cantidad_anterior       = $cantidad_anterior;
-                                $articulo_guardado->user_id                 = $loggedUser->id;
-                                $articulo_guardado->save();
-
-                                $lista_articulos_guardados[$articulo['id'].'-'.$lote_guardado->id] = NULL;
-                            }else{*/
-                            //}
                         }
 
                     }else if($tipo_movimiento->clave == 'RCPCN'){
@@ -604,40 +586,12 @@ class AlmacenEntradaController extends Controller
                         ];
 
                         $lista_articulos_agregar[] = $articulo_en_ceros;
-
-                        /*if(isset($lista_articulos_guardados[$articulo['id'].'-'.null])){
-                            $articulo_guardado = $lista_articulos_guardados[$articulo['id'].'-'.null];
-                            $articulo_guardado->stock_id                = null;
-                            $articulo_guardado->bien_servicio_id        = $articulo_en_ceros['bien_servicio_id'];
-                            $articulo_guardado->direccion_movimiento    = $articulo_en_ceros['direccion_movimiento'];
-                            $articulo_guardado->modo_movimiento         = $articulo_en_ceros['modo_movimiento'];
-                            $articulo_guardado->cantidad                = $articulo_en_ceros['cantidad'];
-                            $articulo_guardado->precio_unitario         = $articulo_en_ceros['precio_unitario'];
-                            $articulo_guardado->iva                     = $articulo_en_ceros['iva'];
-                            $articulo_guardado->total_monto             = $articulo_en_ceros['total_monto'];
-                            $articulo_guardado->cantidad_anterior       = $articulo_en_ceros['cantidad_anterior'];
-                            $articulo_guardado->user_id                 = $articulo_en_ceros['user_id'];
-                            $articulo_guardado->save();
-
-                            $lista_articulos_guardados[$articulo['id'].'-'.null] = NULL;
-                        }else{*/
-                        //}
-
                     }else{
                         DB::rollback();
                         return response()->json(['error'=>"El articulo con la Clave: ".$articulo['clave']." fue capturado con cantidades en 0."],HttpResponse::HTTP_OK);
                         //$total_claves -= 1;
                     }
                 }
-
-                /*foreach ($lista_articulos_guardados as $key => $articulo_guardado) {
-                    if($articulo_guardado){
-                        $lista_articulos_eliminar[] = $articulo_guardado->id;
-                    }
-                }
-                if(count($lista_articulos_eliminar)){
-                    $movimiento->listaArticulos()->whereIn('id',$lista_articulos_eliminar)->delete();
-                }*/
 
                 if(count($lista_articulos_agregar)){
                     $movimiento->listaArticulos()->createMany($lista_articulos_agregar);
@@ -654,7 +608,6 @@ class AlmacenEntradaController extends Controller
                     if(!$movimiento_padre){
                         DB::rollback();
                         return response()->json(['error'=>'El Movimiento padre no fue encontrado'],HttpResponse::HTTP_OK);
-                        //throw new \Exception("El Movimiento padre no fue encontrado", 1);
                     }
                     $movimiento_padre->estatus = 'FIN';
                     $movimiento_padre->save();

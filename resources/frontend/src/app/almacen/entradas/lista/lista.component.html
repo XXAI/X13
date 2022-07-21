@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
+        <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="overflow-x: auto; overflow-y: hidden;">
             <div fxFlex fxLayout="row" fxLayoutGap="5px">
                 <div fxFlex="none">
                     <button mat-stroked-button [matMenuTriggerFor]="filtroEstatus" [matTooltipPosition]="'above'" [matTooltip]="(filtros.estatus)?listaEstatusLabels[filtros.estatus]:'Todos'">
@@ -102,7 +102,7 @@
                 <button mat-stroked-button color="accent" (click)="verDialogoSubirArchivo()" matTooltip="Subir Archivo de Existencias"><mat-icon>file_upload</mat-icon></button>
             </div>
             <div fxFlex="none" *ngIf="datosRecuperados.id">
-                <button mat-flat-button color="accent" [matTooltip]="'Fecha: ' + (datosRecuperados.actualizado | date:'medium')" (click)="recuperarDatos()"><mat-icon>restore_page</mat-icon> Recuperar Captura</button>
+                <button mat-flat-button color="accent"  class="my-tooltip" [matTooltip]="'Recuperar Captura &#13;Fecha: ' + (datosRecuperados.actualizado | date:'medium')" (click)="recuperarDatos()"><mat-icon>restore_page</mat-icon></button>
             </div>
             <div fxFlex="none">
                 <button mat-flat-button color="info" [routerLink]="'/almacen/entradas/nueva'" ><mat-icon>add_circle</mat-icon> Nueva Entrada</button>

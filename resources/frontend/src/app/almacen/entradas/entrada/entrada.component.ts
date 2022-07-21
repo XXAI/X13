@@ -26,6 +26,7 @@ import { Location } from '@angular/common';
 import { MovimientosLocalStorageService } from '../../tools/movimientos-local-storage.service';
 import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
 import { DialogoHistorialModificacionesComponent } from '../../tools/dialogo-historial-modificaciones/dialogo-historial-modificaciones.component';
+import { DialogoResolverConflictoComponent } from '../dialogo-resolver-conflicto/dialogo-resolver-conflicto.component';
 
 @Component({
   selector: 'app-entrada',
@@ -184,6 +185,7 @@ export class EntradaComponent implements OnInit {
       eliminar:false,
       cancelar:false,
       modificar_entrada:false,
+      resolver_conflicto:false,
       descartar_cambios:false,
     };
 
@@ -233,6 +235,7 @@ export class EntradaComponent implements OnInit {
       this.dataSourceArticulos.data.forEach(articulo =>{
         articulo.lotes.forEach(stock => {
           if(!stock.respaldo){
+            stock.precio_unitario = (stock.precio_unitario == 0)?'':stock.precio_unitario;
             stock.respaldo = JSON.parse(JSON.stringify(stock));
           }
           stock.almacen_id = almacen.id;
@@ -295,6 +298,11 @@ export class EntradaComponent implements OnInit {
                 this.reconfigurarFormulario(['id','fecha_movimiento','turno_id','observaciones']);
                 this.modoRecepcion = true;
                 this.totalesRecibidos.recibidos = 0;
+              }else if(response.data.estatus == 'CONF'){
+                this.verBoton.duplicar = true;
+                this.verBoton.crear_salida = true;
+                this.verBoton.cancelar = true;
+                this.verBoton.resolver_conflicto = true;
               }else if(response.data.estatus == 'CAN'){
                 this.verBoton.duplicar = true;
               }else{
@@ -881,6 +889,28 @@ export class EntradaComponent implements OnInit {
     }
   }
 
+  resolverConflictoEntrada(){
+    let configDialog = {
+      width: '80%',
+      height: '80%',
+      disableClose: true,
+      data:{id:this.datosEntrada.id},
+      panelClass: 'no-padding-dialog'
+    };
+
+    if(this.datosEntrada && (this.datosEntrada.estatus == 'CONF')){
+      const dialogRef = this.dialog.open(DialogoResolverConflictoComponent, configDialog);
+
+      dialogRef.afterClosed().subscribe(dialogResponse => {
+        if(dialogResponse){
+          console.log('dialog response:',dialogResponse);
+        }
+      });
+    }else{
+      console.log('no encotnrado');
+    }
+  }
+
   verHistorialModificaciones(){
     let configDialog = {
       width: '80%',
@@ -890,8 +920,8 @@ export class EntradaComponent implements OnInit {
       panelClass: 'no-padding-dialog'
     };
 
-    if(this.datosEntrada && (this.datosEntrada.estatus == 'FIN' || this.datosEntrada.estatus == 'PERE')){
-      const dialogRef = this.dialog.open(DialogoHistorialModificacionesComponent, configDialog);
+    if(this.datosEntrada){
+      this.dialog.open(DialogoHistorialModificacionesComponent, configDialog);
     }
   }
 
@@ -918,7 +948,7 @@ export class EntradaComponent implements OnInit {
             this.cargarDatosModificacion(dialogResponse);
 
             this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
-            this.formMovimiento.get('almacen_id').patchValue(this.datosEntrada.almacen_id);
+            //this.formMovimiento.get('almacen_id').patchValue(this.datosEntrada.almacen_id);
             this.checarAlmacenSeleccionado();
             this.formMovimiento.get('tipo_movimiento_id').patchValue(this.datosEntrada.tipo_movimiento_id);
             this.checarTipoMovimientoSeleccinado();
@@ -956,7 +986,7 @@ export class EntradaComponent implements OnInit {
     if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
       mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
       if(nivel == 2){
-        mostrar_campos.push('almacen_id','programa','programa_id');
+        mostrar_campos.push('programa','programa_id');
       }
     }else{
       this.modoRecepcion = true;
@@ -1063,6 +1093,7 @@ export class EntradaComponent implements OnInit {
       this.dataSourceArticulos.data.forEach(articulo =>{
         articulo.lotes.forEach(stock => {
           if(!stock.respaldo){
+            stock.precio_unitario = (stock.precio_unitario == 0)?null:stock.precio_unitario;
             stock.respaldo = JSON.parse(JSON.stringify(stock));
           }
           stock.programa_id = programa.id;

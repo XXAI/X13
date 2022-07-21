@@ -12,8 +12,12 @@ class MovimientoModificacion extends Model{
                             'solicitado_usuario_id','aprobado_usuario_id','modificado_usuario_id','cancelado_usuario_id','revertido_usuario_id','registro_original','registro_modificado'];
 
     public function scopeConDescripciones(){
-        return $this->select('movimientos_modificaciones.*','solicitado_usuario.name as solicitado_usuario','aprobado_usuario.name as aprobado_usuario','modificado_usuario.name as modificado_usuario',
-                            'cancelado_usuario.name as cancelado_usuario','revertido_usuario.name as revertido_usuario')
+        return $this->select('movimientos_modificaciones.*',
+                            'solicitado_usuario.name as solicitado_nombre', 'solicitado_usuario.username as solicitado_usuario',
+                            'aprobado_usuario.name as aprobado_nombre', 'aprobado_usuario.username as aprobado_usuario',
+                            'modificado_usuario.name as modificado_nombre', 'modificado_usuario.username as modificado_usuario',
+                            'cancelado_usuario.name as cancelado_nombre', 'cancelado_usuario.username as cancelado_usuario',
+                            'revertido_usuario.name as revertido_nombre', 'revertido_usuario.username as revertido_usuario')
                     ->leftJoin('users as solicitado_usuario','solicitado_usuario.id','=','movimientos_modificaciones.solicitado_usuario_id')
                     ->leftJoin('users as aprobado_usuario','aprobado_usuario.id','=','movimientos_modificaciones.aprobado_usuario_id')
                     ->leftJoin('users as modificado_usuario','modificado_usuario.id','=','movimientos_modificaciones.modificado_usuario_id')

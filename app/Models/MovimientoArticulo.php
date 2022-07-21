@@ -10,7 +10,7 @@ class MovimientoArticulo extends Model{
     
     use SoftDeletes;
     protected $table = 'movimientos_articulos';  
-    protected $fillable = ['movimiento_id','stock_id','bien_servicio_id','direccion_movimiento','modo_movimiento','cantidad','cantidad_anterior','user_id','precio_unitario','iva','total_monto'];
+    protected $fillable = ['movimiento_id','stock_padre_id','stock_id','bien_servicio_id','direccion_movimiento','modo_movimiento','cantidad','cantidad_anterior','user_id','precio_unitario','iva','total_monto'];
 
     public function articulo(){
         return $this->belongsTo('App\Models\BienServicio','bien_servicio_id');
@@ -18,6 +18,10 @@ class MovimientoArticulo extends Model{
 
     public function stock(){
         return $this->belongsTo('App\Models\Stock','stock_id');
+    }
+
+    public function stockPadre(){
+        return $this->belongsTo('App\Models\Stock','stock_padre_id');
     }
 
     public function cartaCanje(){
