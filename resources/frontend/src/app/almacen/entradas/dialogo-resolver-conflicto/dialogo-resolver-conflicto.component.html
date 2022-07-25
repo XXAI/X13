@@ -55,56 +55,65 @@
             </div>
         </mat-card>
         <div fxFlex fxLayout="column">
-            <!--div fxFlex class="tabla-articulos">
+            <div fxFlex class="tabla-articulos">
                 <table mat-table [dataSource]="dataSourceArticulos" class="lista-articulos-table" matSort>
                     <ng-container matColumnDef="estatus_articulo">
                         <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Estatus </th>
-                        <td mat-cell *matCellDef="let row">
+                        <td mat-cell *matCellDef="let row" style="text-align: center;">
                             <mat-icon matTooltip="{{row.estatus_desc}}">{{row.estatus_icono}}</mat-icon>
                         </td>
                     </ng-container>
 
                     <ng-container matColumnDef="datos_articulo">
-                        <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Datos del Articulo </th>
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Datos del Articulo </th>
                         <td mat-cell *matCellDef="let row">
                             {{row.clave}}<br>
-                            <span>{{row.descripcion}}</span>
+                            <span class="subtext" [matTooltip]="row.descripcion">{{row.nombre}}</span>
                         </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="folio">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Folio </th>
+                    <ng-container matColumnDef="datos_empaque">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Detalle / *Modificado </th>
                         <td mat-cell *matCellDef="let row">
-                            {{row.folio}}<br>
-                            {{(row.documento_folio)?row.documento_folio:'---'}}
-                        </td>
-                    </ng-container>
-                    
-                    <ng-container matColumnDef="destino_origen">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header fxHide.lt-lg> Destino | Origen </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px;" fxHide.lt-lg>
-                            {{row.tipo_movimiento}}<br>
-                            {{(row.destino_origen)?row.destino_origen:'---'}}
+                            {{row.empaque_detalle}}
+                            <span *ngIf="row.empaque_detalle_modificado">* {{row.empaque_detalle_modificado}}</span>
                         </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="modo_movimiento">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1" style="white-space: nowrap; padding:0px 5px;"> Modo </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
-                            {{row.direccion_movimiento}}<br>
-                            {{row.modo_movimiento}}
+                    <ng-container matColumnDef="lote_fecha_cad">
+                        <th mat-header-cell *matHeaderCellDef style="white-space:nowrap;" width="1" mat-sort-header> Lote<br>Fecha Caducidad<br>Código de Barras </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center; white-space: nowrap;">
+                            {{row.lote}}<br>
+                            {{(row.fecha_caducidad)?row.fecha_caducidad:'---'}}<br>
+                            <span class="subtext">{{(row.codigo_barras)?row.codigo_barras:'---'}}</span>
                         </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="cantidad">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header width="1" style="white-space: nowrap; padding:0px 5px;"> Cantidad </th>
-                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
-                            {{row.cantidad | number:'1.0-0'}}
+                    <ng-container matColumnDef="lote_fecha_cad_mod">
+                        <th mat-header-cell *matHeaderCellDef style="white-space:nowrap;" width="1" mat-sort-header> *Lote<br>Fecha Caducidad<br>Código de Barras </th>
+                        <td mat-cell *matCellDef="let row" style="text-align: center; white-space: nowrap;">
+                            {{(row.lote_modificado)?row.lote_modificado:'---'}}<br>
+                            {{(row.fecha_caducidad_modificado)?row.fecha_caducidad_modificado:'---'}}<br>
+                            <span class="subtext">{{(row.codigo_barras_modificado)?row.codigo_barras_modificado:'---'}}</span>
                         </td>
                     </ng-container>
                     
+                    <ng-container matColumnDef="cantidad_enviada">
+                        <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Enviado </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
+                            {{row.cantidad_enviada | number:'1.0-0'}}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="cantidad_recibida">
+                        <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Recibido </th>
+                        <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
+                            {{row.cantidad_recibida | number:'1.0-0'}}
+                        </td>
+                    </ng-container>
+
                     <ng-container matColumnDef="noResultsFound">
-                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron Movimientos </td>
+                        <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns.length"> No se encontraron Articulos </td>
                     </ng-container>
 
                     <ng-container matColumnDef="loadingData">
@@ -112,16 +121,15 @@
                     </ng-container>
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                    <tr mat-row class="tabla-row-articulo {{listaEstatusClaves[row.estatus]}}-color" *matRowDef="let row; let i = index; columns: displayedColumns;" (click)="seleccionarSalida(row.no_index,row.mov_articulo_id,row.direccion_movimiento)" 
-                        [ngClass]="{'salida':row.direccion_movimiento == 'SAL','elemento-actual':data.stock.id == row.mov_articulo_id, 'selectable':(row.no_index > indexSeleccionable && row.direccion_movimiento == 'SAL' && seleccionSalidasActivada), 'selected':(salidasSeleccionadas[row.mov_articulo_id] && seleccionSalidasActivada)}">
-                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': (dataSourceMovimientos && dataSourceMovimientos.filteredData.length > 0) || isLoadingMovimientos}"></tr>
-                    <tr mat-footer-row *matFooterRowDef="['loadingData']" class="no-results-found" [ngClass]="{'hide': !isLoadingMovimientos}"></tr>
+                    <tr mat-row class="tabla-row-articulo" *matRowDef="let row; let i = index; columns: displayedColumns;">
+                    <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': (dataSourceArticulos && dataSourceArticulos.filteredData.length > 0) || isLoading}"></tr>
+                    <tr mat-footer-row *matFooterRowDef="['loadingData']" class="no-results-found" [ngClass]="{'hide': !isLoading}"></tr>
                 </table>
-                <mat-progress-bar *ngIf="isLoadingMovimientos" mode="indeterminate" [color]="'accent'"></mat-progress-bar>
+                <mat-progress-bar *ngIf="isLoading" mode="indeterminate" [color]="'accent'"></mat-progress-bar>
             </div>
             <div fxFlex="none">
                 <mat-paginator [pageSize]="pageSize" [pageIndex]="currentPage" showFirstLastButtons></mat-paginator>
-            </div-->
+            </div>
         </div>
     </section>
 </section>

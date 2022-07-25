@@ -67,10 +67,10 @@ class ModificacionMovimientosController extends Controller{
             }
 
             $movimiento->load(['listaArticulos'=>function($listaArticulos){
-                                    $listaArticulos->with('articulo','stock','stockPadre');
+                                    $listaArticulos->with('articulo','stock.empaqueDetalle');
                                 },'movimientoPadre'=>function($movimientoPadre){
                                     $movimientoPadre->with(['listaArticulos'=>function($subListaArticulos){
-                                        $subListaArticulos->with('articulo','stock');
+                                        $subListaArticulos->with('articulo','stock.empaqueDetalle');
                                     },'almacen','almacenMovimiento','tipoMovimiento']);
                                 },'almacen','turno','almacenMovimiento','tipoMovimiento']);
 

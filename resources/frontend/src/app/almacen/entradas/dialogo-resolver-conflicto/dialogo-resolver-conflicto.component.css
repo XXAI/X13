@@ -73,3 +73,20 @@
     border-bottom: 1px solid rgba(255,255,255,.42);
     padding: 0 5px;
 }
+
+.tabla-articulos{
+    overflow: auto;
+}
+
+.lista-articulos-table{
+    width: 100%;
+}
+
+.lista-articulos-table tbody tr{
+    cursor:default;
+}
+
+.lista-articulos-table .subtext{
+    font-size: small;
+    color: #787878;
+}

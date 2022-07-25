@@ -19,6 +19,7 @@ import { Router } from '@angular/router';
 import * as FileSaver from 'file-saver';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { DialogoResolverConflictoComponent } from '../dialogo-resolver-conflicto/dialogo-resolver-conflicto.component';
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 @Component({
@@ -296,6 +297,27 @@ export class ListaComponent implements OnInit {
     }else{
       console.log('no encontrado');
     }
+  }
+
+  resolverConflictoEntrada(id){
+    let configDialog = {
+      width: '80%',
+      height: '80%',
+      disableClose: true,
+      data:{id:id},
+      panelClass: 'no-padding-dialog'
+    };
+
+    //if(this.datosEntrada && (this.datosEntrada.estatus == 'CONF')){
+      const dialogRef = this.dialog.open(DialogoResolverConflictoComponent, configDialog);
+
+      dialogRef.afterClosed().subscribe(dialogResponse => {
+        if(dialogResponse){
+          console.log('dialog response:',dialogResponse);
+        }
+      });
+    //}else{
+    //}
   }
 
   cancelarEntrada(id){
