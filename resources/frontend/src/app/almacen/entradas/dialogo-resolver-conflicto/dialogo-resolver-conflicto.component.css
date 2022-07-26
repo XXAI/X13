@@ -23,6 +23,12 @@
     border-radius: 0px;
 }
 
+.boton-principal{
+    border-radius: 0px;
+    border: 1px solid #4A4848;
+    background-color: whitesmoke;
+}
+
 .no-results-found{
     text-align: center;
     font-style: italic;
@@ -76,17 +82,67 @@
 
 .tabla-articulos{
     overflow: auto;
+    padding-top: 8px;
 }
 
 .lista-articulos-table{
     width: 100%;
 }
 
-.lista-articulos-table tbody tr{
-    cursor:default;
+table.lista-articulos-table th {
+    padding:0 5px;
+    text-align: center;
+    background-color: slategrey;
+    color:whitesmoke;
+    cursor: default;
+}
+
+.lista-articulos-table tr.mat-row.editable td{
+    color: green;
+    font-weight: 500;
+}
+
+.lista-articulos-table tr.mat-row.editable td .subtext{
+    color: rgba(0,128,0,.62);
+}
+
+.lista-articulos-table tr.mat-row.modificado td{
+    color: steelblue;
+    font-weight: 500;
+}
+
+.lista-articulos-table tr.mat-row.modificado td .subtext{
+    color: rgba(70, 130, 180,.62);
+}
+
+.lista-articulos-table tr.mat-row.eliminar td{
+    color: red;
+    font-weight: 500;
+}
+
+.lista-articulos-table tr.mat-row.eliminar td .subtext{
+    color: rgba(255, 0, 0,.42);
+}
+
+.lista-articulos-table tr.mat-row:hover{
+    background-color: rgba(0,0,0,.05);
+    cursor: default;
 }
 
 .lista-articulos-table .subtext{
+    color: rgba(0,0,0,.42);
     font-size: small;
-    color: #787878;
+}
+
+.lista-articulos-table td.input-cell{
+    width: 100px;
+    position: relative;
+}
+
+.lista-articulos-table td.input-cell input{
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
 }

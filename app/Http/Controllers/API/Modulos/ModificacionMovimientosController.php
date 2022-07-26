@@ -435,6 +435,64 @@ class ModificacionMovimientosController extends Controller{
         }
     }
 
+    public function resolverConflicto(Request $request, $id){
+        try{
+            DB::beginTransaction();
+
+            $fecha_hoy = date("Y-m-d");
+            $loggedUser = auth()->userOrFail();
+            $parametros = $request->all();
+
+            $movimiento = Movimiento::with('listaArticulos.stock')->find($id);
+
+            if(!$movimiento){
+                return response()->json(['error'=>"Movimiento no encontrado"],HttpResponse::HTTP_OK);
+            }
+
+            if($movimiento->estatus != 'CONF'){
+                return response()->json(['error'=>"El movimiento no tiene el estatus requerido para ejecutar esta acción"],HttpResponse::HTTP_OK);
+            }
+
+            $tipo_movimiento = TipoMovimiento::find($movimiento->tipo_movimiento_id);
+
+            if($tipo_movimiento->clave != 'RCPCN'){
+                return response()->json(['error'=>"El tipo de movimiento no es el requerido para ejecutar esta acción"],HttpResponse::HTTP_OK);
+            }
+
+            $datos_modificacion = [
+                'movimiento_id' => $movimiento->id,
+                'estatus' => 'FIN',
+                'nivel_modificacion' => 2,
+                'motivo_modificacion' => 'Modificación aplicada automaticamente al Resolver conflictos con movimiento de recepción',
+                'modificado_fecha' => $fecha_hoy,
+                'modificado_usuario_id' => $loggedUser->id,
+            ];
+
+            $modificacion = MovimientoModificacion::create($datos_modificacion);
+
+            if(!$modificacion){
+                DB::rollback();
+                return response()->json(['error'=>"Solicitud de Modificación no encontrada"],HttpResponse::HTTP_OK);
+            }
+
+            $movimiento_padre = Movimiento::with('listaArticulos.stock')->where('id',$movimiento->movimiento_padre_id)->first();
+
+            $lista_articulos = [];
+            for ($i=0; $i < count($movimiento_padre->listaArticulos) ; $i++) { 
+                $articulo = $movimiento_padre->listaArticulos[$i];
+
+                $lista_articulos[$articulo->bien_servicio_id . '-' . $articulo->stock_id] = $articulo;
+            }
+
+            DB::commit();
+
+            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$modificacion]],HttpResponse::HTTP_OK);
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
+        }
+    }
+
     private function modificarArticulosEntrada($movimiento,$lista_articulos){
         DB::enableQueryLog();
         $loggedUser = auth()->userOrFail();

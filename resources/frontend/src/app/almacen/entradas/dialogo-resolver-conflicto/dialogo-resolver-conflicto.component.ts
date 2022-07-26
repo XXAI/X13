@@ -73,14 +73,14 @@ export class DialogoResolverConflictoComponent implements OnInit {
             datos_articulos.push(dato_item);
           });
 
-          let nuevos_articulos:any[] = [];
+          //let nuevos_articulos:any[] = [];
           response.data.movimiento_padre.lista_articulos.forEach(element => {
             let articulo:any = datos_articulos.find(x => x.stock_padre_id == element.stock_id);
 
             if(articulo){
               if(articulo.lote != element.stock.lote || articulo.fecha_caducidad != element.stock.fecha_caducidad || articulo.codigo_barras != element.stock.codigo_barras || articulo.no_serie != element.stock.no_serie || articulo.modelo != element.stock.modelo || articulo.marca_id != element.stock.marca_id || articulo.empaque_detalle_id != element.stock.empaque_detalle_id){
                 articulo.estatus_articulo = 'EDIT';
-                articulo.estatus_icono = 'edit_note';
+                articulo.estatus_icono = 'playlist_add_check';
                 articulo.estatus_desc = 'Modificado';
                 articulo.lote_modificado = element.stock.lote;
                 articulo.fecha_caducidad_modificado = element.stock.fecha_caducidad;
@@ -107,39 +107,44 @@ export class DialogoResolverConflictoComponent implements OnInit {
                 fecha_caducidad_modificado: element.stock.fecha_caducidad,
                 codigo_barras_modificado: element.stock.codigo_barras,
                 cantidad_enviada: element.cantidad,
-                cantidad_recibida: 0,
+                cantidad_recibida: element.cantidad,
                 stock_id: null,
                 stock_padre_id: element.stock_id,
                 articulo_id:element.articulo.id,
+                mostrar_campo: true,
               };
-              nuevos_articulos.push(articulo);
+              //nuevos_articulos.push(articulo);
+              datos_articulos.push(articulo);
             }
           });
 
-          if(nuevos_articulos.length > 0){
+          /*if(nuevos_articulos.length > 0){
             nuevos_articulos.forEach(element => {
               let articulo:any = datos_articulos.find(x => x.articulo_id == element.articulo_id && x.estatus_articulo == 'DEL');
 
               if(articulo){
-                articulo.estatus_articulo = 'EDIT';
+                articulo.estatus_articulo = 'REPLACE';
                 articulo.estatus_icono = 'edit_note';
-                articulo.estatus_desc = 'Modificado';
+                articulo.estatus_desc = 'Reemplazado';
                 articulo.lote_modificado = element.lote_modificado;
                 articulo.fecha_caducidad_modificado = element.fecha_caducidad_modificado;
                 articulo.codigo_barras_modificado = element.codigo_barras_modificado;
                 articulo.cantidad_enviada = element.cantidad_enviada;
-                articulo.cantidad_recibida = 0;
+                articulo.cantidad_recibida = element.cantidad_recibida;
+                articulo.mostrar_campo = true;
                 articulo.stock_padre_id = element.stock_padre_id;
                 if(articulo.empaque_detalle_id != element.empaque_detalle_id){
                   articulo.empaque_detalle_modificado = element.empaque_detalle_modificado;
                 }
               }else{
-                datos_articulos.push(articulo);
+                datos_articulos.push(element);
               }
               
             });
-          }
+          }*/
           //this.listaArticulos = datos_articulos;
+          datos_articulos.sort((a, b)=>((a.clave < b.clave)?-1:1));
+
           this.dataSourceArticulos = new MatTableDataSource<any>(datos_articulos);
           this.dataSourceArticulos.paginator = this.lotesPaginator;
           this.dataSourceArticulos.sort = this.sort;
@@ -155,6 +160,19 @@ export class DialogoResolverConflictoComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  aceptarCambios(){
+    //
+  }
+
+  aplicarCantidad(item){
+    console.log(item);
+    if(isNaN(item.cantidad_recibida) || item.cantidad_recibida < 0){
+      item.cantidad_recibida = 0;
+    }else if(item.cantidad_recibida > item.cantidad_enviada){
+      item.cantidad_recibida = item.cantidad_enviada;
+    }
   }
 
   cancelarAccion(){
