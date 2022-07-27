@@ -475,6 +475,40 @@ class ModificacionMovimientosController extends Controller{
                 return response()->json(['error'=>"Solicitud de Modificación no encontrada"],HttpResponse::HTTP_OK);
             }
 
+            /*
+            "articulos_modificados":[
+                {
+                    "id":142,
+                    "clave":"010.000.6006.00",
+                    "nombre":"Axitinib",
+                    "total_cantidad":20,
+                    "lotes":[
+                        {
+                            "id":14575,
+                            "stock_id":3190,
+                            "programa_id":1,
+                            "almacen_id":6,
+                            "lote":"FF1100",
+                            "codigo_barras":null,
+                            "cantidad":20,
+                            "entrada_piezas":false,
+                            "empaque_detalle_id":1072,
+                            "precio_unitario":0,
+                            "iva":null,
+                            "fecha_caducidad":"2023-03-31",
+                            "estatus_caducidad":1,
+                            "icono_estatus":"task_alt",
+                            "hash":"FF11002023-03-31null",
+                            "total_monto":0,
+                            "lista_salidas":[],
+                            "accion_lote":"edit",
+                            "accion_salidas":""
+                        }
+                    ]
+                }
+            ]
+            */
+
             $movimiento_padre = Movimiento::with('listaArticulos.stock')->where('id',$movimiento->movimiento_padre_id)->first();
 
             $lista_articulos = [];
@@ -482,6 +516,60 @@ class ModificacionMovimientosController extends Controller{
                 $articulo = $movimiento_padre->listaArticulos[$i];
 
                 $lista_articulos[$articulo->bien_servicio_id . '-' . $articulo->stock_id] = $articulo;
+            }
+
+            for ($i=0; $i < count($movimiento->listaArticulos) ; $i++) { 
+                $articulo = $movimiento->listaArticulos[$i];
+
+                $stock_actual = [
+                    //'almacen_id'        => $articulo->stock->almacen_id,
+                    'empaque_detalle_id'=> $articulo->stock->empaque_detalle_id,
+                    'programa_id'       => $articulo->stock->programa_id,
+                    'marca_id'          => $articulo->stock->marca_id,
+                    'modelo'            => $articulo->stock->modelo,
+                    'no_serie'          => $articulo->stock->no_serie,
+                    'lote'              => $articulo->stock->lote,
+                    'fecha_caducidad'   => $articulo->stock->fecha_caducidad,
+                    'codigo_barras'     => $articulo->stock->codigo_barras,
+                ];
+
+                if($articulo->stock_padre_id){
+                    $index_stock_padre = $articulo->bien_servicio_id . '-' . $articulo->stock_padre_id;
+                    if(isset($lista_articulos[$index_stock_padre])){
+                        $articulo_enviado = $lista_articulos[$index_stock_padre];
+
+                        $cantidad = $articulo->cantidad;
+                        if(isset($parametros['lista_articulos']) && isset($parametros['lista_articulos'][$articulo->id.'-'.$articulo->stock_id]) && isset($parametros['lista_articulos'][$articulo->id.'-'.$articulo->stock_id]['cantidad'])){
+                            $cantidad =  $parametros['lista_articulos'][$articulo->id.'-'.$articulo->stock_id]['cantidad'];
+                        }
+
+                        $articulo->modo_movimiento  = $articulo_enviado->modo_movimiento;
+                        $articulo->cantidad_anterior= $articulo_enviado->cantidad;
+                        $articulo->cantidad         = $cantidad;
+                        $articulo->precio_unitario  = $articulo_enviado->precio_unitario;
+                        $articulo->iva              = $articulo_enviado->iva;
+                        $articulo->total_monto      = $articulo_enviado->total_monto;
+
+                        $stock_encontrado = Stock::where('almacen_id',$articulo->stock->almacen_id)->where('bien_servicio_id',$articulo->stock->bien_servicio_id);
+                        $stock_enviado = $articulo_enviado->stock->toArray();
+                        foreach ($stock_actual as $key => $value) {
+                            if(isset($stock_enviado[$key])){
+                                $stock_encontrado = $stock_encontrado->where($key,$stock_enviado[$key]);
+                            }
+                        }
+                        $stock_encontrado = $stock_encontrado->first();
+
+                        if($stock_encontrado){
+                            //encontro el stock checa si es el mismo
+                            if($stock_encontrado->id != $articulo->stock->id){
+                                //
+                            }
+                        }else{
+                            //el mismo stock
+                        }
+                    }
+                    
+                }
             }
 
             DB::commit();
