@@ -503,20 +503,64 @@ class ModificacionMovimientosController extends Controller{
                             "lista_salidas":[],
                             "accion_lote":"edit",
                             "accion_salidas":""
+                            "marcado_borrar":true|false
                         }
                     ]
                 }
             ]
             */
 
-            $movimiento_padre = Movimiento::with('listaArticulos.stock')->where('id',$movimiento->movimiento_padre_id)->first();
+            $movimiento_padre = Movimiento::with(['listaArticulos'=>function($listaArticulos){
+                                                    $listaArticulos->with('stock.empaqueDetalle','articulo');
+                                                }])->where('id',$movimiento->movimiento_padre_id)->first();
 
             $lista_articulos = [];
             for ($i=0; $i < count($movimiento_padre->listaArticulos) ; $i++) { 
                 $articulo = $movimiento_padre->listaArticulos[$i];
 
-                $lista_articulos[$articulo->bien_servicio_id . '-' . $articulo->stock_id] = $articulo;
+                if(!isset($lista_articulos[$articulo->bien_servicio_id])){
+                    $lista_articulos[$articulo->bien_servicio_id] = [
+                        'id'                => $articulo->bien_servicio_id,
+                        'clave'             => $articulo->articulo->clave_local,
+                        'nombre'            => $articulo->articulo->articulo,
+                        'total_cantidad'    => 0,
+                        'lotes'             => [],
+                    ];
+                }
+
+                $lote_hash = $articulo->stock->lote . $articulo->stock->fecha_caducidad . $articulo->stock->codigo_barras . $articulo->stock->modelo . $articulo->stock->no_serie . $articulo->stock->marca_id;
+
+                if(!isset($lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash])){
+                    //LLenar con los datos del movimiento padre, dejando en blanco para ids a crear
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash] = [
+                        "id"                    => null,
+                        "stock_padre_id"        => $articulo->stock->id,
+                        "stock_id"              => null,
+                        "programa_id"           => null,
+                        "almacen_id"            => null,
+                        "lote"                  => $articulo->stock->lote,
+                        "codigo_barras"         =>null,
+                    "   cantidad"               =>20,
+                        "entrada_piezas"        =>false,
+                        "empaque_detalle_id"    =>1072,
+                        "precio_unitario"       =>0,
+                        "iva"                   =>null,
+                        "fecha_caducidad"       =>"2023-03-31",
+                        "estatus_caducidad"     =>1,
+                        "icono_estatus"         =>"task_alt",
+                        "hash"                  =>"FF11002023-03-31null",
+                        "total_monto"           =>0,
+                        "lista_salidas"         =>[],
+                        "accion_lote"           =>"edit",
+                        "accion_salidas"        =>"",
+                        //"marcado_borrar"        =>true|false
+                    ];
+                }else{
+                    //Error: repetido
+                }
             }
+
+            //Hacer otro loop por los articulos del movimiento hijo, llenando los ids que se daron limpios y agregando los registros que no aparecen en el padre, marcados como para eliminar
 
             for ($i=0; $i < count($movimiento->listaArticulos) ; $i++) { 
                 $articulo = $movimiento->listaArticulos[$i];
