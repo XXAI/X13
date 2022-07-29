@@ -236,7 +236,7 @@ class ModificacionMovimientosController extends Controller{
                 $datos_originales[$key] = $movimiento_original[$key];
                 if(isset($parametros[$key])){
                     $datos_modificados[$key] = $parametros[$key];
-                }else{
+                }else if($tipo_movimiento->clave != 'RCPCN'){
                     $datos_modificados[$key] = null;
                 }
             }
@@ -403,7 +403,7 @@ class ModificacionMovimientosController extends Controller{
             }
 
             $datos_originales['modificado_por_usuario_id'] = $movimiento->modificado_por_usuario_id;
-            $datos_originales['modificado_por'] = $movimiento->modificadoPor->username;
+            $datos_originales['modificado_por'] = ($movimiento->modificado_por_usuario_id)?$movimiento->modificadoPor->username:null;
             $datos_modificados['modificado_por_usuario_id'] = $loggedUser->id;
             $datos_modificados['modificado_por'] = $loggedUser->name;
 
@@ -475,47 +475,12 @@ class ModificacionMovimientosController extends Controller{
                 return response()->json(['error'=>"Solicitud de Modificación no encontrada"],HttpResponse::HTTP_OK);
             }
 
-            /*
-            "articulos_modificados":[
-                {
-                    "id":142,
-                    "clave":"010.000.6006.00",
-                    "nombre":"Axitinib",
-                    "total_cantidad":20,
-                    "lotes":[
-                        {
-                            "id":14575,
-                            "stock_id":3190,
-                            "programa_id":1,
-                            "almacen_id":6,
-                            "lote":"FF1100",
-                            "codigo_barras":null,
-                            "cantidad":20,
-                            "entrada_piezas":false,
-                            "empaque_detalle_id":1072,
-                            "precio_unitario":0,
-                            "iva":null,
-                            "fecha_caducidad":"2023-03-31",
-                            "estatus_caducidad":1,
-                            "icono_estatus":"task_alt",
-                            "hash":"FF11002023-03-31null",
-                            "total_monto":0,
-                            "lista_salidas":[],
-                            "accion_lote":"edit",
-                            "accion_salidas":""
-                            "marcado_borrar":true|false
-                        }
-                    ]
-                }
-            ]
-            */
-
             $movimiento_padre = Movimiento::with(['listaArticulos'=>function($listaArticulos){
                                                     $listaArticulos->with('stock.empaqueDetalle','articulo');
                                                 }])->where('id',$movimiento->movimiento_padre_id)->first();
 
             $lista_articulos = [];
-            for ($i=0; $i < count($movimiento_padre->listaArticulos) ; $i++) { 
+            for ($i=0; $i < count($movimiento_padre->listaArticulos) ; $i++){
                 $articulo = $movimiento_padre->listaArticulos[$i];
 
                 if(!isset($lista_articulos[$articulo->bien_servicio_id])){
@@ -523,7 +488,6 @@ class ModificacionMovimientosController extends Controller{
                         'id'                => $articulo->bien_servicio_id,
                         'clave'             => $articulo->articulo->clave_local,
                         'nombre'            => $articulo->articulo->articulo,
-                        'total_cantidad'    => 0,
                         'lotes'             => [],
                     ];
                 }
@@ -532,88 +496,114 @@ class ModificacionMovimientosController extends Controller{
 
                 if(!isset($lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash])){
                     //LLenar con los datos del movimiento padre, dejando en blanco para ids a crear
-                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash] = [
+                    $cantidad = (isset($parametros['cantidades'][$articulo->id]))?$parametros['cantidades'][$articulo->id]:0;
+                    
+                    $nuevo_lote = [
                         "id"                    => null,
                         "stock_padre_id"        => $articulo->stock->id,
                         "stock_id"              => null,
-                        "programa_id"           => null,
+                        "bien_servicio_id"      => $articulo->bien_servicio_id,
+                        "programa_id"           => $articulo->stocks->programa_id,
                         "almacen_id"            => null,
-                        "lote"                  => $articulo->stock->lote,
-                        "codigo_barras"         =>null,
-                    "   cantidad"               =>20,
-                        "entrada_piezas"        =>false,
-                        "empaque_detalle_id"    =>1072,
-                        "precio_unitario"       =>0,
-                        "iva"                   =>null,
-                        "fecha_caducidad"       =>"2023-03-31",
-                        "estatus_caducidad"     =>1,
-                        "icono_estatus"         =>"task_alt",
-                        "hash"                  =>"FF11002023-03-31null",
-                        "total_monto"           =>0,
-                        "lista_salidas"         =>[],
-                        "accion_lote"           =>"edit",
-                        "accion_salidas"        =>"",
-                        //"marcado_borrar"        =>true|false
+                        "cantidad_anterior"     => $articulo->cantidad,
+                        "cantidad"              => $cantidad,
+                        "entrada_piezas"        => ($articulo->modo_movimiento == 'UNI')?true:false,
+                        "empaque_detalle_id"    => $articulo->stock->empaque_detalle_id,
+                        "precio_unitario"       => $articulo->precio_unitario,
+                        "iva"                   => $articulo->iva,
+                        "hash"                  => $lote_hash,
+                        "total_monto"           => round($cantidad*$articulo->precio_unitario,2),
+                        "lista_salidas"         => [],
                     ];
+
+                    if($artiuclo->stock->lote){
+                        $nuevo_lote["lote"]             = $articulo->stock->lote;
+                        $nuevo_lote["fecha_caducidad"]  = $articulo->stock->fecha_caducidad;
+                        $nuevo_lote["codigo_barras"]    = $articulo->stock->codigo_barras;
+                    }else{
+                        $nuevo_lote["no_serie"]         = $articulo->stock->no_serie;
+                        $nuevo_lote["modelo"]           = $articulo->stock->modelo;
+                        $nuevo_lote["marca_id"]         = $articulo->stock->marca_id;
+                    }
+
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash] = $nuevo_lote;
                 }else{
-                    //Error: repetido
+                    return response()->json(['error'=>'El Lote: '.$articulo->stock->lote.' esta duplicado, para el Articulo con Clave: '.$articulo->articulo->clave_local],HttpResponse::HTTP_OK);
                 }
             }
 
             //Hacer otro loop por los articulos del movimiento hijo, llenando los ids que se daron limpios y agregando los registros que no aparecen en el padre, marcados como para eliminar
-
             for ($i=0; $i < count($movimiento->listaArticulos) ; $i++) { 
                 $articulo = $movimiento->listaArticulos[$i];
+                $lote_hash = $articulo->stock->lote . $articulo->stock->fecha_caducidad . $articulo->stock->codigo_barras . $articulo->stock->modelo . $articulo->stock->no_serie . $articulo->stock->marca_id;
 
-                $stock_actual = [
-                    //'almacen_id'        => $articulo->stock->almacen_id,
-                    'empaque_detalle_id'=> $articulo->stock->empaque_detalle_id,
-                    'programa_id'       => $articulo->stock->programa_id,
-                    'marca_id'          => $articulo->stock->marca_id,
-                    'modelo'            => $articulo->stock->modelo,
-                    'no_serie'          => $articulo->stock->no_serie,
-                    'lote'              => $articulo->stock->lote,
-                    'fecha_caducidad'   => $articulo->stock->fecha_caducidad,
-                    'codigo_barras'     => $articulo->stock->codigo_barras,
-                ];
-
-                if($articulo->stock_padre_id){
-                    $index_stock_padre = $articulo->bien_servicio_id . '-' . $articulo->stock_padre_id;
-                    if(isset($lista_articulos[$index_stock_padre])){
-                        $articulo_enviado = $lista_articulos[$index_stock_padre];
-
-                        $cantidad = $articulo->cantidad;
-                        if(isset($parametros['lista_articulos']) && isset($parametros['lista_articulos'][$articulo->id.'-'.$articulo->stock_id]) && isset($parametros['lista_articulos'][$articulo->id.'-'.$articulo->stock_id]['cantidad'])){
-                            $cantidad =  $parametros['lista_articulos'][$articulo->id.'-'.$articulo->stock_id]['cantidad'];
-                        }
-
-                        $articulo->modo_movimiento  = $articulo_enviado->modo_movimiento;
-                        $articulo->cantidad_anterior= $articulo_enviado->cantidad;
-                        $articulo->cantidad         = $cantidad;
-                        $articulo->precio_unitario  = $articulo_enviado->precio_unitario;
-                        $articulo->iva              = $articulo_enviado->iva;
-                        $articulo->total_monto      = $articulo_enviado->total_monto;
-
-                        $stock_encontrado = Stock::where('almacen_id',$articulo->stock->almacen_id)->where('bien_servicio_id',$articulo->stock->bien_servicio_id);
-                        $stock_enviado = $articulo_enviado->stock->toArray();
-                        foreach ($stock_actual as $key => $value) {
-                            if(isset($stock_enviado[$key])){
-                                $stock_encontrado = $stock_encontrado->where($key,$stock_enviado[$key]);
-                            }
-                        }
-                        $stock_encontrado = $stock_encontrado->first();
-
-                        if($stock_encontrado){
-                            //encontro el stock checa si es el mismo
-                            if($stock_encontrado->id != $articulo->stock->id){
-                                //
-                            }
-                        }else{
-                            //el mismo stock
-                        }
-                    }
-                    
+                if(!isset($lista_articulos[$articulo->bien_servicio_id])){
+                    $lista_articulos[$articulo->bien_servicio_id] = [
+                        'id'                => $articulo->bien_servicio_id,
+                        'clave'             => $articulo->articulo->clave_local,
+                        'nombre'            => $articulo->articulo->articulo,
+                        'lotes'             => [],
+                    ];
                 }
+
+                if(!isset($lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash])){
+                    //LLenar con los datos del movimiento padre, dejando en blanco para ids a crear
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash] = [
+                        "id"                    => $articulo->id,
+                        "stock_id"              => $articulo->stock->id,
+                        "bien_servicio_id"      => $articulo->bien_servicio_id,
+                        "programa_id"           => $articulo->stocks->programa_id,
+                        "almacen_id"            => $articulo->stock->almacen_id,
+                        "cantidad"              => $articulo->cantidad,
+                        "entrada_piezas"        => ($articulo->modo_movimiento == 'UNI')?true:false,
+                        "precio_unitario"       => $articulo->precio_unitario,
+                        "iva"                   => $articulo->iva,
+                        "hash"                  => $lote_hash,
+                        "total_monto"           => round($articulo->cantidad*$articulo->precio_unitario,2),
+                        "lista_salidas"         => [],
+                        "marcado_borrar"        => true
+                    ];
+                }else{
+                    $cantidad = (isset($parametros['cantidades'][$articulo->id]))?$parametros['cantidades'][$articulo->id]:$articulo->cantidad;
+                    $precio_unitario = $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]['precio_unitario'];
+
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["id"]                    = $articulo->id;
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["stock_id"]              = $articulo->stock_id;
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["bien_servicio_id"]      = $articulo->bien_servicio_id;
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["almacen_id"]            = $articulo->stock->almacen_id;
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["cantidad"]              = $cantidad;
+                    $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["total_monto"]           = round($cantidad*$precio_unitario,2);
+                }
+            }
+
+            $response = $this->modificarArticulosEntrada($movimiento,$lista_articulos);;
+                
+            if(!$response['estatus']){
+                DB::rollback();
+                return response()->json(['error'=>$response['mensaje'],'parametros'=>$response],HttpResponse::HTTP_OK);
+            }
+
+            if(count($response['lista_modificaciones']) > 0){
+                $datos_originales = [];
+                $datos_modificados = [];
+
+                $modificacion->modificacionesArticulos()->createMany($response['lista_modificaciones']);
+
+                $datos_originales['total_articulos'] = $movimiento->total_articulos;
+                $datos_originales['total_claves'] = $movimiento->total_claves;
+                $datos_originales['total_monto'] = $movimiento->total_monto;
+                $datos_originales['modificado_por_usuario_id'] = $movimiento->modificado_por_usuario_id;
+                $datos_originales['modificado_por'] = $movimiento->modificadoPor->username;
+                
+                $datos_modificados['total_articulos'] = $response['datos_modificados_movimiento']['total_articulos'];
+                $datos_modificados['total_claves'] = $response['datos_modificados_movimiento']['total_claves'];
+                $datos_modificados['total_monto'] = $response['datos_modificados_movimiento']['total_monto'];
+                $datos_modificados['modificado_por_usuario_id'] = $loggedUser->id;
+                $datos_modificados['modificado_por'] = $loggedUser->name;
+
+                $modificacion->registro_original = json_encode($datos_originales);
+                $modificacion->registro_modificado = json_encode($datos_modificados);
+                $modificacion->save();
             }
 
             DB::commit();
@@ -894,11 +884,11 @@ class ModificacionMovimientosController extends Controller{
                             'id'                => $movimiento_articulo_db->id,
                             'stock_id'          => $movimiento_articulo_db->stock_id,
                             'modo_movimiento'   => $movimiento_articulo_db->modo_movimiento,
+                            'cantidad_anterior' => $movimiento_articulo_db->cantidad_anterior, 
                             'cantidad'          => $movimiento_articulo_db->cantidad, 
                             'precio_unitario'   => $movimiento_articulo_db->precio_unitario, 
                             'iva'               => $movimiento_articulo_db->iva, 
                             'total_monto'       => $movimiento_articulo_db->total_monto, 
-                            'cantidad_anterior' => $movimiento_articulo_db->cantidad_anterior, 
                             'user_id'           => $movimiento_articulo_db->user_id, 
                             'user'              => $movimiento_articulo_db->usuario->name, 
                             'updated_at'        => $movimiento_articulo_db->updated_at, 
@@ -1403,12 +1393,13 @@ class ModificacionMovimientosController extends Controller{
                         $diferencias_precios = ($lote['precio_unitario'] != $movimiento_articulo_db->precio_unitario || $lote['iva'] != $movimiento_articulo_db->iva);
                         if($actualizar_datos || $ajustar_existencias || $diferencias_precios){
                             /***  Actualizamos los datos en el registro correspondiente al stock(lote) del movimiento (tabla movimientos_articulos) ***/
-                            $movimiento_articulo_db->cantidad = $lote['cantidad'];
-                            $movimiento_articulo_db->modo_movimiento = $modo_movimiento;
-                            $movimiento_articulo_db->precio_unitario = $lote['precio_unitario'];
-                            $movimiento_articulo_db->iva = $lote['iva'];
-                            $movimiento_articulo_db->total_monto = $lote['total_monto'];
-                            $movimiento_articulo_db->user_id = $loggedUser->id;
+                            $movimiento_articulo_db->cantidad           = $lote['cantidad'];
+                            $movimiento_articulo_db->cantidad_anterior  = (isset($lote['cantidad_anterior']))?$lote['cantidad_anterior']:$movimiento_articulo_db->cantidad_anterior;
+                            $movimiento_articulo_db->modo_movimiento    = $modo_movimiento;
+                            $movimiento_articulo_db->precio_unitario    = $lote['precio_unitario'];
+                            $movimiento_articulo_db->iva                = $lote['iva'];
+                            $movimiento_articulo_db->total_monto        = $lote['total_monto'];
+                            $movimiento_articulo_db->user_id            = $loggedUser->id;
                             $movimiento_articulo_db->save();
                             $bitacora_modificaciones[] = '      |--+ Se Actualizaron datos del Articulo: '.$articulo_clave.' - Lote: '.$lote['lote'];
 
@@ -1416,11 +1407,11 @@ class ModificacionMovimientosController extends Controller{
                                 'id'                => $movimiento_articulo_db->id,
                                 'stock_id'          => $movimiento_articulo_db->stock_id,
                                 'modo_movimiento'   => $movimiento_articulo_db->modo_movimiento,
+                                'cantidad_anterior' => $movimiento_articulo_db->cantidad_anterior, 
                                 'cantidad'          => $movimiento_articulo_db->cantidad, 
                                 'precio_unitario'   => $movimiento_articulo_db->precio_unitario, 
                                 'iva'               => $movimiento_articulo_db->iva, 
                                 'total_monto'       => $movimiento_articulo_db->total_monto, 
-                                'cantidad_anterior' => $movimiento_articulo_db->cantidad_anterior, 
                                 'user_id'           => $loggedUser->id, 
                                 'user'              => $loggedUser->name, 
                                 'updated_at'        => $movimiento_articulo_db->updated_at, 
@@ -1518,11 +1509,11 @@ class ModificacionMovimientosController extends Controller{
                         'id'                => $nuevo_articulo->id,
                         'stock_id'          => $nuevo_articulo->stock_id,
                         'modo_movimiento'   => $nuevo_articulo->modo_movimiento,
+                        'cantidad_anterior' => $nuevo_articulo->cantidad_anterior, 
                         'cantidad'          => $nuevo_articulo->cantidad, 
                         'precio_unitario'   => $nuevo_articulo->precio_unitario, 
                         'iva'               => $nuevo_articulo->iva, 
                         'total_monto'       => $nuevo_articulo->total_monto, 
-                        'cantidad_anterior' => $nuevo_articulo->cantidad_anterior, 
                         'user_id'           => $loggedUser->id, 
                         'user'              => $loggedUser->name, 
                         'created_at'        => $nuevo_articulo->created_at,
@@ -1676,7 +1667,7 @@ class ModificacionMovimientosController extends Controller{
             'existencia_piezas' => $datosStock->existencia_piezas,
             'resguardo_piezas'  => $datosStock->resguardo_piezas,
             'user_id'           => $datosUsuario->id,
-            'user'              => $datosUsuario->username,
+            'user'              => $datosUsuario->name,
             'updated_at'        => $datosStock->updated_at,
         ];
 

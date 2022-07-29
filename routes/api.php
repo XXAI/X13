@@ -32,6 +32,7 @@ Route::get('enviar-recuperar-pass',             'API\Admin\MailerController@envi
 Route::group(['middleware'=>'auth'],function($router){
     Route::apiResource('user',          'API\Admin\UserController');
     Route::get('user-catalogs', 'API\Admin\UserController@getCatalogs');
+    Route::get('get-notifications', 'API\Auth\NotificationsController@userNotifications');
 
     Route::apiResource('catalogos/grupos',    'API\Catalogos\GruposController');
 

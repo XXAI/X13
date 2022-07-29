@@ -25,6 +25,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   user: User;
   apps: App[];
   breakpoint = 6;
+  alertaEstatus:boolean;
+  alertaOn:boolean;
+  controlAlerta:any;
 
   constructor(private authService:AuthService, private appsService: AppsListService, private sharedService: SharedService, private router: Router) {
     router.events.pipe(
@@ -67,6 +70,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
           }
         }
       }
+
+      console.log('obtener-notificaciones');
+      this.controlAlerta = {total:0,alerts:[]};
+      this.controlAlerta.alerts = [];
+      this.controlAlerta.total = this.controlAlerta.alerts.length;
+
+      if(this.controlAlerta.total > 0){
+        this.alertaEstatus = true;
+      }
     });
   }
 
@@ -86,6 +98,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       }
     );
     this.breakpoint = (window.innerWidth <= 599) ? 3 : 6;
+  }
+
+  cerrarAlertas(event){
+    if(event.code == 'Escape'){
+      this.alertaOn = false;
+    }
   }
 
   getApps():void{

@@ -33,6 +33,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatRippleModule } from '@angular/material/core';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
   declarations: [],
@@ -69,7 +70,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatProgressBarModule,
     MatExpansionModule,
     MatRippleModule,
-    MatSortModule
+    MatSortModule,
+    OverlayModule
   ],
   exports: [
     MatButtonModule,
@@ -103,7 +105,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatProgressBarModule,
     MatExpansionModule,
     MatRippleModule,
-    MatSortModule
+    MatSortModule,
+    OverlayModule
   ],
 })
 export class MaterialModule { }

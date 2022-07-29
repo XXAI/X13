@@ -36,6 +36,17 @@ export class AuthService {
   isAuth(): boolean {
     return !!this.getToken();
   }
+
+  getNotifications(){
+    if(this.isAuth){
+      const url = `${environment.base_url}/get-notifications`;
+      return this.http.get<any>(url,{}).pipe(
+        map( (response) => {
+          return response;
+        }
+      ));
+    }
+  }
   
   logIn(username: string, password: string):Observable<any> {
     const url = `${environment.base_url}/signin`;

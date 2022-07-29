@@ -37,18 +37,15 @@
             <div fxFlex></div>
         </div>
         <div fxFlex fxLayout="column" *ngIf="!isLoading && !mostrarErrores">
-            <div fxFlex="none" class="nivel-modificacion">
-                <span>Nivel: </span>
-                <mat-radio-group color="primary" aria-label="Nivel de Modificación" formControlName="nivel_modificacion" [disabled]="!puedeEditar">
-                    <mat-radio-button [value]="1">Solo Encabezado</mat-radio-button>
-                    <mat-radio-button [value]="2">Incluir Articulos</mat-radio-button>
-                </mat-radio-group>
-            </div>
             <mat-form-field fxFlex appearance="outline">
                 <mat-label>Motivo:</mat-label>
                 <textarea rows="3" cdkFocusInitial matInput #motivo maxlength="255" formControlName="motivo_modificacion" [readonly]="!puedeEditar"></textarea>
                 <mat-hint align="end">{{motivo.value.length}}/255</mat-hint>
             </mat-form-field>
+            <div fxFlex="none" class="nivel-modificacion">
+                <span>Modificar Encabezado: </span>
+                <mat-checkbox formControlName="incluir_articulos" class="form-checkbox" [disabled]="!puedeEditar">Incluir Articulos</mat-checkbox>
+            </div>
             <div fxFlex fxLayout="column" class="admin-access">
                 <div fxFlex fxLayout="column" fxLayoutGap="5px" *ngIf="!mostrarFormUsuario">
                     <button fxFlex mat-flat-button color="admin" (click)="toggleMostrarFormUsuario('aprobar')" *ngIf="!datosAprobado" [disabled]="cancelado">

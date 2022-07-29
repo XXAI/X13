@@ -9,20 +9,54 @@
     <span class="spacer"></span>
 
     <ng-template [ngIf]="isAuthenticated">
-      <button mat-icon-button color="white" [matMenuTriggerFor]="menuApps" fxHide.xs>
-        <mat-icon aria-label="Apps">apps</mat-icon>
-      </button>
+      <div class="header-buttons" fxLayout="row">
+        <div fxFlex="none">
+          <button mat-icon-button color="white" [matMenuTriggerFor]="menuApps" fxHide.xs>
+            <mat-icon aria-label="Apps">apps</mat-icon>
+          </button>
+        </div>
+        
+        <div fxFlex="none">
+          <button mat-icon-button [ngClass]="{'alert-on':alertaEstatus}" [color]="'white'" (click)="alertaOn = !alertaOn" cdkOverlayOrigin #verAlertas="cdkOverlayOrigin">
+            <mat-icon aria-label="Notificaciones">{{(alertaEstatus)?'notification_important':'circle_notifications'}}</mat-icon>
+          </button>
+        </div>
+        
+        <div fxFlex="none">
+          <button mat-icon-button aria-label="Mostrar Sidenav" (click)="toggleSidenav()" fxShow.xs fxHide>
+            <img src="{{user.avatar}}" alt="" style="width:auto; margin:auto">
+            <!--mat-icon>menu</mat-icon-->
+          </button>
+        </div>
+        
+        <div fxFlex="none">
+          <button mat-icon-button [matMenuTriggerFor]="menuAccount" fxHide.xs="true">
+            <!--mat-icon svgIcon="user-icon" aria-label="Avatar"></mat-icon-->
+            <img src="{{user.avatar}}" alt="" style="width:auto; margin:auto">
+          </button>
+        </div>
+      </div>
 
-      <button mat-icon-button aria-label="Mostrar Sidenav" (click)="toggleSidenav()" fxShow.xs fxHide>
-        <img src="{{user.avatar}}" alt="" style="width:auto; margin:auto">
-        <!--mat-icon>menu</mat-icon-->
-      </button>
-
-      <button mat-icon-button [matMenuTriggerFor]="menuAccount" fxHide.xs="true">
-        <!--mat-icon svgIcon="user-icon" aria-label="Avatar"></mat-icon-->
-        <img src="{{user.avatar}}" alt="" style="width:auto; margin:auto">
-      </button>
-
+      <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="verAlertas" [cdkConnectedOverlayOpen]="alertaOn" yPosition="below" xPosition="before" (overlayKeydown)="cerrarAlertas($event)" (overlayOutsideClick)="alertaOn = false">
+        <mat-card class="lista-notificaciones">
+            <mat-action-list dense>
+                <mat-list-item *ngIf="controlAlerta.alerts.length == 0" class="notificacion" disabled>
+                  <div class="titulo">
+                    No se encontraron notificaciones activas
+                  </div>
+                </mat-list-item>
+                <mat-list-item *ngFor="let alert of controlAlerta.alerts" class="notificacion level-{{alert.nivel_alerta}}">
+                  <div class="titulo">
+                    {{alert.titulo}}
+                  </div>
+                  <div class="total">
+                    {{alert.total}}
+                  </div>
+                </mat-list-item>
+            </mat-action-list>
+        </mat-card>
+    </ng-template>
+      
       <mat-menu #menuApps="matMenu">
         <button mat-menu-item style="text-align:center" routerLink="/apps">
           <mat-icon>home</mat-icon>
@@ -81,7 +115,11 @@
             <mat-icon>apps</mat-icon>
           </button>
         </div-->
-
+        <mat-divider></mat-divider>
+        <button mat-menu-item>
+          <mat-icon>info</mat-icon>
+          <span>Acerca de ...</span>
+        </button>
         <mat-divider></mat-divider>
         <button mat-menu-item (click)="logout()">
           <mat-icon>exit_to_app</mat-icon>

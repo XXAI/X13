@@ -944,14 +944,17 @@ export class EntradaComponent implements OnInit {
       dialogRef.afterClosed().subscribe(dialogResponse => {
         if(dialogResponse){
           if(dialogResponse.estatus != 'CAN'){
-            this.datosEntrada.modificacion_activa = dialogResponse;            
-            this.cargarDatosModificacion(dialogResponse);
-
+            this.datosEntrada.modificacion_activa = dialogResponse;
+            
             this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
             //this.formMovimiento.get('almacen_id').patchValue(this.datosEntrada.almacen_id);
             this.checarAlmacenSeleccionado();
-            this.formMovimiento.get('tipo_movimiento_id').patchValue(this.datosEntrada.tipo_movimiento_id);
+            if(this.formMovimiento.get('tipo_movimiento_id')){
+              this.formMovimiento.get('tipo_movimiento_id').patchValue(this.datosEntrada.tipo_movimiento_id);
+            }
             this.checarTipoMovimientoSeleccinado();
+
+            this.cargarDatosModificacion(dialogResponse);
             this.formMovimiento.patchValue(this.datosEntrada);
           }else{
             this.datosEntrada.modificacion_activa = null;
@@ -982,7 +985,7 @@ export class EntradaComponent implements OnInit {
   }
 
   protegerDatosFormulario(nivel:number){
-    let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','documento_folio','observaciones'];
+    let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','observaciones'];
     if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
       mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
       if(nivel == 2){

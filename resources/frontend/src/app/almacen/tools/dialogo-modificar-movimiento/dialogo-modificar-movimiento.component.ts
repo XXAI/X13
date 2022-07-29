@@ -66,7 +66,7 @@ export class DialogoModificarMovimientoComponent implements OnInit {
     this.modificarForm = this.formBuilder.group({
       id:[''],
       solicitado_fecha:[this.hoy,Validators.required],
-      nivel_modificacion:[1],
+      incluir_articulos:[false],
       motivo_modificacion:['',Validators.required],
     });
 
@@ -128,6 +128,12 @@ export class DialogoModificarMovimientoComponent implements OnInit {
       params.cancelar = this.cancelarModificacion;
       params.solicitado_fecha = this.datepipe.transform(params.solicitado_fecha, 'yyyy-MM-dd');
 
+      if(params.incluir_articulos){
+        params.nivel_modificacion = 2;
+      }else{
+        params.nivel_modificacion = 1;
+      }
+
       this.almacenService.administrarModificacion(this.data.id, params).subscribe(
         response =>{
           if(response.error) {
@@ -137,8 +143,6 @@ export class DialogoModificarMovimientoComponent implements OnInit {
               this.cargarDatosGuardados(response.data);
               this.data.modificacion = response.data;
             }
-            //let errorMessage = response.error;
-            //this.sharedService.showSnackBar(errorMessage, null, 3000);
           }else{
             this.sharedService.showSnackBar('Datos Guardados con Éxito', null, 3000);
             this.cargarDatosGuardados(response.data);
@@ -168,6 +172,9 @@ export class DialogoModificarMovimientoComponent implements OnInit {
     this.usuarioSolicita = response.solicitado_usuario.name;
     if(typeof response.solicitado_fecha === 'string'){
       response.solicitado_fecha = new Date(response.solicitado_fecha+'T12:00:00');
+    }
+    if(response.nivel_modificacion == 2){
+      response.incluir_articulos = true;
     }
     this.modificarForm.patchValue(response);
 
