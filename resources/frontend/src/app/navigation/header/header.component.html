@@ -10,15 +10,20 @@
 
     <ng-template [ngIf]="isAuthenticated">
       <div class="header-buttons" fxLayout="row">
+
+        <div fxFlex="none">
+          <button mat-icon-button class="alert-nav-icon" [ngClass]="{'alert-off':alertaEstatus == 0, 'alert-low':alertaEstatus == 1, 'alert-medium':alertaEstatus == 2, 'alert-high':alertaEstatus == 3}" (click)="alertaOn = !alertaOn" cdkOverlayOrigin #verAlertas="cdkOverlayOrigin" 
+                  [matBadge]="totalAlertas" [matBadgeHidden]="totalAlertas == 0" matBadgePosition="before">
+            <mat-icon *ngIf="alertaEstatus == 0">notifications</mat-icon>
+            <mat-icon *ngIf="alertaEstatus == 1">notifications_active</mat-icon>
+            <mat-icon *ngIf="alertaEstatus == 2">notification_important</mat-icon>
+            <mat-icon *ngIf="alertaEstatus == 3">notification_important</mat-icon>
+          </button>
+        </div>
+
         <div fxFlex="none">
           <button mat-icon-button color="white" [matMenuTriggerFor]="menuApps" fxHide.xs>
             <mat-icon aria-label="Apps">apps</mat-icon>
-          </button>
-        </div>
-        
-        <div fxFlex="none">
-          <button mat-icon-button [ngClass]="{'alert-on':alertaEstatus}" [color]="'white'" (click)="alertaOn = !alertaOn" cdkOverlayOrigin #verAlertas="cdkOverlayOrigin">
-            <mat-icon aria-label="Notificaciones">{{(alertaEstatus)?'notification_important':'circle_notifications'}}</mat-icon>
           </button>
         </div>
         
@@ -38,22 +43,38 @@
       </div>
 
       <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="verAlertas" [cdkConnectedOverlayOpen]="alertaOn" yPosition="below" xPosition="before" (overlayKeydown)="cerrarAlertas($event)" (overlayOutsideClick)="alertaOn = false">
-        <mat-card class="lista-notificaciones">
-            <mat-action-list dense>
-                <mat-list-item *ngIf="controlAlerta.alerts.length == 0" class="notificacion" disabled>
-                  <div class="titulo">
-                    No se encontraron notificaciones activas
-                  </div>
-                </mat-list-item>
+        <mat-card class="panel-notificaciones">
+            <mat-progress-bar *ngIf="isLoadingAlerts" mode="indeterminate"></mat-progress-bar>
+            <div  class="lista-notificaciones" fxLayout="column" style="width: 100%;">
+              <div fxFlex fxLayout="row" *ngIf="isLoadingAlerts" class="notificacion">
+                <div fxFlex class="titulo-not-found">
+                  Cargando Notificaciones ...
+                </div>
+              </div>
+              <div fxFlex fxLayout="row" *ngIf="controlAlerta.total == 0 && !isLoadingAlerts" class="notificacion">
+                <div fxFlex class="titulo-not-found">
+                  No se encontraron notificaciones activas
+                </div>
+              </div>
+              <div fxFlex fxLayout="row" *ngFor="let alert of controlAlerta.alerts" class="notificacion level-{{alert.nivel_alerta}}" [ngClass]="{'active':alert.accion}" matRipple (click)="accionAlertas(alert)">
+                <div fxFlex="none" class="icono">
+                  <mat-icon *ngIf="alert.nivel_alerta == 'low'">info</mat-icon>
+                  <mat-icon *ngIf="alert.nivel_alerta == 'medium'">report</mat-icon>
+                  <mat-icon *ngIf="alert.nivel_alerta == 'high'">warning</mat-icon>
+                </div>
+                <div fxFlex class="titulo">
+                  {{alert.titulo}}
+                </div>
+                <div fxFlex="none" class="total">
+                  {{alert.total | number:'1.0-0'}}
+                </div>
+              </div>
+            </div>
+            <!--mat-action-list dense>
                 <mat-list-item *ngFor="let alert of controlAlerta.alerts" class="notificacion level-{{alert.nivel_alerta}}">
-                  <div class="titulo">
-                    {{alert.titulo}}
-                  </div>
-                  <div class="total">
-                    {{alert.total}}
-                  </div>
+                  
                 </mat-list-item>
-            </mat-action-list>
+            </mat-action-list-->
         </mat-card>
     </ng-template>
       

@@ -20,7 +20,6 @@ export class AuthService {
   }
 
   getUserData(): User{
-    //console.log('####################################################################################### GetUserData()');
     let user = new User();
     user = JSON.parse(localStorage.getItem('user'));
     return user;
@@ -38,7 +37,7 @@ export class AuthService {
   }
 
   getNotifications(){
-    if(this.isAuth){
+    if(this.getToken()){
       const url = `${environment.base_url}/get-notifications`;
       return this.http.get<any>(url,{}).pipe(
         map( (response) => {

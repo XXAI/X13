@@ -87,6 +87,13 @@ export class ListaComponent implements OnInit {
       response => {
         this.mediaSize = response.mqAlias;
     });
+
+    let filtros_recibidos = history.state.filtros;
+    if(filtros_recibidos){
+      if(filtros_recibidos.estatus){
+        this.filtros.estatus = filtros_recibidos.estatus;
+      }
+    }
     
     this.loadListadoMovimientos();
 

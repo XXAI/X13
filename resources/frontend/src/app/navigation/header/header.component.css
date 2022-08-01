@@ -35,49 +35,117 @@ a + a::before {
     flex: 1 1 auto;
 }
 
-.alert-on{
-    background-color: yellow;
+::ng-deep .alert-nav-icon .mat-badge-content {
+    top: 0px !important;
+    left: 0px !important;
+    background-color: transparent !important;
+}
+
+.alert-off{
+    color: rgba(255, 255, 255, 0.30);
+}
+
+.alert-low{
+    color: white;
+}
+
+.alert-medium{
+    color: yellow;
+}
+
+.alert-high{
+    background-color: rgba(255, 255, 0, 0.95);
     color: red;
 }
 
-.lista-notificaciones{
-    padding: 8px;
-    /*background-color: rgb(202, 214, 227);*/
-    background-color: whitesmoke;
+::ng-deep .alert-nav-icon.alert-high .mat-badge-content{
+    color: red !important;
+}
+
+.panel-notificaciones{
+    padding: 8px 0px;
+    background-color: #3f51b5;
     font-family: Roboto, "Helvetica Neue", sans-serif;
+    box-shadow: 5px 5px 15px 0px grey;
+}
+
+.lista-notificaciones{
+    background-color: whitesmoke;
 }
 
 .lista-notificaciones .notificacion{
+    cursor: default;
     border-bottom: 1px solid rgba(0,0,0,.25);
     font-family: "Roboto Mono" , "Roboto" !important;
+    min-height: 40px;
 }
 
-.lista-notificaciones .mat-action-list > mat-list-item.mat-list-item:first-of-type{
+.lista-notificaciones .notificacion.active{
+    cursor: pointer;
+}
+
+.lista-notificaciones .notificacion.active:hover{
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+}
+
+.lista-notificaciones > div.notificacion:first-of-type{
     border-top: 1px solid rgba(0,0,0,.25);
 }
 
-.lista-notificaciones .mat-list-item-content{
-    padding: 0px;
+.lista-notificaciones .notificacion > div{
+    padding: 8px;
 }
 
 .lista-notificaciones .total{
-    position: absolute; 
-    right: 0;
     padding-right: 16px;
-    font-weight: 500;
+}
+
+.lista-notificaciones .titulo-not-found{
+    padding-right: 16px;
+    font-weight: normal;
+    font-style: italic;
 }
 
 .lista-notificaciones .titulo{
     padding-right: 16px;
-    font-weight: 600;
 }
 
 .lista-notificaciones .level-high{
-    color: red;
+    color: #680000;
+}
+
+.lista-notificaciones .level-high .icono{
+    color: #d00000;
+}
+
+.lista-notificaciones .notificacion.level-high:hover{
+    background-color: #ffa8a8;
 }
 
 .lista-notificaciones .level-medium{
-    color: orange;
+    color: rgb(88, 57, 0);
+}
+
+.lista-notificaciones .level-medium .icono{
+    color: rgb(210, 144, 0);
+}
+
+.lista-notificaciones .notificacion.level-medium:hover{
+    background-color: rgb(255, 219, 140);
+}
+
+.lista-notificaciones .level-low{
+    color: rgb(72, 72, 72);
+}
+
+.lista-notificaciones .level-low .icono{
+    color: rgb(0, 0, 0);
+}
+
+.lista-notificaciones .notificacion.level-low:hover{
+    background-color: rgb(207, 207, 207);
 }
 
 .apps {    

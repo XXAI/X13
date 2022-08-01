@@ -492,7 +492,8 @@ class ModificacionMovimientosController extends Controller{
                     ];
                 }
 
-                $lote_hash = $articulo->stock->lote . $articulo->stock->fecha_caducidad . $articulo->stock->codigo_barras . $articulo->stock->modelo . $articulo->stock->no_serie . $articulo->stock->marca_id;
+                //$lote_hash = $articulo->stock->lote . $articulo->stock->fecha_caducidad . $articulo->stock->codigo_barras . $articulo->stock->modelo . $articulo->stock->no_serie . $articulo->stock->marca_id;
+                $lote_hash = $articulo->stock->id;
 
                 if(!isset($lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash])){
                     //LLenar con los datos del movimiento padre, dejando en blanco para ids a crear
@@ -503,7 +504,7 @@ class ModificacionMovimientosController extends Controller{
                         "stock_padre_id"        => $articulo->stock->id,
                         "stock_id"              => null,
                         "bien_servicio_id"      => $articulo->bien_servicio_id,
-                        "programa_id"           => $articulo->stocks->programa_id,
+                        "programa_id"           => $articulo->stock->programa_id,
                         "almacen_id"            => null,
                         "cantidad_anterior"     => $articulo->cantidad,
                         "cantidad"              => $cantidad,
@@ -516,7 +517,7 @@ class ModificacionMovimientosController extends Controller{
                         "lista_salidas"         => [],
                     ];
 
-                    if($artiuclo->stock->lote){
+                    if($articulo->stock->lote){
                         $nuevo_lote["lote"]             = $articulo->stock->lote;
                         $nuevo_lote["fecha_caducidad"]  = $articulo->stock->fecha_caducidad;
                         $nuevo_lote["codigo_barras"]    = $articulo->stock->codigo_barras;
@@ -535,7 +536,8 @@ class ModificacionMovimientosController extends Controller{
             //Hacer otro loop por los articulos del movimiento hijo, llenando los ids que se daron limpios y agregando los registros que no aparecen en el padre, marcados como para eliminar
             for ($i=0; $i < count($movimiento->listaArticulos) ; $i++) { 
                 $articulo = $movimiento->listaArticulos[$i];
-                $lote_hash = $articulo->stock->lote . $articulo->stock->fecha_caducidad . $articulo->stock->codigo_barras . $articulo->stock->modelo . $articulo->stock->no_serie . $articulo->stock->marca_id;
+                //$lote_hash = $articulo->stock->lote . $articulo->stock->fecha_caducidad . $articulo->stock->codigo_barras . $articulo->stock->modelo . $articulo->stock->no_serie . $articulo->stock->marca_id;
+                $lote_hash = $articulo->stock_padre_id;
 
                 if(!isset($lista_articulos[$articulo->bien_servicio_id])){
                     $lista_articulos[$articulo->bien_servicio_id] = [
@@ -552,7 +554,7 @@ class ModificacionMovimientosController extends Controller{
                         "id"                    => $articulo->id,
                         "stock_id"              => $articulo->stock->id,
                         "bien_servicio_id"      => $articulo->bien_servicio_id,
-                        "programa_id"           => $articulo->stocks->programa_id,
+                        "programa_id"           => $articulo->stock->programa_id,
                         "almacen_id"            => $articulo->stock->almacen_id,
                         "cantidad"              => $articulo->cantidad,
                         "entrada_piezas"        => ($articulo->modo_movimiento == 'UNI')?true:false,
@@ -575,6 +577,10 @@ class ModificacionMovimientosController extends Controller{
                     $lista_articulos[$articulo->bien_servicio_id]['lotes'][$lote_hash]["total_monto"]           = round($cantidad*$precio_unitario,2);
                 }
             }
+
+            //TODO: Para probar la función de modificación.....
+            DB::rollback();
+            return response()->json(['data'=>['movimiento'=>$movimiento,'lista_articulos'=>$lista_articulos]],HttpResponse::HTTP_OK);
 
             $response = $this->modificarArticulosEntrada($movimiento,$lista_articulos);;
                 

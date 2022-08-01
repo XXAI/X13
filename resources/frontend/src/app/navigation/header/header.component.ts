@@ -25,9 +25,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   user: User;
   apps: App[];
   breakpoint = 6;
-  alertaEstatus:boolean;
+  isLoadingAlerts:boolean;
+  alertaEstatus:number;
   alertaOn:boolean;
   controlAlerta:any;
+  totalAlertas:number;
 
   constructor(private authService:AuthService, private appsService: AppsListService, private sharedService: SharedService, private router: Router) {
     router.events.pipe(
@@ -35,6 +37,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     ).subscribe((event: NavigationEnd) => {
       this.headerIcon = undefined;
       this.appHeaderLinks = [];
+      this.controlAlerta = {total:0,alerts:[]};
+      this.alertaEstatus = 0;
+      this.totalAlertas = 0;
 
       this.getApps();
       let routes = event.url.split('/');
@@ -71,13 +76,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
         }
       }
 
-      console.log('obtener-notificaciones');
-      this.controlAlerta = {total:0,alerts:[]};
-      this.controlAlerta.alerts = [];
-      this.controlAlerta.total = this.controlAlerta.alerts.length;
-
-      if(this.controlAlerta.total > 0){
-        this.alertaEstatus = true;
+      if(this.authService.getToken()){
+        this.isLoadingAlerts = true;
+        this.authService.getNotifications().subscribe(
+          response =>{
+            if(response.error) {
+              this.sharedService.showSnackBar(response.error, null, 3000);
+            }else{
+              this.controlAlerta.alerts = response.alerts;
+              this.controlAlerta.total = response.total;
+              this.totalAlertas = this.controlAlerta.alerts.length;
+              this.alertaEstatus = response.nivel;
+            }
+            this.isLoadingAlerts = false;
+          },
+          errorResponse =>{
+            var errorMessage = "Ocurrió un error.";
+            if(errorResponse.status == 409){
+              errorMessage = errorResponse.error.error.message;
+            }
+            this.sharedService.showSnackBar(errorMessage, null, 3000);
+            this.isLoadingAlerts = false;
+          }
+        );
       }
     });
   }
@@ -98,6 +119,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
       }
     );
     this.breakpoint = (window.innerWidth <= 599) ? 3 : 6;
+  }
+
+  accionAlertas(alerta){
+    let uri:string = alerta.accion;
+    let filtros:any = alerta.filtros;
+
+    if(uri){
+      this.alertaOn = false;
+      this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>
+      this.router.navigate([uri],{state:{filtros: filtros}}));
+    }
   }
 
   cerrarAlertas(event){

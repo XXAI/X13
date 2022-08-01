@@ -41,7 +41,7 @@ export class DialogoResolverConflictoComponent implements OnInit {
   ngOnInit(): void {
     this.isLoading = true;
 
-    this.almacenService.confictoModificacion(this.data.id).subscribe(
+    this.almacenService.conflictoModificacion(this.data.id).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error;
@@ -163,7 +163,25 @@ export class DialogoResolverConflictoComponent implements OnInit {
   }
 
   aceptarCambios(){
-    //
+    console.log('Resolver Conflicto Con Payload:',{});
+    this.almacenService.resolverConflictoModificacion(this.data.id,{}).subscribe(
+      response =>{
+        if(response.error) {
+          let errorMessage = response.error;
+          this.sharedService.showSnackBar(errorMessage, null, 3000);
+        } else {
+          //console.log('Resolver Conflicto Con Payload:',{});
+        }
+      },
+      errorResponse =>{
+        var errorMessage = "Ocurrió un error.";
+        if(errorResponse.status == 409){
+          errorMessage = errorResponse.error.error.message;
+        }
+        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.isLoading = false;
+      }
+    );
   }
 
   aplicarCantidad(item){
