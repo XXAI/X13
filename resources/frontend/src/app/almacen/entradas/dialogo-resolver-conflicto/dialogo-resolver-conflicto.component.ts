@@ -77,6 +77,10 @@ export class DialogoResolverConflictoComponent implements OnInit {
           response.data.movimiento_padre.lista_articulos.forEach(element => {
             let articulo:any = datos_articulos.find(x => x.stock_padre_id == element.stock_id);
 
+            if(!articulo){
+              articulo = datos_articulos.find(x => x.lote == element.stock.lote && x.fecha_caducidad == element.stock.fecha_caducidad && x.codigo_barras == element.stock.codigo_barras && x.no_serie == element.stock.no_serie && x.modelo == element.stock.modelo && x.marca_id == element.stock.marca_id && x.empaque_detalle_id == element.stock.empaque_detalle_id);
+            }
+
             if(articulo){
               if(articulo.lote != element.stock.lote || articulo.fecha_caducidad != element.stock.fecha_caducidad || articulo.codigo_barras != element.stock.codigo_barras || articulo.no_serie != element.stock.no_serie || articulo.modelo != element.stock.modelo || articulo.marca_id != element.stock.marca_id || articulo.empaque_detalle_id != element.stock.empaque_detalle_id){
                 articulo.estatus_articulo = 'EDIT';

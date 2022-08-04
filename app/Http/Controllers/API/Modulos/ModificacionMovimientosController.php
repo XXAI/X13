@@ -782,6 +782,8 @@ class ModificacionMovimientosController extends Controller{
                                         'deleted_at'                    => $ma_eliminar->deleted_at,
                                     ];
 
+                                    //TODO:: Checar si la salida es una transferemcia
+
                                     $conteos_movimiento = MovimientoArticulo::select(DB::raw('SUM(cantidad) as total_articulos'), DB::raw('COUNT(DISTINCT bien_servicio_id) as total_claves'), DB::raw('SUM(total_monto) as total_monto'))
                                                                             ->where('movimiento_id',$ma_eliminar->movimiento_id)->where('id','!=',$ma_eliminar->id)->first();
                                     $ma_eliminar->movimiento->update(['total_articulos'=>$conteos_movimiento->total_articulos, 'total_claves'=>$conteos_movimiento->total_claves, 'total_monto'=>$conteos_movimiento->total_monto,'modificado_por_usuario_id'=>$loggedUser->id]);
@@ -1005,7 +1007,7 @@ class ModificacionMovimientosController extends Controller{
                                 }
 
                                 /***  Si se modifico la cantidad o el detalle del empaque  ***/
-                                if($ajustar_existencias){ 
+                                if($ajustar_existencias){
 
                                     /***  Se calculan las cantidades a usar como existencias  ***/
                                     if($modo_movimiento == 'UNI'){
@@ -1273,6 +1275,8 @@ class ModificacionMovimientosController extends Controller{
                                         $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                         if(count($movimientos_recepcion)){
                                             $registro_original['movimientos_recepciones'] = [];
+                                            $registro_modificado['movimientos_recepciones'] = [];
+
                                             for($k = 0; $k < count($movimientos_recepcion); $k++){
                                                 $registro_original['movimientos_recepciones'][] = [
                                                     'id'                        => $movimientos_recepcion[$k]->id,
@@ -1281,14 +1285,18 @@ class ModificacionMovimientosController extends Controller{
                                                     'modificado_por_usuario_id' => $movimientos_recepcion[$k]->modificado_por_usuario_id,
                                                     'updated_at'                => $movimientos_recepcion[$k]->updated_at,
                                                 ];
-                                            }
+                                                //}
+
+                                                //Actualizar el stock_padre_id
+                                                MovimientoArticulo::where('movimiento_id',$movimientos_recepcion[$k]->id)->where('stock_padre_id',$registro_original['stock']['id'])->update(['stock_padre_id'=>$nuevo_stock->id]);
         
-                                            $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
-                                                                                ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
+                                                /*$movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
+                                                                                ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);*/
+                                                $movimientos_recepcion[$k]->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
         
-                                            $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
-                                            $registro_modificado['movimientos_recepciones'] = [];
-                                            for($k = 0; $k < count($movimientos_recepcion); $k++){
+                                                //$movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
+                                                //$registro_modificado['movimientos_recepciones'] = [];
+                                                //for($k = 0; $k < count($movimientos_recepcion); $k++){
                                                 $registro_modificado['movimientos_recepciones'][] = [
                                                     'id'                        => $movimientos_recepcion[$k]->id,
                                                     'folio'                     => $movimientos_recepcion[$k]->folio,

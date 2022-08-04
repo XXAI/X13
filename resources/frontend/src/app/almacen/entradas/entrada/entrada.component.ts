@@ -783,7 +783,7 @@ export class EntradaComponent implements OnInit {
         this.datosForm.unidad_medica_movimiento_id = true;
       }
     }else{
-      if(!this.formMovimiento.get('proveedor')){
+      if(!this.formMovimiento.get('proveedor') && tipo_movimiento && tipo_movimiento.clave != 'RCPCN'){
         this.formMovimiento.addControl('proveedor',new FormControl(''));
         this.formMovimiento.addControl('proveedor_id',new FormControl(''));
         this.filteredProveedores = this.formMovimiento.get('proveedor').valueChanges.pipe( startWith(''), map(value => typeof value === 'string' ? value : (value)?value.nombre:''),
@@ -946,15 +946,16 @@ export class EntradaComponent implements OnInit {
           if(dialogResponse.estatus != 'CAN'){
             this.datosEntrada.modificacion_activa = dialogResponse;
             
-            this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
+            this.cargarDatosModificacion(dialogResponse);
+            
             //this.formMovimiento.get('almacen_id').patchValue(this.datosEntrada.almacen_id);
             this.checarAlmacenSeleccionado();
             if(this.formMovimiento.get('tipo_movimiento_id')){
               this.formMovimiento.get('tipo_movimiento_id').patchValue(this.datosEntrada.tipo_movimiento_id);
             }
-            this.checarTipoMovimientoSeleccinado();
+            this.checarTipoRecepcion(this.datosEntrada.tipo_movimiento_id);
+            //this.checarTipoMovimientoSeleccinado();
 
-            this.cargarDatosModificacion(dialogResponse);
             this.formMovimiento.patchValue(this.datosEntrada);
           }else{
             this.datosEntrada.modificacion_activa = null;
@@ -987,7 +988,7 @@ export class EntradaComponent implements OnInit {
   protegerDatosFormulario(nivel:number){
     let mostrar_campos:string[] = ['id','fecha_movimiento','turno_id','observaciones'];
     if(this.datosEntrada.tipo_movimiento.clave != 'RCPCN'){
-      mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','referencia_folio','referencia_fecha');
+      mostrar_campos.push('tipo_movimiento_id','proveedor','proveedor_id','documento_folio','referencia_folio','referencia_fecha');
       if(nivel == 2){
         mostrar_campos.push('programa','programa_id');
       }
