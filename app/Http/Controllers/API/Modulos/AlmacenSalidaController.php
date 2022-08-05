@@ -110,6 +110,14 @@ class AlmacenSalidaController extends Controller
                 $salidas = $salidas->where('movimientos.fecha_movimiento','>=',$parametros['fecha_inicio'])
                                     ->where('movimientos.fecha_movimiento','<=',$parametros['fecha_fin']);
             }
+
+            if(isset($parametros['especiales']) && $parametros['especiales']){
+                $especiales = json_decode($parametros['especiales']);
+                if(isset($especiales->transferencias_inconclusas) && $especiales->transferencias_inconclusas){
+                    $salidas = $salidas->leftJoin('movimientos AS M','M.movimiento_padre_id','=','movimientos.id')
+                                    ->whereRaw('M.estatus != movimientos.estatus');
+                }
+            }
             
             if(isset($parametros['page'])){
                 $resultadosPorPagina = isset($parametros["per_page"])? $parametros["per_page"] : 20;

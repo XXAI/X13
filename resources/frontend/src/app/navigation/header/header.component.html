@@ -45,6 +45,12 @@
       <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="verAlertas" [cdkConnectedOverlayOpen]="alertaOn" yPosition="below" xPosition="before" (overlayKeydown)="cerrarAlertas($event)" (overlayOutsideClick)="alertaOn = false">
         <mat-card class="panel-notificaciones">
             <mat-progress-bar *ngIf="isLoadingAlerts" mode="indeterminate"></mat-progress-bar>
+            <div class="titulo-panel" fxLayout="row">
+              <div fxFlex class="titulo">Panel de Notificaciones:</div>
+              <div fxFlex="none">
+                <button mat-icon-button (click)="obtenerAlertas()" [disabled]="isLoadingAlerts"><mat-icon>refresh</mat-icon></button>
+              </div>
+            </div>
             <div  class="lista-notificaciones" fxLayout="column" style="width: 100%;">
               <div fxFlex fxLayout="row" *ngIf="isLoadingAlerts" class="notificacion">
                 <div fxFlex class="titulo-not-found">

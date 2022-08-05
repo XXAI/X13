@@ -69,9 +69,10 @@ export class ListaComponent implements OnInit {
 
     let filtros_recibidos = history.state.filtros;
     if(filtros_recibidos){
-      if(filtros_recibidos.estatus){
-        this.filtros.estatus = filtros_recibidos.estatus;
-      }
+      let filtros = Object.keys(filtros_recibidos);
+      filtros.forEach(element => {
+        this.filtros[element] = filtros_recibidos[element];
+      });
     }
     
     this.loadListadoMovimientos();
@@ -131,6 +132,10 @@ export class ListaComponent implements OnInit {
 
     if(this.filtros.estatus){
       params.estatus = this.filtros.estatus;
+    }
+
+    if(this.filtros.especiales){
+      params.especiales = JSON.stringify(this.filtros.especiales);
     }
 
     if(this.filtros.rango_fechas.inicio){
@@ -195,10 +200,6 @@ export class ListaComponent implements OnInit {
     );
     
     return event;
-  }
-
-  eliminarEntrada(id){
-    console.log('eliminar : '+id);
   }
 
   applyFilter(){
@@ -361,6 +362,7 @@ export class ListaComponent implements OnInit {
     this.filtros.tipo_movimiento_id = false;
     this.filtros.rango_fechas = {inicio:null, fin:null};
     this.filtros.estatus = false;
+    this.filtros.especiales = undefined;
     this.aplicarFiltro();
   }
 

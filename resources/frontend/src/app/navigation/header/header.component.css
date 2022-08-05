@@ -37,7 +37,7 @@ a + a::before {
 
 ::ng-deep .alert-nav-icon .mat-badge-content {
     top: 0px !important;
-    left: 0px !important;
+    left: -5px !important;
     background-color: transparent !important;
 }
 
@@ -67,6 +67,18 @@ a + a::before {
     background-color: #3f51b5;
     font-family: Roboto, "Helvetica Neue", sans-serif;
     box-shadow: 5px 5px 15px 0px grey;
+}
+
+.panel-notificaciones .titulo-panel{
+    color: whitesmoke;
+    padding: 0px 8px 8px 8px;
+}
+
+.panel-notificaciones .titulo-panel .titulo{
+    display: flex;
+    align-items: center;
+    font-size: large;
+    cursor: default;
 }
 
 .lista-notificaciones{
