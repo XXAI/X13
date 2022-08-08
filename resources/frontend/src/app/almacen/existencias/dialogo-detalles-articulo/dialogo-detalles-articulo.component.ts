@@ -6,6 +6,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { of, Subscription } from 'rxjs';
 import { SharedService } from 'src/app/shared/shared.service';
+import { AlmacenService } from '../../almacen.service';
 import { DialogoPreviewMovimientoComponent } from '../../tools/dialogo-preview-movimiento/dialogo-preview-movimiento.component';
 import { ExistenciasService } from '../existencias.service';
 
@@ -28,6 +29,7 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<DialogoDetallesArticuloComponent>,
     private sharedService: SharedService,
+    private almacenService: AlmacenService,
     private existenciasService: ExistenciasService,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     public dialog: MatDialog,
@@ -68,11 +70,15 @@ export class DialogoDetallesArticuloComponent implements OnInit {
   filtroAplicado:boolean;
   dataSourceLotes: MatTableDataSource<any>;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
+  listaEstatusIconos: any;
+  listaEstatusClaves: any;
+  listaEstatusLabels: any;
 
   ngOnInit(): void {
+    this.listaEstatusIconos = this.almacenService.listaIconos;
+    this.listaEstatusClaves = this.almacenService.listaClaves;
+    this.listaEstatusLabels = this.almacenService.listaEtiquetas;
+
     this.nivelesEscape = [];
     this.isLoading = true;
     this.mostrarTodosLotes = false;

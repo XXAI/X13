@@ -35,7 +35,7 @@ export class DialogoResolverConflictoComponent implements OnInit {
   resultsLength: number = 0;
   currentPage: number = 0;
   pageSize: number = 15;
-  displayedColumns: string[] = ['estatus_articulo','datos_articulo','datos_empaque','lote_fecha_cad','lote_fecha_cad_mod','cantidad_enviada','cantidad_recibida'];
+  displayedColumns: string[] = ['estatus_articulo','datos_articulo','datos_empaque','programa','lote_fecha_cad','cantidad_enviada','cantidad_recibida'];
   dataSourceArticulos: MatTableDataSource<any>;
 
   ngOnInit(): void {
@@ -60,6 +60,8 @@ export class DialogoResolverConflictoComponent implements OnInit {
               descripcion: element.articulo.especificaciones,
               empaque_detalle_id: element.stock.empaque_detalle_id,
               empaque_detalle: (element.stock.empaque_detalle)?element.stock.empaque_detalle.descripcion:'Sin Detalles',
+              programa_id: element.stock.programa_id,
+              programa: (element.stock.programa)?element.stock.programa.descripcion:'Sin Programa',
               lote: element.stock.lote,
               fecha_caducidad: element.stock.fecha_caducidad,
               codigo_barras: element.stock.codigo_barras,
@@ -78,19 +80,27 @@ export class DialogoResolverConflictoComponent implements OnInit {
             let articulo:any = datos_articulos.find(x => x.stock_padre_id == element.stock_id);
 
             if(!articulo){
-              articulo = datos_articulos.find(x => x.lote == element.stock.lote && x.fecha_caducidad == element.stock.fecha_caducidad && x.codigo_barras == element.stock.codigo_barras && x.no_serie == element.stock.no_serie && x.modelo == element.stock.modelo && x.marca_id == element.stock.marca_id && x.empaque_detalle_id == element.stock.empaque_detalle_id);
+              articulo = datos_articulos.find(x => x.lote == element.stock.lote && x.fecha_caducidad == element.stock.fecha_caducidad && x.codigo_barras == element.stock.codigo_barras && x.no_serie == element.stock.no_serie && x.modelo == element.stock.modelo && x.marca_id == element.stock.marca_id && x.empaque_detalle_id == element.stock.empaque_detalle_id && x.programa_id == element.stock.programa_id);
             }
 
             if(articulo){
-              if(articulo.lote != element.stock.lote || articulo.fecha_caducidad != element.stock.fecha_caducidad || articulo.codigo_barras != element.stock.codigo_barras || articulo.no_serie != element.stock.no_serie || articulo.modelo != element.stock.modelo || articulo.marca_id != element.stock.marca_id || articulo.empaque_detalle_id != element.stock.empaque_detalle_id){
+              if(articulo.lote != element.stock.lote || articulo.fecha_caducidad != element.stock.fecha_caducidad || articulo.codigo_barras != element.stock.codigo_barras || articulo.no_serie != element.stock.no_serie || articulo.modelo != element.stock.modelo || articulo.marca_id != element.stock.marca_id || articulo.empaque_detalle_id != element.stock.empaque_detalle_id || articulo.programa_id != element.stock.programa_id){
                 articulo.estatus_articulo = 'EDIT';
                 articulo.estatus_icono = 'playlist_add_check';
                 articulo.estatus_desc = 'Modificado';
+
                 articulo.lote_modificado = element.stock.lote;
+                articulo.diff_lote = (articulo.lote != element.stock.lote);
                 articulo.fecha_caducidad_modificado = element.stock.fecha_caducidad;
+                articulo.diff_fecha_caducidad = (articulo.fecha_caducidad != element.stock.fecha_caducidad);
                 articulo.codigo_barras_modificado = element.stock.codigo_barras;
+                articulo.diff_codigo_barras = (articulo.codigo_barras != element.stock.codigo_barras);
+
                 if(articulo.empaque_detalle_id != element.stock.empaque_detalle_id){
-                  articulo.empaque_detalle_modificado = element.stock.empaque_detalle_modificado;
+                  articulo.empaque_detalle_modificado = element.stock.empaque_detalle.descripcion;
+                }
+                if(articulo.programa_id != element.stock.programa_id){
+                  articulo.programa_modificado = element.stock.programa.descripcion;
                 }
               }else{
                 articulo.estatus_articulo = 'OK';
@@ -107,6 +117,8 @@ export class DialogoResolverConflictoComponent implements OnInit {
                 descripcion: element.articulo.especificaciones,
                 empaque_detalle_id: element.stock.empaque_detalle_id,
                 empaque_detalle_modificado: (element.stock.empaque_detalle)?element.stock.empaque_detalle.descripcion:'Sin Detalles',
+                programa_id: element.stock.programa_id,
+                programa_modificado: (element.stock.programa)?element.stock.programa.descripcion:'Sin Programa',
                 lote_modificado: element.stock.lote,
                 fecha_caducidad_modificado: element.stock.fecha_caducidad,
                 codigo_barras_modificado: element.stock.codigo_barras,

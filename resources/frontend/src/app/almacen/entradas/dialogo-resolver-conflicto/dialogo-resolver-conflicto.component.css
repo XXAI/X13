@@ -134,6 +134,10 @@ table.lista-articulos-table th {
     font-size: small;
 }
 
+.lista-articulos-table .dato-modificado{
+    font-weight: 600;
+}
+
 .lista-articulos-table td.input-cell{
     width: 100px;
     position: relative;

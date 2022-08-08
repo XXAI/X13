@@ -360,6 +360,10 @@
     color:#b000e6;
 }
 
+.conflicto-color > td{
+    color: #eb0808;
+  }
+
 .lista-resguardos{
     padding:0px !important;
 }

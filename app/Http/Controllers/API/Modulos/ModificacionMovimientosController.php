@@ -67,10 +67,14 @@ class ModificacionMovimientosController extends Controller{
             }
 
             $movimiento->load(['listaArticulos'=>function($listaArticulos){
-                                    $listaArticulos->with('articulo','stock.empaqueDetalle');
+                                    $listaArticulos->with(['articulo','stock'=>function($stocks){
+                                                                                $stocks->with('empaqueDetalle','programa');
+                                                                            }]);
                                 },'movimientoPadre'=>function($movimientoPadre){
                                     $movimientoPadre->with(['listaArticulos'=>function($subListaArticulos){
-                                        $subListaArticulos->with('articulo','stock.empaqueDetalle');
+                                        $subListaArticulos->with(['articulo','stock'=>function($stocks){
+                                                                                $stocks->with('empaqueDetalle','programa');
+                                                                            }]);
                                     },'almacen','almacenMovimiento','tipoMovimiento']);
                                 },'almacen','turno','almacenMovimiento','tipoMovimiento']);
 
@@ -578,6 +582,11 @@ class ModificacionMovimientosController extends Controller{
                 }
             }
 
+            foreach ($lista_articulos as $key => $value) {
+                $lista_articulos[$key]['lotes'] = array_values($value['lotes']);
+            }
+            $lista_articulos = array_values($lista_articulos);
+
             //TODO: Para probar la función de modificación.....
             DB::rollback();
             return response()->json(['data'=>['movimiento'=>$movimiento,'lista_articulos'=>$lista_articulos]],HttpResponse::HTTP_OK);
@@ -614,7 +623,7 @@ class ModificacionMovimientosController extends Controller{
 
             DB::commit();
 
-            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$modificacion]],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$response]],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -666,7 +675,9 @@ class ModificacionMovimientosController extends Controller{
                 /***  Datos del lote recibido del cliente, lo datos nuevos que reemplazarán lo guardado en la base de datos  ***/
                 $lote = $lista_articulos[$i]['lotes'][$j];
 
-                $lote['programa_id'] = $movimiento->programa_id;//Asignamos el id del programa del movimiento de entrada
+                if(!isset($lote['programa_id']) || !$lote['programa_id']){
+                    $lote['programa_id'] = $movimiento->programa_id;//Asignamos el id del programa del movimiento de entrada
+                }
                 //$lote['almacen_id'] = $movimiento->almacen_id;//Asignamos el id del almacen del movimiento de entrada
 
                 //Se obtiene el modo de entrada del lote

@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { AlmacenService } from '../../almacen.service';
 
 export interface DialogData {
   id: number;
@@ -38,6 +39,7 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private dialog: MatDialog, 
     private router: Router,
+    private almacenService: AlmacenService,
   ) { }
 
   isLoading:boolean;
@@ -60,15 +62,19 @@ export class DialogoPreviewMovimientoComponent implements OnInit {
 
   idArticuloSeleccionado:number;
   
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
+  listaEstatusIconos: any;
+  listaEstatusClaves: any;
+  listaEstatusLabels: any;
 
   listaClasesCaducidad:any = { 1:'caducidad-verde', 2:'caducidad-ambar', 3:'caducidad-rojo' };
   listaIconosCaducidad:any = { 1:'task_alt', 2:'notification_important', 3:'warning' };
   listaEtiquetasCaducidad:any = { 1:'', 2:'Por Caducar', 3:'Caducado' };
 
   ngOnInit(): void {
+    this.listaEstatusIconos = this.almacenService.listaIconos;
+    this.listaEstatusClaves = this.almacenService.listaClaves;
+    this.listaEstatusLabels = this.almacenService.listaEtiquetas;
+
     this.isLoading = true;
     this.idArticuloSeleccionado = null;
 

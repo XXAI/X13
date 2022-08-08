@@ -350,6 +350,11 @@ table td {
     color:#ff2a2a;
 }
 
+.conflicto-color{
+    color: whitesmoke !important;
+    background-color: #eb0808;
+}
+
 .expirado-color{
     color:#fdcd2f;
 }

@@ -2,7 +2,7 @@
     <section fxFlex="none" class="movimiento-toolbar"> <!-- Toolbar Menu <<<<<<< -->
         <div fxLayout="row">
             <div fxFlex="none" class="label-info">
-                <mat-icon>{{listaEstatusIconos[estatusMovimiento]}}</mat-icon> {{tipoMovimiento}}: {{listaEstatusLabels[estatusMovimiento]}}
+                <mat-icon class="estatus-icon {{listaEstatusClaves[estatusMovimiento]}}-color">{{listaEstatusIconos[estatusMovimiento]}}</mat-icon> {{tipoMovimiento}}: {{listaEstatusLabels[estatusMovimiento]}}
             </div>
             <div fxFlex>
             </div>
@@ -35,7 +35,7 @@
                     <span class="value">{{movimiento.folio }}</span>
                 </div>
                 <div fxFlex class="fake-input">
-                    <span class="label">Fecha Entrada:</span>
+                    <span class="label">Fecha del Movimiento:</span>
                     <span class="value">{{movimiento.fecha_movimiento | date:'MMMM d, y' }}</span>
                 </div>
                 <div fxFlex class="fake-input">

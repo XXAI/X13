@@ -17,6 +17,36 @@
     padding-left: 5px;
 }
 
+.label-info .estatus-icon{
+    background-color: whitesmoke;
+    border-radius: 6px;
+    margin-right: 8px;
+}
+
+.pendiente-recepcion-color{
+    color:#dc8503 !important;
+}
+
+.concluido-color{
+    color:#07a8ff !important;
+}
+
+.cancelado-color{
+    color:#ff2a2a !important;
+}
+
+.peticion-modificacion-color{
+    color:#b000e6;
+}
+
+.modificacion-aprobada-color{
+    color:#b000e6;
+}
+
+.conflicto-color{
+    color: #eb0808;
+}
+
 .label-info-delete{
     cursor: default;
     font-weight: 500;
