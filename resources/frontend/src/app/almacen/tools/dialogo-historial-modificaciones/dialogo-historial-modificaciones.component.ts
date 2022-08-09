@@ -33,9 +33,9 @@ export class DialogoHistorialModificacionesComponent implements OnInit {
   modSeleccionada: boolean;
   datosModificacion: any;
 
-  listaEstatusIconos: any = { 'FIN':'assignment_turned_in',   'CAN':'cancel',     'SOL':'edit_notifications',         'MOD':'note_alt'};
-  listaEstatusClaves: any = { 'FIN':'concluido',              'CAN':'cancelado',  'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'FIN':'Concluido',              'CAN':'Cancelado',  'SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
+  listaEstatusIconos: any = { 'FIN':'assignment_turned_in',   'CAN':'cancel',     'SOL':'edit_notifications',         'MOD':'note_alt',             'ATM':'assignment_late'};
+  listaEstatusClaves: any = { 'FIN':'concluido',              'CAN':'cancelado',  'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada','ATM':'peticion-automatica'};
+  listaEstatusLabels: any = { 'FIN':'Concluido',              'CAN':'Cancelado',  'SOL':'Petición de Modificación',   'MOD':'Modificación Activa',  'ATM':'Petición Automatica'};
 
   ngOnInit(): void {
     this.dataSourceMods = new MatTableDataSource<any>([]);

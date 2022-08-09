@@ -87,7 +87,13 @@
                         <span class="value">{{datosModificacion.modificado_fecha||'---'}}</span>
                     </div>
                 </div>
-                <div fxflex fxLayout="row" style="overflow: auto;">
+                <div fxFLex fxLayout="row" *ngIf="datosModificacion.estatus != 'FIN'">
+                    <div fxFlex class="no-seleccionado">
+                        <span *ngIf="datosModificacion.estatus != 'CAN'">Modificación Pendiente de Aplicar</span>
+                        <span *ngIf="datosModificacion.estatus == 'CAN'">Modificación Cancelada: {{datosModificacion.motivo_revertido}}</span>
+                    </div>
+                </div>
+                <div fxflex fxLayout="row" style="overflow: auto;"  *ngIf="datosModificacion.estatus == 'FIN'">
                     <div fxFlex fxLayout="column" class="detalles-movimiento">
                         <div fxFlex="none" class="no-seleccionado" *ngIf="datosModificacion.datos_movimiento.length == 0">
                             <span>Sin Registro de Modificaciones</span>

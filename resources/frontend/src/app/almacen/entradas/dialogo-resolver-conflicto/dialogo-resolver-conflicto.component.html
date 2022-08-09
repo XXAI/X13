@@ -4,10 +4,10 @@
             <div fxFlex="none" class="label-info">
                 <mat-icon>build</mat-icon>&nbsp;&nbsp; Resolver Conflicto:
             </div>
-            <button fxFlex="none" mat-button color="primary" class="boton-principal" (click)="aceptarCambios()"><mat-icon>add_task</mat-icon>&nbsp;<span>Aceptar y Guardar Cambios</span></button>
+            <button fxFlex="none" mat-button color="primary" class="boton-principal" [disabled]="isSaving" (click)="aceptarCambios()"><mat-icon>add_task</mat-icon>&nbsp;<span>Aceptar y Guardar Cambios</span></button>
             <div fxFlex>
             </div>
-            <button fxFlex="none" class="boton-accion" mat-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
+            <button fxFlex="none" class="boton-accion" mat-button [disabled]="isSaving" (click)="cerrar()"><mat-icon>close</mat-icon></button>
         </div>
     </section>
     <section fxFlex fxLayout="column" style="padding: 8px; overflow: hidden;">
@@ -57,6 +57,8 @@
         </mat-card>
         <div fxFlex fxLayout="column">
             <div fxFlex class="tabla-articulos">
+                <mat-progress-bar *ngIf="isSaving" mode="indeterminate" [color]="'primary'"></mat-progress-bar>
+                <alert-panel></alert-panel>
                 <table mat-table [dataSource]="dataSourceArticulos" class="lista-articulos-table">
                     <ng-container matColumnDef="estatus_articulo">
                         <th mat-header-cell *matHeaderCellDef width="1"> Estatus </th>

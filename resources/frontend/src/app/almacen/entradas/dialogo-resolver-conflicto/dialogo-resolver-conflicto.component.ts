@@ -4,6 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
 import { SharedService } from 'src/app/shared/shared.service';
 import { AlmacenService } from '../../almacen.service';
 
@@ -19,6 +20,7 @@ export interface DialogData {
 export class DialogoResolverConflictoComponent implements OnInit {
   @ViewChild(MatPaginator) lotesPaginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(AlertPanelComponent) alertPanel:AlertPanelComponent;
   
   constructor(
     public dialogRef: MatDialogRef<DialogoResolverConflictoComponent>,
@@ -28,6 +30,7 @@ export class DialogoResolverConflictoComponent implements OnInit {
   ) { }
 
   isLoading:boolean;
+  isSaving:boolean;
   datosEntrada:any;
   listaArticulos:any[];
 
@@ -45,7 +48,8 @@ export class DialogoResolverConflictoComponent implements OnInit {
       response =>{
         if(response.error) {
           let errorMessage = response.error;
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.alertPanel.mostrarError(errorMessage);
         } else {
           console.log(response);
           this.datosEntrada = response.data;
@@ -172,36 +176,39 @@ export class DialogoResolverConflictoComponent implements OnInit {
         if(errorResponse.status == 409){
           errorMessage = errorResponse.error.error.message;
         }
-        this.sharedService.showSnackBar(errorMessage, null, 3000);
+        //this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.alertPanel.mostrarError(errorMessage);
         this.isLoading = false;
       }
     );
   }
 
   aceptarCambios(){
-    console.log('Resolver Conflicto Con Payload:',{});
+    this.isSaving = true;
     this.almacenService.resolverConflictoModificacion(this.data.id,{}).subscribe(
       response =>{
         if(response.error) {
           let errorMessage = response.error;
-          this.sharedService.showSnackBar(errorMessage, null, 3000);
+          //this.sharedService.showSnackBar(errorMessage, null, 3000);
+          this.alertPanel.mostrarError(errorMessage);
         } else {
-          //console.log('Resolver Conflicto Con Payload:',{});
+          console.log('Resolver Conflicto Con Payload:',{});
         }
+        this.isSaving = false;
       },
       errorResponse =>{
         var errorMessage = "Ocurrió un error.";
         if(errorResponse.status == 409){
           errorMessage = errorResponse.error.error.message;
         }
-        this.sharedService.showSnackBar(errorMessage, null, 3000);
-        this.isLoading = false;
+        //this.sharedService.showSnackBar(errorMessage, null, 3000);
+        this.alertPanel.mostrarError(errorMessage);
+        this.isSaving = false;
       }
     );
   }
 
   aplicarCantidad(item){
-    console.log(item);
     if(isNaN(item.cantidad_recibida) || item.cantidad_recibida < 0){
       item.cantidad_recibida = 0;
     }else if(item.cantidad_recibida > item.cantidad_enviada){
@@ -210,7 +217,9 @@ export class DialogoResolverConflictoComponent implements OnInit {
   }
 
   cancelarAccion(){
-    this.cerrar();
+    if(!this.isSaving){
+      this.cerrar();
+    }
   }
 
   cerrar(){

@@ -385,7 +385,7 @@ class ModificacionMovimientosController extends Controller{
                     /*if(isset($datos_modificados['almacen_id']) && $datos_modificados['almacen_id']){
                         $movimiento->almacen_id = $datos_modificados['almacen_id'];
                     }*/
-                    $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados']);
+                    $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados'],$modificacion);
                 }
 
                 if(!$response['estatus']){
@@ -463,16 +463,7 @@ class ModificacionMovimientosController extends Controller{
                 return response()->json(['error'=>"El tipo de movimiento no es el requerido para ejecutar esta acción"],HttpResponse::HTTP_OK);
             }
 
-            $datos_modificacion = [
-                'movimiento_id' => $movimiento->id,
-                'estatus' => 'FIN',
-                'nivel_modificacion' => 2,
-                'motivo_modificacion' => 'Modificación aplicada automaticamente al Resolver conflictos con movimiento de recepción',
-                'modificado_fecha' => $fecha_hoy,
-                'modificado_usuario_id' => $loggedUser->id,
-            ];
-
-            $modificacion = MovimientoModificacion::create($datos_modificacion);
+            $modificacion = MovimientoModificacion::where('estatus','ATM')->where('movimiento_id',$movimiento->id)->first();
 
             if(!$modificacion){
                 DB::rollback();
@@ -560,6 +551,7 @@ class ModificacionMovimientosController extends Controller{
                         "bien_servicio_id"      => $articulo->bien_servicio_id,
                         "programa_id"           => $articulo->stock->programa_id,
                         "almacen_id"            => $articulo->stock->almacen_id,
+                        "lote"                  => $articulo->stock->lote,
                         "cantidad"              => $articulo->cantidad,
                         "entrada_piezas"        => ($articulo->modo_movimiento == 'UNI')?true:false,
                         "precio_unitario"       => $articulo->precio_unitario,
@@ -588,10 +580,10 @@ class ModificacionMovimientosController extends Controller{
             $lista_articulos = array_values($lista_articulos);
 
             //TODO: Para probar la función de modificación.....
-            DB::rollback();
-            return response()->json(['data'=>['movimiento'=>$movimiento,'lista_articulos'=>$lista_articulos]],HttpResponse::HTTP_OK);
+            //DB::rollback();
+            //return response()->json(['data'=>['movimiento'=>$movimiento,'lista_articulos'=>$lista_articulos]],HttpResponse::HTTP_OK);
 
-            $response = $this->modificarArticulosEntrada($movimiento,$lista_articulos);;
+            $response = $this->modificarArticulosEntrada($movimiento,$lista_articulos,$modificacion);
                 
             if(!$response['estatus']){
                 DB::rollback();
@@ -604,18 +596,25 @@ class ModificacionMovimientosController extends Controller{
 
                 $modificacion->modificacionesArticulos()->createMany($response['lista_modificaciones']);
 
+                $datos_originales['estatus'] = $movimiento->estatus;
                 $datos_originales['total_articulos'] = $movimiento->total_articulos;
                 $datos_originales['total_claves'] = $movimiento->total_claves;
                 $datos_originales['total_monto'] = $movimiento->total_monto;
                 $datos_originales['modificado_por_usuario_id'] = $movimiento->modificado_por_usuario_id;
                 $datos_originales['modificado_por'] = $movimiento->modificadoPor->username;
                 
+                $datos_modificados['estatus'] = 'FIN';
                 $datos_modificados['total_articulos'] = $response['datos_modificados_movimiento']['total_articulos'];
                 $datos_modificados['total_claves'] = $response['datos_modificados_movimiento']['total_claves'];
                 $datos_modificados['total_monto'] = $response['datos_modificados_movimiento']['total_monto'];
                 $datos_modificados['modificado_por_usuario_id'] = $loggedUser->id;
                 $datos_modificados['modificado_por'] = $loggedUser->name;
 
+                $movimiento->update($datos_modificados);
+                
+                $modificacion->estatus = 'FIN';
+                $modificacion->modificado_fecha = $fecha_hoy;
+                $modificacion->modificado_usuario_id = $loggedUser->id;
                 $modificacion->registro_original = json_encode($datos_originales);
                 $modificacion->registro_modificado = json_encode($datos_modificados);
                 $modificacion->save();
@@ -630,7 +629,7 @@ class ModificacionMovimientosController extends Controller{
         }
     }
 
-    private function modificarArticulosEntrada($movimiento,$lista_articulos){
+    private function modificarArticulosEntrada($movimiento,$lista_articulos,$modificacion_padre){
         DB::enableQueryLog();
         $loggedUser = auth()->userOrFail();
         $response_estatus = true;
@@ -740,7 +739,7 @@ class ModificacionMovimientosController extends Controller{
                         }
 
                         /***  Si hay datos a modificar en los lotes y el movimieto es de tipo recepción, regresar error, ya que las recepciónes solo deben poder modificar la cantidad recibida  ***/
-                        if($movimiento->tipoMovimiento->clave == 'RCPCN' && $actualizar_datos){
+                        if($movimiento->tipoMovimiento->clave == 'RCPCN' && $actualizar_datos && $movimiento->estatus != 'CONF'){
                             $response_estatus = false;
                             $mensaje = 'El tipo de movimiento no permite este nivel de modificación.';
                             break 2;
@@ -775,7 +774,8 @@ class ModificacionMovimientosController extends Controller{
                                 $registro_original['salidas_seleccionadas'] = [];
                                 $registro_modificado['salidas_seleccionadas'] = [];
 
-                                $salidas_eliminar_stock = MovimientoArticulo::with('movimiento.modificadoPor')->where('bien_servicio_id',$articulo_id)->whereIn('id',$salidas_seleccionadas)->where('stock_id',$stock_afectado->id)->where('direccion_movimiento','SAL')->get();
+                                $salidas_eliminar_stock = MovimientoArticulo::with(['movimiento'=>function($movimiento){ $movimiento->with('modificadoPor','tipoMovimiento'); }])->where('bien_servicio_id',$articulo_id)->whereIn('id',$salidas_seleccionadas)->where('stock_id',$stock_afectado->id)
+                                                                            ->where('direccion_movimiento','SAL')->get();
                                 for($k = 0; $k < count($salidas_eliminar_stock); $k++){
                                     $ma_eliminar = $salidas_eliminar_stock[$k];
                                     $registro_original['salidas_seleccionadas'][] = [
@@ -793,13 +793,18 @@ class ModificacionMovimientosController extends Controller{
                                         'deleted_at'                    => $ma_eliminar->deleted_at,
                                     ];
 
-                                    //TODO:: Checar si la salida es una transferemcia
-
                                     $conteos_movimiento = MovimientoArticulo::select(DB::raw('SUM(cantidad) as total_articulos'), DB::raw('COUNT(DISTINCT bien_servicio_id) as total_claves'), DB::raw('SUM(total_monto) as total_monto'))
                                                                             ->where('movimiento_id',$ma_eliminar->movimiento_id)->where('id','!=',$ma_eliminar->id)->first();
-                                    $ma_eliminar->movimiento->update(['total_articulos'=>$conteos_movimiento->total_articulos, 'total_claves'=>$conteos_movimiento->total_claves, 'total_monto'=>$conteos_movimiento->total_monto,'modificado_por_usuario_id'=>$loggedUser->id]);
+                                    $datos_actualizar_movimiento_salida = ['total_articulos'=>$conteos_movimiento->total_articulos, 'total_claves'=>$conteos_movimiento->total_claves, 'total_monto'=>$conteos_movimiento->total_monto,'modificado_por_usuario_id'=>$loggedUser->id];
+                                    //Checamos si la salida es una transferencia, si lo es lo marcamos como conflicto
+                                    if($ma_eliminar->movimiento->tipoMovimiento->clave == 'LMCN' && $movimiento->estatus != 'CONF'){
+                                        $datos_actualizar_movimiento_salida['estatus'] = 'CONF';
+                                        //Hay que crear una solicitud especial de modificación para este movimiento, tomando encuenta que se esta marcando como automatica
+                                        $this->crearSolicitudModificacionAutomatica($ma_eliminar->movimiento->id,$modificacion_padre);
+                                    }
+                                    $ma_eliminar->movimiento->update($datos_actualizar_movimiento_salida);
                                     $ma_eliminar->update(['user_id' => $loggedUser->id]);
-                                    $ma_eliminar->delete();
+                                    $ma_eliminar->delete();                                    
 
                                     $registro_modificado['salidas_seleccionadas'][] = [
                                         'id'                            => $ma_eliminar->id,
@@ -1088,6 +1093,7 @@ class ModificacionMovimientosController extends Controller{
                                                 'modificado_por_usuario_id' => $movimientos_recepcion[$k]->modificado_por_usuario_id,
                                                 'updated_at'                => $movimientos_recepcion[$k]->updated_at,
                                             ];
+                                            $this->crearSolicitudModificacionAutomatica($movimientos_recepcion[$k]->id,$modificacion_padre);
                                         }
 
                                         $bitacora_modificaciones[] = '      |--+ Se Marcan las entradas que sean recepciones de transferencias, del Stock modificado con Lote: '.$stock_db['lote'];
@@ -1283,7 +1289,7 @@ class ModificacionMovimientosController extends Controller{
                                         //Estatus de conflicto en las entradas/recepciones de las salidas(transferencias) de este stock
                                         $tipo_movimiento = TipoMovimiento::where('clave','RCPCN')->where('movimiento','ENT')->first();
     
-                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
+                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->whereIn('estatus',['FIN','CONF'])->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                         if(count($movimientos_recepcion)){
                                             $registro_original['movimientos_recepciones'] = [];
                                             $registro_modificado['movimientos_recepciones'] = [];
@@ -1304,6 +1310,7 @@ class ModificacionMovimientosController extends Controller{
                                                 /*$movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
                                                                                 ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);*/
                                                 $movimientos_recepcion[$k]->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
+                                                $this->crearSolicitudModificacionAutomatica($movimientos_recepcion[$k]->id,$modificacion_padre);
         
                                                 //$movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                                 //$registro_modificado['movimientos_recepciones'] = [];
@@ -1697,5 +1704,44 @@ class ModificacionMovimientosController extends Controller{
         ];
 
         return $plantilla;
+    }
+
+    private function crearSolicitudModificacionAutomatica($movimientoId,$modificacionPadre){
+        $fecha_hoy = date("Y-m-d");
+        $loggedUser = auth()->userOrFail();
+        $crear_modificacion = true;
+
+        $modificacion_anterior = MovimientoModificacion::where('movimiento_id',$movimientoId)->where('estatus','ATM')->first();
+
+        if($modificacion_anterior){
+            if( $modificacion_anterior->nivel_modificacion != $modificacionPadre->nivel_modificacion ||
+                $modificacion_anterior->solicitado_fecha != $modificacionPadre->solicitado_fecha ||
+                $modificacion_anterior->aprobado_fecha != $modificacionPadre->aprobado_fecha ||
+                $modificacion_anterior->solicitado_usuario_id != $modificacionPadre->solicitado_usuario_id ||
+                $modificacion_anterior->aprobado_usuario_id != $modificacionPadre->aprobado_usuario_id){
+                    //
+                    $modificacion_anterior->cancelado_usuario_id = $loggedUser->id;
+                    $modificacion_anterior->cancelado_fecha = $fecha_hoy;
+                    $modificacion_anterior->motivo_revertido = 'Cancelado debido a modificaciones posteriores';
+                    $modificacion_anterior->estatus = 'CAN';
+                    $modificacion_anterior->save();
+                }else{
+                    $crear_modificacion = false;
+                }
+        }
+        //
+        if($crear_modificacion){
+            $datos_modificacion = [
+                'movimiento_id' => $movimientoId,
+                'estatus' => 'ATM',
+                'nivel_modificacion' => $modificacionPadre->nivel_modificacion,
+                'motivo_modificacion' => 'Modificación generada automaticamente por una modificación aplicada a una transferencia',
+                'solicitado_fecha' => $fecha_hoy,
+                'aprobado_fecha' => $modificacionPadre->aprobado_fecha,
+                'solicitado_usuario_id' => $modificacionPadre->solicitado_usuario_id,
+                'aprobado_usuario_id' => $modificacionPadre->aprobado_usuario_id,
+            ];
+            $modificacion = MovimientoModificacion::create($datos_modificacion);
+        }
     }
 }

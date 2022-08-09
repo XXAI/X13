@@ -60,6 +60,7 @@ a + a::before {
 
 ::ng-deep .alert-nav-icon.alert-high .mat-badge-content{
     color: red !important;
+    left: 0px !important;
 }
 
 .panel-notificaciones{
