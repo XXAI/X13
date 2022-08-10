@@ -374,7 +374,7 @@ class ModificacionMovimientosController extends Controller{
                 $movimiento->movimientoHijo()->update($datos_movimiento_entrada);
             }
 
-
+            $otros_movimientos_afectados = [];
             if($modificacion->nivel_modificacion == 2){
                 $response = [ 'estatus'=> false ];
                 if($movimiento->direccion_movimiento == 'ENT'){
@@ -382,9 +382,7 @@ class ModificacionMovimientosController extends Controller{
                     if(isset($datos_modificados['programa_id']) && $datos_modificados['programa_id']){
                         $movimiento->programa_id = $datos_modificados['programa_id'];
                     }
-                    /*if(isset($datos_modificados['almacen_id']) && $datos_modificados['almacen_id']){
-                        $movimiento->almacen_id = $datos_modificados['almacen_id'];
-                    }*/
+                    
                     $response = $this->modificarArticulosEntrada($movimiento,$parametros['articulos_modificados'],$modificacion);
                 }
 
@@ -404,6 +402,8 @@ class ModificacionMovimientosController extends Controller{
 
                     $modificacion->modificacionesArticulos()->createMany($response['lista_modificaciones']);
                 }
+
+                $otros_movimientos_afectados = $response['movimientos_afectados'];
             }
 
             $datos_originales['modificado_por_usuario_id'] = $movimiento->modificado_por_usuario_id;
@@ -421,6 +421,7 @@ class ModificacionMovimientosController extends Controller{
             $movimiento->update($datos_modificados);
 
             DB::commit();
+            //DB::rollback();
 
             $movimiento = Movimiento::with(['unidadMedica','unidadMedicaMovimiento','almacenMovimiento','areaServicioMovimiento','programa','turno','paciente','personalMedico',
                                             'tipoMovimiento','almacen','proveedor',
@@ -432,7 +433,7 @@ class ModificacionMovimientosController extends Controller{
                                                 $modificacionActiva->with('solicitadoUsuario','aprobadoUsuario');
                                             }])->find($id);
 
-            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$modificacion]],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$modificacion, 'otros_movimientos_afectados'=>$otros_movimientos_afectados]],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -590,6 +591,8 @@ class ModificacionMovimientosController extends Controller{
                 return response()->json(['error'=>$response['mensaje'],'parametros'=>$response],HttpResponse::HTTP_OK);
             }
 
+            $otros_movimientos_afectados = $response['movimientos_afectados'];
+
             if(count($response['lista_modificaciones']) > 0){
                 $datos_originales = [];
                 $datos_modificados = [];
@@ -622,7 +625,7 @@ class ModificacionMovimientosController extends Controller{
 
             DB::commit();
 
-            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$response]],HttpResponse::HTTP_OK);
+            return response()->json(['data'=>['movimiento'=>$movimiento,'modificacion'=>$response, 'otros_movimientos_afectados'=>$otros_movimientos_afectados]],HttpResponse::HTTP_OK);
         }catch(\Exception $e){
             DB::rollback();
             return response()->json(['error'=>['message'=>$e->getMessage(),'line'=>$e->getLine()]], HttpResponse::HTTP_CONFLICT);
@@ -630,12 +633,12 @@ class ModificacionMovimientosController extends Controller{
     }
 
     private function modificarArticulosEntrada($movimiento,$lista_articulos,$modificacion_padre){
-        DB::enableQueryLog();
         $loggedUser = auth()->userOrFail();
         $response_estatus = true;
         $mensaje = '|-- Guardado con Éxito --|';
         $listado_modificaciones = []; //['tipo_modificacion'=>('ADD'|'DEL'|'UPD'), 'movimiento_articulo_id'=>0, 'registro_original'=>json, 'registro_modificado'=>json]
         $bitacora_modificaciones = [];
+        $movimientos_afectados = ['salidas'=>[],'recepciones'=>[],'total'=>0];
         $es_recepcion = false;
 
         $conteo_claves = 0;
@@ -677,7 +680,6 @@ class ModificacionMovimientosController extends Controller{
                 if(!isset($lote['programa_id']) || !$lote['programa_id']){
                     $lote['programa_id'] = $movimiento->programa_id;//Asignamos el id del programa del movimiento de entrada
                 }
-                //$lote['almacen_id'] = $movimiento->almacen_id;//Asignamos el id del almacen del movimiento de entrada
 
                 //Se obtiene el modo de entrada del lote
                 if(isset($lote['entrada_piezas']) && $lote['entrada_piezas']){
@@ -719,7 +721,6 @@ class ModificacionMovimientosController extends Controller{
 
                         /***  Datos originales del stock, para comparativas y calculos de existencias anteriores  ***/
                         $stock_db = [
-                            //'almacen_id'        =>$movimiento_articulo_db->stock->almacen_id,
                             'empaque_detalle_id'=>$movimiento_articulo_db->stock->empaque_detalle_id,
                             'programa_id'       =>$movimiento_articulo_db->stock->programa_id,
                             'marca_id'          =>$movimiento_articulo_db->stock->marca_id,
@@ -738,7 +739,7 @@ class ModificacionMovimientosController extends Controller{
                             }
                         }
 
-                        /***  Si hay datos a modificar en los lotes y el movimieto es de tipo recepción, regresar error, ya que las recepciónes solo deben poder modificar la cantidad recibida  ***/
+                        /***  Si hay datos a modificar en los lotes y el movimieto es de tipo recepción, regresar error, ya que las recepciónes solo deben poder modificar la cantidad recibida, a menos que se trate de una recepción en conflicto  ***/
                         if($movimiento->tipoMovimiento->clave == 'RCPCN' && $actualizar_datos && $movimiento->estatus != 'CONF'){
                             $response_estatus = false;
                             $mensaje = 'El tipo de movimiento no permite este nivel de modificación.';
@@ -796,13 +797,43 @@ class ModificacionMovimientosController extends Controller{
                                     $conteos_movimiento = MovimientoArticulo::select(DB::raw('SUM(cantidad) as total_articulos'), DB::raw('COUNT(DISTINCT bien_servicio_id) as total_claves'), DB::raw('SUM(total_monto) as total_monto'))
                                                                             ->where('movimiento_id',$ma_eliminar->movimiento_id)->where('id','!=',$ma_eliminar->id)->first();
                                     $datos_actualizar_movimiento_salida = ['total_articulos'=>$conteos_movimiento->total_articulos, 'total_claves'=>$conteos_movimiento->total_claves, 'total_monto'=>$conteos_movimiento->total_monto,'modificado_por_usuario_id'=>$loggedUser->id];
-                                    //Checamos si la salida es una transferencia, si lo es lo marcamos como conflicto
-                                    if($ma_eliminar->movimiento->tipoMovimiento->clave == 'LMCN' && $movimiento->estatus != 'CONF'){
-                                        $datos_actualizar_movimiento_salida['estatus'] = 'CONF';
-                                        //Hay que crear una solicitud especial de modificación para este movimiento, tomando encuenta que se esta marcando como automatica
-                                        $this->crearSolicitudModificacionAutomatica($ma_eliminar->movimiento->id,$modificacion_padre);
-                                    }
                                     $ma_eliminar->movimiento->update($datos_actualizar_movimiento_salida);
+                                    //Checamos si la salida es una transferencia, y si esta concluida, marcamos la recepción como un conflicto
+                                    if($ma_eliminar->movimiento->tipoMovimiento->clave == 'LMCN' && $movimiento->estatus == 'FIN'){
+                                        $movimiento_recepion = Movimiento::with('almacen','unidadMedica','tipoMovimiento')->where('movimiento_padre_id',$ma_eliminar->movimiento->id)->where('direccion_movimiento','ENT')->where('estatus','FIN')->first();
+                                        $registro_original['movimientos_recepciones'][] = [
+                                            'id'                        => $movimiento_recepion->id,
+                                            'folio'                     => $movimiento_recepion->folio,
+                                            'estatus'                   => $movimiento_recepion->estatus,
+                                            'modificado_por_usuario_id' => $movimiento_recepion->modificado_por_usuario_id,
+                                            'updated_at'                => $movimiento_recepion->updated_at,
+                                        ];
+                                        $movimiento_recepion->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
+                                        $registro_modificado['movimientos_recepciones'][] = [
+                                            'id'                        => $movimiento_recepion->id,
+                                            'folio'                     => $movimiento_recepion->folio,
+                                            'estatus'                   => $movimiento_recepion->estatus,
+                                            'modificado_por_usuario_id' => $movimiento_recepion->modificado_por_usuario_id,
+                                            'updated_at'                => $movimiento_recepion->updated_at,
+                                        ];
+                                        //Hay que crear una solicitud especial de modificación para este movimiento, tomando encuenta que se esta marcando como automatica
+                                        $this->crearSolicitudModificacionAutomatica($movimiento_recepion->id,$modificacion_padre);
+                                        if(!isset($movimientos_afectados['recepciones'][$movimiento_recepion->id])){
+                                            $movimientos_afectados['recepciones'][$movimiento_recepion->id] = [
+                                                'id'                        => $movimiento_recepion->id,
+                                                'folio'                     => $movimiento_recepion->folio,
+                                                'fecha_movimiento'          => $movimiento_recepion->fecha_movimiento,
+                                                'direccion_movimiento'      => $movimiento_recepion->direccion_movimiento,
+                                                'tipo_movimiento'           => $movimiento_recepion->tipoMovimiento->descripcion,
+                                                'documento_folio'           => $movimiento_recepion->documento_folio,
+                                                'referencia_folio'          => $movimiento_recepion->referencia_folio,
+                                                'referencia_fecha'          => $movimiento_recepion->referencia_fecha,
+                                                'estatus'                   => $movimiento_recepion->estatus,
+                                                'almacen'                   => $movimiento_recepion->almacen->nombre,
+                                                'unidad_medica'             => $movimiento_recepion->unidadMedica->nombre,
+                                            ];
+                                        }
+                                    }
                                     $ma_eliminar->update(['user_id' => $loggedUser->id]);
                                     $ma_eliminar->delete();                                    
 
@@ -821,7 +852,21 @@ class ModificacionMovimientosController extends Controller{
                                         'deleted_at'                    => $ma_eliminar->deleted_at,
                                     ];
 
-                                    //TODO:: calcular el total de salidas por pieza
+                                    if(!isset($movimientos_afectados['salidas'][$ma_eliminar->movimiento->id])){
+                                        $movimientos_afectados['salidas'][$ma_eliminar->movimiento->id] = [
+                                            'id'                        => $ma_eliminar->movimiento->id,
+                                            'folio'                     => $ma_eliminar->movimiento->folio,
+                                            'fecha_movimiento'          => $ma_eliminar->movimiento->fecha_movimiento,
+                                            'direccion_movimiento'      => $ma_eliminar->movimiento->direccion_movimiento,
+                                            'documento_folio'           => $ma_eliminar->movimiento->documento_folio,
+                                            'referencia_folio'          => $ma_eliminar->movimiento->referencia_folio,
+                                            'referencia_fecha'          => $ma_eliminar->movimiento->referencia_fecha,
+                                            'estatus'                   => $ma_eliminar->movimiento->estatus,
+                                            'tipo_movimiento'           => $ma_eliminar->movimiento->tipoMovimiento->descripcion,
+                                        ];
+                                    }
+
+                                    //Sumar el total de salidas por pieza
                                     if($ma_eliminar->modo_movimiento == 'UNI'){
                                         $total_salidas_pzas += $ma_eliminar->cantidad;
                                     }else{
@@ -846,6 +891,12 @@ class ModificacionMovimientosController extends Controller{
 
                             $stock_afectado->existencia_piezas -= ($cantidad_entrada_pzas - $total_salidas_pzas);
                             $stock_afectado->existencia = floor($stock_afectado->existencia_piezas / $piezas_x_empaque);
+
+                            if($stock_afectado->existencia_piezas < 0){
+                                $response_estatus = false;
+                                $mensaje = 'Las existencias del articulo con Clave: '.$articulo_clave.' y Lote: '.$lote['lote'].' resultan negativas';
+                                break 2;
+                            }
 
                             if($stock_afectado->resguardo_piezas){
                                 if($stock_afectado->resguardo_piezas > $stock_afectado->existencia_piezas){
@@ -1083,7 +1134,7 @@ class ModificacionMovimientosController extends Controller{
                                         $movimientos_modificados = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','FIN')->where('direccion_movimiento','ENT')->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)
                                                                             ->update(['estatus'=>'CONF','modificado_por_usuario_id'=>$loggedUser->id]);
 
-                                        $movimientos_recepcion = Movimiento::where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
+                                        $movimientos_recepcion = Movimiento::with('almacen','unidadMedica','tipoMovimiento')->where('tipo_movimiento_id',$tipo_movimiento->id)->where('estatus','CONF')->where('modificado_por_usuario_id',$loggedUser->id)->whereIn('movimiento_padre_id',$lista_movimientos_transferencias)->get();
                                         $registro_modificado['movimientos_recepciones'] = [];
                                         for($k = 0; $k < count($movimientos_recepcion); $k++){
                                             $registro_modificado['movimientos_recepciones'][] = [
@@ -1094,6 +1145,21 @@ class ModificacionMovimientosController extends Controller{
                                                 'updated_at'                => $movimientos_recepcion[$k]->updated_at,
                                             ];
                                             $this->crearSolicitudModificacionAutomatica($movimientos_recepcion[$k]->id,$modificacion_padre);
+                                            if(!isset($movimientos_afectados['recepciones'][$movimientos_recepcion[$k]->id])){
+                                                $movimientos_afectados['recepciones'][$movimientos_recepcion[$k]->id] = [
+                                                    'id'                        => $movimientos_recepcion[$k]->id,
+                                                    'folio'                     => $movimientos_recepcion[$k]->folio,
+                                                    'fecha_movimiento'          => $movimientos_recepcion[$k]->fecha_movimiento,
+                                                    'direccion_movimiento'      => $movimientos_recepcion[$k]->direccion_movimiento,
+                                                    'tipo_movimiento'           => $movimientos_recepcion[$k]->tipoMovimiento->descripcion,
+                                                    'documento_folio'           => $movimientos_recepcion[$k]->documento_folio,
+                                                    'referencia_folio'          => $movimientos_recepcion[$k]->referencia_folio,
+                                                    'referencia_fecha'          => $movimientos_recepcion[$k]->referencia_fecha,
+                                                    'estatus'                   => $movimientos_recepcion[$k]->estatus,
+                                                    'almacen'                   => $movimientos_recepcion[$k]->almacen->nombre,
+                                                    'unidad_medica'             => $movimientos_recepcion[$k]->unidadMedica->nombre,
+                                                ];
+                                            }
                                         }
 
                                         $bitacora_modificaciones[] = '      |--+ Se Marcan las entradas que sean recepciones de transferencias, del Stock modificado con Lote: '.$stock_db['lote'];
@@ -1261,7 +1327,7 @@ class ModificacionMovimientosController extends Controller{
 
                                     MovimientoArticulo::where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('direccion_movimiento','SAL')->where('stock_id',$movimiento_articulo_db->stock_id)->update(['stock_id'=>$nuevo_stock->id]);
 
-                                    $salidas_seleccionadas = MovimientoArticulo::with('movimiento')->where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('direccion_movimiento','SAL')->where('stock_id',$nuevo_stock->id)->get();
+                                    $salidas_seleccionadas = MovimientoArticulo::with(['movimiento'=>function($movimiento){ $movimiento->with('tipoMovimiento'); }])->where('bien_servicio_id',$articulo_id)->whereIn('id',$lote['lista_salidas'])->where('direccion_movimiento','SAL')->where('stock_id',$nuevo_stock->id)->get();
                                     for($k = 0; $k < count($salidas_seleccionadas); $k++){
                                         $registro_modificado['salidas_seleccionadas'][] = [
                                             'id'                    => $salidas_seleccionadas[$k]->id,
@@ -1272,6 +1338,20 @@ class ModificacionMovimientosController extends Controller{
                                             'stock_id'              => $salidas_seleccionadas[$k]->stock_id,
                                             'cantidad'              => $salidas_seleccionadas[$k]->cantidad,
                                         ];
+
+                                        if(!isset($movimientos_afectados['salidas'][$salidas_seleccionadas[$k]->movimiento->id])){
+                                            $movimientos_afectados['salidas'][$salidas_seleccionadas[$k]->movimiento->id] = [
+                                                'id'                        => $salidas_seleccionadas[$k]->movimiento->id,
+                                                'folio'                     => $salidas_seleccionadas[$k]->movimiento->folio,
+                                                'fecha_movimiento'          => $salidas_seleccionadas[$k]->movimiento->fecha_movimiento,
+                                                'direccion_movimiento'      => $salidas_seleccionadas[$k]->movimiento->direccion_movimiento,
+                                                'documento_folio'           => $salidas_seleccionadas[$k]->movimiento->documento_folio,
+                                                'referencia_folio'          => $salidas_seleccionadas[$k]->movimiento->referencia_folio,
+                                                'referencia_fecha'          => $salidas_seleccionadas[$k]->movimiento->referencia_fecha,
+                                                'estatus'                   => $salidas_seleccionadas[$k]->movimiento->estatus,
+                                                'tipo_movimiento'           => $salidas_seleccionadas[$k]->movimiento->tipoMovimiento->descripcion,
+                                            ];
+                                        }
                                     }
 
                                     $bitacora_modificaciones[] = '      |--+ Se Modificaron las Salidas del Lote: '.$lote['lote'];
@@ -1603,16 +1683,12 @@ class ModificacionMovimientosController extends Controller{
         ];
 
         $bitacora_modificaciones[] = '|--+ Actualizando Movmiento: '.$movimiento->folio;
-        $query_log = DB::getQueryLog();
-        $queries = [];
-        for($i = 0; $i < count($query_log); $i++){
-            $query = $query_log[$i]['query'];
-            if(strpos($query,'select') === false){
-                $queries[] = $query_log[$i];
-            }
-        }
 
-        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje,'log'=>$queries, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento];
+        $otros_movimientos_afectados = [];
+        $otros_movimientos_afectados['lista_movimientos'] = array_values($movimientos_afectados['salidas']) + array_values($movimientos_afectados['recepciones']);
+        $otros_movimientos_afectados['total'] = count($movimientos_afectados['salidas']) + count($movimientos_afectados['recepciones']);
+
+        return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento, 'movimientos_afectados'=>$otros_movimientos_afectados];
     }
 
     private function ajustarResguardos($stock){

@@ -120,7 +120,7 @@
 
                     <ng-container matColumnDef="folio">
                         <th mat-header-cell *matHeaderCellDef> Folio - Tipo Entrada </th>
-                        <td mat-cell *matCellDef="let row" width="1" [routerLink]="'/almacen/entradas/editar/'+row.id" style="cursor:pointer;">
+                        <td mat-cell *matCellDef="let row" width="1" [routerLink]="'/almacen/entradas/editar/'+row.id" class="open-link">
                             <span style="white-space: nowrap;">{{ row.folio }}</span><br>
                             <span class="added-data">
                                 {{(row.tipo_movimiento)?row.tipo_movimiento:'Sin Tipo'}}&nbsp;

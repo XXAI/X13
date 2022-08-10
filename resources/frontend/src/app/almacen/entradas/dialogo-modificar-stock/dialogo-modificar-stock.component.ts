@@ -81,12 +81,15 @@ export class DialogoModificarStockComponent implements OnInit {
 
   subDialogRef: any;
 
-  listaEstatusIconos: any = { 'BOR':'content_paste',  'FIN':'assignment_turned_in',   'CAN':'cancel',     'PERE':'pending_actions',       'SOL':'edit_notifications',         'MOD':'note_alt'};
-  listaEstatusClaves: any = { 'BOR':'borrador',       'FIN':'concluido',              'CAN':'cancelado',  'PERE':'pendiente-recepcion',   'SOL':'peticion-modificacion',      'MOD':'modificacion-aprobada'};
-  listaEstatusLabels: any = { 'BOR':'Borrador',       'FIN':'Concluido',              'CAN':'Cancelado',  'PERE':'Pendiente de Recepción','SOL':'Petición de Modificación',   'MOD':'Modificación Activa'};
+  listaEstatusIconos: any;
+  listaEstatusClaves: any;
+  listaEstatusLabels: any;
 
   ngOnInit(): void {
-    console.log(this.data);
+    this.listaEstatusIconos = this.almacenService.listaIconos;
+    this.listaEstatusClaves = this.almacenService.listaClaves;
+    this.listaEstatusLabels = this.almacenService.listaEtiquetas;
+
     let formConfig:any;
     this.fechaActual = new Date();
     this.salidasSeleccionadas = {};

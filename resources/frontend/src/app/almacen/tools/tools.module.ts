@@ -7,10 +7,11 @@ import { DialogoModificarMovimientoComponent } from './dialogo-modificar-movimie
 import { WidgetBuscadorArticulosComponent } from './widget-buscador-articulos/widget-buscador-articulos.component';
 import { DialogoPreviewMovimientoComponent } from './dialogo-preview-movimiento/dialogo-preview-movimiento.component';
 import { DialogoHistorialModificacionesComponent } from './dialogo-historial-modificaciones/dialogo-historial-modificaciones.component';
+import { DialogoMovimientosAfectadosComponent } from './dialogo-movimientos-afectados/dialogo-movimientos-afectados.component';
 
 
 @NgModule({
-  declarations: [DialogoCancelarMovimientoComponent, DialogoModificarMovimientoComponent, WidgetBuscadorArticulosComponent, DialogoPreviewMovimientoComponent, DialogoHistorialModificacionesComponent],
+  declarations: [DialogoCancelarMovimientoComponent, DialogoModificarMovimientoComponent, WidgetBuscadorArticulosComponent, DialogoPreviewMovimientoComponent, DialogoHistorialModificacionesComponent, DialogoMovimientosAfectadosComponent],
   imports: [
     CommonModule,
     SharedModule,

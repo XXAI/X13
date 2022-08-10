@@ -1,0 +1,102 @@
+::ng-deep .no-padding-dialog > .mat-dialog-container{
+    padding:0px;
+}
+
+.movimiento-toolbar:not(.mat-button){
+    background-color: #4a4848;
+    color:whitesmoke;
+}
+
+.label-info{
+    cursor: default;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.label-info .estatus-icon{
+    background-color: whitesmoke;
+    border-radius: 6px;
+    margin-right: 8px;
+}
+
+.boton-accion{
+    border-left: 1px solid whitesmoke;
+    background-color: #787878;
+    border-radius: 0px;
+}
+
+.boton-accion-medio{
+    border-radius: 0px;
+}
+
+.tabla-movimientos{
+    overflow: auto;
+}
+
+.lista-movimientos-table{
+    width: 100%;
+    cursor: default;
+}
+
+.lista-movimientos-table th{
+    text-align: center;
+    background-color: #282525;
+    color:whitesmoke;
+}
+
+.lista-movimientos-table tr.mat-header-row {
+    height: 35px;
+}
+
+.lista-movimientos-table tr.mat-row:hover {
+    background-color: #F5F5F5;
+}
+
+.lista-movimientos-table tr.mat-row.salida {
+    font-style: italic;
+}
+
+.lista-movimientos-table tr.mat-row td {
+    color:rgba(0, 0, 0, 0.65);
+}
+
+.no-results-found{
+    text-align: center;
+    font-style: italic;
+}
+
+.hide{
+    display: none;
+}
+
+.added-data{
+    font-size: smaller;
+}
+
+.pendiente-recepcion-color > td .mat-icon{
+    color:#dc8503;
+}
+
+.concluido-color > td .mat-icon{
+    color:#07a8ff;
+}
+
+.cancelado-color > td .mat-icon{
+    color:#ff2a2a;
+}
+
+.conflicto-color > td .mat-icon{
+    color:#eb0808;
+}
+
+.peticion-modificacion-color > td .mat-icon{
+    color:#b000e6;
+}
+
+.modificacion-aprobada-color > td .mat-icon{
+    color:#b000e6;
+}

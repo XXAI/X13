@@ -27,6 +27,7 @@ import { MovimientosLocalStorageService } from '../../tools/movimientos-local-st
 import { AlertPanelComponent } from 'src/app/shared/components/alert-panel/alert-panel.component';
 import { DialogoHistorialModificacionesComponent } from '../../tools/dialogo-historial-modificaciones/dialogo-historial-modificaciones.component';
 import { DialogoResolverConflictoComponent } from '../dialogo-resolver-conflicto/dialogo-resolver-conflicto.component';
+import { DialogoMovimientosAfectadosComponent } from '../../tools/dialogo-movimientos-afectados/dialogo-movimientos-afectados.component';
 
 @Component({
   selector: 'app-entrada',
@@ -1074,6 +1075,16 @@ export class EntradaComponent implements OnInit {
                 this.verBoton.agregar_articulos = false;
                 this.verBoton.concluir_modificacion = false;
                 this.verBoton.modificar_entrada = true;
+              }
+
+              if(response.data.otros_movimientos_afectados.total > 0){
+                const dialogRef = this.dialog.open(DialogoMovimientosAfectadosComponent, {
+                  width: '80%',
+                  height:'80%',
+                  disableClose: false,
+                  panelClass: 'no-padding-dialog',
+                  data:{resultadoModificacion: response.data.otros_movimientos_afectados}
+                });
               }
             }
             this.isSaving = false;

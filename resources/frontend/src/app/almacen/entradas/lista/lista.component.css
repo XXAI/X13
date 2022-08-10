@@ -31,6 +31,12 @@
   font-size: smaller;
 }
 
+.open-link:hover{
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 table {
   width: 100%;
 }
