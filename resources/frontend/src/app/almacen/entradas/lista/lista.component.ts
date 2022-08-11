@@ -325,7 +325,8 @@ export class ListaComponent implements OnInit {
 
       dialogRef.afterClosed().subscribe(dialogResponse => {
         if(dialogResponse){
-          console.log('dialog response:',dialogResponse);
+          //this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>this.router.navigate(['/almacen/entradas']));
+          this.loadListadoMovimientos();
         }
       });
     //}else{

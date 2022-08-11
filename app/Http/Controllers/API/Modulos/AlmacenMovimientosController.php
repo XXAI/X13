@@ -406,7 +406,7 @@ class AlmacenMovimientosController extends Controller{
                                         ->with(['articulo'=>function($articulos)use($loggedUser){
                                             $articulos->datosDescripcion($loggedUser->unidad_medica_asignada_id);
                                         },'stock'=>function($stock){
-                                            $stock->with('marca','empaqueDetalle.unidadMedida')->withTrashed();
+                                            $stock->with('marca','empaqueDetalle.unidadMedida','programa')->withTrashed();
                                         },'cartaCanje']);
                         },'listaArticulosBorrador'=>function($listaBorrador)use($loggedUser){ 
                             return $listaBorrador->with(['articulo'=>function($articulos)use($loggedUser){

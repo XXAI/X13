@@ -2,9 +2,7 @@ import { Component, OnInit, SimpleChange, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlmacenService } from '../../almacen.service';
 import { EntradasService } from '../entradas.service';
-import { SharedService } from '../../../shared/shared.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatDrawer } from '@angular/material/sidenav';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -54,7 +52,6 @@ export class EntradaComponent implements OnInit {
     private authService: AuthService,
     private almacenService: AlmacenService, 
     private entradasService: EntradasService, 
-    private sharedService: SharedService, 
     private dialog: MatDialog, 
     private route: ActivatedRoute,
     private router: Router,
@@ -904,11 +901,11 @@ export class EntradaComponent implements OnInit {
 
       dialogRef.afterClosed().subscribe(dialogResponse => {
         if(dialogResponse){
-          console.log('dialog response:',dialogResponse);
+          this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>this.router.navigate(['/almacen/entradas/editar/'+this.datosEntrada.id]));
         }
       });
     }else{
-      console.log('no encotnrado');
+      console.log('no encontrado');
     }
   }
 

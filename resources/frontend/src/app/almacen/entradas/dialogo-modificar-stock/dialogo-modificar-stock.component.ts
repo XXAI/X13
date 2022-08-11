@@ -15,6 +15,7 @@ export interface DialogData {
   stock: any;
   articulo: any;
   fecha_movimiento: Date;
+  modo_conflicto: boolean;
 }
 
 @Component({
@@ -38,6 +39,8 @@ export class DialogoModificarStockComponent implements OnInit {
 
   isLoading: boolean;
   isLoadingMovimientos: boolean;
+
+  modoSeleccion: boolean;
 
   descartarCambios: boolean;
 
@@ -86,6 +89,8 @@ export class DialogoModificarStockComponent implements OnInit {
   listaEstatusLabels: any;
 
   ngOnInit(): void {
+    this.modoSeleccion = this.data.modo_conflicto;
+
     this.listaEstatusIconos = this.almacenService.listaIconos;
     this.listaEstatusClaves = this.almacenService.listaClaves;
     this.listaEstatusLabels = this.almacenService.listaEtiquetas;
@@ -110,53 +115,50 @@ export class DialogoModificarStockComponent implements OnInit {
       'SAL':{'nrm':0,'uni':0,'total':0}
     };
     
-    if(this.data.articulo.tipo_formulario == 'MEDS'){
-      formConfig = {
-        id:[''],
-        stock_id:[''],
-        programa_id:[''],
-        almacen_id:[''],
-        lote:['',Validators.required],
-        codigo_barras:[''],
-        cantidad:['',Validators.required],
-        entrada_piezas:[''],
-        empaque_detalle_id:[''],
-        precio_unitario:[''],
-        iva:[''],
-      };
-      
-      if(this.data.articulo.tiene_fecha_caducidad > 0){
-        formConfig.fecha_caducidad = ['',[Validators.required,CustomValidator.isValidDate()]];
-      }else{
-        formConfig.fecha_caducidad = ['',CustomValidator.isValidDate()];
+    if(!this.modoSeleccion){
+      if(this.data.articulo.tipo_formulario == 'MEDS'){
+        formConfig = {
+          id:[''],
+          stock_id:[''],
+          programa_id:[''],
+          almacen_id:[''],
+          lote:['',Validators.required],
+          codigo_barras:[''],
+          cantidad:['',Validators.required],
+          entrada_piezas:[''],
+          empaque_detalle_id:[''],
+          precio_unitario:[''],
+          iva:[''],
+        };
+        
+        if(this.data.articulo.tiene_fecha_caducidad > 0){
+          formConfig.fecha_caducidad = ['',[Validators.required,CustomValidator.isValidDate()]];
+        }else{
+          formConfig.fecha_caducidad = ['',CustomValidator.isValidDate()];
+        }
+      }else if(this.data.articulo.tipo_formulario == 'ACTVO'){
+        formConfig = {
+          id:[''],
+          stock_id:[''],
+          programa_id:[''],
+          almacen_id:[''],
+          marca:[''],
+          marca_id:[''],
+          modelo: [''],
+          no_serie:['',Validators.required],
+          cantidad:['',Validators.required],
+          entrada_piezas:[''],
+          empaque_detalle_id:[''],
+          precio_unitario:[''],
+          iva:[''],
+        };
       }
-    }else if(this.data.articulo.tipo_formulario == 'ACTVO'){
-      formConfig = {
-        id:[''],
-        stock_id:[''],
-        programa_id:[''],
-        almacen_id:[''],
-        marca:[''],
-        marca_id:[''],
-        modelo: [''],
-        no_serie:['',Validators.required],
-        cantidad:['',Validators.required],
-        entrada_piezas:[''],
-        empaque_detalle_id:[''],
-        precio_unitario:[''],
-        iva:[''],
-      };
-    }
     
-    this.formStock = this.formBuilder.group(formConfig);
+      this.formStock = this.formBuilder.group(formConfig);
 
-    if(this.data.stock.precio_unitario == 0){
-      this.data.stock.precio_unitario = null;
-    }
-
-    //let result = this.verificarFechaCaducidad(this.data.stock.fecha_caducidad);
-    //this.estatusCaducidad = result.estatus; //Caducado
-    //this.etiquetaEstatus = result.label;
+      if(this.data.stock.precio_unitario == 0){
+        this.data.stock.precio_unitario = null;
+      }
 
     /*let item = JSON.parse(JSON.stringify(this.data.stock));
     item.memo_fecha = new Date(item.memo_fecha + 'T00:00:00');
@@ -164,92 +166,101 @@ export class DialogoModificarStockComponent implements OnInit {
       item.fecha_caducidad = new Date(item.fecha_caducidad + 'T00:00:00');
     }*/
     
-    if(this.data.stock.memo_folio){
-      this.toggleCartaCanje(true);
-    }else{
-      this.toggleCartaCanje(false);
-    }
-
-    if(this.data.stock.respaldo){
-      this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock.respaldo));
-      this.accionLote = this.data.stock.accion_lote;
-      this.accionSalidas = this.data.stock.accion_salidas;
-      if(this.accionSalidas != 'none' && this.accionSalidas != ''){
-        this.seleccionSalidasActivada = true;
+      if(this.data.stock.memo_folio){
+        this.toggleCartaCanje(true);
+      }else{
+        this.toggleCartaCanje(false);
       }
-    }else{
-      this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock));
-    }
+
+      if(this.data.stock.respaldo){
+        this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock.respaldo));
+        this.accionLote = this.data.stock.accion_lote;
+        this.accionSalidas = this.data.stock.accion_salidas;
+        if(this.accionSalidas != 'none' && this.accionSalidas != ''){
+          this.seleccionSalidasActivada = true;
+        }
+      }else{
+        this.respaldoStock = JSON.parse(JSON.stringify(this.data.stock));
+      }
     
-    if(this.accionLote && this.accionLote != 'delete'){
-      this.descartarCambios = true;
-    }
+      if(this.accionLote && this.accionLote != 'delete'){
+        this.descartarCambios = true;
+      }
     
-    this.formStock.valueChanges.subscribe(
-      changes => {
-        let cambios_datos:boolean;
-        let cambios_cantidad:boolean;
-        let cambios_precio:boolean;
-        for(const key in changes){
-          if(this.respaldoStock[key] != changes[key]){
-            if(key == 'cantidad' || key == 'entrada_piezas'){
-              cambios_cantidad = true;
-            }else if(key != 'precio_unitario' && key != 'iva'){
-              cambios_datos = true;
-            }else{
-              cambios_precio = true;
+      this.formStock.valueChanges.subscribe(
+        changes => {
+          let cambios_datos:boolean;
+          let cambios_cantidad:boolean;
+          let cambios_precio:boolean;
+          for(const key in changes){
+            if(this.respaldoStock[key] != changes[key]){
+              if(key == 'cantidad' || key == 'entrada_piezas'){
+                cambios_cantidad = true;
+              }else if(key != 'precio_unitario' && key != 'iva'){
+                cambios_datos = true;
+              }else{
+                cambios_precio = true;
+              }
             }
           }
-        }
 
-        if(cambios_datos && this.resumenMovimientos.ENT.total > 0){
-          this.accionLote = 'create';
-        }else if(cambios_datos && this.resumenMovimientos.ENT.total == 0){
-          this.accionLote = 'edit';
-        }else if(cambios_cantidad || cambios_precio){
-          this.accionLote = 'edit';
-        }else{
-          this.accionLote = '';
-        }
-
-        if(this.accionLote == 'create' && this.resumenMovimientos.SAL.total > 0){
-          this.accionSalidas = 'select';
-          this.seleccionSalidasActivada = true;
-
-          if(this.resumenMovimientos.SAL.total > this.resumenMovimientos.ENT.total){
-            //Aqui hacer validaciones para que tenga que seleccionar salidas de manera obligatoria, o marcar error
+          if(cambios_datos && this.resumenMovimientos.ENT.total > 0){
+            this.accionLote = 'create';
+          }else if(cambios_datos && this.resumenMovimientos.ENT.total == 0){
+            this.accionLote = 'edit';
+          }else if(cambios_cantidad || cambios_precio){
+            this.accionLote = 'edit';
+          }else{
+            this.accionLote = '';
           }
-        }else if(this.accionLote == 'edit' && this.resumenMovimientos.SAL.total > 0){
-          this.seleccionSalidasActivada = false;
-          if(cambios_cantidad){
-            //this.accionSalidas = 'modify';
-            //validar existencias despues del cambio en base a las salidas
+
+          if(this.accionLote == 'create' && this.resumenMovimientos.SAL.total > 0){
+            this.accionSalidas = 'select';
+            this.seleccionSalidasActivada = true;
+
+            if(this.resumenMovimientos.SAL.total > this.resumenMovimientos.ENT.total){
+              //Aqui hacer validaciones para que tenga que seleccionar salidas de manera obligatoria, o marcar error
+            }
+          }else if(this.accionLote == 'edit' && this.resumenMovimientos.SAL.total > 0){
+            this.seleccionSalidasActivada = false;
+            if(cambios_cantidad){
+              //this.accionSalidas = 'modify';
+              //validar existencias despues del cambio en base a las salidas
+            }
+          }else{
+            this.seleccionSalidasActivada = false;
           }
-        }else{
-          this.seleccionSalidasActivada = false;
-        }
 
-        if(!this.seleccionSalidasActivada){
-          this.accionSalidas = '';
-        }
+          if(!this.seleccionSalidasActivada){
+            this.accionSalidas = '';
+          }
 
-        this.infoMessage = [];
-        
-        if(this.respaldoStock['programa_id'] != changes['programa_id']){
-          this.infoMessage.push('El Programa ha sido modificado');
-        }
+          this.infoMessage = [];
+          
+          if(this.respaldoStock['programa_id'] != changes['programa_id']){
+            this.infoMessage.push('El Programa ha sido modificado');
+          }
 
-        if(this.respaldoStock['almacen_id'] != changes['almacen_id']){
-          this.infoMessage.push('El Almacen ha sido modificado');
-        }
+          if(this.respaldoStock['almacen_id'] != changes['almacen_id']){
+            this.infoMessage.push('El Almacen ha sido modificado');
+          }
 
-        if(cambios_cantidad || cambios_datos || cambios_precio){
-          this.descartarCambios = true;
-        }
+          if(cambios_cantidad || cambios_datos || cambios_precio){
+            this.descartarCambios = true;
+          }
 
-        this.calcularExistencias();
-      }
-    );
+          this.calcularExistencias();
+        }
+      );
+    }else{
+      this.formStock = this.formBuilder.group({id:[''],cantidad:[''],entrada_piezas:['']});
+      let result = this.verificarFechaCaducidad(this.data.stock.fecha_caducidad);
+      this.estatusCaducidad = result.estatus;
+      this.seleccionSalidasActivada = true;
+      this.accionLote = this.data.stock.accion_lote;
+      //this.accionSalidas = this.data.stock.accion_salidas;
+      //this.etiquetaEstatus = result.label;
+    }
 
     this.dataSourceMovimientos = new MatTableDataSource<any>([]);
     this.dataSourceMovimientos.paginator = this.lotesPaginator;
@@ -261,7 +272,7 @@ export class DialogoModificarStockComponent implements OnInit {
         if(response.error) {
           let errorMessage = response.error.message;
           //this.sharedService.showSnackBar(errorMessage, null, 3000);
-          //this.alertPanel.mostrarError('Error: '+errorMessage);
+          this.alertPanel.mostrarError('Error: '+errorMessage);
         } else {
           let index = 0;
           response.data.forEach(item => {
@@ -303,12 +314,21 @@ export class DialogoModificarStockComponent implements OnInit {
             }
           });
 
-          if(!this.respaldoStock.entrada_piezas){
-            this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad * this.piezasXEmpaque;
+          if(this.respaldoStock){
+            if(!this.respaldoStock.entrada_piezas){
+              this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad * this.piezasXEmpaque;
+            }else{
+              this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad;
+            }
           }else{
-            this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad;
+            console.log('new respalgo------');
+            if(!this.data.stock.entrada_piezas){
+              this.resumenMovimientos['ENT']['total'] -= this.data.stock.cantidad * this.piezasXEmpaque;
+            }else{
+              this.resumenMovimientos['ENT']['total'] -= this.data.stock.cantidad;
+            }
           }
-
+          
           this.resumenMovimientos['ENT']['uni'] -= (this.resumenMovimientos['ENT']['total'] % this.piezasXEmpaque);
           this.resumenMovimientos['ENT']['nrm'] += Math.floor(this.resumenMovimientos['ENT']['total'] / this.piezasXEmpaque);
 

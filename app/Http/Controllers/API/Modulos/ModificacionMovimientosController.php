@@ -800,7 +800,14 @@ class ModificacionMovimientosController extends Controller{
                                     $ma_eliminar->movimiento->update($datos_actualizar_movimiento_salida);
                                     //Checamos si la salida es una transferencia, y si esta concluida, marcamos la recepción como un conflicto
                                     if($ma_eliminar->movimiento->tipoMovimiento->clave == 'LMCN' && $movimiento->estatus == 'FIN'){
-                                        $movimiento_recepion = Movimiento::with('almacen','unidadMedica','tipoMovimiento')->where('movimiento_padre_id',$ma_eliminar->movimiento->id)->where('direccion_movimiento','ENT')->where('estatus','FIN')->first();
+                                        $movimiento_recepion = Movimiento::with('almacen','unidadMedica','tipoMovimiento')->where('movimiento_padre_id',$ma_eliminar->movimiento->id)->where('direccion_movimiento','ENT')->whereIn('estatus',['FIN','CONF'])->first();
+
+                                        if(!$movimiento_recepion){
+                                            $response_estatus = false;
+                                            $mensaje = 'No se encontró la recepción del movimiento con folio: '.$ma_eliminar->movimiento->folio;
+                                            break 2;
+                                        }
+
                                         $registro_original['movimientos_recepciones'][] = [
                                             'id'                        => $movimiento_recepion->id,
                                             'folio'                     => $movimiento_recepion->folio,
@@ -1685,7 +1692,7 @@ class ModificacionMovimientosController extends Controller{
         $bitacora_modificaciones[] = '|--+ Actualizando Movmiento: '.$movimiento->folio;
 
         $otros_movimientos_afectados = [];
-        $otros_movimientos_afectados['lista_movimientos'] = array_values($movimientos_afectados['salidas']) + array_values($movimientos_afectados['recepciones']);
+        $otros_movimientos_afectados['lista_movimientos'] = array_merge(array_values($movimientos_afectados['salidas']), array_values($movimientos_afectados['recepciones']));
         $otros_movimientos_afectados['total'] = count($movimientos_afectados['salidas']) + count($movimientos_afectados['recepciones']);
 
         return ['estatus'=>$response_estatus, 'mensaje'=>$mensaje, 'data'=>$bitacora_modificaciones, 'lista_modificaciones'=>$listado_modificaciones, 'datos_modificados_movimiento'=>$datos_movimiento, 'movimientos_afectados'=>$otros_movimientos_afectados];

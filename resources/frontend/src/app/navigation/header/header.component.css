@@ -54,13 +54,12 @@ a + a::before {
 }
 
 .alert-high{
-    background-color: rgba(255, 255, 0, 0.95);
+    text-shadow: -1px -1px 0 rgb(251, 255, 19), 1px -1px 0 rgb(251, 255, 19), -1px 1px 0 rgb(251, 255, 19), 1px 1px 0 rgb(251, 255, 19);
     color: red;
 }
 
 ::ng-deep .alert-nav-icon.alert-high .mat-badge-content{
     color: red !important;
-    left: 0px !important;
 }
 
 .panel-notificaciones{

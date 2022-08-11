@@ -106,6 +106,15 @@
     color:#ff2a2a;
 }
 
+.conflicto-color.elemento-actual > td{
+    background-color:#07a8ff !important;
+    color: white !important;
+}
+
+.conflicto-color > td .mat-icon{
+    color:#eb0808;
+}
+
 .peticion-modificacion-color > td .mat-icon{
     color:#b000e6;
 }

@@ -16,7 +16,7 @@
         <div fxFlex="none">
             <alert-panel></alert-panel>
         </div>
-        <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;">
+        <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;" *ngIf="!modoSeleccion">
             <div fxFlex="100" fxLayout="row raw" fxLayoutGap="2px" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
                 <mat-form-field fxFlex="none">
                     <mat-label>Lote</mat-label>
