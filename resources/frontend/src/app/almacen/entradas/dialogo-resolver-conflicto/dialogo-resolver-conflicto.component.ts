@@ -1,6 +1,6 @@
 import { AriaDescriber } from '@angular/cdk/a11y';
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MatDialogState, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -38,6 +38,8 @@ export class DialogoResolverConflictoComponent implements OnInit {
   datosEntrada:any;
   listaArticulos:any[];
 
+  subDialogRef:any;
+
   pageEvent: PageEvent;
   resultsLength: number = 0;
   currentPage: number = 0;
@@ -67,6 +69,7 @@ export class DialogoResolverConflictoComponent implements OnInit {
               clave: element.articulo.clave_local,
               nombre: element.articulo.articulo,
               tiene_fecha_caducidad: element.articulo.tiene_fecha_caducidad,
+              modo_movimiento: (element.modo_movimiento == 'UNI')?element.modo_movimiento:'NRM',
               entrada_piezas: (element.modo_movimiento == 'UNI')?true:false,
               descripcion: element.articulo.especificaciones,
               empaque_detalle_id: element.stock.empaque_detalle_id,
@@ -96,7 +99,7 @@ export class DialogoResolverConflictoComponent implements OnInit {
             }
 
             if(articulo){
-              if(articulo.lote != element.stock.lote || articulo.fecha_caducidad != element.stock.fecha_caducidad || articulo.codigo_barras != element.stock.codigo_barras || articulo.no_serie != element.stock.no_serie || articulo.modelo != element.stock.modelo || articulo.marca_id != element.stock.marca_id || articulo.empaque_detalle_id != element.stock.empaque_detalle_id || articulo.programa_id != element.stock.programa_id){
+              if(articulo.lote != element.stock.lote || articulo.fecha_caducidad != element.stock.fecha_caducidad || articulo.codigo_barras != element.stock.codigo_barras || articulo.no_serie != element.stock.no_serie || articulo.modelo != element.stock.modelo || articulo.marca_id != element.stock.marca_id || articulo.empaque_detalle_id != element.stock.empaque_detalle_id || articulo.programa_id != element.stock.programa_id  || articulo.modo_movimiento != element.modo_movimiento){
                 articulo.estatus_articulo = 'EDIT';
                 articulo.estatus_icono = 'playlist_add_check';
                 articulo.estatus_desc = 'Modificado';
@@ -108,9 +111,13 @@ export class DialogoResolverConflictoComponent implements OnInit {
                 articulo.codigo_barras_modificado = element.stock.codigo_barras;
                 articulo.diff_codigo_barras = (articulo.codigo_barras != element.stock.codigo_barras);
 
+                articulo.entrada_piezas_modificado = (element.modo_movimiento == 'UNI')?true:false;
+
                 if(articulo.empaque_detalle_id != element.stock.empaque_detalle_id){
                   articulo.empaque_detalle_modificado = element.stock.empaque_detalle.descripcion;
+                  articulo.piezas_x_empaque = (element.stock.empaque_detalle)?element.stock.empaque_detalle.piezas_x_empaque:1;
                 }
+
                 if(articulo.programa_id != element.stock.programa_id){
                   articulo.programa_modificado = element.stock.programa.descripcion;
                 }
@@ -247,20 +254,18 @@ export class DialogoResolverConflictoComponent implements OnInit {
       id: lote.id,
       stock_id: lote.stock_id,
       cantidad: lote.cantidad_recibida,
-      fecha_caducidad: lote.fecha_caducidad,
-      estatus_caducidad: 1,
-      empaque_detalle: {piezas_x_empaque: lote.piezas_x_empaque},
-      entrada_piezas: lote.entrada_piezas,
-      accion_lote: '',
+      lote: (lote.lote_modificado)?lote.lote_modificado:lote.lote,
+      fecha_caducidad: (lote.fecha_caducidad_modificado)?lote.fecha_caducidad_modificado:lote.fecha_caducidad,
+      codigo_barras: (lote.codigo_barras_modificado)?lote.codigo_barras_modificado:lote.codigo_barras,
+      programa: (lote.programa_modificado)?lote.programa_modificado:lote.programa,
+      estatus_caducidad: 0,
+      empaque_detalle: {piezas_x_empaque: lote.piezas_x_empaque, descripcion: (lote.empaque_detalle_modificado)?lote.empaque_detalle_modificado:lote.empaque_detalle},
+      entrada_piezas: (lote.entrada_piezas_modificado)?lote.entrada_piezas_modificado:lote.entrada_piezas,
+      estatus_articulo: lote.estatus_articulo,
     };
 
-    if(lote.estatus_articulo == 'EDIT'){
-      stock.accion_lote = 'create';
-    }else if(lote.estatus_articulo == 'DEL'){
-      stock.accion_lote = 'delete';
-    }
     //TODO:: mas acciones
-    const dialogRef = this.dialog.open(DialogoModificarStockComponent, {
+    this.subDialogRef = this.dialog.open(DialogoModificarStockComponent, {
       width: '80%',
       height:'80%',
       disableClose: false,
@@ -268,7 +273,7 @@ export class DialogoResolverConflictoComponent implements OnInit {
       data:{stock: stock, articulo: articulo, fecha_movimiento: fecha_movimiento, modo_conflicto: true},
     });
 
-    dialogRef.afterClosed().subscribe(response => {
+    this.subDialogRef.afterClosed().subscribe(response => {
       if(response){
         console.log('dialog response: ',response);
       }
@@ -284,7 +289,9 @@ export class DialogoResolverConflictoComponent implements OnInit {
   }
 
   cancelarAccion(){
-    if(!this.isSaving){
+    if(this.subDialogRef && this.subDialogRef.getState() === MatDialogState.OPEN){
+      this.subDialogRef.close();
+    }else if(!this.isSaving){
       this.cerrar();
     }
   }

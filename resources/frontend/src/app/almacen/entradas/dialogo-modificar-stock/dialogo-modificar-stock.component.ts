@@ -5,7 +5,7 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { CustomValidator } from 'src/app/utils/classes/custom-validator';
 import { AlmacenService } from '../../almacen.service';
 import { DialogoPreviewMovimientoComponent } from '../../tools/dialogo-preview-movimiento/dialogo-preview-movimiento.component';
@@ -40,7 +40,7 @@ export class DialogoModificarStockComponent implements OnInit {
   isLoading: boolean;
   isLoadingMovimientos: boolean;
 
-  modoSeleccion: boolean;
+  modoConflicto: boolean;
 
   descartarCambios: boolean;
 
@@ -89,7 +89,7 @@ export class DialogoModificarStockComponent implements OnInit {
   listaEstatusLabels: any;
 
   ngOnInit(): void {
-    this.modoSeleccion = this.data.modo_conflicto;
+    this.modoConflicto = this.data.modo_conflicto;
 
     this.listaEstatusIconos = this.almacenService.listaIconos;
     this.listaEstatusClaves = this.almacenService.listaClaves;
@@ -115,7 +115,7 @@ export class DialogoModificarStockComponent implements OnInit {
       'SAL':{'nrm':0,'uni':0,'total':0}
     };
     
-    if(!this.modoSeleccion){
+    if(!this.modoConflicto){
       if(this.data.articulo.tipo_formulario == 'MEDS'){
         formConfig = {
           id:[''],
@@ -256,8 +256,8 @@ export class DialogoModificarStockComponent implements OnInit {
       this.formStock = this.formBuilder.group({id:[''],cantidad:[''],entrada_piezas:['']});
       let result = this.verificarFechaCaducidad(this.data.stock.fecha_caducidad);
       this.estatusCaducidad = result.estatus;
-      this.seleccionSalidasActivada = true;
-      this.accionLote = this.data.stock.accion_lote;
+      //this.seleccionSalidasActivada = true;
+      //this.accionLote = this.data.stock.accion_lote;
       //this.accionSalidas = this.data.stock.accion_salidas;
       //this.etiquetaEstatus = result.label;
     }
@@ -320,7 +320,7 @@ export class DialogoModificarStockComponent implements OnInit {
             }else{
               this.resumenMovimientos['ENT']['total'] -= this.respaldoStock.cantidad;
             }
-          }else{
+          }else if(this.modoConflicto){
             console.log('new respalgo------');
             if(!this.data.stock.entrada_piezas){
               this.resumenMovimientos['ENT']['total'] -= this.data.stock.cantidad * this.piezasXEmpaque;
@@ -334,6 +334,30 @@ export class DialogoModificarStockComponent implements OnInit {
 
           this.resumenMovimientos['SAL']['uni'] -= (this.resumenMovimientos['SAL']['total'] % this.piezasXEmpaque);
           this.resumenMovimientos['SAL']['nrm'] += Math.floor(this.resumenMovimientos['SAL']['total'] / this.piezasXEmpaque);
+
+          console.log('configurar acciones:',this.data.stock);
+
+          if(this.modoConflicto){
+            if(this.data.stock.estatus_articulo == 'DEL'){
+              this.data.stock.marcado_borrar = true;
+            }else if(this.data.stock.estatus_articulo == 'EDIT'){
+              //Checar entradas y salidas
+              if(this.resumenMovimientos.SAL.total > 0 && this.resumenMovimientos.ENT.total == 0){
+                this.accionLote = 'edit';
+                this.accionSalidas = '';
+                this.seleccionSalidasActivada = false;
+                //this.totalPiezasSalidas = this.resumenMovimientos.SAL.total;
+              }else if(this.resumenMovimientos.SAL.total > 0 && this.resumenMovimientos.ENT.total > 0){
+                this.accionLote = 'create';
+                this.accionSalidas = 'select';
+                this.seleccionSalidasActivada = true;
+              }else{
+                this.accionLote = 'edit';
+                this.accionSalidas = '';
+                this.seleccionSalidasActivada = false;
+              }
+            }
+          }
 
           this.formStock.patchValue(this.data.stock);
           this.checarCaducidadFormulario();
@@ -578,7 +602,9 @@ export class DialogoModificarStockComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  previewMovimiento(id){
+  previewMovimiento(event,id){
+    event.stopPropagation();
+
     let configDialog = {
       width: '80%',
       height: '90%',

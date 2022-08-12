@@ -16,7 +16,10 @@
         <div fxFlex="none">
             <alert-panel></alert-panel>
         </div>
-        <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;" *ngIf="!modoSeleccion">
+        <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" style="padding: 8px;" *ngIf="modoConflicto">
+            <div fxFlex="none">Datos del Lote:</div>
+        </div>
+        <div fxFlex="none" fxLayout="column" fxLayoutGap="5px" [formGroup]="formStock" style="padding: 8px;" *ngIf="!modoConflicto">
             <div fxFlex="100" fxLayout="row raw" fxLayoutGap="2px" *ngIf="data.articulo.tipo_formulario == 'MEDS'">
                 <mat-form-field fxFlex="none">
                     <mat-label>Lote</mat-label>
@@ -135,15 +138,15 @@
         </div>
         <mat-divider></mat-divider>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" style="padding: 8px;">
-            <button fxFlex="none" mat-button [ngClass]="{'mat-stroked-button':(mostrarCartaCanje)}" (click)="toggleCartaCanje(!mostrarCartaCanje)" [disabled]="estatusCaducidad == 1">
+            <button fxFlex="none" mat-button [ngClass]="{'mat-stroked-button':(mostrarCartaCanje)}" (click)="toggleCartaCanje(!mostrarCartaCanje)" [disabled]="estatusCaducidad == 1" *ngIf="!modoConflicto">
                 <mat-icon>{{(mostrarCartaCanje)?'event_busy':'event_note'}}</mat-icon> {{(mostrarCartaCanje)?'Quitar':'Agregar'}} Carta de Canje
             </button>
             <div fxFlex></div>
-            <button fxFlex="none" mat-button [ngClass]="{'mat-flat-button':(marcadoParaEliminar)}" color="warn" (click)="marcarEliminarLote()">
+            <button fxFlex="none" mat-button [ngClass]="{'mat-flat-button':(marcadoParaEliminar)}" color="warn" (click)="marcarEliminarLote()" *ngIf="!modoConflicto">
                 <mat-icon fontSet="{{(!marcadoParaEliminar)?'material-icons-outlined':''}}">delete</mat-icon> {{(marcadoParaEliminar)?'Marcado para Eliminar':'Marcar para Eliminar'}}
             </button>
             <div fxFlex></div>
-            <button fxFlex="none" mat-stroked-button [disabled]="!descartarCambios" (click)="descartarCambiosStock()" color="primary"><mat-icon>undo</mat-icon></button>
+            <button fxFlex="none" mat-stroked-button [disabled]="!descartarCambios" (click)="descartarCambiosStock()" color="primary" *ngIf="!modoConflicto"><mat-icon>undo</mat-icon></button>
             <button fxFlex="none" mat-stroked-button (click)="cancelarEdicion()" >Cancelar</button>
             <button fxFlex="none" color="primary" mat-flat-button [disabled]="!formStock.valid" (click)="aceptarCambiosStock()">Aceptar</button>
         </div>
@@ -184,8 +187,10 @@
                     <ng-container matColumnDef="direccion_movimiento">
                         <th mat-header-cell *matHeaderCellDef width="1" mat-sort-header> Estatus - Dirección </th>
                         <td mat-cell *matCellDef="let row" class="{{listaEstatusClaves[row.estatus]}}-color">
-                            <mat-icon matTooltip="{{listaEstatusLabels[row.estatus]}}">{{listaEstatusIconos[row.estatus]}}</mat-icon>
-                            <mat-icon [matTooltip]="(row.direccion_movimiento == 'ENT')?'Entrada':'Salida'">{{(row.direccion_movimiento == 'ENT')?'exit_to_app':'launch'}}</mat-icon>
+                            <mat-icon *ngIf="!(row.no_index > indexSeleccionable && row.direccion_movimiento == 'SAL' && seleccionSalidasActivada)" matTooltip="{{listaEstatusLabels[row.estatus]}}">{{listaEstatusIconos[row.estatus]}}</mat-icon>
+                            <mat-icon *ngIf="(row.no_index > indexSeleccionable && row.direccion_movimiento == 'SAL' && seleccionSalidasActivada)">
+                                {{(salidasSeleccionadas[row.mov_articulo_id])?'task_alt':'radio_button_unchecked'}}
+                            </mat-icon>
                         </td>
                     </ng-container>
 
@@ -199,7 +204,7 @@
                     <ng-container matColumnDef="preview">
                         <th mat-header-cell *matHeaderCellDef> Ver </th>
                         <td mat-cell *matCellDef="let row" style="text-align: center;">
-                            <button mat-icon-button (click)="previewMovimiento(row.id)"><mat-icon>preview</mat-icon></button>
+                            <button mat-icon-button (click)="previewMovimiento($event,row.id)"><mat-icon>preview</mat-icon></button>
                         </td>
                     </ng-container>
 
@@ -222,8 +227,8 @@
                     <ng-container matColumnDef="modo_movimiento">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header width="1" style="white-space: nowrap; padding:0px 5px;"> Modo </th>
                         <td mat-cell *matCellDef="let row" style="white-space: nowrap; padding:0px 5px; text-align: center;">
-                            {{row.direccion_movimiento}}<br>
-                            {{row.modo_movimiento}}
+                            <mat-icon [matTooltip]="(row.direccion_movimiento == 'ENT')?'Entrada':'Salida'">{{(row.direccion_movimiento == 'ENT')?'exit_to_app':'launch'}}</mat-icon>
+                            <mat-icon *ngIf="row.modo_movimiento == 'UNI'">workspaces</mat-icon>
                         </td>
                     </ng-container>
 
@@ -244,7 +249,7 @@
                     
                     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                     <tr mat-row class="tabla-row-articulo {{listaEstatusClaves[row.estatus]}}-color" *matRowDef="let row; let i = index; columns: displayedColumns;" (click)="seleccionarSalida(row.no_index,row.mov_articulo_id,row.direccion_movimiento)" 
-                        [ngClass]="{'salida':row.direccion_movimiento == 'SAL','elemento-actual':data.stock.id == row.mov_articulo_id, 'selectable':(row.no_index > indexSeleccionable && row.direccion_movimiento == 'SAL' && seleccionSalidasActivada), 'selected':(salidasSeleccionadas[row.mov_articulo_id] && seleccionSalidasActivada)}">
+                        [ngClass]="{'salida':row.direccion_movimiento == 'SAL','entrada':row.direccion_movimiento == 'ENT','elemento-actual':data.stock.id == row.mov_articulo_id,'selectable':(row.no_index > indexSeleccionable && row.direccion_movimiento == 'SAL' && seleccionSalidasActivada), 'selected':(salidasSeleccionadas[row.mov_articulo_id] && seleccionSalidasActivada)}">
                     <tr mat-footer-row *matFooterRowDef="['noResultsFound']" class="no-results-found" [ngClass]="{'hide': (dataSourceMovimientos && dataSourceMovimientos.filteredData.length > 0) || isLoadingMovimientos}"></tr>
                     <tr mat-footer-row *matFooterRowDef="['loadingData']" class="no-results-found" [ngClass]="{'hide': !isLoadingMovimientos}"></tr>
                 </table>
